@@ -1,0 +1,24 @@
+# Example configuration for ve-ecs-ops
+# Volcengine ECS instance creation template
+
+# Credentials
+credentials:
+  access_key: "{{env.VOLCENGINE_ACCESS_KEY}}"
+  secret_key: "{{env.VOLCENGINE_SECRET_KEY}}"
+  region: "{{env.VOLCENGINE_REGION}}"
+
+# Instance Defaults
+defaults:
+  region: "cn-beijing"
+  instance_type: "ecs.g3i.large"
+  charge_type: "PostPaid"
+  volume_type: "ESSD_PL0"
+  volume_size: 40
+  security_group_type: "default"
+
+# Network (requires pre-existing VPC/subnet)
+network:
+  vpc_id: "{{user.vpc_id}}"
+  subnet_id: "{{user.subnet_id}}"
+  assign_public_ip: true
+  bandwidth: 5

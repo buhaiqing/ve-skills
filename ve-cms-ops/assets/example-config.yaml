@@ -1,0 +1,32 @@
+# Example configuration for ve-cms-ops
+# Volcengine Cloud Monitor metric query template
+credentials:
+  access_key: "{{env.VOLCENGINE_ACCESS_KEY}}"
+  secret_key: "{{env.VOLCENGINE_SECRET_KEY}}"
+  region: "{{env.VOLCENGINE_REGION}}"
+metric_defaults:
+  period: 60
+  granularity_seconds: 300
+  time_range_hours: 1
+alarm_defaults:
+  statistics: Average
+  comparison_operator: GreaterThanThreshold
+  times: 3
+  silence_period_minutes: 5
+  escalation_levels:
+    info:
+      threshold: 70
+      notify_type: channel
+    warn:
+      threshold: 80
+      notify_type: email
+    critical:
+      threshold: 90
+      notify_type: sms
+namespaces:
+  ECS: Volcengine_ECS
+  RDS: Volcengine_RDS_MySQL
+  Redis: Volcengine_Redis
+  TOS: Volcengine_TOS
+  SLB: Volcengine_SLB
+  VKE: Volcengine_VKE
