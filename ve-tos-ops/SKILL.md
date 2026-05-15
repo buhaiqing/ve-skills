@@ -1,0 +1,540 @@
+---
+name: ve-tos-ops
+description: >-
+  Use when the user needs to deploy, configure, troubleshoot, or manage Volcengine
+  (火山引擎) TOS (对象存储 / Torch Object Storage) — bucket lifecycle, object
+  upload/download/copy, multi-part uploads, lifecycle rules, versioning,
+  access control (ACL/policy), pre-signed URLs, and cross-region replication.
+  User mentions TOS, 对象存储, or describes storage-related scenarios
+  (e.g., uploading files to cloud storage, downloading large objects, setting
+  bucket permissions, configuring lifecycle rules) even without naming the
+  product directly. Not for ECS block storage (云盘), file storage (NAS), or
+  database storage services.
+license: MIT
+compatibility: >-
+  Official tosutil CLI tool, Volcengine CLI (`ve`) for API calls, Go SDK
+  `github.com/volcengine/ve-tos-golang-sdk/v2`, valid API credentials,
+  network access to TOS endpoints (tos-{region}.volces.com).
+metadata:
+  author: volcengine
+  version: "1.0.0"
+  last_updated: "2026-05-15"
+  runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
+  go_version_minimum: "1.13"
+  cli_applicability: dual-path
+  cli_support_evidence: >-
+    TOS API is accessible via `ve tos --help`. Bulk data operations use the
+    dedicated `tosutil` CLI tool.
+    See: https://github.com/volcengine/tosutil
+    API docs: https://www.volcengine.com/docs/6349
+  environment:
+    - TOS_ACCESS_KEY
+    - TOS_SECRET_KEY
+    - VOLCENGINE_REGION
+---
+
+> This skill follows the [Agent Skill OpenSpec](https://agentskills.io/specification).
+
+# Volcengine TOS Operations Skill
+
+## Overview
+
+TOS (Torch Object Storage, 对象存储) on Volcengine (火山引擎) provides massively scalable object storage with S3-compatible APIs, supporting buckets, objects, lifecycle management, versioning, and access control. This skill is an **operational runbook** for agents with **dual-path execution**: `ve` CLI for API calls, `tosutil` for bulk data transfer, and JIT Go SDK fallback.
+
+### CLI applicability
+
+- **`cli_applicability: dual-path`:** TOS API is accessible via both `ve tos` and the dedicated `tosutil` tool.
+  - **`ve tos`**: API operations (CreateBucket, ListBuckets, etc.)
+  - **`tosutil`**: Bulk data transfer (cp, ls, rm, mb) — recommended for upload/download
+
+## Five Core Standards (Quality Gates)
+
+| # | Standard | How This Skill Fulfills It |
+|---|----------|---------------------------|
+| 1 | **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules |
+| 2 | **Structured I/O** | `{{env.TOS_*}}` (TOS env), `{{user.*}}` (interactive), `{{output.*}}` (API/tosutil response) |
+| 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover |
+| 4 | **Complete Failure Strategies** | Error taxonomy with ≥ 10 TOS-specific codes; HALT vs retry per type |
+| 5 | **Absolute Single Responsibility** | One product (TOS), one primary resource (Bucket/Object); cross-product delegation documented |
+
+## Trigger & Scope (Agent-Readable)
+
+### SHOULD Use This Skill When
+
+- User mentions "Volcengine TOS", "火山引擎 TOS", "对象存储", "Torch Object Storage", or "tos"
+- Task involves bucket operations: CreateBucket, ListBuckets, DeleteBucket, GetBucketLocation
+- Task involves object operations: PutObject, GetObject, DeleteObject, CopyObject, ListObjects
+- Task involves multi-part upload: CreateMultipartUpload, UploadPart, CompleteMultipartUpload
+- Task involves lifecycle rules, versioning, ACL/policy, pre-signed URLs
+- Task involves bulk data transfer: upload/download/copy local files to/from TOS
+
+### SHOULD NOT Use This Skill When
+
+- Task is about ECS cloud disks (云盘) → delegate to: `ve-ecs-ops`
+- Task is about NAS file storage → delegate to NAS ops skill (when present)
+- Task is about database storage (RDS) → delegate to: `ve-rds-ops` (when present)
+- Task is purely billing → delegate to billing ops
+
+### Delegation Rules
+
+- TOS bucket permissions depend on IAM policies → reference `ve-iam-ops` (when present)
+- TOS cross-region replication depends on VPC networking → reference `ve-vpc-ops` (when present)
+
+## Variable Convention (Agent-Readable)
+
+| Placeholder | Meaning | Agent Action |
+|-------------|---------|--------------|
+| `{{env.TOS_ACCESS_KEY}}` | TOS access key | NEVER ask user; fail if unset |
+| `{{env.TOS_SECRET_KEY}}` | TOS secret key | NEVER ask user; fail if unset |
+| `{{env.VOLCENGINE_REGION}}` | Region (e.g., cn-beijing) | Use documented default if skill allows |
+| `{{user.bucket}}` | Bucket name | Ask once; globally unique; lowercase alphanumeric + hyphens |
+| `{{user.object_key}}` | Object key (path) | Ask once; URL-safe |
+| `{{user.local_file}}` | Local file path | Ask once; verify exists |
+| `{{user.endpoint}}` | TOS endpoint | Default: `https://tos-{{env.VOLCENGINE_REGION}}.volces.com` |
+| `{{output.etag}}` | Object ETag from upload response | Parse from response |
+| `{{output.request_id}}` | Request ID for tracing | Parse from response |
+
+> **TOS-specific env vars:** TOS uses `TOS_ACCESS_KEY`/`TOS_SECRET_KEY` (not `VOLCENGINE_*`). Use `VOLCENGINE_REGION` for region.
+
+> **Security Warning (Credential Masking):** NEVER echo or log `TOS_SECRET_KEY` or any credential values. Verify existence only with `test -n "$TOS_SECRET_KEY"`.
+
+## API and Response Conventions (Agent-Readable)
+
+- **TOS uses RESTful S3-compatible API** with XML responses for most operations
+- **Endpoint:** `https://tos-{region}.volces.com` (e.g., `https://tos-cn-beijing.volces.com`)
+- **Go SDK:** `github.com/volcengine/ve-tos-golang-sdk/v2/tos`
+- **Error responses:** S3-compatible `Error` XML with `Code` and `Message` elements
+
+### Key Response Fields
+
+| Operation | Response Field | Type | Description |
+|-----------|---------------|------|-------------|
+| ListBuckets | `$.Buckets[].Name` | array | Bucket names |
+| ListBuckets | `$.Buckets[].CreationDate` | array | Creation timestamps |
+| ListObjectsV2 | `$.Contents[]` | array | Object list |
+| ListObjectsV2 | `$.Contents[].Key` | string | Object key |
+| ListObjectsV2 | `$.Contents[].Size` | integer | Object size in bytes |
+| ListObjectsV2 | `$.IsTruncated` | boolean | More pages available |
+| ListObjectsV2 | `$.NextMarker` | string | Pagination token |
+| PutObjectV2 | `.ETag` | string | Object tag |
+| PutObjectV2 | `.RequestID` | string | Request identifier |
+| CreateBucketV2 | `.Location` | string | Bucket location |
+
+## Quick Start
+
+### What This Skill Does
+This skill enables you to manage Volcengine TOS buckets and objects — create buckets, upload/download files, set lifecycle rules, generate pre-signed URLs — using `tosutil` (bulk data) or `ve tos` (API calls), with JIT Go SDK fallback.
+
+### Prerequisites
+- [ ] `tosutil` CLI installed (bulk data) or `ve` CLI (API calls)
+- [ ] Credentials: `TOS_ACCESS_KEY`, `TOS_SECRET_KEY`
+- [ ] Region: `VOLCENGINE_REGION` (e.g., `cn-beijing`)
+
+### Verify Setup
+```bash
+# List buckets using tosutil
+tosutil ls
+
+# Or using ve CLI
+ve tos ListBuckets
+```
+
+### Your First Command
+```bash
+# List all buckets
+tosutil ls -s
+```
+
+## Capabilities at a Glance
+
+| Operation | Description | Complexity | Risk Level |
+|-----------|-------------|------------|------------|
+| CreateBucket | Create a new TOS bucket | Low | Medium |
+| ListBuckets | List all accessible buckets | Low | None |
+| DeleteBucket | Delete an empty bucket | Low | **High** |
+| PutObject | Upload an object | Low | Low |
+| GetObject | Download an object | Low | None |
+| ListObjects | List objects in a bucket | Low | None |
+| DeleteObject | Delete an object | Low | High |
+| CopyObject | Copy object within/across buckets | Medium | Medium |
+| MultipartUpload | Upload large files in parts | High | Low |
+| PresignURL | Generate pre-signed URL | Low | Medium |
+| PutBucketLifecycle | Set lifecycle rules | Medium | Medium |
+| PutBucketVersioning | Enable/disable versioning | Low | Medium |
+| PutBucketACL | Set bucket access control | Low | High |
+
+## Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-05-15 | Initial release with bucket/object management, lifecycle, versioning |
+
+## Execution Flows (Agent-Readable)
+
+Every operation: **Pre-flight → Execute → Validate → Recover**.
+
+### Operation: CreateBucket — Create a TOS Bucket
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Credentials | `test -n "$TOS_ACCESS_KEY" && test -n "$TOS_SECRET_KEY"` | Both set | HALT; configure credentials |
+| Bucket name unique | Bucket name must be globally unique in TOS | No conflict | Use a different name |
+| Name format | Lowercase letters, numbers, hyphens; 3–63 chars | Valid format | Fix name format |
+
+#### Execution — tosutil CLI (Primary for bucket management)
+
+```bash
+# Create a bucket
+tosutil mb tos://{{user.bucket}}
+
+# Create a bucket with storage class
+tosutil mb tos://{{user.bucket}} -sc=IA  # Infrequent Access
+
+# Create a bucket with ACL
+tosutil mb tos://{{user.bucket}} -acl=public-read
+```
+
+#### Execution — ve CLI API
+
+```bash
+ve tos CreateBucket --bucket "{{user.bucket}}" --Region "{{env.VOLCENGINE_REGION}}"
+```
+
+#### Execution — JIT Go SDK (Fallback)
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "os"
+
+    "github.com/volcengine/ve-tos-golang-sdk/v2/tos"
+    "github.com/volcengine/ve-tos-golang-sdk/v2/tos/enum"
+)
+
+func main() {
+    client, err := tos.NewClientV2(
+        "https://tos-"+os.Getenv("VOLCENGINE_REGION")+".volces.com",
+        tos.WithRegion(os.Getenv("VOLCENGINE_REGION")),
+        tos.WithCredentials(tos.NewStaticCredentials(
+            os.Getenv("TOS_ACCESS_KEY"),
+            os.Getenv("TOS_SECRET_KEY"),
+        )),
+    )
+    if err != nil {
+        log.Fatalf("Failed to create client: %v", err)
+    }
+    defer client.Close()
+
+    resp, err := client.CreateBucketV2(context.Background(), &tos.CreateBucketV2Input{
+        Bucket:       os.Getenv("BUCKET_NAME"),
+        ACL:          enum.ACLPrivate,
+        StorageClass: enum.StorageClassStandard,
+    })
+    if err != nil {
+        log.Fatalf("Failed to create bucket: %v", err)
+    }
+    fmt.Printf("Bucket created at: %s\n", resp.Location)
+}
+```
+
+#### Validation
+
+```bash
+tosutil ls -s | grep "{{user.bucket}}"
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `BucketAlreadyExists` | HALT; bucket name taken globally — use different name |
+| `InvalidBucketName` | HALT; name must be 3–63 chars, lowercase, alphanumeric, hyphens only |
+| `Unauthorized` | HALT; ensure TOSFullAccess IAM policy is attached |
+| `TooManyBuckets` | HALT; bucket limit reached (default 100 per account) |
+
+---
+
+### Operation: Upload Object — Upload File to TOS
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Bucket exists | `tosutil ls tos://{{user.bucket}}` | Bucket found | HALT; create bucket first |
+| Local file exists | `test -f "{{user.local_file}}"` | File readable | HALT; verify file path |
+| File size | `stat` or `ls -l` | Check if > 100MB | Use multipart for large files |
+
+#### Execution — tosutil CLI (Primary)
+
+```bash
+# Upload a single file
+tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}}
+
+# Upload a directory recursively
+tosutil cp "{{user.local_folder}}" tos://{{user.bucket}}/{{user.object_prefix}} -r
+
+# Upload with progress bar and verification
+tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} --enable-verify
+```
+
+#### Execution — ve CLI API (for small objects)
+
+```bash
+# Note: ve CLI does not support binary upload directly
+# Use tosutil or Go SDK for actual file upload
+```
+
+#### Execution — JIT Go SDK (Fallback)
+
+```go
+fh, err := os.Open(os.Getenv("LOCAL_FILE"))
+if err != nil {
+    log.Fatal(err)
+}
+defer fh.Close()
+
+output, err := client.PutObjectV2(context.Background(), &tos.PutObjectV2Input{
+    PutObjectBasicInput: tos.PutObjectBasicInput{
+        Bucket: os.Getenv("BUCKET"),
+        Key:    os.Getenv("OBJECT_KEY"),
+    },
+    Content: fh,
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Uploaded: ETag=%s\n", output.ETag)
+```
+
+#### Validation
+
+```bash
+# Check object exists and get metadata
+tosutil stat tos://{{user.bucket}}/{{user.object_key}}
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `NoSuchBucket` | HALT; bucket doesn't exist — create first |
+| `AccessDenied` | HALT; check bucket ACL and IAM permissions |
+| `NetworkError` | Retry with backoff; consider setting smaller part size (`-ps=5mb`) |
+| `QuotaExceeded` | HALT; bucket or account storage limit |
+
+---
+
+### Operation: Download Object — Download File from TOS
+
+#### Execution
+
+```bash
+# Download a single file
+tosutil cp tos://{{user.bucket}}/{{user.object_key}} "{{user.local_file}}"
+
+# Download recursively
+tosutil cp tos://{{user.bucket}}/{{user.object_prefix}} "{{user.local_folder}}" -r
+
+# Download with verification
+tosutil cp tos://{{user.bucket}}/{{user.object_key}} "{{user.local_file}}" --enable-verify
+```
+
+#### Go SDK
+
+```go
+output, err := client.GetObjectV2(context.Background(), &tos.GetObjectV2Input{
+    Bucket: os.Getenv("BUCKET"),
+    Key:    os.Getenv("OBJECT_KEY"),
+})
+if err != nil {
+    log.Fatal(err)
+}
+defer output.Content.Close()
+
+// Save to local file
+fw, err := os.Create(os.Getenv("LOCAL_FILE"))
+if err != nil {
+    log.Fatal(err)
+}
+defer fw.Close()
+io.Copy(fw, output.Content)
+```
+
+#### Validation
+
+Verify file contents:
+```bash
+# For integrity-checked downloads
+diff "{{user.local_file}}.original" "{{user.local_file}}" && echo "MATCH" || echo "MISMATCH"
+```
+
+---
+
+### Operation: ListObjects — List Objects in Bucket
+
+#### Execution
+
+```bash
+# List root objects
+tosutil ls tos://{{user.bucket}}
+
+# List with prefix filter (recursive)
+tosutil ls tos://{{user.bucket}}/{{user.object_prefix}} -s
+
+# List with limit
+tosutil ls tos://{{user.bucket}} --limited-num 50
+
+# List flat (no directory grouping)
+tosutil ls tos://{{user.bucket}} -ab
+```
+
+#### Go SDK (Paginated)
+
+```go
+output, err := client.ListObjectsV2(context.Background(), &tos.ListObjectsV2Input{
+    Bucket: bucketName,
+    Prefix: "{{user.object_prefix}}",
+})
+
+// Handle pagination
+for output.IsTruncated {
+    output, err = client.ListObjectsV2(context.Background(), &tos.ListObjectsV2Input{
+        Bucket:           bucketName,
+        ListObjectsInput: tos.ListObjectsInput{Marker: output.NextMarker},
+    })
+}
+```
+
+---
+
+### Operation: DeleteObject — Delete Object(s)
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** confirm target: deleting `tos://{{user.bucket}}/{{user.object_key}}`
+- **MUST** recommend backup if object is critical
+- Pattern matching deletions: review the file list before `rm` for prefix patterns
+
+#### Execution
+
+```bash
+# Delete a single object
+tosutil rm tos://{{user.bucket}}/{{user.object_key}}
+
+# Delete objects matching prefix (REVIEW LIST FIRST!)
+tosutil ls tos://{{user.bucket}}/{{user.object_prefix}} -s
+# After review:
+tosutil rm tos://{{user.bucket}}/{{user.object_prefix}} -r
+```
+
+---
+
+### Operation: PresignedURL — Generate Pre-signed URL
+
+#### Execution
+
+```bash
+# Generate a pre-signed URL (default 1 hour)
+tosutil presign tos://{{user.bucket}}/{{user.object_key}}
+
+# Generate with custom expiration (seconds)
+tosutil presign tos://{{user.bucket}}/{{user.object_key}} --expires 3600
+```
+
+#### Go SDK
+
+```go
+output, err := client.SignUrlHttpMethodV2(context.Background(), &tos.TrustedSignV2Input{
+    Bucket: bucketName,
+    Key:    objectKey,
+    HTTPMethod: http.MethodGet,
+    Expires:    3600, // seconds
+})
+fmt.Println("Signed URL:", output.SignedUrl)
+```
+
+---
+
+### Operation: PutBucketLifecycle — Set Lifecycle Rules
+
+#### Execution
+
+```bash
+# Set lifecycle rule via API (JSON payload)
+ve tos PutBucketLifecycle \
+  --bucket "{{user.bucket}}" \
+  --body '{"Rules": [{"ID": "auto-delete", "Status": "Enabled", "Prefix": "logs/", "Expiration": {"Days": 30}}]}'
+```
+
+Go SDK:
+```go
+_, err := client.PutBucketLifecycle(context.Background(), &tos.PutBucketLifecycleInput{
+    Bucket: bucketName,
+    LifecycleRules: []tos.RuleStatusType{
+        {
+            ID:     "auto-delete",
+            Status: enum.RuleStatusEnabled,
+            Prefix: "logs/",
+            Expiration: &tos.TimeType{Days: 30},
+        },
+    },
+})
+```
+
+---
+
+### Operation: PutBucketVersioning — Enable/disable Versioning
+
+#### Execution
+
+```bash
+# Enable versioning
+ve tos PutBucketVersioning --bucket "{{user.bucket}}" --Status Enabled
+
+# Suspend versioning
+ve tos PutBucketVersioning --bucket "{{user.bucket}}" --Status Suspended
+```
+
+---
+
+### Operation: MultipartUpload — Upload Large Files
+
+For files > 100MB, use multipart upload via `tosutil`:
+
+```bash
+# tosutil automatically uses multipart for large files
+# Customize part size with -ps (e.g., 10MB per part)
+tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} -ps=10mb
+
+# Resume a failed upload
+tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} --task-id <task-id>
+```
+
+## Reference Directory
+
+- [Core Concepts](references/core-concepts.md)
+- [API & SDK Usage](references/api-sdk-usage.md)
+- [CLI Usage](references/cli-usage.md)
+- [Troubleshooting Guide](references/troubleshooting.md)
+- [Monitoring](references/monitoring.md)
+- [Integration](references/integration.md)
+- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [Enhanced Self-Healing Framework](../../ve-skill-generator/references/enhanced-self-healing-framework.md)
+
+## Operational Best Practices
+
+- **Bucket naming:** lowercase, alphanumeric, hyphens; avoid dots; globally unique
+- **Lifecycle rules:** auto-expire logs, temp files, and old versions
+- **Versioning:** enable for production buckets to prevent accidental deletion
+- **Access control:** use bucket policies and ACLs; prefer least privilege
+- **Data integrity:** use `--enable-verify` flag on uploads/downloads
+- **Cost optimization:** use IA/Archive storage classes for infrequently accessed data
+- **Large files:** always use multipart upload for files > 100MB
