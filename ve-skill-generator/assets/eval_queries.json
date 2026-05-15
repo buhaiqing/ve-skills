@@ -1,0 +1,23 @@
+[
+  { "query": "Generate a Volcengine ECS skill for instance management", "should_trigger": true },
+  { "query": "Create a skill for volcano engine RDS MySQL operations", "should_trigger": true },
+  { "query": "I need to manage 火山引擎 cloud resources via CLI", "should_trigger": true },
+  { "query": "Generate ve-redis-ops for Redis cache lifecycle and diagnostics", "should_trigger": true },
+  { "query": "Build a Volcengine operational skill for VPC networking", "should_trigger": true },
+  { "query": "Create a skill for ve load balancer operations", "should_trigger": true },
+  { "query": "Generate ops runbook for 火山引擎云服务器", "should_trigger": true },
+  { "query": "I need to scaffold a new ve skill from OpenAPI spec", "should_trigger": true },
+  { "query": "Regenerate the Volcengine skill after API version bump", "should_trigger": true },
+  { "query": "Fix gaps in my ve-ecs-ops skill found during review", "should_trigger": true },
+
+  { "query": "Create an ECS instance on Volcengine", "should_trigger": false },
+  { "query": "List all RDS MySQL instances in cn-beijing", "should_trigger": false },
+  { "query": "Check my Volcengine account balance", "should_trigger": false },
+  { "query": "How to configure IAM permissions for ECS", "should_trigger": false },
+  { "query": "Debug why my VE Redis connection is timing out", "should_trigger": false },
+  { "query": "What is the price of Volcengine compute instances", "should_trigger": false },
+  { "query": "Create a VPC network for my application", "should_trigger": false },
+  { "query": "Monitor CPU usage on my ECS fleet", "should_trigger": false },
+  { "query": "How to set up alerting for RDS slow queries", "should_trigger": false },
+  { "query": "Delete an old load balancer I don't need anymore", "should_trigger": false }
+]
