@@ -28,8 +28,8 @@ metadata:
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   type: meta-skill
   guidance_freedom_level: medium
-  go_version_minimum: "1.14"
-  go_version_jit: "1.21+"
+  go_script_syntax_minimum: "1.14"
+  go_jit_runtime_version: "1.21+"
 ---
 
 # Volcengine Skill Generator (Meta-Skill)
@@ -314,6 +314,37 @@ Replace all `[Placeholder]` with product-specific content derived from Step 2. E
 
 Run the [P0/P1 Checklist](#p0--must-pass) below against the generated skill. Run the [Adversarial Review](references/governance-and-adversarial-review.md) scenarios (when present).
 
+**Reference File Existence Validation (automated):**
+Before running P0/P1 checklist, verify all expected files exist and contain real content:
+```bash
+# Check all required files exist and are not empty
+REQUIRED_FILES=(
+  "ve-[product]-ops/SKILL.md"
+  "ve-[product]-ops/references/core-concepts.md"
+  "ve-[product]-ops/references/api-sdk-usage.md"
+  "ve-[product]-ops/references/troubleshooting.md"
+  "ve-[product]-ops/references/integration.md"
+  "ve-[product]-ops/assets/example-config.yaml"
+)
+
+# Conditionally required files
+if [ "$CLI_APPLICABILITY" = "dual-path" ]; then
+  REQUIRED_FILES+=("ve-[product]-ops/references/cli-usage.md")
+fi
+
+for f in "${REQUIRED_FILES[@]}"; do
+  if [ ! -s "$f" ]; then
+    echo "FAIL: $f is missing or empty"
+    exit 1
+  fi
+  # Check for unreplaced placeholders
+  if grep -q '\[Product Name\]\|\[product\]\|\[Resource Type\]\|\[Placeholder\]' "$f"; then
+    echo "FAIL: $f contains unreplaced placeholders"
+    exit 1
+  fi
+done
+```
+
 **For any failure:**
 1. Identify the gap
 2. Return to Step 4 (SKILL.md) or Step 5 (references)
@@ -335,51 +366,15 @@ Run the [Anti-Pattern Checklist](#anti-pattern-checklist) above against the gene
 
 ---
 
-## Description Optimization (Trigger Accuracy)
+## Description Optimization & Generation Telemetry
 
-The `description` field in frontmatter is the sole trigger mechanism for skill activation. An under-specified description means the skill won't load when it should; an over-broad one means it loads when it shouldn't. Optimize it systematically:
+Moved to **[references/generation-guidance.md](references/generation-guidance.md)** for better separation of concerns. Covers:
+- Description optimization principles (agentskills.io)
+- Eval query design and optimization loop
+- Generation telemetry & observability metrics
+- Version pinning strategy for CLI and SDK
 
-### Write an Effective Description
-
-Follow these principles from the [agentskills.io specification](https://agentskills.io/skill-creation/optimizing-descriptions):
-
-| Principle | Guideline | Example |
-|-----------|-----------|---------|
-| **Imperative phrasing** | Frame as instruction to agent: "Use when..." | `Use when the user needs to...` |
-| **Focus on user intent** | Describe what user is trying to achieve, not skill mechanics | Focus on problems user solves, not CLI/SDK internals |
-| **Err on the side of pushy** | Include implicit trigger scenarios explicitly | `even when the user doesn't explicitly mention [product]` |
-| **Negative boundaries** | State what the skill is NOT for | `Not for billing, RAM, or related products` |
-| **Keep concise** | Under 1024 character hard limit | Aim for 300–700 characters |
-
-### Create Eval Queries
-
-Create an `assets/eval_queries.json` file with ~20 queries (10 should-trigger, 10 should-not-trigger):
-
-```json
-[
-  { "query": "I need to create an [product] instance", "should_trigger": true },
-  { "query": "Check my account bill", "should_trigger": false }
-}
-```
-
-**Query design tips:**
-- **Should-trigger**: Vary phrasing (formal/casual/typos), explicitness (names product vs describes need), detail level (terse vs context-heavy)
-- **Should-not-trigger**: Focus on **near-misses** — queries sharing keywords but needing different skills (e.g., "Create an ECS instance" for a generator skill — shares "create" and "ECS" but is operational, not skill generation)
-- **Realism**: Include file paths (`~/Downloads/`), personal context (`"my manager asked..."`), casual language, abbreviations
-
-### Optimization Loop
-
-1. **Evaluate**: Run each query through the agent with the skill installed; compute trigger rate (fraction of runs where skill was invoked)
-2. **Identify failures**: Which should-trigger queries didn't trigger? Which should-not-trigger did?
-3. **Revise**: If too narrow — broaden scope or add trigger context. If too broad — add specificity or negative boundaries. Avoid adding specific keywords from failed queries (overfitting).
-4. **Repeat**: 5 iterations max. Use a 60/40 train/validation split to avoid overfitting.
-
-### Apply the Result
-
-- Update `description` in SKILL.md frontmatter
-- Verify under 1024 characters
-- Test with 5–10 fresh queries as sanity check
-- See `assets/eval_queries.json` for the meta-skill's own eval queries
+**Quick summary:** The `description` field is the sole trigger mechanism. Target ≤ 600 characters. Create `assets/eval_queries.json` with ≥ 20 queries. Track generation metrics for continuous improvement.
 
 ---
 
@@ -422,39 +417,72 @@ Optional later improvements: PR template checkbox linking to that doc; periodic 
 
 ## Agent-Ready Quality Checklist
 
-### P0 — MUST PASS
+### Generator Self-Checks (P0 — for THIS meta-skill's process)
 
-- [ ] **Trigger & Scope** with SHOULD-use / SHOULD-NOT-use and delegation rules
-- [ ] **Variables:** `{{env.*}}` vs `{{user.*}}`; no secret literals; `{{env.*}}` never collected from user
-- [ ] **Flows:** Pre-flight → Execute → Validate → Recover for **each** critical operation
-- [ ] **Each flow** documents **`ve` CLI as primary path** and **SDK/API as fallback** (when `cli_applicability: dual-path`)
-- [ ] **Failure recovery:** HALT vs retry; throttling with exponential backoff; non-retryable business errors (QuotaExceeded, InsufficientBalance, InvalidParameter)
-- [ ] **API fidelity:** Fields and paths traceable to OpenAPI/SDK for the stated version
-- [ ] **CLI fidelity:** Default output is JSON; commands match official CLI docs; JSON paths verified with a real CLI run or official docs
-- [ ] **Safety gates** for destructive operations (before **each** documented path: `ve` **and** SDK fallback)
-- [ ] **Timeouts** for polling and long-running operations (default: 5s interval, 300s max wait)
-- [ ] **Self-Healing Framework:** All installation flows follow [enhanced-self-healing-framework.md](references/enhanced-self-healing-framework.md) with pre-flight checks, error classification, multi-path recovery, health verification, and graceful degradation
-- [ ] **Self-Healing Coverage:** CLI install, Go runtime JIT, dependency download all have ≥ 3 self-healing paths per error type (network, permission, resource, configuration)
-- [ ] **Self-Healing Metrics:** Health score ≥ 8/10, self-healing duration < 30s, user intervention rate < 20% documented as success criteria
-- [ ] **UX Onboarding:** Quick Start section present; first-time user can execute first command within 60 seconds per [user-experience-spec.md](references/user-experience-spec.md) Section 2.1
-- [ ] **UX Interaction:** Common operations require ≤ 3 prompts; smart defaults documented; destructive operations have explicit confirmation per [user-experience-spec.md](references/user-experience-spec.md) Section 3
-- [ ] **UX Feedback:** Success/failure messages follow standardized format; progress shown for operations > 5s per [user-experience-spec.md](references/user-experience-spec.md) Section 4
-- [ ] **UX Error Handling:** Error messages follow `[ERROR] code: summary → explanation → fix → next step` format per [user-experience-spec.md](references/user-experience-spec.md) Section 5
-- [ ] **Prompt Library Alignment:** Generation process uses structured prompts from [prompt-library.md](references/prompt-library.md) with effectiveness tracking where applicable
-- [ ] **Description Optimization:** Generated skill's `description` field follows agentskills.io optimization principles — imperative phrasing, user-intent focused, implicit trigger scenarios, negative boundaries, under 1024 chars
-- [ ] **Eval Queries:** `assets/eval_queries.json` created or updated with should-trigger/should-not-trigger queries for the generated skill
-- [ ] **Optimization Awareness:** Skill design considers Fault Diagnosis, Root Cause Localization, and Rapid Resolution dimensions per [optimization-analysis.md](references/optimization-analysis.md)
-- [ ] **AIOps Compliance (when skill involves monitoring/alarm/diagnosis):** Skill implements multi-metric correlation, cross-skill diagnosis decision tree, delegation matrix, proactive inspection, and alarm storm handling per [aiops-best-practices.md](references/aiops-best-practices.md)
+- [ ] **Template Integrity:** All `[Placeholder]` tokens replaced with product-specific content — no literal placeholder strings remain in output
+- [ ] **Reference File Completeness:** Every file listed in Reference Directory exists and contains real content (not template stubs)
+- [ ] **Frontmatter Valid:** `name` matches `ve-[product]-ops` pattern, `cli_applicability` is `dual-path` or `sdk-only`, `cli_support_evidence` cites real verification
+- [ ] **Description Length:** Generated `description` is ≤ 1024 characters (target: ≤ 600)
+- [ ] **JSON Validity:** `assets/eval_queries.json` is valid JSON with correct trigger classifications
+- [ ] **No Credential Leakage:** No real AK/SK values appear anywhere in generated files (template or data)
+- [ ] **File Naming Consistency:** All filenames use lowercase-hyphen convention; no underscores or mixed case
+- [ ] **Anti-Pattern Clean:** Ran Anti-Pattern Checklist — all 10 items pass
+
+### Generated Skill Requirements (P0 — the OUTPUT must satisfy these)
+
+#### 1. Trigger & Scope
+- [ ] SHOULD/SHOULD NOT use conditions present with specific delegation targets (≥ 3 SHOULD NOT entries)
+- [ ] Delegation rules point to named skills (e.g., `ve-billing-ops`, `ve-iam-ops`)
+
+#### 2. Variables & Security
+- [ ] `{{env.*}}` placeholders use `VOLCENGINE_*` prefix; none collected from user
+- [ ] `{{user.*}}` placeholders only for interactive inputs (name, region, etc.)
+- [ ] No secret literals anywhere; credential masking pattern enforced
+- [ ] SDK scripts use `os.Getenv()` — never print config structs or credential values
+
+#### 3. Execution Flows
+- [ ] Every critical operation: Pre-flight → Execute → Validate → Recover
+- [ ] `ve` CLI documented as primary path; JIT Go SDK as fallback (when `cli_applicability: dual-path`)
+- [ ] Safety gate before each destructive operation (both CLI and SDK paths)
+- [ ] Timeouts for polling (default: 5s interval, 300s max wait)
+
+#### 4. Failure Recovery
+- [ ] Error taxonomy ≥ 10 product-specific codes
+- [ ] Each entry: max retries, backoff strategy, agent action, UX feedback
+- [ ] HALT vs retry clearly distinguished; credential, quota, business errors separated
+- [ ] Error messages follow `[ERROR] code: summary → explanation → fix → next step` format
+
+#### 5. API & CLI Fidelity
+- [ ] All operationIds, fields, JSON paths traceable to OpenAPI or verified CLI output
+- [ ] CLI default output is JSON; commands match official docs
+- [ ] Version pin: SDK/API baseline documented in metadata or integration.md
+
+#### 6. UX Compliance (per user-experience-spec.md)
+- [ ] Quick Start section; first command executable within 60s
+- [ ] Common operations require ≤ 3 prompts; smart defaults documented
+- [ ] Success/failure messages follow standardized format; progress for ops > 5s
+
+#### 7. Self-Healing (per enhanced-self-healing-framework.md)
+- [ ] All installation flows: pre-flight checks, error classification, multi-path recovery, health verification, graceful degradation
+- [ ] CLI install, Go runtime JIT, dependency download each have ≥ 3 self-healing paths per error type
+- [ ] Health score ≥ 8/10, self-healing duration < 30s, user intervention rate < 20% documented
+
+#### 8. Prompt & Description Quality
+- [ ] `description` field: imperative phrasing, user-intent focused, implicit triggers, negative boundaries
+- [ ] `assets/eval_queries.json` created with ≥ 20 should/should-not trigger queries
+- [ ] Generation used structured prompts from `prompt-library.md`
+
+#### 9. AIOps Compliance (when monitoring/alarm/diagnosis in scope)
+- [ ] Multi-metric correlation (≥ 4 anomaly patterns), cross-skill diagnosis decision tree
+- [ ] Delegation matrix, proactive inspection, alarm storm handling per `aiops-best-practices.md`
 
 ### P1 — SHOULD PASS
 
 - [ ] **Chaining:** Stable output fields for downstream skills (via `{{output.*}}` placeholders)
 - [ ] **Naming:** `ve-[product]-ops` consistent with repo conventions
-- [ ] **Pinned** SDK/API baseline where drift matters (in metadata or integration.md)
-- [ ] **Idempotency** or duplicate-resource behavior documented when automation or retries apply
-- [ ] **Adversarial scenarios** considered using the governance doc (when present)
+- [ ] **Idempotency** or duplicate-resource behavior documented
+- [ ] **Adversarial scenarios** considered using the governance doc
 - [ ] **Path preference:** SKILL.md states when to prefer `ve` vs SDK fallback if non-obvious
-- [ ] **Metadata:** Ops skill frontmatter includes `cli_applicability`, `cli_support_evidence`, `go_version_minimum`, `environment` vars
 
 ---
 
@@ -479,6 +507,7 @@ Optional later improvements: PR template checkbox linking to that doc; periodic 
 | [optimization-analysis.md](references/optimization-analysis.md) | Three-dimensional optimization framework |
 | [user-experience-spec.md](references/user-experience-spec.md) | Mandatory UX requirements for all generated skills |
 | [aiops-best-practices.md](references/aiops-best-practices.md) | Mandatory AIOps patterns for monitoring/diagnosis skills |
+| [generation-guidance.md](references/generation-guidance.md) | Description optimization, eval queries, generation telemetry, version pinning |
 | [assets/eval_queries.json](assets/eval_queries.json) | Eval queries for testing the meta-skill's description trigger accuracy |
 
 ### External References

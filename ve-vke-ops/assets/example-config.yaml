@@ -1,0 +1,51 @@
+# VKE Cluster Example Configuration
+
+cluster:
+  name: production-cluster
+  description: "Production Kubernetes cluster"
+  kubernetes_version: "v1.28"
+  region: cn-beijing
+
+  cluster_config:
+    vpc_id: vpc-xxxxx
+    subnet_ids:
+      - subnet-xxxxx-a
+      - subnet-xxxxx-b
+    api_server_public_access_enabled: true
+    api_server_public_access_config:
+      public_access_network_config:
+        billing_type: PostPaidByBandwidth
+        bandwidth: 5
+
+  pods_config:
+    pod_network_mode: VpcCniShared
+    vpc_cni_config:
+      subnet_ids:
+        - subnet-xxxxx-pod
+
+  services_config:
+    service_cidrsv4:
+      - "172.30.0.0/18"
+
+  node_pools:
+    - name: general-purpose
+      instance_types:
+        - ecs.g1ie.xlarge
+      subnet_ids:
+        - subnet-xxxxx-a
+        - subnet-xxxxx-b
+      image: veLinux 1.0 CentOS Compatible 64bit
+      system_volume:
+        type: ESSD_PL0
+        size: 80
+      data_volumes:
+        - type: ESSD_PL0
+          size: 100
+          mount_point: /data
+      security_group_ids:
+        - sg-xxxxx
+      auto_scaling:
+        enabled: true
+        min_replicas: 2
+        max_replicas: 10
+        desired_replicas: 3

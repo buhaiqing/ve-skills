@@ -166,7 +166,8 @@ func main() {
 
     resp, err := instance.Client.Request("ecs", "DescribeInstances", params)
     if err != nil {
-        panic(err)
+        fmt.Fprintf(os.Stderr, "API call failed: %v\n", err)
+        os.Exit(1)
     }
 
     fmt.Println(string(resp))

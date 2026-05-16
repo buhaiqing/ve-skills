@@ -1,0 +1,376 @@
+---
+name: ve-rds-pg-ops
+description: >-
+  Use when the user needs to deploy, configure, troubleshoot, or monitor Volcengine
+  RDS for PostgreSQL (云数据库 PostgreSQL 版) — DBInstance lifecycle, parameter
+  management, account management, backup/restore, read-only nodes, and diagnostics.
+  User mentions RDS PostgreSQL, PostgreSQL instance, Postgres database, 云数据库
+  PostgreSQL, or describes product-specific scenarios (e.g., connection failures,
+  WAL issues, instance creation, slow queries) even without naming the product
+  directly. Not for billing, IAM, VPC networking, or application-level SQL schema.
+license: MIT
+compatibility: >-
+  Official Volcengine CLI (`ve`, Go binary, no runtime), Go 1.14+ runtime
+  (for JIT SDK fallback), valid API credentials, network access to Volcengine
+  endpoints.
+metadata:
+  author: volcengine
+  version: "1.0.0"
+  last_updated: "2026-05-16"
+  runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
+  go_version_minimum: "1.14"
+  go_version_jit: "1.21+"
+  api_profile: "RDS PostgreSQL OpenAPI 2022-01-01 — https://www.volcengine.com/docs/6438"
+  cli_applicability: dual-path
+  cli_support_evidence: >-
+    RDS PostgreSQL is a core Volcengine service; `ve rds_postgresql --help` lists instance operations.
+    OpenAPI service ID: rds_postgresql, version: 2022-01-01.
+    Go SDK: github.com/volcengine/volc-sdk-golang/service/rds_postgresql.
+  environment:
+    - VOLCENGINE_ACCESS_KEY
+    - VOLCENGINE_SECRET_KEY
+    - VOLCENGINE_REGION
+---
+
+# Volcengine RDS for PostgreSQL Operations Skill
+
+## Overview
+
+Volcengine RDS for PostgreSQL (云数据库 PostgreSQL 版) provides managed PostgreSQL database instances with support for versions 11-17. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and official **`ve` CLI**), response validation, and failure recovery.
+
+### CLI applicability
+
+- **`cli_applicability: dual-path`:** `ve` CLI supports RDS PostgreSQL operations. Both SDK and CLI documented.
+
+## Five Core Standards (Quality Gates)
+
+| # | Standard | How This Skill Fulfills It |
+|---|----------|---------------------------|
+| 1 | **Clear Boundaries** | PostgreSQL-specific triggers; VPC/ECS delegated |
+| 2 | **Structured I/O** | `{{env.*}}` for credentials, `{{user.*}}` for params, `{{output.*}}` for API responses |
+| 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover |
+| 4 | **Complete Failure Strategies** | 15 PostgreSQL-specific error codes with HALT/retry per type |
+| 5 | **Absolute Single Responsibility** | RDS PostgreSQL only; MySQL/VPC/ECS delegated |
+
+## Trigger & Scope
+
+### SHOULD Use This Skill When
+
+- User mentions "RDS PostgreSQL", "PostgreSQL instance", "云数据库 PostgreSQL", "Postgres", "PG database"
+- Task involves RDS PostgreSQL lifecycle (create, describe, modify, delete, list, restore)
+- Task keywords: postgresql, postgres, pg, rds_pg, wal, vacuum, extension, pg_dump, 数据库实例
+- User asks about PostgreSQL connection, configuration, spec changes, parameters, or read-only nodes
+
+### SHOULD NOT Use This Skill When
+
+- Billing / account → delegate to `ve-billing-ops`
+- IAM / permissions → delegate to `ve-iam-ops`
+- VPC / subnet → delegate to `ve-vpc-ops`
+- RDS MySQL operations → use `ve-rds-mysql-ops` (different API service, different params)
+- SQL schema design / DDL → application-level
+- Console-only → state limitation
+
+### Delegation Rules
+
+- RDS requires VPC/subnets: verify via `ve-vpc-ops`
+- Underlying compute: ECS issues delegate to `ve-ecs-ops`
+- PostgreSQL-specific SQL extensions/application logic → not this skill
+
+## Variable Convention
+
+| Placeholder | Meaning | Agent Action |
+|-------------|---------|--------------|
+| `{{env.VOLCENGINE_ACCESS_KEY}}` | Runtime credential | NEVER ask user; fail if unset |
+| `{{env.VOLCENGINE_SECRET_KEY}}` | Runtime credential | NEVER ask user; fail if unset |
+| `{{env.VOLCENGINE_REGION}}` | Runtime region | Use from env |
+| `{{user.instance_name}}` | Instance name | Ask once |
+| `{{user.instance_id}}` | Instance ID | Ask if not in context |
+| `{{user.pg_version}}` | PG version (PostgreSQL_11 to PostgreSQL_17) | Ask with options |
+| `{{user.primary_zone_id}}` | Primary node AZ | Ask with available zones |
+| `{{user.secondary_zone_id}}` | Secondary node AZ | Ask with available zones |
+| `{{user.storage_space}}` | Storage in GB (20-3000) | Ask with range |
+| `{{output.instance_id}}` | From API response | Parse `$.Result.InstanceId` |
+
+## API and Response Conventions
+
+- **OpenAPI 2022-01-01** is canonical
+- **API Version:** `2022-01-01`, **Service:** `rds_postgresql`
+- **Endpoint:** `rds-postgresql.{region}.volcengineapi.com`
+
+### Key Response Field Table
+
+| Operation | JSON Path | Type | Description |
+|-----------|-----------|------|-------------|
+| CreateDBInstance | `$.Result.InstanceId` | string | New instance ID |
+| DescribeDBInstances | `$.Result.Instances[].InstanceId` | array | Instance IDs |
+| DescribeDBInstances | `$.Result.Instances[].InstanceName` | array | Instance names |
+| DescribeDBInstances | `$.Result.Instances[].InstanceStatus` | array | RUNNING/CREATING/ERROR |
+| DescribeDBInstances | `$.Result.Instances[].DbEngineVersion` | array | PostgreSQL_12, etc. |
+| DescribeDBInstances | `$.Result.Instances[].StorageType` | array | LocalSSD |
+| DescribeDBInstances | `$.Result.Instances[].StorageSpace` | array | Storage GB |
+| DescribeDBInstances | `$.Result.Instances[].VpcId` | array | VPC ID |
+| DescribeDBInstances | `$.Result.Instances[].NodeSpec` | array | e.g., rds.postgres.2c4g |
+| DescribeDBInstances | `$.Result.TotalCount` | int | Total instances |
+| DescribeDBInstanceDetail | `$.Result.Endpoints` | array | Connection strings |
+| DescribeDBInstanceDetail | `$.Result.Nodes` | array | Primary/Secondary/ReadOnly nodes |
+| DeleteDBInstance | `$.Metadata.RequestId` | string | Request correlation ID |
+
+### Instance States
+
+| State | Description |
+|-------|-------------|
+| `RUNNING` | Operational |
+| `CREATING` | Being created |
+| `DELETING` | Being deleted |
+| `ERROR` | Error state |
+| `RESTARTING` | Restarting |
+| `MODIFYING` | Spec change in progress |
+| `BACKING_UP` | Backup in progress |
+| `RESTORING` | Restore in progress |
+| `UPGRADING` | Engine version upgrade |
+
+### State Transitions
+
+| Operation | Initial | Target | Poll | Max Wait |
+|-----------|---------|--------|------|----------|
+| Create | — | `RUNNING` | 10s | 600s |
+| Delete | any | gone | 10s | 600s |
+| Modify Spec | RUNNING | `RUNNING` | 10s | 900s |
+| Restore | — | `RUNNING` | 10s | 1800s |
+| Rebuild | any | `RUNNING` | 10s | 900s |
+| Restart | RUNNING | `RUNNING` | 5s | 300s |
+| Add RO Node | RUNNING | `RUNNING` | 10s | 600s |
+
+## Quick Start
+
+### Prerequisites
+- [ ] `ve` CLI installed
+- [ ] `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION` set
+
+### Verify Setup
+```bash
+ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"
+```
+
+### Your First Command
+```bash
+ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 10
+```
+
+## Capabilities at a Glance
+
+| Operation | Description | Complexity | Risk |
+|-----------|-------------|------------|------|
+| CreateDBInstance | Create PostgreSQL instance | Medium | Low |
+| DescribeDBInstanceDetail | Get instance details | Low | None |
+| DescribeDBInstances | List all instances | Low | None |
+| DeleteDBInstance | Delete instance | Low | **High** |
+| ModifyDBInstanceSpec | Modify node spec/storage | Medium | Medium |
+| DescribeDBInstanceParameters | Query parameters | Low | None |
+| ModifyDBInstanceParameter | Modify parameters | Medium | Medium |
+| DescribeRegions | List regions | Low | None |
+| CreateReadonlyInstance | Create read-only instance | Medium | Low |
+| DescribeAccounts | List accounts | Low | None |
+| CreateAccount | Create DB account | Low | Medium |
+| DescribeBackups | List backups | Low | None |
+| CreateBackup | Create backup | Low | Low |
+| RestoreToNewInstance | Restore from backup | High | Medium |
+| RebuildDBInstance | Rebuild instance | High | **High** |
+
+## Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-05-16 | Initial release with RDS PostgreSQL lifecycle |
+
+## Execution Flows
+
+### Operation: Create PostgreSQL Instance (CreateDBInstance)
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| CLI | `ve version` | Exit 0 | JIT Go SDK |
+| Credentials | Verify env vars | Set | HALT |
+| Region | Supported PG region | Valid | HALT; DescribeRegions |
+| VPC/Subnet | Network exists | Valid in region | HALT; ve-vpc-ops |
+| Zones | Primary + secondary AZ available | Valid | HALT; DescribeAZs |
+| Quota | Instance quota | Sufficient | HALT |
+
+#### Execution — CLI (Primary)
+
+```bash
+ve rds_postgresql CreateDBInstance \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --DbEngineVersion "{{user.pg_version}}" \
+  --NodeSpec "{{user.node_spec}}" \
+  --PrimaryZoneId "{{user.primary_zone_id}}" \
+  --SecondaryZoneId "{{user.secondary_zone_id}}" \
+  --StorageSpace "{{user.storage_space}}" \
+  --SubnetId "{{user.subnet_id}}" \
+  --InstanceName "{{user.instance_name}}" \
+  --ChargeInfo.ChargeType "PostPaid"
+```
+
+#### Execution — JIT Go SDK (Fallback)
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+
+    "github.com/volcengine/volc-sdk-golang/service/rds_postgresql"
+)
+
+func main() {
+    instance := rds_postgresql.NewInstance()
+    instance.Client.SetAccessKey(os.Getenv("VOLCENGINE_ACCESS_KEY"))
+    instance.Client.SetSecretKey(os.Getenv("VOLCENGINE_SECRET_KEY"))
+
+    params := map[string]interface{}{
+        "DbEngineVersion": os.Getenv("PG_VERSION"),
+        "NodeSpec":        os.Getenv("NODE_SPEC"),
+        "PrimaryZoneId":   os.Getenv("PRIMARY_ZONE"),
+        "SecondaryZoneId": os.Getenv("SECONDARY_ZONE"),
+        "StorageSpace":    os.Getenv("STORAGE_SPACE"),
+        "SubnetId":        os.Getenv("SUBNET_ID"),
+        "InstanceName":    os.Getenv("INSTANCE_NAME"),
+        "ChargeInfo":      map[string]interface{}{"ChargeType": "PostPaid"},
+    }
+
+    resp, err := instance.Client.Request("rds_postgresql", "CreateDBInstance", params)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(string(resp))
+}
+```
+
+#### Post-execution Validation
+
+```bash
+for i in $(seq 1 60); do
+  STATUS=$(ve rds_postgresql DescribeDBInstanceDetail --InstanceId "{{output.instance_id}}" | jq -r '.Result.InstanceStatus // ""')
+  [ "$STATUS" = "RUNNING" ] && break
+  [ "$STATUS" = "ERROR" ] && echo "Instance creation failed" && exit 1
+  sleep 10
+done
+```
+
+#### Failure Recovery
+
+| Error Pattern | Retries | Action | UX Feedback |
+|---------------|---------|--------|-------------|
+| `InvalidParameter.InstanceName` | 0 | HALT | `[ERROR] Invalid name. 1-128 chars, no leading number/dash.` |
+| `InvalidParameter.NodeSpec` | 0 | HALT | `[ERROR] Invalid spec. Check via DescribeInstanceSpecs.` |
+| `InvalidParameter.StorageSpace` | 0 | HALT | `[ERROR] Storage [20-3000]GB, step 10GB.` |
+| `InvalidParameter.ZoneConfig` | 0 | HALT | `[ERROR] Invalid zone. Verify primary/secondary zones.` |
+| `InvalidParameter.NetworkConfig` | 0 | HALT | `[ERROR] Invalid VPC/subnet.` |
+| `ResourceNotFound.Vpc` | 0 | HALT | `[ERROR] VPC not found.` |
+| `QuotaExceeded.InstanceCount` | 0 | HALT | `[ERROR] Max instances. Delete or request quota.` |
+| `OperationDenied.InstanceStatus` | 0 | HALT | `[ERROR] Cannot operate. Wait for state change.` |
+| `InsufficientBalance` | 0 | HALT | `[ERROR] InsufficientBalance. Recharge account.` |
+| `Throttling` | 3 | exponential | `⚠️ Rate limit. Retrying...` |
+| `InternalError` | 3 | 2s,4s,8s | `[ERROR] InternalError with RequestId: {RequestId}.` |
+| `ResourceAlreadyExists` | 0 | Ask | `[ERROR] Instance name exists. Use unique name.` |
+| `Forbidden.RAM` | 0 | HALT | `[ERROR] Insufficient permissions. Add RAM policy.` |
+| `ResourceNotFound.Instance` | 0 | HALT | `[ERROR] Instance not found.` |
+| `ResourceInUse` | 0 | HALT | `[ERROR] Instance in use by another operation.` |
+
+### Operation: Describe/ List Instances
+
+```bash
+# Details
+ve rds_postgresql DescribeDBInstanceDetail --InstanceId "{{user.instance_id}}"
+
+# List
+ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 100
+```
+
+| Field | Path | Notes |
+|-------|------|-------|
+| Instance ID | `$.Result.InstanceId` | Primary identifier |
+| Name | `$.Result.InstanceName` | Human-readable |
+| Status | `$.Result.InstanceStatus` | RUNNING/CREATING/ERROR |
+| PG Version | `$.Result.DbEngineVersion` | PostgreSQL_12, etc. |
+| Node Spec | `$.Result.NodeSpec` | rds.postgres.2c4g |
+| Storage | `$.Result.StorageSpace` | GB |
+| Endpoints | `$.Result.Endpoints[]` | Connection strings |
+| Nodes | `$.Result.Nodes[]` | Primary/Secondary/ReadOnly |
+
+### Operation: Delete Instance
+
+#### Safety Gate
+- Explicit confirmation required for `{{user.instance_name}}` (`{{user.instance_id}}`)
+- MUST NOT proceed without user assent
+
+```bash
+ve rds_postgresql DeleteDBInstance --InstanceId "{{user.instance_id}}"
+```
+
+Poll until gone.
+
+### Operation: Modify Instance Spec
+
+```bash
+ve rds_postgresql ModifyDBInstanceSpec --InstanceId "{{user.instance_id}}" --NodeSpec "{{user.new_spec}}" --StorageSpace "{{user.new_storage_gb}}"
+```
+
+Poll until `RUNNING` (up to 900s).
+
+### Operation: Add Read-Only Instance
+
+```bash
+ve rds_postgresql CreateReadonlyInstance --SrcInstanceInstanceId "{{user.source_instance_id}}" --NodeSpec "{{user.ro_node_spec}}" --ZoneId "{{user.ro_zone_id}}"
+```
+
+### Operation: Parameter Management
+
+```bash
+# Query
+ve rds_postgresql DescribeDBInstanceParameters --InstanceId "{{user.instance_id}}"
+
+# Modify
+ve rds_postgresql ModifyDBInstanceParameter --InstanceId "{{user.instance_id}}" --body '{"Parameters": [{"Name":"shared_buffers","Value":"2GB"}]}'
+```
+
+### Operation: Account Management
+
+```bash
+ve rds_postgresql DescribeAccounts --InstanceId "{{user.instance_id}}"
+ve rds_postgresql CreateAccount --InstanceId "{{user.instance_id}}" --AccountName "{{user.account_name}}" --AccountPassword "{{user.password}}" --AccountType "Normal"
+```
+
+### Operation: Backup/Restore
+
+```bash
+ve rds_postgresql DescribeBackups --InstanceId "{{user.instance_id}}"
+ve rds_postgresql CreateBackup --InstanceId "{{user.instance_id}}" --BackupName "{{user.backup_name}}"
+ve rds_postgresql RestoreToNewInstance --body '{"BackupId":"{{user.backup_id}}","InstanceName":"{{user.new_name}}","NodeSpec":"{{user.spec}}","PrimaryZoneId":"{{user.zone}}"...}'
+```
+
+### Operation: Rebuild Instance
+
+```bash
+ve rds_postgresql RebuildDBInstance --InstanceId "{{user.instance_id}}"
+```
+
+## Prerequisites
+
+1. **`ve` CLI** installed
+2. **Go runtime** for JIT fallback (see references/integration.md)
+3. **Credentials:** `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION`
+4. **Verify:** `ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"`
+
+## Reference Directory
+
+- [Core Concepts](references/core-concepts.md) — Architecture, engine versions, node specs
+- [API & SDK Usage](references/api-sdk-usage.md) — Full operation map, JSON paths
+- [CLI Usage](references/cli-usage.md) — `ve rds_postgresql` command reference
+- [Knowledge Base](references/knowledge-base.md) — fault pattern library (AIOps diagnosis)
+- [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
+- [Monitoring & Alerts](references/monitoring.md) — RDS PG monitoring
+- [Integration](references/integration.md) — Go SDK setup, JIT workflow

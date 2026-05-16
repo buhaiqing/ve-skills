@@ -1,0 +1,22 @@
+[
+  {"query": "Create a VKE cluster on Volcengine", "should_trigger": true},
+  {"query": "怎么创建容器服务集群", "should_trigger": true},
+  {"query": "Set up Kubernetes node pool scaling", "should_trigger": true},
+  {"query": "VKE cluster stuck in Creating state", "should_trigger": true},
+  {"query": "List all my K8s clusters", "should_trigger": true},
+  {"query": "Delete the node pool from my container cluster", "should_trigger": true},
+  {"query": "Add ECS nodes to existing VKE node pool", "should_trigger": true},
+  {"query": "Update Kubernetes cluster configuration", "should_trigger": true},
+  {"query": "火山引擎容器服务集群管理", "should_trigger": true},
+  {"query": "Check VKE cluster health status", "should_trigger": true},
+  {"query": "Create an ECS instance", "should_trigger": false},
+  {"query": "Check my Volcengine bill", "should_trigger": false},
+  {"query": "Configure IAM policy for VKE access", "should_trigger": false},
+  {"query": "Set up VPC peering", "should_trigger": false},
+  {"query": "Deploy Docker container to ECS", "should_trigger": false},
+  {"query": "Manage container image registry", "should_trigger": false},
+  {"query": "Create a Redis cache instance", "should_trigger": false},
+  {"query": "Setup RDS MySQL database", "should_trigger": false},
+  {"query": "Configure load balancer for web app", "should_trigger": false},
+  {"query": "Check CDN bandwidth usage", "should_trigger": false}
+]

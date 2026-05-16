@@ -1,0 +1,38 @@
+# RDS PostgreSQL Instance Example Configuration
+
+instance:
+  name: production-postgresql
+  db_engine_version: "PostgreSQL_14"
+  region: cn-beijing
+  charge_type: PostPaid
+  project_name: default
+
+  primary_node:
+    node_spec: "rds.postgres.4c8g"
+    zone_id: "cn-beijing-a"
+
+  secondary_node:
+    node_spec: "rds.postgres.4c8g"
+    zone_id: "cn-beijing-b"
+
+  storage:
+    type: LocalSSD
+    space_gb: 200
+
+  network:
+    vpc_id: vpc-xxxxx
+    subnet_id: subnet-xxxxx
+
+  parameters:
+    - name: "shared_buffers"
+      value: "2GB"
+    - name: "max_connections"
+      value: "500"
+    - name: "wal_level"
+      value: "replica"
+
+  tags:
+    - key: "env"
+      value: "production"
+    - key: "project"
+      value: "my-app"
