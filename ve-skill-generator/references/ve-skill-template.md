@@ -10,16 +10,16 @@ description: >-
   have their own ops skills.
 license: MIT
 compatibility: >-
-  Official Volcengine CLI (`ve`, Go binary, no runtime), Go 1.14+ runtime
-  (for JIT SDK fallback), valid API credentials, network access to Volcengine
-  endpoints.
+  Official Volcengine CLI (`ve`, Go binary, no runtime), Go 1.21+ runtime
+  (JIT SDK fallback; scripts compatible with Go 1.14+ syntax), valid API credentials,
+  network access to Volcengine endpoints.
 metadata:
   author: volcengine
   version: "1.0.0"
   last_updated: "2026-05-15"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
-  go_version_minimum: "1.14"
-  go_version_jit: "1.21+"
+  go_script_syntax_minimum: "1.14"
+  go_jit_runtime_version: "1.21+"
   api_profile: "[Paste OpenAPI title/version or doc link]"
   cli_applicability: dual-path
   cli_support_evidence: >-
@@ -50,13 +50,13 @@ metadata:
 
 Every generated skill MUST satisfy these five standards. Use them as a design checklist during population:
 
-| # | Standard | How This Skill Fulfills It |
-|---|----------|---------------------------|
-| 1 | **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules |
-| 2 | **Structured I/O** | Placeholder conventions (`{{env.*}}`, `{{user.*}}`, `{{output.*}}`) with type and source documented |
-| 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover, with numbered imperative steps |
-| 4 | **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type |
-| 5 | **Absolute Single Responsibility** | One product, one primary resource model; cross-product delegation to other skills |
+| # | Standard | How This Skill Fulfills It | Concrete Validation Criteria |
+|---|----------|---------------------------|------------------------------|
+| 1 | **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules | ≥ 3 SHOULD entries with specific triggers; ≥ 3 SHOULD NOT entries with named delegation targets |
+| 2 | **Structured I/O** | Placeholder conventions (`{{env.*}}`, `{{user.*}}`, `{{output.*}}`) with type and source documented | Zero bare variable names; every input uses a typed placeholder; every output maps to a JSON path |
+| 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover, with numbered imperative steps | ≥ 1 operation with all 4 phases present; all steps numbered and imperative (not descriptive) |
+| 4 | **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type | Error table has ≥ 10 rows; each row has: code, max retries, backoff, agent action, UX template |
+| 5 | **Absolute Single Responsibility** | One product, one primary resource model; cross-product delegation to other skills | SKILL.md covers exactly 1 product; cross-product ops delegate (not duplicate); naming follows `ve-[product]-ops` |
 
 Refer to the [meta-skill](../SKILL.md#five-core-standards-quality-gates) for detailed descriptions of each standard.
 
@@ -152,7 +152,7 @@ This skill enables you to deploy, configure, troubleshoot, and monitor [Product 
 ### Verify Setup
 ```bash
 # Check CLI and credentials
-ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}}
+ve [product] Describe[Resources] --Region {{env.VOLCENGINE_REGION}}
 ```
 
 ### Your First Command
@@ -250,7 +250,8 @@ func main() {
     // Make API call
     resp, err := instance.Client.Request("[product]", "Create[Resource]", params)
     if err != nil {
-        panic(err)
+        fmt.Fprintf(os.Stderr, "API call failed: %v\n", err)
+        os.Exit(1)
     }
     
     fmt.Println(string(resp))
@@ -422,7 +423,7 @@ Poll describe (or head/get) until **404**, **NotFound**, or status indicates del
 4. **Verify Configuration**:
    ```bash
    # Quick validation (JSON output by default)
-   ve ecs DescribeInstances --Region "{{env.VOLCENGINE_REGION}}"
+   ve [product] Describe[Resources] --Region "{{env.VOLCENGINE_REGION}}"
    ```
 
 > **Security:** Never commit `.env` to version control (already in `.gitignore`). All credentials use `{{env.*}}` placeholders in generated Skills — never real values.
@@ -633,7 +634,8 @@ func main() {
     // Make API call
     resp, err := instance.Client.Request("[product]", "[ActionName]", params)
     if err != nil {
-        panic(err)
+        fmt.Fprintf(os.Stderr, "API call failed: %v\n", err)
+        os.Exit(1)
     }
     
     fmt.Println(string(resp))

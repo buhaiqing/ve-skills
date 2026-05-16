@@ -1,0 +1,22 @@
+[
+  {"query": "Create an RDS PostgreSQL instance on Volcengine", "should_trigger": true},
+  {"query": "怎么创建云数据库PostgreSQL实例", "should_trigger": true},
+  {"query": "PostgreSQL connection timeout on RDS", "should_trigger": true},
+  {"query": "Modify PostgreSQL shared_buffers parameter", "should_trigger": true},
+  {"query": "Scale up PG instance to 8c16g", "should_trigger": true},
+  {"query": "List all PostgreSQL instances in production", "should_trigger": true},
+  {"query": "Delete RDS PostgreSQL instance", "should_trigger": true},
+  {"query": "Restore PostgreSQL from backup", "should_trigger": true},
+  {"query": "云数据库PostgreSQL只读节点管理", "should_trigger": true},
+  {"query": "Add read-only node to PostgreSQL instance", "should_trigger": true},
+  {"query": "Create an RDS MySQL instance", "should_trigger": false},
+  {"query": "Create a VKE Kubernetes cluster", "should_trigger": false},
+  {"query": "Check my Volcengine bill", "should_trigger": false},
+  {"query": "Configure IAM policy for database access", "should_trigger": false},
+  {"query": "Set up VPC peering", "should_trigger": false},
+  {"query": "Create a Redis cache instance", "should_trigger": false},
+  {"query": "Create an ECS instance", "should_trigger": false},
+  {"query": "Optimize PostgreSQL query plan", "should_trigger": false},
+  {"query": "Run database migration scripts", "should_trigger": false},
+  {"query": "Monitor server disk usage", "should_trigger": false}
+]

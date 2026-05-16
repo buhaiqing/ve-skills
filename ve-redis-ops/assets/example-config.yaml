@@ -1,0 +1,33 @@
+# Redis Instance Example Configuration
+
+instance:
+  name: production-cache
+  engine_version: "6.0"
+  region: cn-beijing
+  charge_type: PostPaid
+
+  capacity:
+    shard_capacity_mb: 2048
+    shard_number: 2
+    node_number: 4  # 2 shards × 2 replicas
+
+  network:
+    vpc_id: vpc-xxxxx
+    subnet_id: subnet-xxxxx
+    zone_ids:
+      - cn-beijing-a
+      - cn-beijing-b
+
+  security:
+    allowlist_name: production-redis-access
+    ip_list:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+    password: "your-secure-password"
+
+  backup:
+    backup_periods:
+      - Monday
+      - Wednesday
+      - Friday
+    backup_time: "02:00Z-03:00Z"
