@@ -1,0 +1,69 @@
+# Volcengine EIP Example Configuration
+#
+# This example configuration demonstrates a typical EIP setup for a
+# production environment with multi-tier bandwidth allocation,
+# instance binding, and tagging.
+
+---
+
+# Environment
+environment: production
+region: "{{env.VOLCENGINE_REGION}}"
+project_name: production
+
+# EIP Configuration
+eips:
+  # Web tier EIP (high bandwidth)
+  - name: "prod-web-eip"
+    description: "Public IP for web tier load balancer"
+    bandwidth: 50  # Mbps
+    billing_type: "PayByBandwidth"
+    charge_type: "PostPaid"
+    line_type: "BGP"
+    bind:
+      instance_type: "ClbInstance"
+      instance_id: "{{clb.web_id}}"
+    tags:
+      - key: "tier"
+        value: "web"
+      - key: "environment"
+        value: "production"
+
+  # NAT Gateway EIP (outbound for private subnets)
+  - name: "prod-nat-eip"
+    description: "Public IP for NAT Gateway"
+    bandwidth: 20  # Mbps
+    billing_type: "PayByBandwidth"
+    charge_type: "PostPaid"
+    line_type: "BGP"
+    bind:
+      instance_type: "Nat"
+      instance_id: "{{nat.gateway_id}}"
+    tags:
+      - key: "tier"
+        value: "infrastructure"
+      - key: "environment"
+        value: "production"
+
+  # Bastion host EIP (SSH access)
+  - name: "prod-bastion-eip"
+    description: "Public IP for bastion host"
+    bandwidth: 5  # Mbps
+    billing_type: "PayByTraffic"
+    charge_type: "PostPaid"
+    line_type: "BGP"
+    bind:
+      instance_type: "EcsInstance"
+      instance_id: "{{bastion.instance_id}}"
+    tags:
+      - key: "tier"
+        value: "security"
+      - key: "environment"
+        value: "production"
+
+# Default tags
+default_tags:
+  - key: "managed-by"
+    value: "ve-eip-ops"
+  - key: "team"
+    value: "infrastructure"

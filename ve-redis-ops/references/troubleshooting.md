@@ -1,43 +1,123 @@
-# Troubleshooting Redis
+# Troubleshooting Guide — Volcengine Redis
 
-## Common Error Codes
+> **Purpose:** Systematic troubleshooting guide for common Redis operational issues.
+> **Version:** 1.0.0
+> **Last Updated:** 2026-05-25
 
-| Error Code | Meaning | Agent Action |
-|-----------|---------|--------------|
-| `InvalidParameter.InstanceName` | Name format invalid | Use valid name (1-128 chars, alphanumeric, hyphens) |
-| `InvalidParameter.Parameter` | Parameter value invalid | Check parameter against allowed values |
-| `InvalidParameter.NetworkConfig` | VPC/subnet invalid | Verify network exists in region |
-| `InvalidParameter.Password` | Password format invalid | 8-32 chars, mix of letters, digits, special chars |
-| `ResourceNotFound.Instance` | Instance doesn't exist | Verify InstanceId via DescribeDBInstances |
-| `ResourceNotFound.AllowList` | Allowlist doesn't exist | Verify AllowListId |
-| `OperationDenied.InstanceStatus` | Invalid state | Wait for current operation to complete |
-| `OperationDenied.DeletionProtection` | Delete protection enabled | Disable protection first |
-| `QuotaExceeded.InstanceCount` | Max instances reached | Delete unused or raise quota |
-| `QuotaExceeded.AllowListCount` | Max allowlists reached | Delete unused allowlists |
-| `InsufficientBalance` | No funds | Recharge account |
-| `InternalError` | Server error | Retry with backoff; HALT after 3 with RequestId |
-| `Throttling` | Rate limit | Exponential backoff |
-| `ResourceInUse` | Being used | Wait for operation to complete |
-| `Forbidden.RAM` | Insufficient permissions | Add RAM policy for Redis |
+---
 
-## Diagnostic Order
+## Table of Contents
 
-1. Check instance status: `ve redis DescribeDBInstanceDetail --InstanceId <id>`
-2. Verify VPC/subnet exists in target region
-3. Check allowlist configuration (new instances start with no allowed IPs)
-4. Verify engine version compatibility
-5. Check quota limits
+1. [Error Taxonomy](#1-error-taxonomy)
+2. [Instance Creation Errors](#2-instance-creation-errors)
+3. [Connection Errors](#3-connection-errors)
+4. [Memory and Performance Issues](#4-memory-and-performance-issues)
+5. [Cross-Service Authorization](#5-cross-service-authorization)
 
-## Common Patterns
+---
+
+## 1. Error Taxonomy
+
+| Category | Error Code | HALT or Retry | Example |
+|----------|-----------|---------------|---------|
+| **Parameter Error** | `Invalid*.Malformed` | HALT | `InvalidParameterValue.Malformed` |
+| **Resource Not Found** | `InstanceNotFound` | HALT | `InstanceNotFound` |
+| **Status Error** | `IncorrectInstanceStatus` | HALT | `IncorrectInstanceStatus` |
+| **Quota Error** | `QuotaExceeded.*` | HALT | `QuotaExceeded.Redis` |
+| **Billing Error** | `BalanceNotEnough` | HALT | `BalanceNotEnough` |
+| **IAM Error** | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
+| **Rate Limit** | `FlowLimitExceeded` | Retry | `FlowLimitExceeded` |
+| **Server Error** | `InternalError` | Retry | `InternalError` |
+
+---
+
+## 2. Instance Creation Errors
+
+### Cross-Service Authorization Required
+
+```
+Error: Forbidden
+Message: Cross-service access authorization is required. Please complete the authorization before calling CreateDBInstance.
+```
+
+**Root Cause:** Since 2022-05-17, Redis requires a service-linked role for cross-service access.
+
+**Resolution:**
+```bash
+# Create service-linked role (use ve CLI)
+ve iam CreateServiceLinkedRole --body '{"ServiceName": "Redis"}'
+```
+
+Or authorize via Volcengine console.
+
+### SubnetNotFound
+
+**Resolution:**
+```bash
+ve vpc DescribeSubnets --Region "$VOLCENGINE_REGION" --SubnetIds "[\"$SUBNET_ID\"]"
+```
+
+---
+
+## 3. Connection Errors
 
 ### Connection Refused
-- Cause: AllowList not configured (default deny all)
-- Fix: Add client IP to allowlist via ModifyAllowList or CreateAllowList
 
-### Instance Creation Timeout
-- Cause: VPC/subnet issues, capacity unavailable
-- Fix: Verify network config; try different zone
+**Checklist:**
+1. Instance status is `Running`
+2. Client IP is in the allow list
+3. Client is in the same VPC (for private access)
+4. Security group allows Redis port (6379)
 
-### Parameter Change Not Applied
-- Cause: Some parameters require restart (check ForceRestart flag)
-- Fix: Restart instance after parameter modification
+### NOAUTH Authentication Required
+
+**Root Cause:** Not passing the password during connection.
+
+**Resolution:**
+```bash
+# Using redis-cli
+redis-cli -h $PRIVATE_ADDRESS -p $PORT -a "$PASSWORD"
+
+# Or authenticate after connection
+redis-cli -h $PRIVATE_ADDRESS -p $PORT
+AUTH $PASSWORD
+```
+
+---
+
+## 4. Memory and Performance Issues
+
+### OOM Command Not Allowed
+
+**Root Cause:** Redis memory is full and `maxmemory-policy` is set to `noeviction`.
+
+**Resolution:**
+1. Change eviction policy:
+   ```bash
+   ve redis ModifyDBInstanceParams --body '{"InstanceId":"xxx","Parameters":[{"Name":"maxmemory-policy","Value":"allkeys-lru"}]}'
+   ```
+2. Increase shard capacity via `ModifyDBInstanceShardCapacity`
+3. Add more shards via `ModifyDBInstanceShardNumber`
+
+### Slow Commands
+
+Redis single-threaded operations mean slow commands (KEYS, SCAN with large result, SMEMBERS on large sets) block all other operations.
+
+**Resolution:**
+- Replace `KEYS pattern` with `SCAN cursor MATCH pattern COUNT 100`
+- Move large set operations to pipeline
+
+---
+
+## 5. Cross-Service Authorization
+
+Required for: CreateDBInstance, ModifyDBInstanceSubnet, CreateDBEndpointPublicAddress.
+
+**Resolution:** Create the `Redis` service-linked role via console or:
+```bash
+ve iam CreateServiceLinkedRole --body '{"ServiceName": "Redis"}'
+```
+
+---
+
+*This reference document is part of the ve-redis-ops skill.*

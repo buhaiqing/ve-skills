@@ -95,8 +95,8 @@ ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capaci
 | `{{user.instance_type}}` | User-supplied instance type (e.g., ecs.g3i.large) | Ask once; reuse |
 | `{{user.vpc_id}}` | User-supplied VPC ID | Format `vpc-xxxxxxxxx` |
 | `{{user.subnet_id}}` | User-supplied subnet ID | Format `subnet-xxxxxxxxx` |
-| `{{output.instance_id}}` | From RunInstances/DescribeInstances response | Parse from `$.Instances.Instance[].InstanceId` |
-| `{{output.status}}` | Instance lifecycle state | Parse from `$.Instances.Instance[].Status` |
+| `{{output.instance_id}}` | From RunInstances/DescribeInstances response | Parse from `$.Result.InstanceIds[0]` or `$.Result.Instances[].InstanceId` |
+| `{{output.status}}` | Instance lifecycle state | Parse from `$.Result.Instances[].Status` |
 
 > **`{{env.*}}` MUST NOT** be collected from the user. **`{{user.*}}`** MUST be collected interactively when missing.
 
@@ -117,26 +117,34 @@ ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capaci
 
 | Operation | JSON Path | Type | Description |
 |-----------|-----------|------|-------------|
-| RunInstances | `$.InstanceIds[]` | array | Created instance IDs |
-| DescribeInstances | `$.Instances.Instance[]` | array | Instance list |
-| DescribeInstances | `$.Instances.Instance[].InstanceId` | string | Instance ID |
-| DescribeInstances | `$.Instances.Instance[].Status` | string | State: `RUNNING`, `STOPPED`, `CREATING`, etc. |
-| DescribeInstances | `$.Instances.Instance[].InstanceName` | string | Instance name |
-| DescribeInstances | `$.Instances.Instance[].InstanceType` | string | Instance spec |
-| DescribeInstances | `$.TotalCount` | integer | Total matching instances |
-| DescribeInstances | `$.NextToken` | string | Pagination token |
-| DeleteInstance | `$.RequestId` | string | Request identifier |
-| StartInstance | `$.RequestId` | string | Request identifier |
+| RunInstances | `$.Result.InstanceIds` | array | Created instance IDs |
+| RunInstances | `$.Result.InstanceIds[0]` | string | First instance ID |
+| DescribeInstances | `$.Result.Instances` | array | Instance list |
+| DescribeInstances | `$.Result.Instances[].InstanceId` | string | Instance ID |
+| DescribeInstances | `$.Result.Instances[].Status` | string | State: `RUNNING`, `STOPPED`, `CREATING`, etc. |
+| DescribeInstances | `$.Result.Instances[].InstanceName` | string | Instance name |
+| DescribeInstances | `$.Result.Instances[].InstanceType` | string | Instance spec |
+| DescribeInstances | `$.Result.Instances[].PrimaryIpAddress` | string | Primary private IP |
+| DescribeInstances | `$.Result.Instances[].VpcId` | string | VPC ID |
+| DescribeInstances | `$.Result.TotalCount` | integer | Total matching instances |
+| DescribeImages | `$.Result.Images` | array | Image list |
+| DescribeSnapshots | `$.Result.Snapshots` | array | Snapshot list |
+| CreateVolume | `$.Result.VolumeId` | string | Volume ID |
+| CreateSnapshot | `$.Result.SnapshotId` | string | Snapshot ID |
+| CreateKeyPair | `$.Result.KeyPairName` | string | Key pair name |
+| CreateKeyPair | `$.Result.PrivateKey` | string | PEM private key |
+| DeleteInstance | `$.ResponseMetadata.RequestId` | string | Request ID |
+| StartInstance | `$.ResponseMetadata.RequestId` | string | Request ID |
 
 ### Instance State Transitions
 
 | Operation | Initial State | Target State | Poll Interval | Max Wait |
 |-----------|---------------|--------------|---------------|----------|
 | RunInstances | — | `RUNNING` | 5s | 600s |
-| StartInstance | `STOPPED` | `RUNNING` | 5s | 300s |
-| StopInstance | `RUNNING` | `STOPPED` | 5s | 300s |
-| RebootInstance | `RUNNING` | `RUNNING` | 5s | 300s |
-| DeleteInstance | `STOPPED` | absent | 5s | 300s |
+| StartInstances | `STOPPED` | `RUNNING` | 5s | 300s |
+| StopInstances | `RUNNING` | `STOPPED` | 5s | 300s |
+| RebootInstances | `RUNNING` | `RUNNING` | 5s | 300s |
+| DeleteInstances | `STOPPED` | absent | 5s | 300s |
 
 ## Quick Start
 
@@ -252,8 +260,8 @@ func main() {
 
 #### Validation
 
-1. Check `$.TotalCount` for total matching instances
-2. Parse `$.Instances.Instance[]` for instance details
+1. Check `$.Result.TotalCount` for total matching instances
+2. Parse `$.Result.Instances[]` for instance details
 3. Report instance count, IDs, names, and statuses
 
 #### Failure Recovery
@@ -599,7 +607,7 @@ ve ecs DescribeInvocationResults \
   --InvocationId "{{output.invocation_id}}"
 ```
 
-3. Parse `$.Invocation.CommandInvocationResult[].InvokeStatus` → `Running`, `Success`, `Failed`, `Timeout`
+3. Parse `$.Result.CommandInvocationResult[].InvokeStatus` → `Running`, `Success`, `Failed`, `Timeout`
 4. On success, display `Output` field from results
 
 #### Failure Recovery
@@ -631,8 +639,8 @@ ve ecs DescribeInvocationResults --Region "{{user.region}}" --InvocationId "{{us
 
 #### Validation
 
-- Check `$.Invocation[].InvokeStatus` for overall status
-- Parse `$.Invocation.CommandInvocationResult[]` for per-instance results
+- Check `$.Result.InvokeStatus` for overall status
+- Parse `$.Result.CommandInvocationResult[]` for per-instance results
 - Key fields: `Output`, `ExitCode`, `InvokeStatus`, `FinishedTime`
 
 ---

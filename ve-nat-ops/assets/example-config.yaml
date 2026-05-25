@@ -1,0 +1,71 @@
+# Volcengine NAT Gateway Example Configuration
+#
+# This example configuration demonstrates a typical NAT Gateway setup for a
+# production environment with multi-AZ SNAT rules and DNAT port mappings.
+
+---
+
+# Environment
+environment: production
+region: "{{env.VOLCENGINE_REGION}}"
+project_name: production
+
+# NAT Gateway Configuration
+nat_gateways:
+  - name: "prod-nat"
+    description: "Production NAT Gateway for private subnets"
+    spec: "Small"
+    vpc_id: "{{vpc.production_id}}"
+    subnet_id: "{{subnet.public_a_id}}"
+    tags:
+      - key: "tier"
+        value: "infrastructure"
+      - key: "environment"
+        value: "production"
+
+# SNAT Rules
+snat_rules:
+  # App tier outbound internet
+  - name: "app-tier-snat"
+    nat_gateway_id: "{{nat.production_id}}"
+    source_cidr: "10.0.2.0/24"    # App subnet
+    eip_addresses:
+      - "{{eip.nat_address}}"
+    description: "SNAT for application server outbound"
+
+  # Database tier outbound (backup, license)
+  - name: "db-tier-snat"
+    nat_gateway_id: "{{nat.production_id}}"
+    source_cidr: "10.0.3.0/24"    # DB subnet
+    eip_addresses:
+      - "{{eip.nat_address}}"
+    description: "SNAT for database server outbound"
+
+# DNAT Rules
+dnat_rules:
+  # SSH access via NAT
+  - name: "ssh-dnat"
+    nat_gateway_id: "{{nat.production_id}}"
+    eip_address: "{{eip.nat_address}}"
+    ip_protocol: "TCP"
+    external_port: 2222
+    internal_ip: "10.0.2.10"      # Bastion host
+    internal_port: 22
+    description: "SSH via NAT port 2222 → bastion:22"
+
+  # Web service via NAT (alternative to CLB)
+  - name: "web-dnat"
+    nat_gateway_id: "{{nat.production_id}}"
+    eip_address: "{{eip.nat_address}}"
+    ip_protocol: "TCP"
+    external_port: 8080
+    internal_ip: "10.0.2.10"
+    internal_port: 80
+    description: "HTTP via NAT port 8080 → web:80"
+
+# Default tags
+default_tags:
+  - key: "managed-by"
+    value: "ve-nat-ops"
+  - key: "team"
+    value: "infrastructure"

@@ -1,33 +1,86 @@
-# Redis Instance Example Configuration
+# Volcengine Redis Example Configuration
+#
+# This example configuration demonstrates a typical Redis setup for a
+# production environment with HA instances, accounts, allow lists,
+# and parameter tuning.
 
-instance:
-  name: production-cache
-  engine_version: "6.0"
-  region: cn-beijing
-  charge_type: PostPaid
+---
 
-  capacity:
-    shard_capacity_mb: 2048
-    shard_number: 2
-    node_number: 4  # 2 shards × 2 replicas
+# Environment
+environment: production
+region: "{{env.VOLCENGINE_REGION}}"
+project_name: production
 
-  network:
-    vpc_id: vpc-xxxxx
-    subnet_id: subnet-xxxxx
-    zone_ids:
-      - cn-beijing-a
-      - cn-beijing-b
+# Redis Instance Configuration
+redis_instances:
+  # Primary cache (HA)
+  - name: "prod-cache-primary"
+    engine_version: "6.0"
+    instance_class: "PrimarySecondary"
+    node_number: 2
+    shard_capacity: 4096  # MB (4 GB)
+    multi_az: "enabled"
+    configure_nodes:
+      - AZ: "cn-beijing-a"
+      - AZ: "cn-beijing-b"
+    charge_type: "PostPaid"
+    tags:
+      - key: "tier"
+        value: "cache"
+      - key: "environment"
+        value: "production"
 
-  security:
-    allowlist_name: production-redis-access
-    ip_list:
-      - "10.0.0.0/8"
-      - "172.16.0.0/12"
-    password: "your-secure-password"
+  # Session store (standalone for cost)
+  - name: "dev-session"
+    engine_version: "7.0"
+    instance_class: "Standalone"
+    node_number: 1
+    shard_capacity: 2048  # MB (2 GB)
+    charge_type: "PostPaid"
+    tags:
+      - key: "tier"
+        value: "session"
+      - key: "environment"
+        value: "dev"
 
-  backup:
-    backup_periods:
-      - Monday
-      - Wednesday
-      - Friday
-    backup_time: "02:00Z-03:00Z"
+# Redis Accounts
+accounts:
+  - instance_name: "prod-cache-primary"
+    name: "app_cache_rw"
+    role: "ReadWrite"
+  - instance_name: "prod-cache-primary"
+    name: "analytics_ro"
+    role: "ReadOnly"
+
+# Allow Lists
+allow_lists:
+  - name: "app-servers"
+    description: "Application server subnet"
+    ips:
+      - "10.0.2.0/24"
+      - "10.0.3.0/24"
+
+# Parameter Tuning
+parameters:
+  - instance_name: "prod-cache-primary"
+    name: "maxmemory-policy"
+    value: "allkeys-lru"
+  - instance_name: "prod-cache-primary"
+    name: "timeout"
+    value: "300"
+  - instance_name: "prod-cache-primary"
+    name: "tcp-keepalive"
+    value: "60"
+
+# Backup Configuration
+backup:
+  schedule: "02:00-06:00"
+  retention_days: 7
+  frequency: "Daily"
+
+# Default tags
+default_tags:
+  - key: "managed-by"
+    value: "ve-redis-ops"
+  - key: "team"
+    value: "infrastructure"

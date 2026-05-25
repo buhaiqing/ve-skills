@@ -1,0 +1,121 @@
+# Volcengine VPC Example Configuration
+#
+# This example configuration demonstrates a typical VPC setup for a
+# production environment with multi-AZ subnets, custom route table,
+# and NAT Gateway integration.
+#
+# Usage: Reference this file when creating VPC resources. Update placeholder
+# values (prefixed with {{ }}) with your specific requirements.
+
+---
+
+# Environment
+environment: production
+region: "{{env.VOLCENGINE_REGION}}"
+project_name: production
+
+# VPC Configuration
+vpc:
+  name: "prod-vpc"
+  description: "Production environment VPC"
+  cidr_block: "10.0.0.0/16"
+  enable_ipv6: false
+
+# Subnet Configuration
+subnets:
+  # Public subnet (for NAT Gateway, load balancer frontends)
+  - name: "prod-public-a"
+    cidr_block: "10.0.1.0/24"
+    zone_id: "cn-beijing-a"
+    description: "Public subnet in availability zone A"
+    tags:
+      - key: "env"
+        value: "production"
+      - key: "tier"
+        value: "public"
+
+  - name: "prod-public-b"
+    cidr_block: "10.0.2.0/24"
+    zone_id: "cn-beijing-b"
+    description: "Public subnet in availability zone B"
+    tags:
+      - key: "env"
+        value: "production"
+      - key: "tier"
+        value: "public"
+
+  # Private subnet (for application servers, databases)
+  - name: "prod-private-a"
+    cidr_block: "10.0.10.0/24"
+    zone_id: "cn-beijing-a"
+    description: "Private subnet for app servers in zone A"
+    tags:
+      - key: "env"
+        value: "production"
+      - key: "tier"
+        value: "private"
+      - key: "workload"
+        value: "application"
+
+  - name: "prod-private-b"
+    cidr_block: "10.0.11.0/24"
+    zone_id: "cn-beijing-b"
+    description: "Private subnet for app servers in zone B"
+    tags:
+      - key: "env"
+        value: "production"
+      - key: "tier"
+        value: "private"
+      - key: "workload"
+        value: "application"
+
+  # Database subnet (restricted access)
+  - name: "prod-db-a"
+    cidr_block: "10.0.20.0/24"
+    zone_id: "cn-beijing-a"
+    description: "Database subnet in zone A"
+    tags:
+      - key: "env"
+        value: "production"
+      - key: "tier"
+        value: "database"
+
+# Route Table Configuration
+route_tables:
+  # System route table (created automatically with VPC)
+  - name: "system-rt"
+    type: "System"
+    description: "Default system route table"
+
+  # Custom route table for private subnets
+  - name: "private-rt"
+    type: "Custom"
+    description: "Custom route table for private subnets with NAT Gateway"
+    route_entries:
+      - destination_cidr: "0.0.0.0/0"
+        next_hop_type: "NatGateway"
+        next_hop_id: "{{nat.gateway_id}}"
+        description: "Default route to NAT Gateway for internet access"
+
+# Tags (applied to all resources above unless overridden)
+default_tags:
+  - key: "managed-by"
+    value: "ve-vpc-ops"
+  - key: "team"
+    value: "infrastructure"
+  - key: "cost-center"
+    value: "engineering"
+
+# CIDR Planning Reference
+# ============================================================
+# Total VPC addresses: 65,536 (10.0.0.0/16)
+#
+# | Subnet          | CIDR            | IPs    | Purpose        |
+# |-----------------|-----------------|--------|----------------|
+# | prod-public-a   | 10.0.1.0/24     | 256    | Public zone A  |
+# | prod-public-b   | 10.0.2.0/24     | 256    | Public zone B  |
+# | prod-private-a  | 10.0.10.0/24    | 256    | Private zone A |
+# | prod-private-b  | 10.0.11.0/24    | 256    | Private zone B |
+# | prod-db-a       | 10.0.20.0/24    | 256    | Database zone  |
+# | Reserved        | —               | 64,256 | Future growth  |
+# ============================================================
