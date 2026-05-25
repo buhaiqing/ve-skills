@@ -1,78 +1,116 @@
-# Redis Multi-Metric Correlation — AIOps
+# Monitoring — Volcengine Redis
 
-## Anomaly Patterns
+> **Purpose:** Monitoring guide for Redis resources on Volcengine.
+> **Version:** 1.0.0
+> **Last Updated:** 2026-05-25
 
-| Pattern | Metrics | Detection Logic | Severity |
-|---------|---------|-----------------|----------|
-| Memory Saturation | Memory > 85% + Evictions > 0 + Hit rate < 90% | All AND over 5min | Critical |
-| Connection Storm | Connections > 90% + New connections > 100/s + Rejected > 0 | Concurrent thresholds | Critical |
-| Slow Command Accumulation | Latency p99 > 100ms + Slow log count > 10/min + CPU > 70% | All AND over 10min | Warning |
-| Network I/O Bottleneck | Bandwidth > 85% + Dropped packets > 0 + Latency > 50ms | AND sustained 10min | Critical |
-| Replication Lag (cluster) | Sync offset growing + Failed sync commands > 0 | Sustained 5min | Warning |
-| Failover Event | Primary node unreachable + Automatic failover triggered | State change | Critical |
+---
 
-## Cross-Skill Diagnosis Decision Tree
+## Table of Contents
+
+1. [Cloud Monitor Metrics](#1-cloud-monitor-metrics)
+2. [Memory Monitoring](#2-memory-monitoring)
+3. [Connection Monitoring](#3-connection-monitoring)
+4. [Performance Monitoring](#4-performance-monitoring)
+5. [Alarm Configuration](#5-alarm-configuration)
+
+---
+
+## 1. Cloud Monitor Metrics
+
+| Metric | Unit | Description |
+|--------|------|-------------|
+| `cpuusage` | % | CPU utilization |
+| `memoryusedratio` | % | Memory utilization ratio |
+| `intranet_in_bps` | bps | Inbound network traffic |
+| `intranet_out_bps` | bps | Outbound network traffic |
+| `newconnections` | Count/s | New connections per second |
+| `totalconnections` | Count | Total active connections |
+| `usedmemory` | Bytes | Memory currently used |
+| `qps` | Count/s | Queries per second |
+
+### Query via CMS CLI
+
+```bash
+ve cms DescribeMetricData \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --Namespace "redis" \
+  --MetricName "cpuusage" \
+  --Dimensions '{"InstanceId":"{{user.instance_id}}"}'
+```
+
+---
+
+## 2. Memory Monitoring
+
+### Capacity Utilization
 
 ```
-[Alarm: Redis instance issue]
-    │
-    ├── Is it memory-related?
-    │   ├── Memory > 85% → What eviction policy? → If noeviction: urgent scale
-    │   ├── Evictions > 0 → Is hit rate dropping? → Optimize key TTL
-    │   └── Memory spike sudden → Check for key pattern: big keys → application issue
-    │
-    ├── Is it connection-related?
-    │   ├── Connections > 90% → Connection leak in app → ve-ecs-ops (check app logs)
-    │   └── Rejected connections → AllowList not configured → Configure whitelist
-    │
-    ├── Is it performance-related?
-    │   ├── Slow commands → Check SLOWLOG → Identify KEYS/scan operations
-    │   └── High latency → Network or bandwidth? → ve-vpc-ops
-    │
-    └── Cluster failover → ve-cms-ops for AZ health check
+MemoryUtilization = (Capacity.Used / Capacity.Total) × 100%
 ```
 
-## Delegation Matrix
+| Utilization | Concern Level | Action |
+|-------------|--------------|--------|
+| < 60% | Normal | — |
+| 60–80% | Warning | Monitor growth rate |
+| > 80% | Critical | Increase capacity or tune eviction policy |
+| > 90% | Emergency | Risk of OOM errors |
 
-| Alarm Signal | Primary Skill | Secondary Skill | Fallback |
-|-------------|--------------|-----------------|----------|
-| Memory > 90% sustained | ve-redis-ops | Application team | ve-cms-ops |
-| Connection exhaustion | ve-redis-ops | ve-ecs-ops (app server) | ve-cms-ops |
-| VPC bandwidth limit | ve-vpc-ops | ve-redis-ops | Manual |
-| Failover triggered | ve-cms-ops | ve-redis-ops | Manual |
-| Slow log accumulation | Application team | ve-redis-ops (SLOWLOG) | Manual |
+### Key Analysis
 
-## Proactive Inspection Checklist
+- **Big Keys:** Use `DescribeBigKeys` to find keys consuming excessive memory
+- **Hot Keys:** Use `DescribeHotKeys` to identify keys causing throughput bottlenecks
+- **Recommendation:** Run scans during off-peak hours — they increase CPU load
 
-### Resource Health
-- [ ] Memory usage < 80% across all instances
-- [ ] EvictedKeys = 0 or stable
-- [ ] Cache hit rate > 95%
-- [ ] Connections < 70% of max
-- [ ] Bandwidth < 70% of limit
-- [ ] AllowList configured (not open to all)
+---
 
-### Security
-- [ ] No password-less instances (v5.0+)
-- [ ] AllowList restricted to app server IPs only
-- [ ] No direct internet access (VPC-only)
+## 3. Connection Monitoring
 
-### Cost
-- [ ] No instances with memory < 10% used for 14 days
-- [ ] No instances with connections < 5% for 7 days
+| Connection Utilization | Concern Level | Action |
+|-----------------------|--------------|--------|
+| < 50% | Normal | — |
+| 50–75% | Warning | Review connection pooling |
+| > 75% | Critical | Increase max connections or add instances |
 
-## Alarm Storm Handling
+---
 
-**Detection:** > 10 key eviction or latency alarms within 2 min, or cascading across shard replicas.
+## 4. Performance Monitoring
 
-**Suppression:**
-1. Correlate by instance + time window
-2. Root alarm = earliest memory spike or node failure
-3. Group: all shard-level alarms → single "instance degraded"
-4. Throttle: 1 notification per root cause
+### CPU High Alert
 
-## Multi-Round Diagnosis Review
+Redis is single-threaded per shard. CPU > 90% usually means:
 
-1. **Fact Check**: Metrics current? Instance status valid?
-2. **Causal Analysis**: Is the application pattern truly the cause?
-3. **Solution Validation**: Will scaling config or eviction change resolve the issue?
+- Slow commands blocking the event loop
+- Too many requests per second for the shard capacity
+- Key scanning or big key operations
+
+**Resolution:**
+1. Check slow logs: `ve redis DescribeSlowLogs`
+2. Identify hot/big keys
+3. Optimize application usage patterns
+
+### High Latency
+
+| Latency | Concern Level |
+|---------|--------------|
+| < 1ms | Normal |
+| 1–10ms | Warning — network or load issue |
+| > 10ms | Critical — investigate immediately |
+
+---
+
+## 5. Alarm Configuration
+
+### Recommended Alarms
+
+| Alarm | Metric | Condition | Severity |
+|-------|--------|-----------|----------|
+| Memory High | `memoryusedratio` | > 80% for 5min | Warning |
+| Memory Critical | `memoryusedratio` | > 90% for 5min | Critical |
+| CPU High | `cpuusage` | > 90% for 5min | Critical |
+| Connection High | `totalconnections` | > 75% of max | Warning |
+| Instance Error | Instance status | Not `Running` | Critical |
+
+---
+
+*This reference document is part of the ve-redis-ops skill.*

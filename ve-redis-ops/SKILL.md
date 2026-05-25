@@ -98,16 +98,16 @@ Volcengine Cache for Redis (缓存数据库 Redis 版) provides managed Redis-co
 | Operation | JSON Path | Type | Description |
 |-----------|-----------|------|-------------|
 | CreateDBInstance | `$.Result.InstanceId` | string | New instance ID |
-| DescribeDBInstances | `$.Result.Instances[].InstanceId` | array | Instance IDs |
-| DescribeDBInstances | `$.Result.Instances[].InstanceName` | array | Instance names |
-| DescribeDBInstances | `$.Result.Instances[].Status` | array | Instance states |
-| DescribeDBInstances | `$.Result.Instances[].EngineVersion` | array | Redis versions |
-| DescribeDBInstances | `$.Result.Instances[].Capacity.Total` | array | Memory capacity (MB) |
-| DescribeDBInstances | `$.Result.Instances[].ChargeType` | array | PostPaid/PrePaid |
-| DescribeDBInstances | `$.Result.Instances[].PrivateAddress` | array | Connection address |
-| DescribeDBInstances | `$.Result.Instances[].VpcId` | array | VPC ID |
-| DescribeDBInstances | `$.Result.TotalInstancesNum` | int | Total count |
-| DeleteDBInstance | `$.Metadata.RequestId` | string | Request ID |
+| DescribeDBInstances | `$.Result.Instances[].InstanceId` | string | Instance ID |
+| DescribeDBInstances | `$.Result.Instances[].InstanceName` | string | Instance name |
+| DescribeDBInstances | `$.Result.Instances[].Status` | string | Instance state |
+| DescribeDBInstances | `$.Result.Instances[].EngineVersion` | string | Redis version |
+| DescribeDBInstances | `$.Result.Instances[].Capacity.Total` | integer | Memory capacity (MB) |
+| DescribeDBInstances | `$.Result.Instances[].ChargeType` | string | PostPaid/PrePaid |
+| DescribeDBInstances | `$.Result.Instances[].PrivateAddress` | string | Connection address |
+| DescribeDBInstances | `$.Result.Instances[].VpcId` | string | VPC ID |
+| DescribeDBInstances | `$.Result.TotalInstancesNum` | integer | Total count |
+| DeleteDBInstance | `$.ResponseMetadata.RequestId` | string | Request ID |
 
 ### Instance States
 

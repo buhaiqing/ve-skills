@@ -40,11 +40,56 @@ ve-skills/
 │       ├── optimization-analysis.md             # 三维度优化分析
 │       ├── prompt-library.md                    # 结构化 prompt 库
 │       └── aiops-best-practices.md              # AIOps 最佳实践
-├── ve-ecs-ops/                                  # 云服务器 ECS（待生成）
-├── ve-rds-ops/                                  # 云数据库 RDS（待生成）
-├── ve-redis-ops/                                # 云数据库 Redis（待生成）
-├── ve-vpc-ops/                                  # 私有网络 VPC（待生成）
-└── ve-slb-ops/                                  # 负载均衡 SLB（待生成）
+├── ve-vpc-ops/                                  # ✅ 私有网络 VPC（已实现 — P0）
+│   ├── SKILL.md                                 #   11 核心操作 + 6 reference files
+│   ├── references/                              #   core-concepts, api-sdk, cli-usage, troubleshooting, monitoring, integration
+│   └── assets/
+│       └── example-config.yaml
+├── ve-eip-ops/                                  # ✅ 弹性公网IP EIP（已实现 — P0）
+│   ├── SKILL.md                                 #   10 核心操作 + 6 reference files
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+├── ve-nat-ops/                                  # ✅ NAT网关（已实现 — P0）
+│   ├── SKILL.md                                 #   10 核心操作 + 6 reference files
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+├── ve-clb-ops/                                  # ✅ 负载均衡 CLB（已实现 — P0）
+│   ├── SKILL.md                                 #   11 核心操作 + 6 reference files
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+├── ve-ecs-ops/                                  # ✅ 云服务器 ECS（已实现）
+│   ├── SKILL.md                                 #   21 核心操作 + 6 reference files
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+├── ve-rds-ops/                                  # ✅ 云数据库 RDS MySQL（已实现）
+│   ├── SKILL.md                                 #   21 核心操作 + 6 reference files
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+├── ve-redis-ops/                                # ✅ 缓存数据库 Redis（已实现）
+│   ├── SKILL.md                                 #   18 核心操作 + 6 reference files
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+├── ve-cms-ops/                                  # ✅ 云端监控 CMS（已实现）
+│   ├── SKILL.md
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+├── ve-tos-ops/                                  # ✅ 对象存储 TOS（已实现）
+│   ├── SKILL.md
+│   ├── references/
+│   └── assets/
+│       └── example-config.yaml
+└── ve-vke-ops/                                  # ✅ 容器引擎 VKE（已实现）
+    ├── SKILL.md
+    ├── references/
+    └── assets/
+        └── example-config.yaml
 ```
 
 ## 快速开始

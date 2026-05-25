@@ -1,0 +1,108 @@
+# Volcengine CLB Example Configuration
+#
+# This example configuration demonstrates a typical CLB setup for a
+# production environment with TCP and HTTP listeners, backend servers,
+# and health checks.
+
+---
+
+# Environment
+environment: production
+region: "{{env.VOLCENGINE_REGION}}"
+project_name: production
+
+# CLB Configuration
+load_balancers:
+  # Public CLB (external-facing web traffic)
+  - name: "prod-public-clb"
+    description: "Public CLB for web tier"
+    type: "public"
+    vpc_id: "{{vpc.production_id}}"
+    subnet_id: "{{subnet.public_a_id}}"
+    tags:
+      - key: "tier"
+        value: "web"
+      - key: "environment"
+        value: "production"
+
+  # Private CLB (internal microservices)
+  - name: "prod-internal-clb"
+    description: "Private CLB for internal services"
+    type: "private"
+    vpc_id: "{{vpc.production_id}}"
+    subnet_id: "{{subnet.private_a_id}}"
+    tags:
+      - key: "tier"
+        value: "application"
+      - key: "environment"
+        value: "production"
+
+# Listeners
+listeners:
+  # Public CLB listeners
+  - load_balancer_name: "prod-public-clb"
+    name: "http-listener"
+    protocol: "HTTP"
+    port: 80
+    health_check:
+      enabled: true
+      method: "GET"
+      uri: "/health"
+      interval: 5
+      timeout: 3
+      healthy_threshold: 3
+      unhealthy_threshold: 3
+      healthy_http_code: "200"
+
+  - load_balancer_name: "prod-public-clb"
+    name: "https-listener"
+    protocol: "HTTPS"
+    port: 443
+    health_check:
+      enabled: true
+      method: "GET"
+      uri: "/health"
+      interval: 5
+      timeout: 3
+
+  # Internal CLB listeners
+  - load_balancer_name: "prod-internal-clb"
+    name: "tcp-listener"
+    protocol: "TCP"
+    port: 8080
+    health_check:
+      enabled: true
+      interval: 5
+      timeout: 3
+      healthy_threshold: 3
+      unhealthy_threshold: 3
+
+# Backend Servers
+backend_servers:
+  - load_balancer_name: "prod-public-clb"
+    servers:
+      - server_id: "{{ecs.web_1_id}}"
+        port: 8080
+        weight: 100
+      - server_id: "{{ecs.web_2_id}}"
+        port: 8080
+        weight: 100
+
+  - load_balancer_name: "prod-internal-clb"
+    servers:
+      - server_id: "{{ecs.app_1_id}}"
+        port: 8080
+        weight: 100
+      - server_id: "{{ecs.app_2_id}}"
+        port: 8080
+        weight: 100
+      - server_id: "{{ecs.app_3_id}}"
+        port: 8080
+        weight: 50
+
+# Default tags
+default_tags:
+  - key: "managed-by"
+    value: "ve-clb-ops"
+  - key: "team"
+    value: "infrastructure"

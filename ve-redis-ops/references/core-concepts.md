@@ -1,71 +1,124 @@
-# Redis Core Concepts
+# Core Concepts — Volcengine Redis (缓存数据库 Redis 版)
 
-## Architecture
+> **Purpose:** Fundamental concepts for Volcengine Redis.
+> **Version:** 1.0.0
+> **Last Updated:** 2026-05-25
 
-Volcengine Cache for Redis provides Redis-compatible managed instances:
+---
 
-```
-Redis Instance
-├── Engine Version (4.0 / 5.0 / 6.0)
-├── Capacity (256MB - 64GB per shard)
-├── Network (VPC, Subnet, Private Address)
-├── Node Configuration
-│   ├── NodeNumber (2 for primary-secondary, 4+ for cluster)
-│   ├── ShardNumber (for sharded cluster)
-│   └── ShardCapacity (per shard memory)
-├── Security (AllowList, Accounts)
-└── Backup Configuration
-```
+## Table of Contents
 
-## Instance Types
+1. [What is Redis](#1-what-is-redis)
+2. [Instance Classes](#2-instance-classes)
+3. [Engine Versions](#3-engine-versions)
+4. [Architecture Types](#4-architecture-types)
+5. [Data Layout](#5-data-layout)
+6. [Sharding](#6-sharding)
+7. [Instance Lifecycle](#7-instance-lifecycle)
+8. [Regions Supporting Redis](#8-regions-supporting-redis)
+9. [Limits and Quotas](#9-limits-and-quotas)
 
-| Type | Description | Nodes | Use Case |
-|------|-------------|-------|----------|
-| Primary-Secondary | 1 master + 1 replica | 2 | General purpose |
-| Sharded Cluster | Multiple shards with replicas | 4+ | High-throughput, large datasets |
+---
 
-## Engine Versions
+## 1. What is Redis
 
-| Version | Features | EOL |
-|---------|----------|-----|
-| 4.0 | Basic Redis 4.0 features | Legacy |
-| 5.0 | Streams, modules support | Supported |
-| 6.0 | ACL, RESP3, SSL/TLS | Latest |
+A **Redis (缓存数据库 Redis 版)** is a fully managed in-memory data store compatible with the Redis protocol. It provides sub-millisecond latency for caching, session management, leaderboards, and real-time analytics.
 
-## Capacity Planning
+---
 
-| Specification | Memory (MB) | Connections | Bandwidth (MB/s) |
-|--------------|-------------|-------------|-----------------|
-| 256MB | 256 | 10,000 | 48 |
-| 1024MB (1GB) | 1024 | 20,000 | 96 |
-| 2048MB (2GB) | 2048 | 20,000 | 96 |
-| 4096MB (4GB) | 4096 | 20,000 | 192 |
-| 8192MB (8GB) | 8192 | 20,000 | 384 |
-| 16384MB (16GB) | 16384 | 40,000 | 768 |
+## 2. Instance Classes
 
-## Connection
+| Class | Code | HA | Persistence | Use Case |
+|-------|------|-----|-------------|----------|
+| **Standalone** | `Standalone` | No | None | Dev/test, non-critical cache |
+| **Primary-Secondary** | `PrimarySecondary` | Auto failover | AOF + RDB | Production, HA required |
+| **Sharded Cluster** | `ShardedCluster` | Multi-shard HA | AOF + RDB | High throughput, large datasets |
 
-- **Private Address**: `redis-{instance_id}.redis.ivolces.com:6379`
-- **VPC Only**: Instances are accessible only within the configured VPC
-- **AllowList**: IP whitelist controls access (default: no IPs allowed)
+---
 
-## Data Persistence
+## 3. Engine Versions
 
-| Method | Description |
-|--------|-------------|
-| RDB | Point-in-time snapshots |
-| AOF | Append-only file (continuous) |
-| Automatic Backup | Scheduled daily backups |
+| Version | Status | Notable Features |
+|---------|--------|-----------------|
+| `5.0` | Stable | Stream datatype, modules |
+| `6.0` | Stable | ACL, RESP3, SSL, multi-part keys |
+| `7.0` | Latest | Functions, new commands, improved eviction |
 
-## Deletion Protection
+---
 
-Instances support deletion protection. Must be disabled before deletion.
+## 4. Architecture Types
 
-## Limits
+### Standalone (单节点)
 
-| Resource | Default Limit |
-|----------|--------------|
-| Instances per account | 50 |
-| Allowlists per instance | 50 |
-| IPs per allowlist | 300 |
-| Accounts per instance | 10 |
+- Single node, in-memory only
+- Data lost on node restart/failure
+- Lowest cost, highest risk
+
+### Primary-Secondary (主从)
+
+- Primary handles all writes; replica handles failover + optional reads
+- Automatic failover if primary fails
+- Persistent storage via AOF/RDB snapshots
+
+### Sharded Cluster (分片集群)
+
+- Multiple shards distribute data via hash slots
+- Each shard is a primary-secondary pair
+- Scales both memory and throughput
+
+---
+
+## 5. Data Layout
+
+| Layout | Description | Use Case |
+|--------|-------------|----------|
+| **RAM** | In-memory only, highest performance | Low-latency cache |
+| **DRAM** | DRAM + disk, larger capacity | Large datasets, cost-effective |
+
+---
+
+## 6. Sharding
+
+Each shard has a maximum capacity (1 GB, 2 GB, 4 GB, 8 GB, 16 GB, 32 GB, 64 GB). Total instance capacity = `ShardNumber × ShardCapacity`.
+
+---
+
+## 7. Instance Lifecycle
+
+| Status | Description | Allowed Operations |
+|--------|-------------|-------------------|
+| `Creating` | Being provisioned | None |
+| `Running` | Operational | All |
+| `Modifying` | Spec change in progress | Restricted |
+| `Restarting` | Being restarted | None |
+| `Error` | Error state | Debug or recreate |
+| `Released` | Deleted | None |
+
+---
+
+## 8. Regions Supporting Redis
+
+| Region | RegionID | Status |
+|--------|----------|--------|
+| 华北2 (北京) | `cn-beijing` | Commercial |
+| 华东2 (上海) | `cn-shanghai` | Commercial |
+| 华南1 (广州) | `cn-guangzhou` | Commercial |
+| 中国香港 | `cn-hongkong` | Commercial |
+| 亚太东南 (新加坡) | `ap-southeast-1` | Commercial |
+| 亚太东南 (雅加达) | `ap-southeast-3` | Commercial |
+
+---
+
+## 9. Limits and Quotas
+
+| Resource | Default Quota | Notes |
+|----------|---------------|-------|
+| Redis instances per region | 20 | Can request increase |
+| Max keys per instance | Memory limited | Bound by maxmemory |
+| Max connections per instance | Varies by spec | 10,000–100,000 |
+| Allow lists per instance | 100 | — |
+| Database accounts per instance | 50 | — |
+
+---
+
+*This reference document is part of the ve-redis-ops skill.*
