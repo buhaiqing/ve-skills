@@ -67,6 +67,9 @@ TOS (Torch Object Storage, 对象存储) on Volcengine (火山引擎) provides m
 - Task involves multi-part upload: CreateMultipartUpload, UploadPart, CompleteMultipartUpload
 - Task involves lifecycle rules, versioning, ACL/policy, pre-signed URLs
 - Task involves bulk data transfer: upload/download/copy local files to/from TOS
+- Task involves **cost optimization**: storage class analysis, stale object detection, cost reports
+- Task involves **resource cleanup**: incomplete multipart uploads, expired objects, orphaned delete markers
+- Task involves **storage class optimization**: transitioning objects between Standard/IA/Archive
 
 ### SHOULD NOT Use This Skill When
 
@@ -162,6 +165,11 @@ tosutil ls -s
 | PutBucketLifecycle | Set lifecycle rules | Medium | Medium |
 | PutBucketVersioning | Enable/disable versioning | Low | Medium |
 | PutBucketACL | Set bucket access control | Low | High |
+| DescribeStorageAnalysis | Analyze storage class distribution and costs | Low | None |
+| DetectStaleObjects | Find objects not accessed for X days | Low | None |
+| DescribeCostSummary | Generate cost report for TOS resources | Low | None |
+| CleanupMultipartUploads | Abort incomplete multipart uploads | Low | Low |
+| OptimizeStorageClass | Recommend storage class changes | Medium | Low |
 
 ## Changelog
 
@@ -684,6 +692,128 @@ tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} -ps=1
 # Resume a failed upload
 tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} --task-id <task-id>
 ```
+
+---
+
+## FinOps Operations (Agent-Readable)
+
+### Operation: DescribeStorageAnalysis — Analyze Storage Class Distribution
+
+Analyzes bucket storage distribution across storage classes to identify optimization opportunities.
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Bucket exists | `tosutil ls tos://{{user.bucket}}` | Bucket found | HALT |
+| Credentials | `test -n "$TOS_ACCESS_KEY" && test -n "$TOS_SECRET_KEY"` | Both set | HALT |
+
+#### Execution
+
+```bash
+# Get bucket storage class distribution
+tosutil ls tos://{{user.bucket}} -s -ab | awk '{print $2, $3}' | sort | uniq -c | sort -rn
+
+# Get bucket size summary
+tosutil du tos://{{user.bucket}}
+```
+
+#### Analysis Logic
+
+| Storage Class | Recommended Use | Cost Relative to Standard |
+|--------------|-----------------|--------------------------|
+| Standard | Frequent access (daily) | 100% (baseline) |
+| IA (Infrequent Access) | Occasional access (monthly) | ~60% |
+| Archive | Rare access (quarterly, restore needed) | ~40% |
+| ColdArchive | Compliance retention (yearly) | ~20% |
+
+---
+
+### Operation: DetectStaleObjects — Find Objects Not Accessed Recently
+
+Identifies objects not accessed for a specified period.
+
+#### Stale Classification
+
+| Last Access | Classification | Recommended Action |
+|-------------|---------------|-------------------|
+| > 30 days | Warm | Consider IA storage class |
+| > 90 days | Cold | Consider Archive storage class |
+| > 365 days | Frozen | Consider deletion or ColdArchive |
+
+#### Execution
+
+```bash
+# List objects with last modified date
+tosutil ls tos://{{user.bucket}} -s -ab
+```
+
+---
+
+### Operation: CleanupMultipartUploads — Abort Incomplete Uploads
+
+Finds and aborts multipart uploads incomplete beyond a threshold.
+
+#### Execution
+
+```bash
+# List incomplete multipart uploads
+ve tos ListMultipartUploads --bucket "{{user.bucket}}" --Region "{{env.VOLCENGINE_REGION}}"
+
+# Abort a specific upload
+ve tos AbortMultipartUpload --bucket "{{user.bucket}}" --key "{{user.object_key}}" --upload-id "{{user.upload_id}}" --Region "{{env.VOLCENGINE_REGION}}"
+```
+
+---
+
+### Operation: OptimizeStorageClass — Apply Storage Class Transitions
+
+Transitions objects to a more cost-effective storage class.
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** list all objects to be transitioned with current and target class
+- **MUST** warn about retrieval costs and restore times for Archive/ColdArchive
+- **MUST** confirm with user before proceeding
+
+#### Execution
+
+```bash
+# Set lifecycle rule for automatic transition
+ve tos PutBucketLifecycle \
+  --bucket "{{user.bucket}}" \
+  --body '{"Rules": [{"ID": "auto-transition-to-ia", "Status": "Enabled", "Prefix": "logs/", "Transitions": [{"Days": 30, "StorageClass": "IA"}, {"Days": 90, "StorageClass": "Archive"}]}]}'
+```
+
+---
+
+### Operation: DescribeCostSummary — Generate TOS Cost Report
+
+Generates a cost summary for all TOS buckets.
+
+#### Execution
+
+```bash
+# List all buckets with sizes
+tosutil ls -s
+
+# Query billing data for TOS
+ve billing DescribeBillDetail --BillingCycle "{{user.billing_cycle}}" --ProductType tos
+```
+
+#### Output Format
+
+```markdown
+## TOS Cost Summary — {{user.billing_cycle}}
+
+| Bucket | Storage | Requests | Bandwidth | Monthly Cost |
+|--------|---------|----------|-----------|-------------|
+| prod-assets | 500 GB (Standard) | 2M | 100 GB | ¥280 |
+| prod-logs | 200 GB (IA) | 500K | 10 GB | ¥65 |
+| **Total** | **700 GB** | **2.5M** | **110 GB** | **¥345** |
+```
+
+---
 
 ## Reference Directory
 
