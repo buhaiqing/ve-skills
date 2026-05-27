@@ -56,6 +56,8 @@ TOS (Torch Object Storage, 对象存储) on Volcengine (火山引擎) provides m
 | 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover |
 | 4 | **Complete Failure Strategies** | Error taxonomy with ≥ 10 TOS-specific codes; HALT vs retry per type |
 | 5 | **Absolute Single Responsibility** | One product (TOS), one primary resource (Bucket/Object); cross-product delegation documented |
+| 6 | **FinOps Integration** | Storage analysis, stale detection, multipart cleanup, cost reports, storage class optimization |
+| 7 | **AIOps Integration** | Knowledge base with fault patterns, cross-skill diagnosis, proactive inspection |
 
 ## Trigger & Scope (Agent-Readable)
 
@@ -176,6 +178,7 @@ tosutil ls -s
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-15 | Initial release with bucket/object management, lifecycle, versioning |
+| 1.1.0 | 2026-05-27 | Added FinOps operations (storage analysis, stale detection, cleanup, cost reports) and AIOps knowledge base |
 
 ## Execution Flows (Agent-Readable)
 
@@ -827,6 +830,8 @@ ve billing DescribeBillDetail --BillingCycle "{{user.billing_cycle}}" --ProductT
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
 - [Enhanced Self-Healing Framework](../../ve-skill-generator/references/enhanced-self-healing-framework.md)
+- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [Knowledge Base](references/knowledge-base.md)
 
 ## Operational Best Practices
 
