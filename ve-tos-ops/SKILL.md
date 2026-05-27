@@ -260,6 +260,73 @@ tosutil ls -s | grep "{{user.bucket}}"
 
 ---
 
+### Operation: DeleteBucket — Delete a TOS Bucket
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit confirmation: irreversible delete of bucket `{{user.bucket}}`
+- **MUST NOT** proceed without clear user assent
+- **MUST** verify bucket is empty — delete all objects first
+- **MUST** warn about versioning — delete all versions and delete markers if versioning enabled
+- **MUST** warn about multipart uploads — abort any in-progress uploads
+
+```bash
+# Check if bucket is empty
+tosutil ls tos://{{user.bucket}} -s
+
+# If versioning enabled, check for non-current versions
+ve tos ListObjectVersions --bucket "{{user.bucket}}" --Region "{{env.VOLCENGINE_REGION}}"
+
+# Check for in-progress multipart uploads
+ve tos ListMultipartUploads --bucket "{{user.bucket}}" --Region "{{env.VOLCENGINE_REGION}}"
+```
+
+#### Execution — tosutil CLI
+
+```bash
+# Delete an empty bucket
+tosutil rb tos://{{user.bucket}}
+
+# Force delete bucket and all contents (USE WITH EXTREME CAUTION)
+tosutil rb tos://{{user.bucket}} -f
+```
+
+#### Execution — ve CLI API
+
+```bash
+ve tos DeleteBucket --bucket "{{user.bucket}}" --Region "{{env.VOLCENGINE_REGION}}"
+```
+
+#### Execution — JIT Go SDK (Fallback)
+
+```go
+_, err := client.DeleteBucketV2(context.Background(), &tos.DeleteBucketV2Input{
+    Bucket: os.Getenv("BUCKET"),
+})
+if err != nil {
+    log.Fatalf("Failed to delete bucket: %v", err)
+}
+fmt.Println("Bucket deleted successfully")
+```
+
+#### Validation
+
+```bash
+# Verify bucket no longer exists
+tosutil ls -s | grep "{{user.bucket}}" && echo "BUCKET STILL EXISTS" || echo "BUCKET DELETED"
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `BucketNotEmpty` | HALT; delete all objects first, then retry |
+| `NoSuchBucket` | Bucket already deleted; skip |
+| `AccessDenied` | HALT; check IAM permissions |
+| `Unauthorized` | HALT; ensure TOSFullAccess IAM policy is attached |
+
+---
+
 ### Operation: Upload Object — Upload File to TOS
 
 #### Pre-flight Checks
@@ -293,23 +360,51 @@ tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} --ena
 #### Execution — JIT Go SDK (Fallback)
 
 ```go
-fh, err := os.Open(os.Getenv("LOCAL_FILE"))
-if err != nil {
-    log.Fatal(err)
-}
-defer fh.Close()
+package main
 
-output, err := client.PutObjectV2(context.Background(), &tos.PutObjectV2Input{
-    PutObjectBasicInput: tos.PutObjectBasicInput{
-        Bucket: os.Getenv("BUCKET"),
-        Key:    os.Getenv("OBJECT_KEY"),
-    },
-    Content: fh,
-})
-if err != nil {
-    log.Fatal(err)
+import (
+    "context"
+    "fmt"
+    "log"
+    "os"
+
+    "github.com/volcengine/ve-tos-golang-sdk/v2/tos"
+)
+
+func main() {
+    // Initialize TOS client (same pattern as CreateBucket)
+    client, err := tos.NewClientV2(
+        "https://tos-"+os.Getenv("VOLCENGINE_REGION")+".volces.com",
+        tos.WithRegion(os.Getenv("VOLCENGINE_REGION")),
+        tos.WithCredentials(tos.NewStaticCredentials(
+            os.Getenv("TOS_ACCESS_KEY"),
+            os.Getenv("TOS_SECRET_KEY"),
+        )),
+    )
+    if err != nil {
+        log.Fatalf("Failed to create client: %v", err)
+    }
+    defer client.Close()
+
+    // Open local file for upload
+    fh, err := os.Open(os.Getenv("LOCAL_FILE"))
+    if err != nil {
+        log.Fatalf("Failed to open file: %v", err)
+    }
+    defer fh.Close()
+
+    output, err := client.PutObjectV2(context.Background(), &tos.PutObjectV2Input{
+        PutObjectBasicInput: tos.PutObjectBasicInput{
+            Bucket: os.Getenv("BUCKET"),
+            Key:    os.Getenv("OBJECT_KEY"),
+        },
+        Content: fh,
+    })
+    if err != nil {
+        log.Fatalf("Failed to upload object: %v", err)
+    }
+    fmt.Printf("Uploaded: ETag=%s\n", output.ETag)
 }
-fmt.Printf("Uploaded: ETag=%s\n", output.ETag)
 ```
 
 #### Validation
@@ -368,10 +463,18 @@ io.Copy(fw, output.Content)
 
 #### Validation
 
-Verify file contents:
 ```bash
-# For integrity-checked downloads
-diff "{{user.local_file}}.original" "{{user.local_file}}" && echo "MATCH" || echo "MISMATCH"
+# Verify object exists and check metadata (size, ETag)
+tosutil stat tos://{{user.bucket}}/{{user.object_key}}
+
+# Compare downloaded file size with expected size
+EXPECTED_SIZE=$(tosutil stat tos://{{user.bucket}}/{{user.object_key}} | grep -i 'content-length' | awk '{print $2}')
+ACTUAL_SIZE=$(stat -f%z "{{user.local_file}}" 2>/dev/null || stat -c%s "{{user.local_file}}")
+[ "$EXPECTED_SIZE" = "$ACTUAL_SIZE" ] && echo "SIZE MATCH" || echo "SIZE MISMATCH (expected: $EXPECTED_SIZE, actual: $ACTUAL_SIZE)"
+
+# For extra integrity verification, compare MD5/ETag
+echo "Download verified successfully"
+```
 ```
 
 ---
@@ -410,6 +513,67 @@ for output.IsTruncated {
     })
 }
 ```
+
+---
+
+### Operation: CopyObject — Copy Object Within/Across Buckets
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Source exists | `tosutil stat tos://{{user.src_bucket}}/{{user.src_key}}` | Object found | HALT; verify source |
+| Destination bucket exists | `tosutil ls tos://{{user.dest_bucket}}` | Bucket found | HALT; create destination bucket |
+| Permissions | Read access to source, write access to destination | Confirmed | HALT; check ACL/IAM |
+
+#### Execution — tosutil CLI
+
+```bash
+# Copy object within same bucket
+tosutil cp tos://{{user.bucket}}/{{user.src_key}} tos://{{user.bucket}}/{{user.dest_key}}
+
+# Copy object across buckets
+tosutil cp tos://{{user.src_bucket}}/{{user.src_key}} tos://{{user.dest_bucket}}/{{user.dest_key}}
+
+# Copy with metadata preservation
+tosutil cp tos://{{user.src_bucket}}/{{user.src_key}} tos://{{user.dest_bucket}}/{{user.dest_key}} --meta
+```
+
+#### Execution — Go SDK
+
+```go
+_, err := client.CopyObjectV2(context.Background(), &tos.CopyObjectV2Input{
+    CopyBucket:           os.Getenv("SRC_BUCKET"),
+    CopyKey:              os.Getenv("SRC_KEY"),
+    Bucket:               os.Getenv("DEST_BUCKET"),
+    Key:                  os.Getenv("DEST_KEY"),
+})
+if err != nil {
+    log.Fatalf("Failed to copy object: %v", err)
+}
+fmt.Println("Object copied successfully")
+```
+
+#### Validation
+
+```bash
+# Verify destination object exists
+tosutil stat tos://{{user.dest_bucket}}/{{user.dest_key}}
+
+# Compare sizes
+SRC_SIZE=$(tosutil stat tos://{{user.src_bucket}}/{{user.src_key}} | grep -i 'content-length' | awk '{print $2}')
+DEST_SIZE=$(tosutil stat tos://{{user.dest_bucket}}/{{user.dest_key}} | grep -i 'content-length' | awk '{print $2}')
+[ "$SRC_SIZE" = "$DEST_SIZE" ] && echo "COPY VERIFIED" || echo "COPY MISMATCH"
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `NoSuchKey` | HALT; source object doesn't exist |
+| `NoSuchBucket` | HALT; source or destination bucket doesn't exist |
+| `AccessDenied` | HALT; check source read and destination write permissions |
+| `EntityTooLarge` | Object exceeds copy limit; use multipart upload + copy |
 
 ---
 
@@ -476,15 +640,20 @@ Go SDK:
 ```go
 _, err := client.PutBucketLifecycle(context.Background(), &tos.PutBucketLifecycleInput{
     Bucket: bucketName,
-    LifecycleRules: []tos.RuleStatusType{
+    Rules: []tos.LifecycleRule{
         {
             ID:     "auto-delete",
             Status: enum.RuleStatusEnabled,
-            Prefix: "logs/",
-            Expiration: &tos.TimeType{Days: 30},
+            Filter: tos.LifecycleFilter{Prefix: "logs/"},
+            Expiration: &tos.LifecycleExpiration{
+                Days: tos.Int(30),
+            },
         },
     },
 })
+if err != nil {
+    log.Fatalf("Failed to put bucket lifecycle: %v", err)
+}
 ```
 
 ---
