@@ -84,3 +84,35 @@ TOS Operations depend on:
   ├── IAM policies (ve-iam-ops) for permissions
   └── VPC endpoints (ve-vpc-ops) for private access (optional)
 ```
+
+## FinOps — TOS Cost Optimization
+
+### Storage Class Pricing (cn-beijing, per GB/month)
+
+| Class | Storage | GET Request | PUT Request | Data Retrieval |
+|-------|---------|-------------|-------------|----------------|
+| Standard | ¥0.50 | ¥0.0001/1K | ¥0.0005/1K | Free |
+| IA | ¥0.30 | ¥0.0001/1K | ¥0.0005/1K | ¥0.01/GB |
+| Archive | ¥0.20 | ¥0.0002/1K | ¥0.001/1K | ¥0.05/GB (restore needed) |
+| ColdArchive | ¥0.10 | ¥0.0003/1K | ¥0.002/1K | ¥0.10/GB (restore needed) |
+
+### Cost Optimization Decision Tree
+
+```
+Object last accessed:
+  ├── < 7 days ago → Keep Standard
+  ├── 7-30 days → Keep Standard (monitoring)
+  ├── 30-90 days → Move to IA (save ~40%)
+  ├── 90-180 days → Move to Archive (save ~60%, restore ~hours)
+  └── > 180 days → Move to ColdArchive (save ~80%, restore ~hours)
+```
+
+### Hidden Cost Traps
+
+| Trap | Description | Prevention |
+|------|-------------|------------|
+| Incomplete multipart uploads | Consumes storage but invisible in normal ls | Regular cleanup job |
+| Delete markers (versioning) | Each marker stored as object | Lifecycle rule to expire |
+| Early deletion (IA/Archive) | Deleting before minimum duration → penalty | Lifecycle rules, not manual |
+| Cross-region replication | Doubles storage + transfer costs | Only replicate critical data |
+| Excessive small objects | Per-request cost dominates for tiny files | Batch or compress |
