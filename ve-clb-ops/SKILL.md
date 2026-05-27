@@ -68,7 +68,7 @@ CLB (负载均衡 / Classic Load Balancer) on Volcengine (火山引擎) distribu
 - Task is about **VPC creation** → delegate to: `ve-vpc-ops`
 - Task is about **EIP allocation** → delegate to: `ve-eip-ops`
 - Task is about **ECS instance creation** → delegate to: `ve-ecs-ops`
-- Task is about **ALB/Advanced Load Balancer** → delegate to: `ve-alb-ops` (when present)
+- Task is about **ALB/Advanced Load Balancer** → delegate to: `ve-alb-ops` (if not available, use Volcengine ALB API directly via `ve alb` commands)
 - User insists on **console-only** flows → state limitation
 
 ### Delegation Rules
@@ -91,6 +91,7 @@ CLB (负载均衡 / Classic Load Balancer) on Volcengine (火山引擎) distribu
 | `{{user.subnet_id}}` | CLB subnet | Format `subnet-xxxxxxxxx` |
 | `{{user.listener_protocol}}` | Listener protocol | TCP, UDP, HTTP, HTTPS |
 | `{{user.listener_port}}` | Listener port | e.g., `80`, `443`, `8080` |
+| `{{user.certificate_id}}` | TLS Certificate ID | For HTTPS listeners |
 | `{{user.backend_server_id}}` | Backend ECS ID | Format `i-xxxxxxxxx` |
 | `{{user.backend_port}}` | Backend port | e.g., `8080` |
 | `{{output.clb_id}}` | From CreateLoadBalancer response | Parse from `$.Result.LoadBalancerId` |
@@ -226,6 +227,21 @@ ve clb CreateListener \
   --ListenerName "http-listener"
 ```
 
+#### Execution (HTTPS)
+
+```bash
+ve clb CreateListener \
+  --Region "{{user.region}}" \
+  --LoadBalancerId "{{user.clb_id}}" \
+  --Protocol "HTTPS" \
+  --Port "443" \
+  --ListenerName "https-listener" \
+  --CertificateId "{{user.certificate_id}}" \
+  --TLSPolicy "tls-1-2"
+```
+
+> **Note:** HTTPS listeners require a valid TLS certificate. Create certificates via Volcengine Certificate Manager first. `TLSPolicy` values: `tls-1-0`, `tls-1-1`, `tls-1-2`.
+
 #### Validation
 
 Poll DescribeListeners until the new listener appears:
@@ -251,7 +267,7 @@ ve clb DescribeListeners --Region "{{user.region}}" --LoadBalancerId "{{user.clb
 ve clb AddBackendServers \
   --Region "{{user.region}}" \
   --LoadBalancerId "{{user.clb_id}}" \
-  --BackendServers '[]'
+  --BackendServers '[{"ServerId":"{{user.backend_server_id}}","Port":{{user.backend_port}},"Weight":100}]'
 ```
 
 Backend server JSON format:
@@ -277,10 +293,30 @@ ve clb DescribeBackendServers --Region "{{user.region}}" --LoadBalancerId "{{use
 
 #### Pre-flight (Safety Gate)
 
-- **MUST** delete or reassign all backend servers
-- **MUST** delete all listeners
-- **MUST** disassociate EIP (for public CLB)
-- **MUST** obtain explicit confirmation
+1. Verify no listeners exist:
+```bash
+ve clb DescribeListeners --Region "{{user.region}}" --LoadBalancerId "{{user.clb_id}}"
+```
+If listeners found, delete each:
+```bash
+ve clb DeleteListener --Region "{{user.region}}" --ListenerId "{{listener_id}}"
+```
+
+2. Verify no backend servers exist:
+```bash
+ve clb DescribeBackendServers --Region "{{user.region}}" --LoadBalancerId "{{user.clb_id}}"
+```
+If backends found, remove them:
+```bash
+ve clb RemoveBackendServers --Region "{{user.region}}" --LoadBalancerId "{{user.clb_id}}" --ServerIds '["{{user.backend_server_id}}"]'
+```
+
+3. For public CLB, disassociate EIP:
+```bash
+ve eip DisassociateEipAddress --Region "{{user.region}}" --AllocationId "{{eip_id}}" --InstanceType "ClbInstance" --InstanceId "{{user.clb_id}}"
+```
+
+4. **MUST** obtain explicit user confirmation before deletion
 
 #### Execution
 

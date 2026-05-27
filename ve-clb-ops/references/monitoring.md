@@ -67,10 +67,13 @@ Healthy Ratio = healthy_rs_count / (healthy_rs_count + unhealthy_rs_count)
 
 | Alarm | Metric | Condition | Severity |
 |-------|--------|-----------|----------|
-| Unhealthy Backends | `listener_unhealthy_rs_count` | > 0 | Critical |
+| All Backends Unhealthy | `listener_unhealthy_rs_count` = total backends | All backends failed | Critical |
+| Partial Backend Failures | `listener_unhealthy_rs_count` > 0 AND < total | Partial failures | Warning |
 | Connection Saturation | `load_balancer_max_conn` | > 80% of limit | Warning |
 | Lost Connections | `load_balancer_lost_conn` | > 100/s for 5min | Warning |
 | CLB Inactive | CLB status | Not `active` | Critical |
+
+> **Note:** For single-backend CLBs, any unhealthy count = all backends down. Set `listener_unhealthy_rs_count > 0` to Critical for single-backend configurations.
 
 ---
 
