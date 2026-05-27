@@ -106,8 +106,12 @@ ve clb CreateListener \
   --LoadBalancerId "{{user.clb_id}}" \
   --Protocol "HTTPS" \
   --Port 443 \
-  --ListenerName "https-listener"
+  --ListenerName "https-listener" \
+  --CertificateId "{{user.certificate_id}}" \
+  --TLSPolicy "tls-1-2"
 ```
+
+> **Note:** HTTPS listeners require a valid TLS certificate from Volcengine Certificate Manager.
 
 ### Delete Listener
 
@@ -147,7 +151,24 @@ ve clb RemoveBackendServers \
 
 ## 4. Health Check Commands
 
-### Configure Health Check
+### Configure TCP Health Check
+
+TCP health checks verify connectivity without HTTP probing:
+
+```bash
+ve clb SetHealthCheckConfig \
+  --Region "{{user.region}}" \
+  --LoadBalancerId "{{user.clb_id}}" \
+  --ListenerId "{{user.listener_id}}" \
+  --HealthyThreshold 3 \
+  --UnhealthyThreshold 3 \
+  --Interval 5 \
+  --Timeout 3
+```
+
+> **Note:** TCP health checks do not use `HttpMethod`, `Uri`, or `HealthyHttpCode` parameters.
+
+### Configure HTTP Health Check
 
 ```bash
 ve clb SetHealthCheckConfig \

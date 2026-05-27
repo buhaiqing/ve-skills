@@ -228,4 +228,106 @@ ve clb DescribeBackendServers --Region "$VOLCENGINE_REGION" --LoadBalancerId "$C
 
 ---
 
+## 7. Go SDK Examples
+
+### CreateLoadBalancer
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "github.com/volcengine/volc-sdk-golang/service/clb"
+)
+
+func main() {
+    instance := clb.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.CreateLoadBalancer(&clb.CreateLoadBalancerInput{
+        VpcId:            "vpc-xxx",
+        SubnetId:         "subnet-xxx",
+        LoadBalancerName: "prod-clb",
+        Type:             "private",
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("CLB ID: %s\n", resp.Result.LoadBalancerId)
+}
+```
+
+### DescribeLoadBalancers
+
+```go
+func listCLBs() {
+    instance := clb.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.DescribeLoadBalancers(&clb.DescribeLoadBalancersInput{
+        VpcId: "vpc-xxx",
+    })
+    if err != nil {
+        panic(err)
+    }
+    for _, lb := range resp.Result.LoadBalancers {
+        fmt.Printf("%s: %s (%s)\n", lb.LoadBalancerId, lb.LoadBalancerName, lb.Status)
+    }
+}
+```
+
+### CreateListener
+
+```go
+func createTCPListener(clbID string, port int) {
+    instance := clb.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.CreateListener(&clb.CreateListenerInput{
+        LoadBalancerId: clbID,
+        Protocol:       "TCP",
+        Port:           port,
+        ListenerName:   "tcp-listener",
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Listener ID: %s\n", resp.Result.ListenerId)
+}
+```
+
+### AddBackendServers
+
+```go
+func addBackends(clbID string, serverIDs []string, port int) {
+    instance := clb.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    var backends []clb.BackendServer
+    for _, id := range serverIDs {
+        backends = append(backends, clb.BackendServer{
+            ServerId: id,
+            Port:     port,
+            Weight:   100,
+        })
+    }
+
+    resp, err := instance.AddBackendServers(&clb.AddBackendServersInput{
+        LoadBalancerId: clbID,
+        BackendServers: backends,
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Added %d backends\n", len(resp.Result.BackendServers))
+}
+```
+
+---
+
 *This reference document is part of the ve-clb-ops skill.*
