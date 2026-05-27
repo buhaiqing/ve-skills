@@ -121,3 +121,36 @@ DeleteInstance affects:
 | Key pairs per region | 500 |
 
 > Limits can be increased via support ticket. Check current quota with: `ve ecs DescribeResourceQuota`
+
+## FinOps — Cost Optimization
+
+### Billing Model Comparison
+
+| Model | Discount | Commitment | Best For |
+|-------|----------|------------|----------|
+| PostPaid | 0% | None | Variable workloads, testing |
+| PrePaid (1 year) | ~35% | 12 months | Steady production workloads |
+| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
+| Spot | ~60-90% | Interruptible | Batch processing, fault-tolerant |
+
+### Cost Per Instance Type (cn-beijing, PostPaid)
+
+| Type | vCPU | Memory | Hourly | Monthly (~730h) |
+|------|------|--------|--------|-----------------|
+| ecs.f3i.large | 2 | 4 GB | ¥0.18 | ¥131 |
+| ecs.g3i.large | 2 | 8 GB | ¥0.31 | ¥226 |
+| ecs.g3i.xlarge | 4 | 16 GB | ¥0.62 | ¥453 |
+| ecs.g3i.2xlarge | 8 | 32 GB | ¥1.23 | ¥898 |
+| ecs.c3i.large | 2 | 4 GB | ¥0.28 | ¥204 |
+| ecs.r3i.large | 2 | 16 GB | ¥0.52 | ¥380 |
+
+### Cost Optimization Quick Reference
+
+| Situation | Action | Savings |
+|-----------|--------|---------|
+| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
+| CPU avg < 15% for 7 days | Right-size down | 25-75% |
+| Non-critical batch workload | Use Spot | 60-90% |
+| Stopped instance > 7 days | Delete or snapshot + delete | 100% |
+| Unattached disk | Snapshot + delete | 100% |
+| Snapshot > 90 days old | Delete | 100% |
