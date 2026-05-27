@@ -55,6 +55,8 @@ ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capaci
 | 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover |
 | 4 | **Complete Failure Strategies** | Error taxonomy with ≥ 10 ECS-specific codes; HALT vs retry per type |
 | 5 | **Absolute Single Responsibility** | One product (ECS), one primary resource (Instance); cross-product delegation documented |
+| 6 | **FinOps Integration** | Idle detection, right-sizing, cleanup workflows, cost reports |
+| 7 | **AIOps Integration** | Knowledge base with fault patterns, cross-skill diagnosis, alarm storm handling |
 
 ## Trigger & Scope (Agent-Readable)
 
@@ -203,6 +205,7 @@ ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-15 | Initial release with instance lifecycle, disk, snapshot, and image management |
+| 1.1.0 | 2026-05-27 | Added FinOps operations (idle detection, right-sizing, cleanup, cost reports) and AIOps knowledge base |
 
 ## Execution Flows (Agent-Readable)
 
@@ -943,6 +946,8 @@ ve ecs DescribeInstances --Region "{{user.region}}" | jq '[.Result.Instances[]] 
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
 - [Enhanced Self-Healing Framework](../../ve-skill-generator/references/enhanced-self-healing-framework.md)
+- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [Knowledge Base](references/knowledge-base.md)
 
 ## Operational Best Practices
 
