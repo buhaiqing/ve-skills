@@ -25,8 +25,7 @@ metadata:
   api_profile: "Cloud Monitor API 2018-03-14 (https://www.volcengine.com/docs/6408/78941)"
   cli_applicability: dual-path
   cli_support_evidence: >-
-    Confirmed via `ve vke_metrics --help` and `ve vke_events --help` —
-    Cloud Monitor APIs are accessible via ve CLI.
+    Confirmed via `ve metrics --help` — Cloud Monitor APIs are accessible via ve CLI.
     SDK service: `github.com/volcengine/volc-sdk-golang`
   environment:
     - VOLCENGINE_ACCESS_KEY
@@ -44,7 +43,7 @@ Cloud Monitor (CMS, 云监控) on Volcengine (火山引擎) provides centralized
 
 ### CLI applicability
 
-- **`cli_applicability: dual-path`:** Cloud Monitor API is accessible via `ve vke_metrics` / `ve vke_events` and programmatic SDK.
+- **`cli_applicability: dual-path`:** Official `ve` CLI supports Cloud Monitor operations via `ve metrics` commands. You **MUST** document **both** the SDK step **and** the `ve` CLI step for every operation.
 
 ## Five Core Standards (Quality Gates)
 
@@ -71,12 +70,12 @@ Cloud Monitor (CMS, 云监控) on Volcengine (火山引擎) provides centralized
 ### SHOULD NOT Use This Skill When
 
 - Task is about a specific product's monitoring (e.g., ECS CPU) → handle via the product ops skill (`ve-ecs-ops`), which delegates here for alarm configuration
-- Task is about log analysis → delegate to Loki/logging ops skill (when present)
+- Task is about log analysis → delegate to Loki/logging ops skill (if not available, use Loki API directly)
 - Task is purely billing → delegate to billing ops
 
 ### Delegation Rules
 
-- CMS alarm strategies depend on IAM permissions for notifications → reference `ve-iam-ops` (when present)
+- CMS alarm strategies depend on IAM permissions for notifications → reference `ve-iam-ops` (if not available, use Volcengine IAM API directly)
 - Cross-service monitoring queries may need context from product-specific ops skills
 
 ## Variable Convention (Agent-Readable)
@@ -93,6 +92,13 @@ Cloud Monitor (CMS, 云监控) on Volcengine (火山引擎) provides centralized
 | `{{user.contact_group}}` | Notification group name | Ask once; reuse |
 | `{{output.request_id}}` | Request identifier for tracing | Parse from response |
 | `{{output.datapoints}}` | Time-series metric data points | Parse from GetMetricData response |
+| `{{user.threshold}}` | Alarm threshold value | e.g., `90` for CPU % |
+| `{{user.period}}` | Data granularity in seconds | `60`, `300`, `3600` |
+| `{{user.dimension_key}}` | Dimension key for resource filter | e.g., `InstanceId` |
+| `{{user.start_time_ms}}` | Query start time (Unix ms) | e.g., `$(($(date +%s)-3600))000` |
+| `{{user.end_time_ms}}` | Query end time (Unix ms) | e.g., `$(date +%s)000` |
+| `{{user.rule_id}}` | Alarm rule ID | Format `rule-xxxxxxxxx` |
+| `{{user.template_name}}` | Alarm template name | Ask once; reuse |
 
 > **`{{env.*}}` MUST NOT** be collected from the user. **`{{user.*}}`** MUST be collected interactively when missing.
 
@@ -102,7 +108,7 @@ Cloud Monitor (CMS, 云监控) on Volcengine (火山引擎) provides centralized
 
 - **Cloud Monitor OpenAPI (2018-03-14)** is canonical for all API fields and response shapes
 - **Endpoint:** `open.volcengineapi.com` (or `monitor.volcengineapi.com`)
-- **Service code:** `vke_metrics` or use the general `ve` CLI endpoint
+- **Service code:** `metrics` (or use the general `ve` CLI endpoint)
 - **Errors:** Responses with `Error` object containing `Code` and `Message` fields
 
 ### Key Response Fields
@@ -152,7 +158,7 @@ ve version
 ### Your First Command
 ```bash
 # Query ECS CPU usage for the last hour
-ve vke_metrics GetMetricData --Namespace Volcengine_ECS --MetricName CpuUtilization --Dimensions '[{"InstanceId":"i-xxxxx"}]' --StartTime $(($(date +%s)-3600))000 --EndTime $(date +%s)000 --Period 60
+ve metrics GetMetricData --Namespace Volcengine_ECS --MetricName CpuUtilization --Dimensions '[{"InstanceId":"i-xxxxx"}]' --StartTime $(($(date +%s)-3600))000 --EndTime $(date +%s)000 --Period 60
 ```
 
 ## Capabilities at a Glance

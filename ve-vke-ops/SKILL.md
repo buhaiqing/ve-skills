@@ -63,10 +63,10 @@ Volcengine VKE (Volcengine Kubernetes Engine / 火山引擎容器服务) provide
 
 ### SHOULD NOT Use This Skill When
 
-- Task is billing / account management → delegate to: `ve-billing-ops` (when present)
-- Task is IAM / permission model → delegate to: `ve-iam-ops` (when present)
-- Task is VPC / subnet / security group → delegate to: `ve-vpc-ops` (when present)
-- Task is ECS instance creation directly → delegate to: `ve-ecs-ops` (when present)
+- Task is billing / account management → delegate to: `ve-billing-ops` (if not available, use Volcengine Billing API directly)
+- Task is IAM / permission model → delegate to: `ve-iam-ops` (if not available, use Volcengine IAM API directly)
+- Task is VPC / subnet / security group → delegate to: `ve-vpc-ops` (if not available, use Volcengine VPC API directly)
+- Task is ECS instance creation directly → delegate to: `ve-ecs-ops` (if not available, use Volcengine ECS API directly)
 - User insists on **console-only** flows → state limitation; do not invent undocumented steps
 
 ### Delegation Rules
@@ -87,6 +87,9 @@ Volcengine VKE (Volcengine Kubernetes Engine / 火山引擎容器服务) provide
 | `{{user.k8s_version}}` | Kubernetes version (e.g., "v1.28") | Ask with supported version list |
 | `{{output.cluster_id}}` | From CreateCluster API response | Parse `$.Result.ClusterId` |
 | `{{output.node_pool_id}}` | From CreateNodePool API response | Parse `$.Result.NodePoolId` |
+| `{{user.cluster_id}}` | Cluster ID | Format `cls-xxxxxxxxx`; ask once or parse from `{{output.cluster_id}}` |
+| `{{user.subnet_id}}` | Cluster deployment subnet | Format `subnet-xxxxxxxxx`; ask once |
+| `{{user.pod_subnet_id}}` | Pod network subnet | Format `subnet-xxxxxxxxx`; ask once |
 
 > **`{{env.*}}` MUST NOT** be collected from the user. **`{{user.*}}`** MUST be collected interactively when missing.
 
@@ -362,19 +365,85 @@ for i in $(seq 1 60); do
 done
 ```
 
-### Operation: Describe/Update/Delete NodePool
+### Operation: DescribeNodePool — Get NodePool Details
 
-Pattern follows Cluster operations. Use `--ClusterId` and `--NodePoolId` for all NodePool operations.
+#### Execution
 
-**Delete NodePool Safety Gate:** Require explicit confirmation with node pool name and ID.
+```bash
+ve vke DescribeNodePool \
+  --ClusterId "{{user.cluster_id}}" \
+  --NodePoolId "{{user.node_pool_id}}"
+```
+
+#### Present to User
+
+| Field | Path | Notes |
+|-------|------|-------|
+| NodePool ID | `$.Result.NodePoolId` | Primary identifier |
+| Name | `$.Result.Name` | Node pool name |
+| Status | `$.Result.Status` | Running/Creating/Deleting/Error |
+| Desired Replicas | `$.Result.AutoScaling.DesiredReplicas` | Current node count |
+| Min/Max Replicas | `$.Result.AutoScaling.MinReplicas` / `MaxReplicas` | Scaling bounds |
+| Instance Types | `$.Result.NodeConfig.InstanceTypeIds` | ECS types in pool |
+
+---
+
+### Operation: DeleteNodePool — Delete NodePool
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit user confirmation for irreversible delete of `{{user.node_pool_name}}` (`{{user.node_pool_id}}`)
+- **MUST** warn: all nodes in pool will be terminated
+- **MUST NOT** proceed without clear user assent
+
+#### Execution
+
+```bash
+ve vke DeleteNodePool --ClusterId "{{user.cluster_id}}" --NodePoolId "{{user.node_pool_id}}"
+```
+
+#### Post-execution Validation
+
+```bash
+for i in $(seq 1 60); do
+  STATUS=$(ve vke DescribeNodePool --ClusterId "{{user.cluster_id}}" --NodePoolId "{{user.node_pool_id}}" 2>/dev/null | jq -r '.Result.Status // "deleted"')
+  [ "$STATUS" = "deleted" ] || [ -z "$STATUS" ] && break
+  sleep 5
+done
+```
+
+---
 
 ### Operation: Add/Remove/Delete Nodes
 
-- **AddNodes:** Add existing ECS instances to a node pool
-- **RemoveNodes:** Remove nodes (optionally drain pods first)
-- **DeleteNodes:** Delete nodes and underlying ECS instances
+#### AddNodes
 
-**Safety Gate for DeleteNodes:** Explicit confirmation required; warn about pod eviction.
+```bash
+ve vke AddNodes \
+  --ClusterId "{{user.cluster_id}}" \
+  --NodePoolId "{{user.node_pool_id}}" \
+  --InstanceIds '["{{user.ecs_instance_id}}"]'
+```
+
+#### RemoveNodes (without deleting ECS)
+
+```bash
+ve vke RemoveNodes \
+  --ClusterId "{{user.cluster_id}}" \
+  --NodePoolId "{{user.node_pool_id}}" \
+  --InstanceIds '["{{user.ecs_instance_id}}"]'
+```
+
+#### DeleteNodes (destroys ECS instances)
+
+**Safety Gate:** Explicit confirmation required; warn about pod eviction and data loss.
+
+```bash
+ve vke DeleteNodes \
+  --ClusterId "{{user.cluster_id}}" \
+  --NodePoolId "{{user.node_pool_id}}" \
+  --InstanceIds '["{{user.ecs_instance_id}}"]'
+```
 
 ### Operation: List Supported Versions
 

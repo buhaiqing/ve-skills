@@ -91,6 +91,9 @@ NAT Gateway (NAT网关) on Volcengine (火山引擎) provides network address tr
 | `{{user.snat_cidr}}` | Source CIDR for SNAT | e.g., `10.0.2.0/24` |
 | `{{user.dnat_external_port}}` | DNAT external port | e.g., `8080` |
 | `{{user.dnat_internal_port}}` | DNAT internal port | e.g., `80` |
+| `{{user.dnat_internal_ip}}` | DNAT target internal IP | e.g., `10.0.2.10` |
+| `{{user.snat_rule_name}}` | SNAT rule name | Ask once; reuse |
+| `{{user.dnat_rule_name}}` | DNAT rule name | Ask once; reuse |
 | `{{output.nat_id}}` | From CreateNatGateway response | Parse from `$.Result.NatGatewayId` |
 | `{{output.snat_rule_id}}` | From CreateSnatRule response | Parse from `$.Result.SnatRuleId` |
 | `{{output.dnat_rule_id}}` | From CreateDnatRule response | Parse from `$.Result.DnatRuleId` |
@@ -297,10 +300,30 @@ ve nat Gateway DescribeDnatRules --Region "{{user.region}}" --NatGatewayId "{{us
 
 #### Pre-flight (Safety Gate)
 
-- **MUST** delete all SNAT rules first
-- **MUST** delete all DNAT rules first
-- **MUST** release/disassociate EIP from NAT first
-- **MUST** obtain explicit confirmation
+1. Verify and delete all SNAT rules:
+```bash
+ve nat Gateway DescribeSnatRules --Region "{{user.region}}" --NatGatewayId "{{user.nat_id}}"
+```
+For each rule found, delete:
+```bash
+ve nat Gateway DeleteSnatRule --Region "{{user.region}}" --SnatRuleId "{{snat_rule_id}}"
+```
+
+2. Verify and delete all DNAT rules:
+```bash
+ve nat Gateway DescribeDnatRules --Region "{{user.region}}" --NatGatewayId "{{user.nat_id}}"
+```
+For each rule found, delete:
+```bash
+ve nat Gateway DeleteDnatRule --Region "{{user.region}}" --DnatRuleId "{{dnat_rule_id}}"
+```
+
+3. Disassociate EIP from NAT Gateway:
+```bash
+ve eip DisassociateEipAddress --Region "{{user.region}}" --AllocationId "{{eip_id}}"
+```
+
+4. **MUST** obtain explicit confirmation before deletion
 
 #### Execution
 
