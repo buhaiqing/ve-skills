@@ -307,4 +307,98 @@ done
 
 ---
 
+## 7. Go SDK Examples
+
+### AllocateEipAddress
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "github.com/volcengine/volc-sdk-golang/service/eip"
+)
+
+func main() {
+    instance := eip.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.AllocateEipAddress(&eip.AllocateEipAddressInput{
+        LineType:  "BGP",
+        Bandwidth: 5,
+        Name:      "web-eip",
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("EIP: %s (%s)\n", resp.Result.EipAddress, resp.Result.AllocationId)
+}
+```
+
+### DescribeEipAddresses
+
+```go
+func listEIPs() {
+    instance := eip.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.DescribeEipAddresses(&eip.DescribeEipAddressesInput{})
+    if err != nil {
+        panic(err)
+    }
+    for _, e := range resp.Result.EipAddresses {
+        bound := "-"
+        if e.InstanceId != "" {
+            bound = fmt.Sprintf("%s:%s", e.InstanceType, e.InstanceId)
+        }
+        fmt.Printf("%s: %s status=%s bw=%dMbps bound=%s\n",
+            e.AllocationId, e.EipAddress, e.Status, e.Bandwidth, bound)
+    }
+}
+```
+
+### AssociateEipAddress
+
+```go
+func associateEIP(eipID, instanceID, instanceType string) {
+    instance := eip.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    _, err := instance.AssociateEipAddress(&eip.AssociateEipAddressInput{
+        AllocationId: eipID,
+        InstanceId:   instanceID,
+        InstanceType: instanceType,
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("EIP %s bound to %s (%s)\n", eipID, instanceID, instanceType)
+}
+```
+
+### ModifyEipBandwidth
+
+```go
+func modifyBandwidth(eipID string, bandwidth int) {
+    instance := eip.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    _, err := instance.ModifyEipBandwidth(&eip.ModifyEipBandwidthInput{
+        AllocationId: eipID,
+        Bandwidth:    bandwidth,
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Bandwidth updated to %d Mbps for EIP %s\n", bandwidth, eipID)
+}
+```
+
+---
+
 *This reference document is part of the ve-eip-ops skill. For operational procedures, see the main SKILL.md.*

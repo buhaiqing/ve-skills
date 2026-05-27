@@ -65,7 +65,7 @@ EIP (弹性公网IP / Elastic IP) on Volcengine (火山引擎) provides public I
 ### SHOULD NOT Use This Skill When
 
 - Task is purely billing / account management → delegate to billing ops
-- Task is IAM / permission model only → delegate to: `ve-iam-ops` (when present)
+- Task is IAM / permission model only → delegate to: `ve-iam-ops` (if not available, use Volcengine IAM API directly)
 - Task is about **VPC creation** → delegate to: `ve-vpc-ops`
 - Task is about **ECS instance creation** → delegate to: `ve-ecs-ops`
 - Task is about **NAT Gateway** → delegate to: `ve-nat-ops`
@@ -92,6 +92,9 @@ EIP (弹性公网IP / Elastic IP) on Volcengine (火山引擎) provides public I
 | `{{user.bandwidth}}` | Bandwidth value | Ask once; unit is Mbps |
 | `{{user.instance_id}}` | Target instance ID (ECS/CLB/NAT) | Ask once; format varies by type |
 | `{{user.instance_type}}` | Target type enum | EcsInstance / ClbInstance / Nat |
+| `{{user.eip_address}}` | EIP address string | Can use `{{output.eip_address}}` from allocation |
+| `{{user.new_name}}` | New EIP name | For ModifyEipAddressAttributes |
+| `{{user.new_description}}` | New EIP description | For ModifyEipAddressAttributes |
 | `{{output.eip_id}}` | From AllocateEipAddress response | Parse from `$.Result.AllocationId` |
 | `{{output.eip_address}}` | From AllocateEipAddress response | Parse from `$.Result.EipAddress` |
 
@@ -277,6 +280,12 @@ Poll DescribeEipAddresses until status is `InUse` and InstanceId matches.
 
 ### Operation: DisassociateEipAddress — Unbind EIP
 
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| EIP exists and bound | DescribeEipAddresses with EIP ID | EIP found, status InUse | HALT; EIP not bound |
+
 #### Execution
 
 ```bash
@@ -295,9 +304,17 @@ Poll DescribeEipAddresses until status is `Available`.
 
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible release
-- **MUST** verify EIP is not bound (status = `Available`)
-- **MUST NOT** proceed without clear user assent
+1. Verify EIP status (must be `Available`):
+```bash
+ve eip DescribeEipAddresses --Region "{{user.region}}" --AllocationIds '["{{user.eip_id}}"]'
+```
+If status is `InUse`, disassociate first:
+```bash
+ve eip DisassociateEipAddress --Region "{{user.region}}" --AllocationId "{{user.eip_id}}"
+```
+
+2. **MUST** obtain explicit confirmation: irreversible release
+3. **MUST NOT** proceed without clear user assent
 
 #### Execution
 
@@ -326,6 +343,47 @@ ve eip ModifyEipBandwidth \
 
 ```bash
 ve eip DescribeEipBandwidth --Region "{{user.region}}" --AllocationId "{{user.eip_id}}"
+```
+
+---
+
+### Operation: RenewEipAddress — Renew Prepaid EIP
+
+#### Execution
+
+```bash
+ve eip RenewEipAddress \
+  --Region "{{user.region}}" \
+  --AllocationId "{{user.eip_id}}" \
+  --RenewalPeriod "Month" \
+  --Quantity 1
+```
+
+**RenewalPeriod values:** `Month`, `Year`
+
+#### Validation
+
+```bash
+ve eip DescribeEipAddressAttributes --Region "{{user.region}}" --AllocationId "{{user.eip_id}}"
+```
+
+---
+
+### Operation: TagEipAddress — Add Tags to EIP
+
+#### Execution
+
+```bash
+ve eip TagEipAddress \
+  --Region "{{user.region}}" \
+  --AllocationId "{{user.eip_id}}" \
+  --Tags '[{"Key": "env", "Value": "production"}, {"Key": "team", "Value": "ops"}]'
+```
+
+#### Validation
+
+```bash
+ve eip DescribeEipAddressAttributes --Region "{{user.region}}" --AllocationId "{{user.eip_id}}" | jq '.Result.Tags'
 ```
 
 ---

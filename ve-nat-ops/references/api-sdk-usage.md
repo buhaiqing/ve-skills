@@ -224,4 +224,102 @@ done
 
 ---
 
+## 7. Go SDK Examples
+
+### CreateNatGateway
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "github.com/volcengine/volc-sdk-golang/service/natgateway"
+)
+
+func main() {
+    instance := natgateway.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.CreateNatGateway(&natgateway.CreateNatGatewayInput{
+        VpcId:          "vpc-xxx",
+        SubnetId:       "subnet-xxx",
+        NatGatewayName: "prod-nat",
+        NatGatewaySpec: "Small",
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("NAT Gateway ID: %s\n", resp.Result.NatGatewayId)
+}
+```
+
+### DescribeNatGateways
+
+```go
+func listNATs() {
+    instance := natgateway.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.DescribeNatGateways(&natgateway.DescribeNatGatewaysInput{
+        VpcId: "vpc-xxx",
+    })
+    if err != nil {
+        panic(err)
+    }
+    for _, ngw := range resp.Result.NatGateways {
+        fmt.Printf("%s: %s (%s) spec=%s\n", ngw.NatGatewayId, ngw.NatGatewayName, ngw.Status, ngw.NatGatewaySpec)
+    }
+}
+```
+
+### CreateSnatRule
+
+```go
+func createSNATRule(natID, eipAddr, cidr string) {
+    instance := natgateway.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.CreateSnatRule(&natgateway.CreateSnatRuleInput{
+        NatGatewayId: natID,
+        SourceCidr:   cidr,
+        SnatRuleName: "private-subnet-snat",
+        EipAddresses: []string{eipAddr},
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("SNAT Rule ID: %s\n", resp.Result.SnatRuleId)
+}
+```
+
+### CreateDnatRule
+
+```go
+func createDNATRule(natID, eipAddr, internalIP string, extPort, intPort int) {
+    instance := natgateway.NewInstance()
+    instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
+
+    resp, err := instance.CreateDnatRule(&natgateway.CreateDnatRuleInput{
+        NatGatewayId: natID,
+        EipAddress:   eipAddr,
+        IpProtocol:   "TCP",
+        ExternalPort: extPort,
+        InternalIp:   internalIP,
+        InternalPort: intPort,
+        DnatRuleName: "https-to-web",
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("DNAT Rule ID: %s\n", resp.Result.DnatRuleId)
+}
+```
+
+---
+
 *This reference document is part of the ve-nat-ops skill.*

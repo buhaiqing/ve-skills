@@ -49,5 +49,85 @@ import "github.com/volcengine/volc-sdk-golang/service/vke"
 instance := vke.NewInstance()
 instance.Client.SetAccessKey(os.Getenv("VOLCENGINE_ACCESS_KEY"))
 instance.Client.SetSecretKey(os.Getenv("VOLCENGINE_SECRET_KEY"))
-resp, err := instance.Client.Request("vke", "CreateCluster", params)
+    resp, err := instance.Client.Request("vke", "CreateCluster", params)
+```
+
+## Go SDK Examples
+
+### CreateNodePool
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "github.com/volcengine/volc-sdk-golang/service/vke"
+)
+
+func main() {
+    instance := vke.NewInstance()
+    instance.Client.SetAccessKey(os.Getenv("VOLCENGINE_ACCESS_KEY"))
+    instance.Client.SetSecretKey(os.Getenv("VOLCENGINE_SECRET_KEY"))
+
+    resp, err := instance.CreateNodePool(&vke.CreateNodePoolInput{
+        ClusterId: "cls-xxx",
+        Name:      "prod-pool",
+        NodeConfig: vke.NodeConfig{
+            InstanceTypeIds: []string{"ecs.g1ie.xlarge"},
+            SubnetIds:       []string{"subnet-xxx"},
+            SystemVolume: vke.Volume{
+                Type: "ESSD_PL0",
+                Size: 50,
+            },
+        },
+        AutoScaling: vke.AutoScaling{
+            Enabled:     true,
+            MinReplicas: 1,
+            MaxReplicas: 5,
+        },
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("NodePool ID: %s\n", resp.Result.NodePoolId)
+}
+```
+
+### DescribeCluster
+
+```go
+func describeCluster(clusterID string) {
+    instance := vke.NewInstance()
+    instance.Client.SetAccessKey(os.Getenv("VOLCENGINE_ACCESS_KEY"))
+    instance.Client.SetSecretKey(os.Getenv("VOLCENGINE_SECRET_KEY"))
+
+    resp, err := instance.DescribeCluster(&vke.DescribeClusterInput{
+        ClusterId: clusterID,
+    })
+    if err != nil {
+        panic(err)
+    }
+    r := resp.Result
+    fmt.Printf("Cluster: %s (%s) status=%s version=%s vpc=%s\n",
+        r.ClusterId, r.Name, r.Status, r.KubernetesVersion, r.ClusterConfig.VpcId)
+}
+```
+
+### DeleteCluster
+
+```go
+func deleteCluster(clusterID string) {
+    instance := vke.NewInstance()
+    instance.Client.SetAccessKey(os.Getenv("VOLCENGINE_ACCESS_KEY"))
+    instance.Client.SetSecretKey(os.Getenv("VOLCENGINE_SECRET_KEY"))
+
+    resp, err := instance.DeleteCluster(&vke.DeleteClusterInput{
+        ClusterId: clusterID,
+    })
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("DeleteCluster request sent. RequestId: %s\n", resp.Metadata.RequestId)
+}
 ```
