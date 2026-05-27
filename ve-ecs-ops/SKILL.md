@@ -235,6 +235,7 @@ package main
 
 import (
     "fmt"
+    "log"
     "os"
 
     "github.com/volcengine/volc-sdk-golang/service/ecs"
@@ -252,7 +253,7 @@ func main() {
 
     resp, err := instance.Client.Request("DescribeInstances", nil, params)
     if err != nil {
-        panic(err)
+        log.Fatalf("Failed to describe instances: %v", err)
     }
     fmt.Println(string(resp))
 }
@@ -345,11 +346,12 @@ resp, err := instance.Client.Request("RunInstances", nil, params)
 
 ```bash
 for i in $(seq 1 120); do
-  STATUS=$(ve ecs DescribeInstances --Region "{{user.region}}" --InstanceIds '["{{output.instance_id}}"]' | jq -r '.Instances.Instance[0].Status')
+  STATUS=$(ve ecs DescribeInstances --Region "{{user.region}}" --InstanceIds '["{{output.instance_id}}"]' | jq -r '.Result.Instances[0].Status')
   [ "$STATUS" = "RUNNING" ] && break
   echo "Current: $STATUS (poll $i/120)"
   sleep 5
 done
+[ "$STATUS" != "RUNNING" ] && echo "[ERROR] Instance failed to reach RUNNING state (current: $STATUS)" && exit 1
 ```
 
 3. On success, report instance ID, public/private IPs, and access info
@@ -457,7 +459,7 @@ Poll until status transitions `RUNNING` → `REBOOTING` → `RUNNING` (max 300s)
 
 ```bash
 # Check deletion protection status
-ve ecs DescribeInstances --Region "{{user.region}}" --InstanceIds '["{{user.instance_id}}"]' | jq '.Instances.Instance[0].DeletionProtection'
+ve ecs DescribeInstances --Region "{{user.region}}" --InstanceIds '["{{user.instance_id}}"]' | jq '.Result.Instances[0].DeletionProtection'
 ```
 
 #### Execution
@@ -656,6 +658,61 @@ ve ecs StopInvocation --Region "{{user.region}}" --InvocationId "{{user.invocati
 #### Validation
 
 Poll `DescribeInvocationResults` until status changes from `Running` to `Stopping` or `Timeout`.
+
+---
+
+### Operation: AssignPrivateIpAddresses — Assign Private IPs to ENI
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Instance exists | DescribeInstances with ID | Instance found | HALT |
+| Instance has ENI | DescribeNetworkInterfaces | ENI found | HALT; instance must have network interface |
+| Available IPs | Check subnet CIDR available IPs | Sufficient IPs | HALT; expand subnet or use existing IPs |
+| IP count limit | Max private IPs per ENI (varies by instance type) | Within limit | HALT; remove unused IPs first |
+
+#### Execution
+
+```bash
+# Assign a single private IP to the primary ENI
+ve ecs AssignPrivateIpAddresses \
+  --Region "{{user.region}}" \
+  --InstanceId "{{user.instance_id}}" \
+  --PrivateIpAddressCount 1
+
+# Assign specific private IP addresses
+ve ecs AssignPrivateIpAddresses \
+  --Region "{{user.region}}" \
+  --InstanceId "{{user.instance_id}}" \
+  --PrivateIpAddresses '["10.0.0.100","10.0.0.101"]'
+
+# Assign IP to a specific ENI
+ve ecs AssignPrivateIpAddresses \
+  --Region "{{user.region}}" \
+  --NetworkInterfaceId "{{user.eni_id}}" \
+  --PrivateIpAddressCount 1
+```
+
+#### Validation
+
+```bash
+# Verify assigned IPs
+ve ecs DescribeNetworkInterfaces \
+  --Region "{{user.region}}" \
+  --InstanceId "{{user.instance_id}}" | jq '.Result.NetworkInterfaceSets.NetworkInterfaceSet[0].PrivateIpSets'
+```
+
+#### Failure Recovery
+
+| Error Pattern | Max Retries | Agent Action |
+|--------------|-------------|--------------|
+| `InvalidInstanceId.NotFound` | 0 | HALT; verify instance ID |
+| `InvalidNetworkInterfaceId.NotFound` | 0 | HALT; verify ENI ID |
+| `IpAlreadyAssigned` | 0 | IP already assigned; skip |
+| `PrivateIpAddressCountExceeded` | 0 | HALT; ENI IP limit reached |
+| `InsufficientAvailableIpAddresses` | 0 | HALT; subnet IP exhausted |
+| `IncorrectInstanceStatus` | 0 | Instance must be `RUNNING` or `STOPPED` |
 
 ---
 
