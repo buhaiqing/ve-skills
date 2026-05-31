@@ -1,0 +1,26 @@
+{
+  "function": {
+    "name": "example-function",
+    "runtime": "Python3.9",
+    "handler": "index.handler",
+    "memory_size": 256,
+    "timeout": 60,
+    "code_type": "URL",
+    "code_url": "https://storage.example.com/code.zip",
+    "description": "Example function for demonstration"
+  },
+  "trigger": {
+    "type": "Timer",
+    "name": "hourly-trigger",
+    "config": {
+      "schedule": "0 * * * *",
+      "enable": true
+    }
+  },
+  "environment": {
+    "variables": {
+      "LOG_LEVEL": "INFO",
+      "DB_HOST": "localhost"
+    }
+  }
+}
