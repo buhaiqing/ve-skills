@@ -182,7 +182,89 @@ ve metrics GetMetricData --Namespace Volcengine_ECS --MetricName CpuUtilization 
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | 2026-05-15 | Initial release with metrics queries, alarm management, event monitoring |
+| 1.0.1 | 2026-05-28 | Enhanced error handling taxonomy with 12 CMS-specific error codes; added retry strategy matrix |
+| 1.0.0 | 2026-05-15 | Initial release with core capabilities: GetMetricData (time-series queries), ListMetrics (namespace metrics), CreateAlarm/EnableAlarm/DisableAlarm/DeleteAlarm (alarm lifecycle), CreateAlarmTemplate/ApplyAlarmTemplate (template management), ListEvents (system events), DescribeContactGroups/CreateContactGroup (notification groups); includes CLI dual-path execution (ve CLI + Go SDK fallback), Pre-flight→Execute→Validate→Recover workflow, namespace convention guide (ECS/RDS/Redis/VKE/TOS/SLB/VPC), security credential masking guidelines |
+
+## Testing Guide
+
+### Unit Testing Strategy
+
+| Component | Test Approach | Coverage Target |
+|-----------|---------------|-----------------|
+| Credential validation | Mock environment vars | 100% |
+| Namespace resolution | Test with valid/invalid namespaces | 100% |
+| Parameter parsing | Test JSON format for Dimensions | 100% |
+| Error code mapping | Test all 12 CMS error codes | 100% |
+
+### Integration Testing
+
+```bash
+# Test 1: Verify credentials are configured
+export VOLCENGINE_ACCESS_KEY="test_key"
+export VOLCENGINE_SECRET_KEY="test_secret"
+export VOLCENGINE_REGION="cn-north-1"
+
+# Test 2: Query ECS CPU metrics (should return data or specific error)
+ve metrics GetMetricData \
+  --Namespace Volcengine_ECS \
+  --MetricName CpuUtilization \
+  --Dimensions '[{"InstanceId":"i-xxxxx"}]' \
+  --StartTime $(($(date +%s)-3600)) P3 000 \
+  --EndTime $(date +%s P4 )000 \
+  --Period 60
+
+# Test 3: List alarm rules
+ve metrics DescribeMetricRuleList
+
+# Test 4: Create and delete test alarm (with cleanup)
+ve metrics PutResourceMetricRule \
+  --RuleName "test-alarm-$(date +%s)" \
+  --Namespace Volcengine_ECS \
+  --MetricName CpuUtilization \
+  --Resources '[{"Dimensions":[{"InstanceId":"i-xxxxx"}]}]' \
+  --AlertState Critical \
+  --ComparisonOperator GreaterThanThreshold \
+  --Statistics Average \
+  --Threshold 99 \
+  --Times 1 \
+  --Period 60
+```
+
+### Test Scenarios
+
+| Scenario | Expected Result |
+|----------|-----------------|
+| Invalid credentials | `Unauthorized` error with clear message |
+| Non-existent namespace | `NoSuchMetric` error |
+| Invalid dimensions format | `InvalidParameter` error |
+| Throttling (rate limit) | Retry with exponential backoff (2s, 4s, 8s) |
+| Create alarm with duplicate name | `DuplicateRuleName` error |
+| Delete non-existent alarm | Success (idempotent) |
+
+### Test Environment Setup
+
+```bash
+# Create dedicated test namespace/project
+export VOLCENGINE_TEST_PROJECT="cms-ops-test"
+
+# Use separate notification group for tests
+export CMS_TEST_CONTACT_GROUP="test-alerts"
+```
+
+### Smoke Tests
+
+```bash
+# Quick validation of setup
+ve version  # Should return version info
+
+# List metrics to verify API connectivity
+ve metrics ListMetrics --Namespace Volcengine_ECS
+
+# Verify notification groups
+ve metrics DescribeContactGroups
+```
+
+---
 
 ## Execution Flows (Agent-Readable)
 

@@ -1,0 +1,238 @@
+# MongoDB Instance Configuration Example
+# Volcengine MongoDB - Replica Set Configuration
+
+apiVersion: ve.volcengine.com/v1
+kind: MongoDBInstance
+metadata:
+  name: my-mongodb-instance
+  description: "Example MongoDB replica set instance"
+  region: cn-beijing
+  labels:
+    environment: production
+    team: platform
+    project: myapp
+
+spec:
+  # MongoDB Version
+  # Supported: 4.0, 4.2, 4.4, 5.0, 6.0
+  mongoVersion: "5.0"
+
+  # Deployment Architecture
+  # - ReplicaSet: 3-node high availability (default, recommended)
+  # - Sharded: For horizontal scaling (advanced)
+  architecture: ReplicaSet
+
+  # Node Configuration
+  nodeSpec: mongo.4c8g
+  nodeNumber: 3
+
+  # Storage Configuration
+  storageType: ESSD_PL1
+  storageSpaceGB: 200
+
+  # Network Configuration
+  network:
+    vpcId: vpc-xxxxxxxx
+    subnetId: subnet-xxxxxxxx
+    zoneId: cn-beijing-a
+    # IP Whitelist (CIDR format)
+    ipWhitelist:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+      - "192.168.0.0/16"
+
+  # Billing Configuration
+  chargeType: PostPaid
+  # chargeType: PrePaid
+  # period: 12  # months for PrePaid
+
+  # Instance Naming
+  instanceName: prod-mongodb-main
+
+---
+# Example Database Configuration
+apiVersion: ve.volcengine.com/v1
+kind: MongoDBDatabase
+metadata:
+  instanceRef: prod-mongodb-main
+spec:
+  databases:
+    - name: app_database
+      description: "Main application database"
+      collections:
+        - name: users
+          description: "User accounts"
+          indexes:
+            - fields: ["email"]
+              unique: true
+            - fields: ["created_at"]
+        - name: orders
+          description: "Order records"
+          indexes:
+            - fields: ["user_id", "created_at"]
+            - fields: ["status"]
+        - name: products
+          description: "Product catalog"
+          indexes:
+            - fields: ["sku"]
+              unique: true
+
+    - name: analytics_db
+      description: "Analytics and reporting"
+      collections:
+        - name: events
+          description: "Event tracking"
+          indexes:
+            - fields: ["timestamp"]
+            - fields: ["event_type"]
+
+---
+# Example User Configuration
+apiVersion: ve.volcengine.com/v1
+kind: MongoDBUser
+metadata:
+  instanceRef: prod-mongodb-main
+spec:
+  users:
+    - username: app_user
+      password: "<secure-password>"
+      description: "Application service account"
+      privileges:
+        - database: app_database
+          role: readWrite
+
+    - username: readonly_user
+      password: "<secure-password>"
+      description: "Read-only analytics user"
+      privileges:
+        - database: app_database
+          role: read
+        - database: analytics_db
+          role: read
+
+    - username: admin_user
+      password: "<secure-password>"
+      description: "Database administrator"
+      privileges:
+        - database: admin
+          role: root
+
+---
+# Example Backup Configuration
+apiVersion: ve.volcengine.com/v1
+kind: MongoDBBackup
+metadata:
+  instanceRef: prod-mongodb-main
+spec:
+  # Automatic Backup Settings
+  automaticBackup:
+    enabled: true
+    backupWindow: "02:00-06:00"
+    retentionDays: 30
+    crossRegionBackup:
+      enabled: true
+      targetRegion: cn-shanghai
+
+  # Manual Backup Schedule
+  manualBackups:
+    - name: weekly-full
+      schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+      description: "Weekly full backup"
+
+---
+# Example Parameter Configuration
+apiVersion: ve.volcengine.com/v1
+kind: MongoDBParameters
+metadata:
+  instanceRef: prod-mongodb-main
+spec:
+  parameters:
+    # Connection Settings
+    - name: maxConnections
+      value: "2000"
+      description: "Maximum number of concurrent connections"
+
+    # Performance Settings
+    - name: slowOpThresholdMs
+      value: "100"
+      description: "Threshold for slow query logging (ms)"
+
+    # Cache Settings
+    - name: wiredTigerCacheSizeGB
+      value: "4"
+      description: "WiredTiger cache size (should be ~50% of RAM)"
+
+    # Replication Settings
+    - name: oplogSizeGB
+      value: "10"
+      description: "Oplog size in GB"
+
+    # Security Settings
+    - name: authMechanism
+      value: "SCRAM-SHA-256"
+      description: "Authentication mechanism"
+
+    # Logging Settings
+    - name: logLevel
+      value: "1"
+      description: "Log verbosity level (0=off, 1=on)"
+
+---
+# Example Monitoring Configuration
+apiVersion: ve.volcengine.com/v1
+kind: MongoDBMonitoring
+metadata:
+  instanceRef: prod-mongodb-main
+spec:
+  # Metrics to Collect
+  metrics:
+    - CPUUtilization
+    - MemoryUtilization
+    - StorageUtilization
+    - ConnectionCount
+    - QPS
+    - SlowQueryCount
+    - ReplicationLag
+
+  # Alert Rules
+  alerts:
+    - name: high-cpu
+      metric: CPUUtilization
+      condition: "> 80%"
+      duration: 10m
+      severity: warning
+      action: notify
+
+    - name: critical-cpu
+      metric: CPUUtilization
+      condition: "> 95%"
+      duration: 5m
+      severity: critical
+      action: page
+
+    - name: storage-low
+      metric: StorageUtilization
+      condition: "> 85%"
+      duration: 5m
+      severity: warning
+      action: notify
+
+    - name: connections-high
+      metric: ConnectionUtilization
+      condition: "> 80%"
+      duration: 10m
+      severity: warning
+      action: notify
+
+    - name: replication-lag
+      metric: ReplicationLag
+      condition: "> 30s"
+      duration: 5m
+      severity: warning
+      action: notify
+
+  # Slow Query Monitoring
+  slowQueryMonitoring:
+    enabled: true
+    thresholdMs: 100
+    sampleRate: 1.0

@@ -1,0 +1,175 @@
+# PolarDB MySQL Example Cluster Configuration
+# Use this as a template for creating PolarDB clusters
+
+cluster:
+  # Cluster identification
+  name: my-polardb-cluster
+  db_engine_version: MySQL_8_0  # Options: MySQL_5_7, MySQL_8_0
+
+  # Network configuration
+  region: cn-beijing
+  zone_id: cn-beijing-a
+  vpc_id: vpc-xxxxxxxxxxxxxxxxx
+  subnet_id: subnet-xxxxxxxxxxxxxxxxx
+
+  # Compute configuration
+  node_class: polar.mysql.x4.large  # See node class table below
+  node_number: 2  # Minimum 2 (1 primary + 1 secondary), max 16
+
+  # Storage configuration
+  storage_space: 100  # GB, range: 100-100000
+
+  # Billing
+  charge_type: PostPaid  # Options: PostPaid, PrePaid
+
+  # Optional parameters
+  description: "Production PolarDB cluster for application database"
+  tags:
+    - key: Environment
+      value: Production
+    - key: Team
+      value: Platform
+    - key: Project
+      value: MyApplication
+
+# Node class reference
+# ┌──────────────────────────────┬──────┬────────┐
+# │ Class                        │ vCPU │ Memory │
+# ├──────────────────────────────┼──────┼────────┤
+# │ polar.mysql.x2.medium        │ 2    │ 4 GB   │
+# │ polar.mysql.x2.large         │ 4    │ 8 GB   │
+# │ polar.mysql.x4.large         │ 4    │ 16 GB  │
+# │ polar.mysql.x4.xlarge        │ 8    │ 32 GB  │
+# │ polar.mysql.x4.2xlarge       │ 16   │ 64 GB  │
+# │ polar.mysql.x8.2xlarge       │ 16   │ 128 GB │
+# │ polar.mysql.x8.4xlarge       │ 32   │ 256 GB │
+# └──────────────────────────────┴──────┴────────┘
+# Note: Available classes vary by region. Use DescribeDBNodeClasses to list.
+
+# Example CLI command to create cluster using this config:
+#
+# ve polardb_mysql CreateDBCluster \
+#   --Region cn-beijing \
+#   --ZoneId cn-beijing-a \
+#   --VpcId vpc-xxxxxxxxxxxxxxxxx \
+#   --SubnetId subnet-xxxxxxxxxxxxxxxxx \
+#   --ClusterName my-polardb-cluster \
+#   --DBEngineVersion MySQL_8_0 \
+#   --NodeClass polar.mysql.x4.large \
+#   --NodeNumber 2 \
+#   --StorageSpace 100 \
+#   --ChargeType PostPaid
+
+# Example: Adding read-only nodes
+read_only_nodes:
+  - node_class: polar.mysql.x4.large
+    node_number: 2
+
+# Example CLI to add RO nodes:
+#
+# ve polardb_mysql CreateDBNode \
+#   --ClusterId pc-xxxxxxxxxxxxxxxxx \
+#   --NodeClass polar.mysql.x4.large \
+#   --NodeNumber 2
+
+# Example: Parameter group settings
+parameter_group:
+  name: my-custom-params
+  parameters:
+    - name: max_connections
+      value: "2000"
+    - name: innodb_buffer_pool_size
+      value: "8589934592"  # 8GB in bytes
+    - name: wait_timeout
+      value: "28800"
+    - name: interactive_timeout
+      value: "28800"
+
+# Example CLI to modify parameters:
+#
+# ve polardb_mysql ModifyDBClusterParameters \
+#   --ClusterId pc-xxxxxxxxxxxxxxxxx \
+#   --Parameters '[
+#     {"ParameterName":"max_connections","ParameterValue":"2000"},
+#     {"ParameterName":"innodb_buffer_pool_size","ParameterValue":"8589934592"}
+#   ]'
+
+# Example: Backup configuration
+backup:
+  backup_name: manual-backup-20260527
+  retention_days: 7
+
+# Example CLI to create backup:
+#
+# ve polardb_mysql CreateBackup \
+#   --ClusterId pc-xxxxxxxxxxxxxxxxx \
+#   --BackupName manual-backup-20260527
+
+# Example: Restore configuration
+restore:
+  source_backup_id: bk-xxxxxxxxxxxxxxxxx
+  new_cluster_name: my-polardb-restored
+  vpc_id: vpc-xxxxxxxxxxxxxxxxx
+  subnet_id: subnet-xxxxxxxxxxxxxxxxx
+  node_class: polar.mysql.x4.large
+  node_number: 2
+  storage_space: 100
+
+# Example CLI to restore:
+#
+# ve polardb_mysql RestoreDBCluster \
+#   --BackupId bk-xxxxxxxxxxxxxxxxx \
+#   --ClusterName my-polardb-restored \
+#   --VpcId vpc-xxxxxxxxxxxxxxxxx \
+#   --SubnetId subnet-xxxxxxxxxxxxxxxxx \
+#   --NodeClass polar.mysql.x4.large \
+#   --NodeNumber 2 \
+#   --StorageSpace 100 \
+#   --ChargeType PostPaid
+
+# Example: Scaling operations
+scaling:
+  # Scale compute
+  new_node_class: polar.mysql.x4.2xlarge
+
+  # Scale storage
+  new_storage_space: 500
+
+# Example CLI to scale:
+#
+# # Scale compute
+# ve polardb_mysql ModifyDBNodeClass \
+#   --ClusterId pc-xxxxxxxxxxxxxxxxx \
+#   --NodeClass polar.mysql.x4.2xlarge
+#
+# # Scale storage
+# ve polardb_mysql ScaleStorage \
+#   --ClusterId pc-xxxxxxxxxxxxxxxxx \
+#   --StorageSpace 500
+
+# Example: Endpoint configuration
+endpoints:
+  - endpoint_type: ReadWrite
+    auto_add_new_nodes: true
+  - endpoint_type: ReadOnly
+    auto_add_new_nodes: true
+
+# Example CLI to modify endpoint:
+#
+# ve polardb_mysql ModifyDBClusterEndpoint \
+#   --ClusterId pc-xxxxxxxxxxxxxxxxx \
+#   --EndpointId ep-xxxxxxxxxxxxxxxxx \
+#   --AutoAddNewNodes true
+
+# Complete workflow example:
+#
+# 1. Create VPC and subnet (use ve-vpc-ops)
+# 2. Create cluster (see CLI above)
+# 3. Wait for cluster RUNNING
+# 4. Get connection endpoint
+# 5. Configure IP whitelist
+# 6. Create database accounts
+# 7. Configure backup policy
+#
+# Connection example:
+# mysql -h pc-xxxxxxxxxxxxxxxxx.polardb.rds.volces.com -P 3306 -u myuser -p

@@ -1,0 +1,20 @@
+{
+  "name": "orders",
+  "partitions": 6,
+  "replicas": 3,
+  "configs": {
+    "min.insync.replicas": 2,
+    "retention.ms": 604800000,
+    "retention.bytes": -1,
+    "max.message.bytes": 1048576,
+    "segment.ms": 604800000,
+    "cleanup.policy": "delete",
+    "compression.type": "producer"
+  },
+  "description": "Order events topic for e-commerce platform",
+  "tags": {
+    "environment": "production",
+    "service": "order-service",
+    "data-classification": "critical"
+  }
+}

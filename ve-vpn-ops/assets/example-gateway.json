@@ -1,0 +1,73 @@
+{
+  "VpnGateway": {
+    "VpnGatewayId": "vgw-2fdcrq7jvi6co5tfc2n8h****",
+    "VpnGatewayName": "prod-vpn-gateway",
+    "VpcId": "vpc-2feppibx2c6kobss3p442****",
+    "SubnetId": "subnet-2fel1rkvk9q3w2i7e1p3z****",
+    "Bandwidth": 10,
+    "Status": "Available",
+    "ChargeType": "PostPaid",
+    "CreationTime": "2024-05-27T12:00:00Z",
+    "ExpiredTime": "2099-12-31T23:59:59Z",
+    "Description": "Production VPN Gateway for site-to-site and remote access"
+  },
+  "CustomerGateway": {
+    "CustomerGatewayId": "cgw-2fdcrq7jvi6co5tfc2n8i****",
+    "CustomerGatewayName": "hq-office-gateway",
+    "IpAddress": "203.0.113.1",
+    "Status": "Available",
+    "CreationTime": "2024-05-27T12:05:00Z",
+    "Description": "Headquarters office VPN gateway"
+  },
+  "VpnConnection": {
+    "VpnConnectionId": "vpn-2fdcrq7jvi6co5tfc2n8j****",
+    "VpnConnectionName": "hq-office-connection",
+    "VpnGatewayId": "vgw-2fdcrq7jvi6co5tfc2n8h****",
+    "CustomerGatewayId": "cgw-2fdcrq7jvi6co5tfc2n8i****",
+    "LocalSubnet": ["10.0.0.0/16"],
+    "RemoteSubnet": ["192.168.0.0/16"],
+    "Status": "Available",
+    "IKEConfig": {
+      "Version": "ikev2",
+      "Mode": "main",
+      "EncAlg": "aes256",
+      "AuthAlg": "sha256",
+      "DhGroup": "group14",
+      "Lifetime": 86400
+    },
+    "IPsecConfig": {
+      "EncAlg": "aes256",
+      "AuthAlg": "sha256",
+      "Pfs": "group14",
+      "Lifetime": 3600
+    },
+    "CreationTime": "2024-05-27T12:10:00Z"
+  },
+  "SslVpnServer": {
+    "SslVpnServerId": "ssl-2fdcrq7jvi6co5tfc2n8k****",
+    "SslVpnServerName": "remote-access-server",
+    "VpnGatewayId": "vgw-2fdcrq7jvi6co5tfc2n8h****",
+    "LocalSubnets": ["10.0.0.0/16"],
+    "ClientIpPool": "10.0.100.0/24",
+    "SslVpnServerProtocol": "UDP",
+    "SslVpnServerPort": 1194,
+    "Cipher": "AES-256-CBC",
+    "Auth": "SHA256",
+    "Compress": false,
+    "Status": "Available",
+    "CreationTime": "2024-05-27T12:15:00Z"
+  },
+  "SslVpnClientCert": {
+    "SslVpnClientCertId": "sc-2fdcrq7jvi6co5tfc2n8l****",
+    "SslVpnClientCertName": "user-laptop-cert",
+    "SslVpnServerId": "ssl-2fdcrq7jvi6co5tfc2n8k****",
+    "Status": "Available",
+    "CreationTime": "2024-05-27T12:20:00Z"
+  },
+  "Metadata": {
+    "ExampleRegion": "cn-beijing",
+    "ExampleDate": "2024-05-27",
+    "Purpose": "Example configuration for VPN resources on Volcengine",
+    "SecurityNote": "Replace placeholder IDs and masked values with actual values in production"
+  }
+}

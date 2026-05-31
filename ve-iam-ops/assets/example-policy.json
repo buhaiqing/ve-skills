@@ -1,0 +1,26 @@
+{
+  "Version": "2021-04-01",
+  "Statement": [
+    {
+      "Sid": "EC2ReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeInstances",
+        "ecs:DescribeInstanceAttribute",
+        "ecs:DescribeInstanceTypes",
+        "ecs:DescribeZones",
+        "ecs:DescribeImages"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RDSReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "rds_mysql:DescribeDBInstances",
+        "rds_mysql:DescribeDBInstanceDetail"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
