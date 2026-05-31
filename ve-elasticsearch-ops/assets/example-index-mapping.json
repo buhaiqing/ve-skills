@@ -1,0 +1,60 @@
+{
+  "index_pattern": "logs-*",
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1,
+    "refresh_interval": "30s",
+    "index.translog.durability": "async",
+    "index.translog.sync_interval": "5s"
+  },
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "message": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "level": {
+        "type": "keyword"
+      },
+      "service": {
+        "type": "keyword"
+      },
+      "host": {
+        "type": "keyword"
+      },
+      "request_id": {
+        "type": "keyword"
+      },
+      "duration_ms": {
+        "type": "integer"
+      },
+      "status_code": {
+        "type": "integer"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "user_agent": {
+        "type": "text",
+        "index": false
+      },
+      "geo": {
+        "properties": {
+          "lat": { "type": "float" },
+          "lon": { "type": "float" }
+        }
+      }
+    }
+  },
+  "aliases": {
+    "logs-current": {}
+  }
+}
