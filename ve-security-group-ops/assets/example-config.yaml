@@ -1,0 +1,29 @@
+security_group:
+  name: prod-web-sg
+  type: enterprise
+  vpc_id: "{{user.vpc_id}}"
+  description: Production web tier security group
+
+inbound_rules:
+  - protocol: tcp
+    port: 80
+    cidr: 0.0.0.0/0
+    priority: 1
+    description: HTTP from internet
+  - protocol: tcp
+    port: 443
+    cidr: 0.0.0.0/0
+    priority: 1
+    description: HTTPS from internet
+  - protocol: tcp
+    port: 22
+    cidr: 10.0.0.0/8
+    priority: 1
+    description: SSH from internal network
+
+outbound_rules:
+  - protocol: all
+    port: 1/65535
+    cidr: 0.0.0.0/0
+    priority: 1
+    description: Allow all outbound

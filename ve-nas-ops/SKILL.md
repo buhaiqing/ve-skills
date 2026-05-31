@@ -187,11 +187,64 @@ ve nas DescribeFileSystems --Region {{env.VOLCENGINE_REGION}}
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-05-28 | Added FinOps cost calculation reference pricing table; enhanced stale file detection with access age classification; added mount command reference |
 | 1.0.0 | 2026-05-27 | Initial release with NAS lifecycle, performance, cost optimization |
+
+## Testing Guide
+
+### Unit Testing Strategy
+
+| Component | Test Approach |
+|-----------|---------------|
+| Credential validation | Mock environment vars |
+| Region validation | Test with valid/invalid regions |
+| Storage type selection | Test tier logic |
+| Permission group rules | Test CIDR validation |
+
+### Integration Testing
+
+```bash
+# Verify credentials
+export VOLCENGINE_ACCESS_KEY="test_key"
+export VOLCENGINE_SECRET_KEY="test_secret"
+export VOLCENGINE_REGION="cn-north-1"
+
+# List file systems
+ve nas DescribeFileSystems --Region cn-north-1
+
+# Create test file system
+FS_ID=$(ve nas CreateFileSystem --Region cn-north-1 --FileSystemName "test-fs-$(date +%s)" --StorageType "Capacity" --Protocol "NFS" --ChargeType "PostPaid" | jq -r '.FileSystemId')
+
+# Wait for creation
+for i in $(seq 1 60); do
+  STATUS=$(ve nas DescribeFileSystems --Region cn-north-1 --FileSystemIds '["'$FS_ID'"]' | jq -r '.FileSystems[0].Status')
+  [ "$STATUS" = "running" ] && break
+  sleep 5
+done
+
+# Cleanup
+ve nas DeleteFileSystem -- P17 Region cn-north-1 --FileSystemId "$FS_ID"
+```
+
+### Test Scenarios
+
+| Scenario | Expected Result |
+|----------|-----------------|
+| Invalid credentials | Unauthorized error |
+| Non-existent region | InvalidRegion error |
+| Delete FS with active mounts | FileSystemInUse error |
+| Create snapshot | Returns SnapshotId, status progress |
+
+### Smoke Tests
+
+```bash
+ve version
+ve nas DescribeRegions
+```
 
 ## Execution Flows (Agent-Readable)
 
-### Operation: DescribeFileSystems — List File Systems
+### Operation: DescribeFileSystems
 
 #### Pre-flight Checks
 

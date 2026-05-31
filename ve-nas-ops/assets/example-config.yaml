@@ -1,0 +1,15 @@
+file_system:
+  name: prod-data
+  storage_type: Performance
+  protocol: NFS
+  charge_type: PostPaid
+  description: Production data file system
+
+mount_target:
+  vpc_id: "{{user.vpc_id}}"
+  subnet_id: "{{user.subnet_id}}"
+  permission_group: VPC_DEFAULT_PERMISSION_GROUP
+
+snapshot:
+  name: pre-upgrade-backup
+  description: Backup before maintenance window
