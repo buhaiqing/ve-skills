@@ -1,0 +1,19 @@
+zone: example.com
+records:
+  - name: www
+    type: A
+    value: 1.2.3.4
+    ttl: 600
+  - name: api
+    type: CNAME
+    value: lb.example.com
+    ttl: 300
+  - name: "@"
+    type: MX
+    value: mail.example.com
+    priority: 10
+    ttl: 600
+  - name: "@"
+    type: TXT
+    value: "v=spf1 include:_spf.volcengine.com ~all"
+    ttl: 3600
