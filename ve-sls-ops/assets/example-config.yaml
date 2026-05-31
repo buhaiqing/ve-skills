@@ -1,0 +1,27 @@
+project:
+  name: prod-app-logs
+  description: Production application logging
+  region: cn-beijing
+
+topics:
+  - name: nginx-access
+    ttl: 7
+    shard_count: 2
+    index:
+      full_text:
+        case_sensitive: false
+      key_value:
+        status: { type: long }
+        request_time: { type: float }
+  - name: app-error
+    ttl: 30
+    shard_count: 1
+    index:
+      full_text:
+        case_sensitive: false
+
+shipper:
+  topic: nginx-access
+  destination_type: TOS
+  bucket: logs-archive
+  prefix: nginx/
