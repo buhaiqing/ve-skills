@@ -1,0 +1,10 @@
+{
+  "endpoint_name": "my-llm-endpoint",
+  "model": "doubao-pro",
+  "description": "Production LLM inference endpoint",
+  "config": {
+    "max_tokens": 4096,
+    "temperature": 0.7,
+    "top_p": 0.9
+  }
+}

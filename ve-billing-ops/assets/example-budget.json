@@ -1,0 +1,11 @@
+{
+  "budget_name": "monthly-production",
+  "budget_amount": 50000.00,
+  "budget_type": "MONTHLY",
+  "alert_thresholds": [80, 90, 100],
+  "scope": {
+    "tags": [
+      {"key": "Environment", "value": "production"}
+    ]
+  }
+}
