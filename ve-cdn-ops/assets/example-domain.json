@@ -1,0 +1,131 @@
+{
+  "domain": "cdn.example.com",
+  "originConfig": {
+    "originType": "domain",
+    "originDomain": "origin.example.com",
+    "originHost": "origin.example.com",
+    "protocol": "https",
+    "originPort": 443,
+    "followRedirect": true,
+    "originTimeout": 30
+  },
+  "serviceType": "static",
+  "cacheRules": [
+    {
+      "ruleType": "path",
+      "ruleValue": "/*.jpg",
+      "ttl": 2592000,
+      "priority": 1,
+      "cacheBehavior": "cache",
+      "description": "Cache JPEG images for 30 days"
+    },
+    {
+      "ruleType": "path",
+      "ruleValue": "/*.png",
+      "ttl": 2592000,
+      "priority": 2,
+      "cacheBehavior": "cache",
+      "description": "Cache PNG images for 30 days"
+    },
+    {
+      "ruleType": "path",
+      "ruleValue": "/*.css",
+      "ttl": 604800,
+      "priority": 3,
+      "cacheBehavior": "cache",
+      "description": "Cache CSS files for 7 days"
+    },
+    {
+      "ruleType": "path",
+      "ruleValue": "/*.js",
+      "ttl": 604800,
+      "priority": 4,
+      "cacheBehavior": "cache",
+      "description": "Cache JavaScript files for 7 days"
+    },
+    {
+      "ruleType": "filetype",
+      "ruleValue": "html,htm",
+      "ttl": 300,
+      "priority": 5,
+      "cacheBehavior": "cache",
+      "description": "Cache HTML files for 5 minutes"
+    },
+    {
+      "ruleType": "path",
+      "ruleValue": "/api/*",
+      "ttl": 0,
+      "priority": 6,
+      "cacheBehavior": "no-cache",
+      "description": "Do not cache API responses"
+    }
+  ],
+  "httpsConfig": {
+    "httpsSwitch": "on",
+    "tlsVersion": "tlsv1.2+",
+    "http2": "on",
+    "forceHttps": false,
+    "certName": "cdn-example-com-cert"
+  },
+  "accessControl": {
+    "ipFilter": {
+      "filterType": "off",
+      "ipList": []
+    },
+    "refererFilter": {
+      "filterType": "off",
+      "refererList": [],
+      "allowEmpty": true
+    },
+    "uaFilter": {
+      "filterType": "off",
+      "uaList": []
+    }
+  },
+  "compression": {
+    "gzipSwitch": "on",
+    "gzipTypes": [
+      "text/html",
+      "text/css",
+      "application/javascript",
+      "application/json",
+      "text/xml",
+      "application/xml"
+    ],
+    "brotliSwitch": "on"
+  },
+  "optimization": {
+    "imageOptimization": {
+      "enabled": true,
+      "webpConversion": true,
+      "quality": 85
+    },
+    "pageOptimization": {
+      "minifyHtml": false,
+      "minifyCss": false,
+      "minifyJs": false
+    }
+  },
+  "advancedSettings": {
+    "rangeOriginPull": true,
+    "videoDrag": true,
+    "httpHeaderOptimization": true,
+    "hostHeader": "origin.example.com",
+    "customErrorPages": {
+      "404": "/errors/404.html",
+      "500": "/errors/500.html"
+    }
+  },
+  "comments": {
+    "description": "Example CDN domain configuration for static website acceleration",
+    "useCase": "Static website with images, CSS, JS, and API endpoints",
+    "notes": [
+      "Long cache TTL for static assets (30 days for images)",
+      "Medium cache TTL for CSS/JS (7 days) with cache busting via file hashes",
+      "Short cache TTL for HTML (5 minutes) for content freshness",
+      "No cache for API endpoints",
+      "HTTPS with TLS 1.2+ and HTTP/2 enabled",
+      "Gzip and Brotli compression enabled"
+    ]
+  }
+}

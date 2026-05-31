@@ -1,0 +1,720 @@
+---
+name: ve-iam-ops
+description: >-
+  Use when the user needs to manage Volcengine (火山引擎) IAM (Identity and Access Management) —
+  users, policies, roles, groups, identity providers, and audit logs. User mentions IAM, 身份与访问管理,
+  access control, permissions, users, policies, roles, groups, SSO, or audit trails even without
+  naming the product directly. Not for product-specific resource management (delegate to product skills).
+license: MIT
+compatibility: >-
+  Official Volcengine CLI (`ve`, Go binary, no runtime), Go 1.21+ runtime
+  (JIT SDK fallback; scripts compatible with Go 1.14+ syntax), valid API credentials,
+  network access to Volcengine IAM endpoints.
+metadata:
+  author: volcengine
+  version: "1.0.0"
+  last_updated: "2026-05-27"
+  runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
+  go_version_minimum: "1.14"
+  go_jit_runtime_version: "1.21+"
+  cli_applicability: dual-path
+  cli_support_evidence: >-
+    IAM API is accessible via `ve iam --help`. Full coverage for user, policy, role,
+    group, and identity provider operations.
+    See: https://www.volcengine.com/docs/6257
+  environment:
+    - VOLCENGINE_ACCESS_KEY
+    - VOLCENGINE_SECRET_KEY
+    - VOLCENGINE_REGION
+---
+
+> This skill follows the [Agent Skill OpenSpec](https://agentskills.io/specification).
+
+# Volcengine IAM Operations Skill
+
+## Overview
+
+IAM (Identity and Access Management, 身份与访问管理) on Volcengine (火山引擎) provides centralized access control for all Volcengine resources. This skill enables agents to manage users, policies, roles, groups, identity providers, and audit logs using the `ve` CLI (primary) or JIT Go SDK (fallback).
+
+### CLI applicability
+
+- **`cli_applicability: dual-path`:** Official `ve` CLI supports IAM operations.
+  - **`ve iam`**: User, policy, role, group, identity provider management
+  - **`ve sts`**: Security Token Service for temporary credentials
+
+## Five Core Standards (Quality Gates)
+
+| # | Standard | How This Skill Fulfills It |
+|---|----------|---------------------------|
+| 1 | **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules |
+| 2 | **Structured I/O** | `{{env.VOLCENGINE_*}}` (env vars), `{{user.*}}` (interactive), `{{output.*}}` (API response) |
+| 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover |
+| 4 | **Complete Failure Strategies** | Error taxonomy with ≥ 10 IAM-specific codes; HALT vs retry per type |
+| 5 | **Absolute Single Responsibility** | IAM only; cross-product resource permissions reference product skills |
+
+## Trigger & Scope (Agent-Readable)
+
+### SHOULD Use This Skill When
+
+- User mentions "Volcengine IAM", "火山引擎 IAM", "身份与访问管理", "access control", "permissions"
+- Task involves user management: CreateUser, ListUsers, GetUser, UpdateUser, DeleteUser
+- Task involves policy management: CreatePolicy, ListPolicies, AttachPolicy, DetachPolicy, DeletePolicy
+- Task involves role management: CreateRole, ListRoles, AssumeRole, DeleteRole
+- Task involves group management: CreateGroup, ListGroups, AddUserToGroup, RemoveUserFromGroup
+- Task involves identity providers: CreateSAMLProvider, CreateOIDCProvider, ListIdentityProviders
+- Task involves audit logs: ListAccessKeys, GetCredentialReport, ListLoginProfiles
+- Task involves temporary credentials: AssumeRole, GetSessionToken
+- Task involves service-linked roles or permission boundaries
+
+### SHOULD NOT Use This Skill When
+
+- Task is about specific product resource operations (ECS, RDS, etc.) → delegate to respective product skill
+- Task is purely billing → delegate to billing ops
+- Task is about KMS key management → delegate to `ve-kms-ops` (when present)
+
+### Delegation Rules
+
+- IAM policies grant access to product resources → reference product skills for resource-specific actions
+- Cross-account access requires IAM roles → complete IAM role setup before cross-account operations
+- Service-linked roles are created automatically by product services → reference service documentation
+
+## Variable Convention (Agent-Readable)
+
+| Placeholder | Meaning | Agent Action |
+|-------------|---------|--------------|
+| `{{env.VOLCENGINE_ACCESS_KEY}}` | Access key from environment | NEVER ask user; fail if unset |
+| `{{env.VOLCENGINE_SECRET_KEY}}` | Secret key from environment | NEVER ask user; fail if unset; mask as `<masked>` |
+| `{{env.VOLCENGINE_REGION}}` | Region (e.g., cn-beijing) | Use default if skill allows |
+| `{{user.user_name}}` | IAM user name | Ask once; follow naming conventions |
+| `{{user.policy_name}}` | IAM policy name | Ask once |
+| `{{user.role_name}}` | IAM role name | Ask once |
+| `{{user.group_name}}` | IAM group name | Ask once |
+| `{{user.provider_name}}` | Identity provider name | Ask once |
+| `{{output.user_id}}` | User ID from API response | Parse from response |
+| `{{output.policy_arn}}` | Policy ARN from response | Parse from response |
+| `{{output.role_arn}}` | Role ARN from response | Parse from response |
+
+> **Security Warning (Credential Masking):** NEVER log, print, or expose `VOLCENGINE_SECRET_KEY` or any credential value. Verify existence only with `test -n "$VOLCENGINE_SECRET_KEY"`.
+
+## API and Response Conventions (Agent-Readable)
+
+- **IAM uses JSON REST API** with standard Volcengine response format
+- **Endpoint:** `https://iam.volcengineapi.com`
+- **Go SDK:** `github.com/volcengine/volc-sdk-golang/service/iam`
+- **Error responses:** JSON with `ResponseMetadata.Error` structure
+
+### Key Response Fields
+
+| Operation | Response Field | Type | Description |
+|-----------|---------------|------|-------------|
+| CreateUser | `$.Result.User.UserId` | string | Unique user ID |
+| CreateUser | `$.Result.User.Arn` | string | User ARN |
+| CreatePolicy | `$.Result.Policy.PolicyArn` | string | Policy ARN |
+| CreateRole | `$.Result.Role.RoleArn` | string | Role ARN |
+| AssumeRole | `$.Result.Credentials.AccessKeyId` | string | Temporary access key |
+| ListUsers | `$.Result.Users[].UserName` | array | User names |
+| ListPolicies | `$.Result.Policies[].PolicyName` | array | Policy names |
+
+## Quick Start
+
+### What This Skill Does
+This skill enables you to manage IAM identities and permissions on Volcengine — create users, manage policies, configure roles, set up groups, and review audit logs using `ve iam` CLI or JIT Go SDK.
+
+### Prerequisites
+- [ ] `ve` CLI installed (or Go runtime for JIT fallback)
+- [ ] Credentials configured: `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`
+- [ ] Region set: `VOLCENGINE_REGION`
+
+### Verify Setup
+```bash
+# Check CLI and list users
+ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
+```
+
+### Your First Command
+```bash
+# List all IAM users
+ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
+```
+
+## Capabilities at a Glance
+
+| Operation | Description | Complexity | Risk Level |
+|-----------|-------------|------------|------------|
+| CreateUser | Create a new IAM user | Low | Low |
+| ListUsers | List all IAM users | Low | None |
+| GetUser | Get user details | Low | None |
+| UpdateUser | Update user attributes | Low | Low |
+| DeleteUser | Delete an IAM user | Low | **High** — check dependencies |
+| CreatePolicy | Create a custom policy | Medium | Medium |
+| AttachPolicy | Attach policy to user/role/group | Low | Medium |
+| DetachPolicy | Detach policy from identity | Low | Medium |
+| DeletePolicy | Delete a custom policy | Low | **High** — check attachments |
+| CreateRole | Create an IAM role | Medium | Low |
+| AssumeRole | Get temporary credentials | Medium | Medium |
+| DeleteRole | Delete an IAM role | Low | **High** — check assumptions |
+| CreateGroup | Create an IAM group | Low | Low |
+| AddUserToGroup | Add user to group | Low | Low |
+| RemoveUserFromGroup | Remove user from group | Low | Low |
+| DeleteGroup | Delete an IAM group | Low | **High** — check members |
+| CreateSAMLProvider | Create SAML identity provider | High | Medium |
+| CreateOIDCProvider | Create OIDC identity provider | High | Medium |
+| ListAccessKeys | List user's access keys | Low | None |
+| CreateAccessKey | Create access key for user | Low | **High** — secret key shown once |
+| DeleteAccessKey | Delete user's access key | Low | **High** — irreversible |
+| GetCredentialReport | Generate credential report | Medium | None |
+| UpdateLoginProfile | Set user console password | Low | Medium |
+
+## Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-05-27 | Initial release with user, policy, role, group, identity provider, and audit operations |
+
+## Execution Flows (Agent-Readable)
+
+Every operation: **Pre-flight → Execute → Validate → Recover**.
+
+### Operation: CreateUser — Create an IAM User
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Credentials | `test -n "$VOLCENGINE_ACCESS_KEY" && test -n "$VOLCENGINE_SECRET_KEY"` | Both set | HALT; configure credentials |
+| User name format | Alphanumeric plus `+=,.@_-`; 1-64 chars | Valid format | Fix name format |
+| User name unique | Query `ListUsers` | No conflict | Use different name |
+
+#### Execution — CLI (`ve`)
+
+```bash
+# Create a user
+ve iam CreateUser \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+
+# Create user with path (for organization)
+ve iam CreateUser \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}" \
+  --Path "/{{user.org_unit}}/"
+```
+
+#### Execution — JIT Go SDK (Fallback)
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "os"
+
+    "github.com/volcengine/volc-sdk-golang/service/iam"
+)
+
+func main() {
+    instance := iam.NewInstance()
+    instance.Client.SetAccessKey(os.Getenv("VOLCENGINE_ACCESS_KEY"))
+    instance.Client.SetSecretKey(os.Getenv("VOLCENGINE_SECRET_KEY"))
+
+    params := make(map[string]interface{})
+    params["Region"] = os.Getenv("VOLCENGINE_REGION")
+    params["UserName"] = os.Getenv("USER_NAME")
+
+    resp, err := instance.Client.Request("iam", "CreateUser", params)
+    if err != nil {
+        log.Fatalf("Failed to create user: %v", err)
+    }
+    fmt.Println(string(resp))
+}
+```
+
+#### Validation
+
+```bash
+# Verify user was created
+ve iam GetUser \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `EntityAlreadyExists` | HALT; user name already exists — use different name |
+| `InvalidUserName` | HALT; name must be 1-64 chars with allowed characters |
+| `LimitExceeded` | HALT; user limit reached (default 1000 per account) |
+| `Unauthorized` | HALT; check IAM permissions for CreateUser |
+
+---
+
+### Operation: DeleteUser — Delete an IAM User
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit confirmation: irreversible delete of user `{{user.user_name}}`
+- **MUST NOT** proceed without clear user assent
+- **MUST** verify user has no dependencies:
+  - No attached policies (detach first)
+  - No group memberships (remove first)
+  - No access keys (delete first)
+  - No login profile (delete first)
+
+```bash
+# Check dependencies before deletion
+
+# 1. Check attached policies
+ve iam ListAttachedUserPolicies \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+
+# 2. Check group memberships
+ve iam ListGroupsForUser \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+
+# 3. Check access keys
+ve iam ListAccessKeys \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+
+# 4. Check login profile
+ve iam GetLoginProfile \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+```
+
+#### Execution
+
+```bash
+# Delete user (only after all dependencies removed)
+ve iam DeleteUser \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+```
+
+#### Validation
+
+```bash
+# Verify user no longer exists
+ve iam GetUser \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}" \
+  && echo "USER STILL EXISTS" || echo "USER DELETED"
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `DeleteConflict` | HALT; user has attached policies, groups, or other dependencies — remove all first |
+| `NoSuchEntity` | User already deleted; skip |
+| `Unauthorized` | HALT; check IAM permissions for DeleteUser |
+
+---
+
+### Operation: CreatePolicy — Create a Custom Policy
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Policy name format | Alphanumeric plus `_+=,.@-`; 1-128 chars | Valid format | Fix name format |
+| Policy document | Valid JSON with correct structure | Valid policy | Fix policy syntax |
+
+#### Execution
+
+```bash
+# Create policy from file
+ve iam CreatePolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --PolicyName "{{user.policy_name}}" \
+  --PolicyDocument "$(cat policy.json)" \
+  --Description "{{user.policy_description}}"
+```
+
+Example policy.json structure:
+```json
+{
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeInstances",
+        "ecs:StartInstance",
+        "ecs:StopInstance"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+#### Validation
+
+```bash
+# Get policy details
+ve iam GetPolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --PolicyName "{{user.policy_name}}"
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `EntityAlreadyExists` | HALT; policy name already exists |
+| `MalformedPolicyDocument` | HALT; policy JSON is invalid or has syntax errors |
+| `InvalidPolicyName` | HALT; name must follow naming conventions |
+
+---
+
+### Operation: AttachPolicy — Attach Policy to User
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| User exists | `GetUser` | User found | HALT; create user first |
+| Policy exists | `GetPolicy` | Policy found | HALT; create policy first |
+
+#### Execution
+
+```bash
+# Attach policy to user
+ve iam AttachUserPolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}" \
+  --PolicyName "{{user.policy_name}}"
+
+# Attach policy to role
+ve iam AttachRolePolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --RoleName "{{user.role_name}}" \
+  --PolicyName "{{user.policy_name}}"
+
+# Attach policy to group
+ve iam AttachGroupPolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}" \
+  --PolicyName "{{user.policy_name}}"
+```
+
+#### Validation
+
+```bash
+# Verify attachment
+ve iam ListAttachedUserPolicies \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+```
+
+---
+
+### Operation: DetachPolicy — Detach Policy from User
+
+#### Execution
+
+```bash
+# Detach policy from user
+ve iam DetachUserPolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}" \
+  --PolicyName "{{user.policy_name}}"
+
+# Detach from role
+ve iam DetachRolePolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --RoleName "{{user.role_name}}" \
+  --PolicyName "{{user.policy_name}}"
+
+# Detach from group
+ve iam DetachGroupPolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}" \
+  --PolicyName "{{user.policy_name}}"
+```
+
+---
+
+### Operation: DeletePolicy — Delete a Custom Policy
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit confirmation: irreversible delete of policy `{{user.policy_name}}`
+- **MUST** verify policy is not attached to any user, role, or group
+
+```bash
+# Check policy attachments
+ve iam ListEntitiesForPolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --PolicyName "{{user.policy_name}}"
+```
+
+#### Execution
+
+```bash
+# Delete policy
+ve iam DeletePolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --PolicyName "{{user.policy_name}}"
+```
+
+---
+
+### Operation: CreateRole — Create an IAM Role
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Role name format | Alphanumeric plus `_+=,.@-`; 1-64 chars | Valid format | Fix name format |
+| Trust policy | Valid assume role policy document | Valid JSON | Fix trust policy |
+
+#### Execution
+
+```bash
+# Create role with trust policy
+ve iam CreateRole \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --RoleName "{{user.role_name}}" \
+  --AssumeRolePolicyDocument "$(cat trust-policy.json)" \
+  --Description "{{user.role_description}}"
+```
+
+Example trust-policy.json for cross-account access:
+```json
+{
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "STS": ["trn:sts::{{user.trusted_account_id}}:root"]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+Example trust-policy.json for service role:
+```json
+{
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": ["ecs"]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+#### Validation
+
+```bash
+# Get role details
+ve iam GetRole \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --RoleName "{{user.role_name}}"
+```
+
+---
+
+### Operation: AssumeRole — Get Temporary Credentials
+
+#### Execution
+
+```bash
+# Assume role
+ve sts AssumeRole \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --RoleTrn "trn:iam::{{user.account_id}}:role/{{user.role_name}}" \
+  --RoleSessionName "{{user.session_name}}"
+```
+
+#### Response Fields
+
+| Field | Path | Description |
+|-------|------|-------------|
+| Access Key ID | `$.Result.Credentials.AccessKeyId` | Temporary access key |
+| Secret Key | `$.Result.Credentials.SecretKey` | Temporary secret key |
+| Session Token | `$.Result.Credentials.SessionToken` | Session token |
+| Expiration | `$.Result.Credentials.Expiration` | Credential expiration time |
+
+---
+
+### Operation: CreateGroup — Create an IAM Group
+
+#### Execution
+
+```bash
+# Create group
+ve iam CreateGroup \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}"
+```
+
+---
+
+### Operation: AddUserToGroup — Add User to Group
+
+#### Execution
+
+```bash
+# Add user to group
+ve iam AddUserToGroup \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}" \
+  --UserName "{{user.user_name}}"
+```
+
+---
+
+### Operation: RemoveUserFromGroup — Remove User from Group
+
+#### Execution
+
+```bash
+# Remove user from group
+ve iam RemoveUserFromGroup \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}" \
+  --UserName "{{user.user_name}}"
+```
+
+---
+
+### Operation: DeleteGroup — Delete an IAM Group
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit confirmation: irreversible delete of group `{{user.group_name}}`
+- **MUST** verify group has no members and no attached policies
+
+```bash
+# Check group members
+ve iam GetGroup \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}"
+
+# Check attached policies
+ve iam ListAttachedGroupPolicies \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}"
+```
+
+#### Execution
+
+```bash
+# Delete group
+ve iam DeleteGroup \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --GroupName "{{user.group_name}}"
+```
+
+---
+
+### Operation: CreateAccessKey — Create Access Key for User
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** warn user: secret key is shown only once at creation
+- **MUST** recommend: download/save credentials immediately
+
+#### Execution
+
+```bash
+# Create access key
+ve iam CreateAccessKey \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}"
+```
+
+#### Response Fields
+
+| Field | Path | Security Note |
+|-------|------|---------------|
+| Access Key ID | `$.Result.AccessKey.AccessKeyId` | Safe to display |
+| Secret Key | `$.Result.AccessKey.SecretKey` | **SHOW ONLY ONCE** — mask in logs |
+| Status | `$.Result.AccessKey.Status` | Active/Inactive |
+
+---
+
+### Operation: DeleteAccessKey — Delete Access Key
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit confirmation: irreversible delete of access key `{{user.access_key_id}}`
+- **MUST** warn: this will invalidate any applications using this key
+
+#### Execution
+
+```bash
+# Delete access key
+ve iam DeleteAccessKey \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}" \
+  --AccessKeyId "{{user.access_key_id}}"
+```
+
+---
+
+### Operation: UpdateLoginProfile — Set Console Password
+
+#### Execution
+
+```bash
+# Create/update login profile
+ve iam UpdateLoginProfile \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --UserName "{{user.user_name}}" \
+  --Password "{{user.password}}" \
+  --PasswordResetRequired false
+```
+
+---
+
+### Operation: GetCredentialReport — Generate Credential Report
+
+#### Execution
+
+```bash
+# Generate and get credential report
+ve iam GenerateCredentialReport \
+  --Region "{{env.VOLCENGINE_REGION}}"
+
+# Get the report
+ve iam GetCredentialReport \
+  --Region "{{env.VOLCENGINE_REGION}}"
+```
+
+---
+
+## Reference Directory
+
+- [Core Concepts](references/core-concepts.md)
+- [API & SDK Usage](references/api-sdk-usage.md)
+- [CLI Usage](references/cli-usage.md)
+- [Troubleshooting Guide](references/troubleshooting.md)
+- [Monitoring](references/monitoring.md)
+- [Integration](references/integration.md)
+- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+
+## Operational Best Practices
+
+- **Least privilege:** Grant only necessary permissions; use specific actions and resources
+- **Policy versioning:** Use policy versions for safe updates; test before applying
+- **Regular audit:** Review credential reports quarterly; rotate access keys every 90 days
+- **MFA enforcement:** Require MFA for privileged operations
+- **Service roles:** Use service-linked roles instead of long-term credentials
+- **Cross-account:** Use role assumption instead of sharing access keys
+- **Permission boundaries:** Use permission boundaries to limit maximum permissions
+- **Naming conventions:** Use consistent naming for users, roles, and policies
