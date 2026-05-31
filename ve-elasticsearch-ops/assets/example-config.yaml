@@ -1,0 +1,82 @@
+# Volcengine Elasticsearch Service - Example Configuration
+# Environment: production
+# Region: cn-beijing
+
+elasticsearch:
+  instance:
+    name: "prod-search-main"
+    version: "7.16"
+    node_spec: "es.x4.medium"
+    node_count: 3
+    storage_per_node_gb: 100
+    storage_type: "ESSD"
+    vpc_id: "vpc-xxxx1"
+    subnet_id: "subnet-xxxx1"
+    charge_type: "PostPaid"
+    description: "Production search cluster for primary application"
+
+  kibana:
+    enabled: true
+    username: "admin"
+    password: "<set-via-secure-vault>"
+    ip_whitelist:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+
+  plugins:
+    - name: "analysis-ik"
+      description: "IK Chinese analysis plugin"
+      force_restart: true
+    - name: "analysis-pinyin"
+      description: "Pinyin analysis plugin"
+      force_restart: false
+
+  indices:
+    - name: "app-logs"
+      shard_count: 5
+      replica_count: 1
+      settings:
+        index.refresh_interval: "30s"
+        index.number_of_routing_shards: 10
+      lifecycle:
+        hot_days: 7
+        warm_days: 30
+        cold_days: 90
+        delete_after_days: 365
+
+    - name: "search-products"
+      shard_count: 3
+      replica_count: 1
+      settings:
+        index.refresh_interval: "5s"
+      lifecycle:
+        hot_days: 30
+        warm_days: 90
+        delete_after_days: 730
+
+  snapshots:
+    schedule: "0 2 * * *"  # Daily at 2:00 AM
+    retention_days: 30
+    indices: "*"
+
+  alerts:
+    cluster_health:
+      enabled: true
+      severity: "Critical"
+    disk_usage:
+      warning_threshold: 75
+      critical_threshold: 85
+      enabled: true
+    jvm_heap:
+      warning_threshold: 75
+      critical_threshold: 90
+      enabled: true
+    search_latency_ms:
+      warning_threshold: 500
+      critical_threshold: 1000
+      enabled: true
+
+  tags:
+    environment: "production"
+    team: "search-platform"
+    cost_center: "infrastructure"

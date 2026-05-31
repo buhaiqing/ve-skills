@@ -1,0 +1,163 @@
+# Example Ark (方舟大模型平台) Configuration
+
+# This file provides sample configurations for common Ark resource setups.
+# Replace placeholder values ({{...}}) with actual values before use.
+
+# =============================================================================
+# 1. Inference Endpoint Configuration
+# =============================================================================
+
+# Simple inference endpoint (production chat)
+endpoint_production:
+  endpoint_name: "prod-chat-doubao-pro-32k"
+  model_version_id: "{{user.model_version_id}}"
+  endpoint_type: "Inference"
+  description: "Production Doubao-pro chat endpoint with 32k context"
+  region: "{{env.VOLCENGINE_REGION}}"
+  scaling:
+    min_replicas: 2
+    max_replicas: 10
+    target_cpu_utilization: 70
+
+# Inference endpoint with VPC (private network)
+endpoint_private:
+  endpoint_name: "internal-embedding-bge"
+  model_version_id: "{{user.model_version_id}}"
+  endpoint_type: "Inference"
+  description: "Internal embedding endpoint with VPC access"
+  region: "{{env.VOLCENGINE_REGION}}"
+  vpc_config:
+    vpc_id: "vpc-xxxxx"
+    subnet_ids:
+      - "subnet-xxxxx"
+      - "subnet-yyyyy"
+  scaling:
+    min_replicas: 1
+    max_replicas: 5
+
+# Low-latency inference endpoint
+endpoint_low_latency:
+  endpoint_name: "realtime-translation"
+  model_version_id: "{{user.model_version_id}}"
+  endpoint_type: "InferenceLowLatency"
+  description: "Low-latency translation endpoint for real-time use"
+  region: "{{env.VOLCENGINE_REGION}}"
+  scaling:
+    min_replicas: 3
+    max_replicas: 20
+    target_cpu_utilization: 60
+
+# TPM-guaranteed inference endpoint
+endpoint_tpm_guaranteed:
+  endpoint_name: "batch-classification"
+  model_version_id: "{{user.model_version_id}}"
+  endpoint_type: "InferenceTPM"
+  description: "TPM-guaranteed classification endpoint"
+  region: "{{env.VOLCENGINE_REGION}}"
+  tpm_guarantee:
+    tpm_limit: 1000000
+    concurrency_limit: 100
+
+# =============================================================================
+# 2. Training Job Configuration
+# =============================================================================
+
+# SFT (Supervised Fine-Tuning) job
+training_job_sft:
+  training_job_name: "sft-customer-service-v1"
+  model_id: "{{user.model_id}}"
+  dataset_id: "{{output.dataset_id}}"
+  output_model_name: "custom-cs-v1"
+  description: "SFT training for customer service use case"
+  region: "{{env.VOLCENGINE_REGION}}"
+  hyper_parameters:
+    learning_rate: 1.0e-5
+    epochs: 5
+    batch_size: 8
+    warmup_steps: 100
+    max_seq_length: 4096
+  method: "SFT"
+
+# DPO (Direct Preference Optimization) job
+training_job_dpo:
+  training_job_name: "dpo-alignment-v1"
+  model_id: "{{user.model_id}}"
+  dataset_id: "{{output.dataset_id}}"
+  output_model_name: "custom-aligned-v1"
+  description: "DPO alignment training"
+  region: "{{env.VOLCENGINE_REGION}}"
+  hyper_parameters:
+    learning_rate: 5.0e-6
+    epochs: 3
+    batch_size: 4
+    beta: 0.1
+  method: "DPO"
+
+# =============================================================================
+# 3. Dataset Configuration
+# =============================================================================
+
+# Dataset from TOS (recommended for large datasets)
+dataset_tos:
+  dataset_name: "sft-training-data-v1"
+  dataset_type: "QAPair"
+  data_source_type: "TOS"
+  tos_path: "tos://my-bucket/datasets/sft/train/"
+  description: "SFT training dataset imported from TOS"
+  region: "{{env.VOLCENGINE_REGION}}"
+
+# Dataset for DPO training
+dataset_dpo:
+  dataset_name: "dpo-preference-data-v1"
+  dataset_type: "Preference"
+  data_source_type: "TOS"
+  tos_path: "tos://my-bucket/datasets/dpo/train.jsonl"
+  description: "DPO preference pairs dataset"
+  region: "{{env.VOLCENGINE_REGION}}"
+
+# Dataset format: SFT JSONL (example)
+sft_dataset_format: |-
+  {"messages": [
+    {"role": "system", "content": "You are a helpful customer service agent."},
+    {"role": "user", "content": "How do I reset my password?"},
+    {"role": "assistant", "content": "Go to Settings > Security > Reset Password and follow the prompts."}
+  ]}
+
+# Dataset format: DPO JSONL (example)
+dpo_dataset_format: |-
+  {
+    "prompt": "What is the return policy?",
+    "chosen": "Our return policy allows returns within 30 days of purchase.",
+    "rejected": "No returns allowed. Check your receipt."
+  }
+
+# =============================================================================
+# 4. Model Evaluation Configuration
+# =============================================================================
+
+evaluation_job:
+  evaluation_job_name: "eval-cs-v1"
+  model_version_id: "{{user.model_version_id}}"
+  dataset_id: "{{output.dataset_id}}"
+  description: "Evaluate customer service model on test set"
+  region: "{{env.VOLCENGINE_REGION}}"
+  metrics:
+    - "accuracy"
+    - "f1"
+    - "bleu"
+
+# =============================================================================
+# 5. Credential and Region Configuration
+# =============================================================================
+
+# Environment variables (recommended for agent execution)
+environment_variables:
+  VOLCENGINE_ACCESS_KEY: "{{env.VOLCENGINE_ACCESS_KEY}}"
+  VOLCENGINE_SECRET_KEY: "{{env.VOLCENGINE_SECRET_KEY}}"
+  VOLCENGINE_REGION: "{{env.VOLCENGINE_REGION}}"
+
+# Supported Ark regions
+supported_regions:
+  - "cn-beijing"
+  - "cn-shanghai"
+  - "cn-guangzhou"

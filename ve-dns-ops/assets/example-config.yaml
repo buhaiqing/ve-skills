@@ -1,0 +1,290 @@
+# Example DNS Configuration — Volcengine DNS
+
+## Basic Domain Configuration
+
+```yaml
+domain:
+  name: example.com
+  description: Production site
+  region: cn-beijing
+
+records:
+  # A record for the main site
+  - rr: www
+    type: A
+    value: 192.168.1.10
+    ttl: 600
+
+  # A record for the root domain
+  - rr: "@"
+    type: A
+    value: 192.168.1.10
+    ttl: 600
+
+  # AAAA record for IPv6
+  - rr: www
+    type: AAAA
+    value: 2001:db8::10
+    ttl: 600
+
+  # MX records with priority
+  - rr: "@"
+    type: MX
+    value: mail.example.com
+    priority: 10
+    ttl: 600
+
+  # Backup MX
+  - rr: "@"
+    type: MX
+    value: backup.mx.example.com
+    priority: 20
+    ttl: 600
+
+  # CNAME for mail client access
+  - rr: mail
+    type: CNAME
+    value: mail.example.com
+    ttl: 600
+
+  # TXT records for email authentication
+  - rr: "@"
+    type: TXT
+    value: "v=spf1 mx include:_spf.example.com ~all"
+    ttl: 600
+
+  - rr: _dmarc
+    type: TXT
+    value: "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
+    ttl: 600
+
+  # CAA record for SSL certificate control
+  - rr: "@"
+    type: CAA
+    value: '0 issue "letsencrypt.org"'
+    ttl: 600
+```
+
+## E-Commerce / Multi-Service Configuration
+
+```yaml
+domain:
+  name: shop.example.com
+  description: E-commerce platform
+  region: cn-beijing
+
+records:
+  # Web frontend
+  - rr: www
+    type: A
+    value: 203.0.113.10
+    ttl: 300
+
+  # API service
+  - rr: api
+    type: CNAME
+    value: clb-xxxxx.cn-beijing.clb.volcengineapi.com
+    ttl: 300
+
+  # CDN for static assets
+  - rr: static
+    type: CNAME
+    value: static-cdn.example-cdn.com
+    ttl: 86400
+
+  # Admin panel
+  - rr: admin
+    type: A
+    value: 203.0.113.20
+    ttl: 600
+
+  # WebSocket service
+  - rr: ws
+    type: A
+    value: 203.0.113.30
+    ttl: 600
+
+  # Email
+  - rr: "@"
+    type: MX
+    value: mail.shop.example.com
+    priority: 10
+    ttl: 600
+
+  # Service discovery with SRV
+  - rr: _api._tcp
+    type: SRV
+    value: 10 100 443 api.shop.example.com
+    ttl: 600
+```
+
+## Multi-Region / Failover Configuration
+
+```yaml
+domain:
+  name: global.example.com
+  description: Multi-region global service
+  region: cn-beijing
+
+records:
+  # Primary region
+  - rr: www
+    type: A
+    value: 203.0.113.10
+    ttl: 60
+
+  # Secondary region (backup)
+  - rr: www-backup
+    type: A
+    value: 198.51.100.10
+    ttl: 60
+
+  # CDN origin (points to primary)
+  - rr: origin
+    type: CNAME
+    value: origin-cdn.example-cdn.com
+    ttl: 600
+
+  # Monitoring endpoints
+  - rr: health
+    type: A
+    value: 203.0.113.50
+    ttl: 60
+```
+
+## Common TXT Record Templates
+
+### SPF (Sender Policy Framework)
+```yaml
+# Allow only specified servers to send email
+- rr: "@"
+  type: TXT
+  value: "v=spf1 mx include:_spf.example.com ~all"
+
+# Soft fail (mark as suspicious, don't reject)
+- rr: "@"
+  type: TXT
+  value: "v=spf1 mx ~all"
+
+# Hard fail (reject unauthorized senders)
+- rr: "@"
+  type: TXT
+  value: "v=spf1 mx -all"
+
+# Include third-party services (e.g., SendGrid)
+- rr: "@"
+  type: TXT
+  value: "v=spf1 include:spf.sendgrid.net mx ~all"
+```
+
+### DKIM (DomainKeys Identified Mail)
+```yaml
+- rr: "default._domainkey"
+  type: TXT
+  value: "v=DKIM1; h=sha256; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQ..."
+```
+
+### DMARC (Domain-based Message Authentication)
+```yaml
+- rr: "_dmarc"
+  type: TXT
+  value: "v=DMARC1; p=reject; rua=mailto:dmarc@example.com; pct=100"
+
+# Monitor only (no enforcement)
+- rr: "_dmarc"
+  type: TXT
+  value: "v=DMARC1; p=none; rua=mailto:dmarc@example.com"
+```
+
+### Domain Verification (for third-party services)
+```yaml
+# Google Workspace / G-Suite
+- rr: "@"
+  type: TXT
+  value: "google-site-verification=xxxxxxxxx"
+
+# Microsoft 365
+- rr: "@"
+  type: TXT
+  value: "MS=msxxxxxxxxx"
+
+# Custom (for any service verification)
+- rr: "@"
+  type: TXT
+  value: "service-verification=xxxxxxxxx"
+```
+
+## CAA Record Templates
+
+```yaml
+# Allow only Let's Encrypt
+- rr: "@"
+  type: CAA
+  value: '0 issue "letsencrypt.org"'
+
+# Allow multiple CAs
+- rr: "@"
+  type: CAA
+  value: '0 issue "letsencrypt.org"'
+- rr: "@"
+  type: CAA
+  value: '0 issue "digicert.com"'
+
+# Disallow all wildcard certificates
+- rr: "@"
+  type: CAA
+  value: '0 issuewild ";"'
+
+# Report violations to an email
+- rr: "@"
+  type: CAA
+  value: '0 iodef "mailto:security@example.com"'
+```
+
+## Subdomain Delegation
+
+```yaml
+# Delegate 'dev.example.com' to different nameservers
+- rr: dev
+  type: NS
+  value: ns1.external-dns.com
+  ttl: 86400
+- rr: dev
+  type: NS
+  value: ns2.external-dns.com
+  ttl: 86400
+
+# Delegate 'k8s.example.com' to a Kubernetes ingress controller
+- rr: k8s
+  type: NS
+  value: ns1.k8s-dns.com
+  ttl: 86400
+```
+
+## SRV Records for Service Discovery
+
+```yaml
+# SIP service
+- rr: "_sip._tcp"
+  type: SRV
+  value: "10 100 5060 sip.example.com"
+  ttl: 600
+
+# XMPP service
+- rr: "_xmpp-client._tcp"
+  type: SRV
+  value: "5 0 5222 xmpp.example.com"
+  ttl: 600
+
+# LDAP service
+- rr: "_ldap._tcp"
+  type: SRV
+  value: "10 100 389 ldap.example.com"
+  ttl: 600
+
+# Microsoft Exchange Autodiscover
+- rr: "_autodiscover._tcp"
+  type: SRV
+  value: "0 0 443 autodiscover.example.com"
+  ttl: 600
+```
