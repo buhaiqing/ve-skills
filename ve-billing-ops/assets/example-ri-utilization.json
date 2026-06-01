@@ -1,0 +1,151 @@
+{
+  "report_type": "ri_utilization",
+  "period": "2026-06",
+  "generated_at": "2026-06-02T10:00:00+08:00",
+  "generated_by": "ve-billing-ops v1.4.0",
+
+  "summary": {
+    "total_ri_types": 5,
+    "total_units": 50,
+    "used_units": 38,
+    "overall_utilization": 76.0,
+    "total_investment": 45000.00,
+    "covered_cost": 52000.00,
+    "actual_savings": 7000.00,
+    "roi": 15.6,
+    "next_expiration": "2026-09-01"
+  },
+
+  "ri_instances": [
+    {
+      "ri_id": "ri-2zea5n5l8j8a4k9m3p10",
+      "instance_type": "ecs.g6.xlarge",
+      "quantity": 20,
+      "used": 18,
+      "utilization": 90.0,
+      "status": "active",
+      "payment_term": "1-Year",
+      "expiration_date": "2027-06-01",
+      "days_until_expiration": 364,
+      "investment": 18000.00,
+      "covered_cost": 21600.00,
+      "savings": 3600.00
+    },
+    {
+      "ri_id": "ri-2zea5n5l8j8a4k9m3p11",
+      "instance_type": "ecs.g6.large",
+      "quantity": 15,
+      "used": 10,
+      "utilization": 66.7,
+      "status": "active",
+      "payment_term": "1-Year",
+      "expiration_date": "2027-06-01",
+      "days_until_expiration": 364,
+      "investment": 9000.00,
+      "covered_cost": 10800.00,
+      "savings": 1800.00,
+      "warning": "Low utilization - consider reducing"
+    },
+    {
+      "ri_id": "ri-2zea5n5l8j8a4k9m3p12",
+      "instance_type": "ecs.c6.2xlarge",
+      "quantity": 5,
+      "used": 4,
+      "utilization": 80.0,
+      "status": "active",
+      "payment_term": "1-Year",
+      "expiration_date": "2026-09-01",
+      "days_until_expiration": 91,
+      "investment": 6000.00,
+      "covered_cost": 7200.00,
+      "savings": 1200.00,
+      "warning": "Expiring soon - renewal decision needed"
+    },
+    {
+      "ri_id": "ri-2zea5n5l8j8a4k9m3p13",
+      "instance_type": "rds.mysql.2xlarge",
+      "quantity": 8,
+      "used": 5,
+      "utilization": 62.5,
+      "status": "active",
+      "payment_term": "1-Year",
+      "expiration_date": "2027-03-01",
+      "days_until_expiration": 272,
+      "investment": 9600.00,
+      "covered_cost": 10800.00,
+      "savings": 1200.00,
+      "warning": "Low utilization - investigate workload allocation"
+    },
+    {
+      "ri_id": "ri-2zea5n5l8j8a4k9m3p14",
+      "instance_type": "redis.standard.large",
+      "quantity": 2,
+      "used": 1,
+      "utilization": 50.0,
+      "status": "active",
+      "payment_term": "1-Year",
+      "expiration_date": "2027-03-01",
+      "days_until_expiration": 272,
+      "investment": 2400.00,
+      "covered_cost": 2600.00,
+      "savings": 200.00,
+      "warning": "Very low utilization - recommend cancellation"
+    }
+  ],
+
+  "renewal_recommendations": [
+    {
+      "instance_type": "ecs.c6.2xlarge",
+      "action": "renew_1_year",
+      "reason": "High utilization (80%), critical for batch processing",
+      "estimated_cost": 5500.00,
+      "estimated_savings_vs_ondemand": 1700.00,
+      "priority": "high",
+      "decision_deadline": "2026-08-01"
+    },
+    {
+      "instance_type": "ecs.g6.large",
+      "action": "reduce_units",
+      "current_units": 15,
+      "recommended_units": 10,
+      "reason": "Utilization only 66.7%",
+      "monthly_savings": 600.00,
+      "priority": "medium",
+      "action_date": "2026-07-01"
+    },
+    {
+      "instance_type": "redis.standard.large",
+      "action": "cancel",
+      "reason": "Utilization only 50%, on-demand is more cost-effective",
+      "monthly_savings": 100.00,
+      "priority": "medium",
+      "action_date": "2026-07-01"
+    },
+    {
+      "instance_type": "rds.mysql.2xlarge",
+      "action": "monitor",
+      "reason": "Utilization 62.5% - investigate before making changes",
+      "priority": "low",
+      "action_date": "2026-07-15"
+    }
+  ],
+
+  "coverage_analysis": {
+    "total_on_demand_cost": 52000.00,
+    "ri_covered_cost": 52000.00,
+    "on_demand_portion": 0.00,
+    "ideal_coverage": 76.0,
+    "target_coverage": 80.0,
+    "gap_analysis": "RI coverage is slightly below target. Consider increasing ecs.g6.xlarge RI by 2 units."
+  },
+
+  "cost_optimization_potential": {
+    "current_monthly_savings": 7000.00,
+    "potential_additional_savings": 1800.00,
+    "actions_to_achieve": [
+      "Reduce ecs.g6.large RI from 15 to 10: Save ¥600/month",
+      "Cancel underutilized redis RI: Save ¥100/month",
+      "Total potential: ¥700/month additional savings"
+    ]
+  }
+}

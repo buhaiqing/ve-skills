@@ -1,0 +1,90 @@
+{
+  "alert_type": "budget_threshold",
+  "alert_id": "alert-20260602-001",
+  "timestamp": "2026-06-02T14:30:00+08:00",
+  "source": "ve-billing-ops v1.4.0",
+
+  "budget": {
+    "budget_id": "budget-2zea5n5l8j8a4k9m3p00",
+    "budget_name": "production-monthly",
+    "budget_type": "MONTHLY",
+    "budget_amount": 100000.00,
+    "currency": "CNY"
+  },
+
+  "alert_details": {
+    "threshold": 85,
+    "actual_utilization": 85.50,
+    "actual_spent": 85500.00,
+    "remaining": 14500.00,
+    "projected_end_of_month": 118500.00,
+    "days_elapsed": 15,
+    "days_in_month": 30,
+    "daily_burn_rate": 5700.00
+  },
+
+  "severity": "high",
+
+  "cost_breakdown": {
+    "by_product": [
+      {"product": "ecs", "cost": 38000.00, "utilization": 38.0},
+      {"product": "rds", "cost": 22000.00, "utilization": 22.0},
+      {"product": "vke", "cost": 15500.00, "utilization": 15.5},
+      {"product": "other", "cost": 10000.00, "utilization": 10.0}
+    ]
+  },
+
+  "top_cost_contributors": [
+    {"resource_id": "i-2zea5n5l8j8a4k9m3p01", "product": "ecs", "cost": 2850.00},
+    {"resource_id": "drm-2zea5n5l8j8a4k9m3p02", "product": "rds", "cost": 2450.00},
+    {"resource_id": "cluster-2zea5n5l8j8a4k9m3p03", "product": "vke", "cost": 1980.00}
+  ],
+
+  "recommended_actions": [
+    {
+      "action": "review_top_costs",
+      "description": "Review top 3 cost contributors",
+      "priority": 1
+    },
+    {
+      "action": "pause_non_critical",
+      "description": "Consider pausing non-critical batch jobs",
+      "priority": 2
+    },
+    {
+      "action": "increase_budget",
+      "description": "Increase budget limit if growth is expected",
+      "priority": 3
+    }
+  ],
+
+  "notification_channels": [
+    {
+      "channel": "slack",
+      "recipient": "#finops-alerts",
+      "status": "sent",
+      "sent_at": "2026-06-02T14:30:05+08:00"
+    },
+    {
+      "channel": "pagerduty",
+      "recipient": "finops-oncall",
+      "status": "sent",
+      "sent_at": "2026-06-02T14:30:03+08:00"
+    }
+  ],
+
+  "escalation": {
+    "current_level": 2,
+    "next_escalation_at": "2026-06-03T14:30:00+08:00",
+    "escalation_path": [
+      {"level": 1, "threshold": 80, "channels": ["slack"], "time": "2026-06-01T09:00:00+08:00"},
+      {"level": 2, "threshold": 85, "channels": ["slack", "pagerduty"], "time": "2026-06-02T14:30:00+08:00"},
+      {"level": 3, "threshold": 100, "channels": ["slack", "pagerduty", "email"], "time": "TBD"}
+    ]
+  },
+
+  "links": {
+    "budget_details": "https://console.volcengine.com/billing/budget/budget-2zea5n5l8j8a4k9m3p00",
+    "cost_analysis": "https://console.volcengine.com/billing/cost-analysis"
+  }
+}

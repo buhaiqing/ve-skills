@@ -1,0 +1,144 @@
+{
+  "report_type": "cost_analysis",
+  "period": "2026-06",
+  "generated_at": "2026-06-02T10:00:00+08:00",
+  "generated_by": "ve-billing-ops v1.4.0",
+
+  "summary": {
+    "total_cost": 156780.50,
+    "currency": "CNY",
+    "cost_change": {
+      "vs_last_month": 12850.30,
+      "vs_last_month_percent": 8.93,
+      "vs_budget": 5680.50,
+      "vs_budget_percent": 3.76
+    },
+    "daily_avg": 5226.02,
+    "projected_month_end": 156780.50,
+    "budget_utilization": 103.76,
+    "ri_coverage": 78.5
+  },
+
+  "cost_breakdown_by_product": [
+    {"product": "ecs", "cost": 68500.00, "percent": 43.66, "mom_change": 5.2},
+    {"product": "rds", "cost": 35200.00, "percent": 22.45, "mom_change": 12.3},
+    {"product": "vke", "cost": 28400.00, "percent": 18.09, "mom_change": -2.1},
+    {"product": "tos", "product_cn": "对象存储", "cost": 12800.00, "percent": 8.16, "mom_change": 15.8},
+    {"product": "sls", "product_cn": "日志服务", "cost": 5800.00, "percent": 3.70, "mom_change": 8.5},
+    {"product": "redis", "cost": 4200.00, "percent": 2.68, "mom_change": 3.2},
+    {"product": "network", "product_cn": "网络", "cost": 1880.50, "percent": 1.20, "mom_change": -5.0}
+  ],
+
+  "cost_breakdown_by_environment": [
+    {"environment": "production", "cost": 98000.00, "percent": 62.48, "tag_coverage": 96.5},
+    {"environment": "staging", "cost": 32500.00, "percent": 20.71, "tag_coverage": 88.2},
+    {"environment": "dev", "cost": 26280.50, "percent": 16.75, "tag_coverage": 72.3}
+  ],
+
+  "cost_breakdown_by_cost_center": [
+    {"cost_center": "team-backend", "cost": 65000.00, "percent": 41.46, "owner": "backend@company.com"},
+    {"cost_center": "team-ml", "cost": 38500.00, "percent": 24.55, "owner": "ml@company.com"},
+    {"cost_center": "team-frontend", "cost": 28100.00, "percent": 17.91, "owner": "frontend@company.com"},
+    {"cost_center": "platform", "cost": 25180.50, "percent": 16.08, "owner": "platform@company.com"}
+  ],
+
+  "top_10_cost_drivers": [
+    {"rank": 1, "resource_id": "i-2zea5n5l8j8a4k9m3p2q", "resource_name": "api-prod-master-01", "product": "ecs", "spec": "ecs.g6.2xlarge", "cost": 2850.00, "percent": 1.82, "avg_cpu": 45, "avg_mem": 62},
+    {"rank": 2, "resource_id": "drm-2zea5n5l8j8a4k9m3p2r", "resource_name": "prod-mysql-primary", "product": "rds", "spec": "rds.mysql.4xlarge", "cost": 2450.00, "percent": 1.56, "avg_cpu": 55, "avg_mem": 78},
+    {"rank": 3, "resource_id": "i-2zea5n5l8j8a4k9m3p2s", "resource_name": "ml-gpu-node-01", "product": "ecs", "spec": "ecs.gn6.4xlarge", "cost": 2200.00, "percent": 1.40, "avg_cpu": 72, "avg_mem": 65},
+    {"rank": 4, "resource_id": "cluster-2zea5n5l8j8a4k9m3p2t", "resource_name": "vke-prod-cluster", "product": "vke", "node_count": 12, "cost": 1980.00, "percent": 1.26},
+    {"rank": 5, "resource_id": "i-2zea5n5l8j8a4k9m3p2u", "resource_name": "api-prod-slave-01", "product": "ecs", "spec": "ecs.g6.2xlarge", "cost": 1850.00, "percent": 1.18, "avg_cpu": 38, "avg_mem": 55},
+    {"rank": 6, "resource_id": "redis-2zea5n5l8j8a4k9m3p2v", "resource_name": "prod-redis-cluster", "product": "redis", "spec": "redis.standard", "cost": 1680.00, "percent": 1.07},
+    {"rank": 7, "resource_id": "bucket-2zea5n5l8j8a4k9m3p2w", "resource_name": "user-assets", "product": "tos", "storage_gb": 8500, "cost": 1450.00, "percent": 0.92},
+    {"rank": 8, "resource_id": "i-2zea5n5l8j8a4k9m3p2x", "resource_name": "ml-training-node", "product": "ecs", "spec": "ecs.c6.2xlarge", "cost": 1200.00, "percent": 0.76, "avg_cpu": 85, "avg_mem": 72},
+    {"rank": 9, "resource_id": "d-2zea5n5l8j8a4k9m3p2y", "resource_name": "prod-mysql-data-disk", "product": "ecs", "disk_type": "cloud_ssd", "size_gb": 500, "cost": 950.00, "percent": 0.61},
+    {"rank": 10, "resource_id": "logstore-2zea5n5l8j8a4k9m3p2z", "resource_name": "app-logs", "product": "sls", "retention_days": 30, "cost": 890.00, "percent": 0.57}
+  ],
+
+  "ri_analysis": {
+    "total_investment": 48000.00,
+    "covered_cost": 54200.00,
+    "actual_savings": 6200.00,
+    "coverage_rate": 78.5,
+    "instances": [
+      {"type": "ecs.g6.xlarge", "total": 20, "used": 18, "utilization": 90.0, "expire": "2027-06-01"},
+      {"type": "ecs.g6.large", "total": 15, "used": 10, "utilization": 66.7, "expire": "2027-06-01"},
+      {"type": "ecs.c6.2xlarge", "total": 5, "used": 4, "utilization": 80.0, "expire": "2026-12-01"}
+    ]
+  },
+
+  "optimization_opportunities": [
+    {
+      "category": "right_sizing",
+      "count": 3,
+      "monthly_savings": 2800.00,
+      "items": [
+        {"resource_id": "i-2zea5n5l8j8a4k9m3p2u", "current": "ecs.g6.2xlarge", "recommend": "ecs.g6.xlarge", "savings": 950.00},
+        {"resource_id": "drm-2zea5n5l8j8a4k9m3p2r", "current": "rds.mysql.4xlarge", "recommend": "rds.mysql.2xlarge", "savings": 1200.00},
+        {"resource_id": "i-2zea5n5l8j8a4k9m3p2s", "current": "ecs.gn6.4xlarge", "recommend": "ecs.gn6.2xlarge", "savings": 650.00}
+      ]
+    },
+    {
+      "category": "idle_resources",
+      "count": 5,
+      "monthly_savings": 1200.00,
+      "items": [
+        {"resource_id": "i-2zea5n5l8j8a4k9m3p99", "type": "ecs", "idle_days": 45, "monthly_cost": 350.00, "action": "delete"},
+        {"resource_id": "d-2zea5n5l8j8a4k9m3p88", "type": "disk", "idle_days": 30, "monthly_cost": 280.00, "action": "snapshot_and_delete"},
+        {"resource_id": "eip-2zea5n5l8j8a4k9m3p77", "type": "eip", "idle_days": 7, "monthly_cost": 18.00, "action": "release"},
+        {"resource_id": "i-2zea5n5l8j8a4k9m3p66", "type": "ecs", "idle_days": 60, "monthly_cost": 450.00, "action": "delete"},
+        {"resource_id": "bucket-2zea5n5l8j8a4k9m3p55", "type": "tos", "idle_days": 90, "monthly_cost": 102.00, "action": "archive_and_delete"}
+      ]
+    },
+    {
+      "category": "ri_optimization",
+      "count": 2,
+      "monthly_savings": 1800.00,
+      "items": [
+        {"action": "reduce_ri", "type": "ecs.g6.large", "current_units": 15, "recommend_units": 10, "savings": 1200.00},
+        {"action": "renew_ri", "type": "ecs.c6.2xlarge", "units": 5, "recommend_term": "1-year", "savings": 600.00}
+      ]
+    }
+  ],
+
+  "anomalies_detected": [
+    {
+      "type": "cost_spike",
+      "severity": "warning",
+      "product": "tos",
+      "change_percent": 15.8,
+      "root_cause": "Bucket user-assets grew from 6TB to 8.5TB due to new feature release",
+      "recommendation": "Implement lifecycle policy for objects older than 90 days"
+    },
+    {
+      "type": "low_ri_utilization",
+      "severity": "warning",
+      "ri_type": "ecs.g6.large",
+      "utilization_percent": 66.7,
+      "root_cause": "Batch processing workloads reduced after migration to VKE",
+      "recommendation": "Reduce RI purchase or redeploy workloads"
+    }
+  ],
+
+  "action_items": [
+    {"priority": "P1", "action": "Right-size 3 oversized instances", "savings": 2800.00, "owner": "team-backend", "due": "2026-06-07"},
+    {"priority": "P2", "action": "Delete 2 idle ECS instances", "savings": 800.00, "owner": "team-backend", "due": "2026-06-05"},
+    {"priority": "P2", "action": "Configure TOS lifecycle policy", "savings": 300.00, "owner": "platform", "due": "2026-06-10"},
+    {"priority": "P3", "action": "Review RDS backup retention", "savings": 150.00, "owner": "team-backend", "due": "2026-06-14"}
+  ],
+
+  "recommendations": {
+    "immediate": [
+      "Right-size 3 instances: Save ¥2,800/month",
+      "Delete idle resources: Save ¥1,200/month"
+    ],
+    "short_term": [
+      "Implement TOS lifecycle policy: Save ¥300/month",
+      "Reduce ecs.g6.large RI from 15 to 10: Save ¥1,200/month"
+    ],
+    "long_term": [
+      "Migrate remaining ECS to VKE: Est. save 20-30%",
+      "Consider 3-year RI commitment for stable workloads: Save additional 15%"
+    ]
+  }
+}
