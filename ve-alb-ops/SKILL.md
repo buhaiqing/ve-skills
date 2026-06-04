@@ -39,7 +39,7 @@ metadata:
 
 ALB (应用型负载均衡 / Application Load Balancer) on Volcengine (火山引擎) provides Layer 7 application-level load balancing with content-based routing, HTTPS termination, WebSocket/gRPC support, and fine-grained traffic management. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and **`ve` CLI**), response validation, and failure recovery.
 
-> **UX Compliance:** This skill follows the [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md).
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md).
 
 ### CLI applicability
 

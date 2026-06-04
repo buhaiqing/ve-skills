@@ -36,7 +36,7 @@ metadata:
 
 VPC (私有网络) on Volcengine (火山引擎) provides isolated network environments including VPCs, Subnets, Route Tables, and Route Entries. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and **`ve` CLI**), response validation, and failure recovery.
 
-> **UX Compliance:** This skill follows the [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
 
 ### CLI applicability
 
@@ -348,9 +348,9 @@ ve vpc CreateRouteEntry \
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
 - [Integration](references/integration.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 

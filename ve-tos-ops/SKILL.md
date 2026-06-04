@@ -872,11 +872,11 @@ ve billing DescribeBillDetail --BillingCycle "{{user.billing_cycle}}" --ProductT
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
 - [Integration](references/integration.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
-- [Enhanced Self-Healing Framework](../../ve-skill-generator/references/enhanced-self-healing-framework.md)
-- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
+- [Enhanced Self-Healing Framework](../ve-skill-generator/references/enhanced-self-healing-framework.md)
+- [FinOps Best Practices](../ve-skill-generator/references/finops-best-practices.md)
 - [Knowledge Base](references/knowledge-base.md)
 - [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
 - [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + TOS-specific safety prompts

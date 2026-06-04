@@ -340,8 +340,8 @@ ve billing CreateBudget \
 | 阈值 | 80%, 90%, 100% |
 
 ### 下一步
-- [查看预算状态](DescribeBudgets)
-- [修改告警阈值](ModifyBudget)
+- 查看预算状态: DescribeBudgets API
+- 修改告警阈值: ModifyBudget API
 - [配置告警通知](observability.md#webhook)
 ```
 

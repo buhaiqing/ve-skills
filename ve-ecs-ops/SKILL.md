@@ -40,7 +40,7 @@ metadata:
 
 ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capacity including virtual machine instances, cloud disks, snapshots, images, and security groups. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and **`ve` CLI**), response validation, and failure recovery. **Do not use the web console as the primary agent execution path** in `SKILL.md` or [Volcengine Console](https://console.volcengine.com).
 
-> **UX Compliance:** This skill follows the [User Experience Specification](references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
 
 ### CLI applicability
 
@@ -1014,11 +1014,11 @@ The Critic itself MUST NOT call any of the above — it only emits suggestions.
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
 - [Integration](references/integration.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
-- [Enhanced Self-Healing Framework](../../ve-skill-generator/references/enhanced-self-healing-framework.md)
-- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
+- [Enhanced Self-Healing Framework](../ve-skill-generator/references/enhanced-self-healing-framework.md)
+- [FinOps Best Practices](../ve-skill-generator/references/finops-best-practices.md)
 - [Knowledge Base](references/knowledge-base.md)
 
 ## Operational Best Practices

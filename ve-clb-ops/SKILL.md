@@ -36,7 +36,7 @@ metadata:
 
 CLB (负载均衡 / Classic Load Balancer) on Volcengine (火山引擎) distributes incoming traffic across multiple backend servers for high availability and scalability. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and **`ve` CLI**), response validation, and failure recovery.
 
-> **UX Compliance:** This skill follows the [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md).
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md).
 
 ### CLI applicability
 
@@ -370,9 +370,9 @@ ve clb SetHealthCheckConfig \
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
 - [Integration](references/integration.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 

@@ -38,7 +38,7 @@ metadata:
 
 NAS (文件存储) on Volcengine (火山引擎) provides scalable, shared file storage accessible by multiple compute instances simultaneously via NFS or SMB protocols. This skill is an **operational runbook** for agents: file system lifecycle management, mount target configuration, performance analysis, storage optimization, file lifecycle management, backup/snapshot management, and cost analysis. **Do not use the web console as the primary agent execution path.**
 
-> **UX Compliance:** This skill follows the [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
 
 ### CLI applicability
 
@@ -723,10 +723,10 @@ ve nas RestoreSnapshot --Region "{{user.region}}" --SnapshotId "{{user.snapshot_
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
 - [Integration](references/integration.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
-- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
+- [FinOps Best Practices](../ve-skill-generator/references/finops-best-practices.md)
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 

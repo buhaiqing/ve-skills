@@ -32,7 +32,7 @@ metadata:
 
 > This skill follows the [Agent Skill OpenSpec](https://agentskills.io/specification).
 >
-> **UX Compliance:** This skill follows the [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
 
 # Volcengine Billing Operations Skill
 
@@ -436,10 +436,10 @@ ve billing DescribeReservedInstances --Region "{{env.VOLCENGINE_REGION}}"
 - [Cross-Skill Orchestration](references/cross-skill-orchestration.md)
 - [Observability Integration](references/observability.md)
 - [Prompts Handbook](references/prompts.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
-- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
+- [FinOps Best Practices](../ve-skill-generator/references/finops-best-practices.md)
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 
