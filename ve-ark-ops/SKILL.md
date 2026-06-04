@@ -14,8 +14,8 @@ compatibility: >-
   network access to Volcengine endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-31"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_script_syntax_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -1189,6 +1189,8 @@ export VOLCENGINE_REGION="{{env.VOLCENGINE_REGION}}"
 - [Monitoring & Alerts](references/monitoring.md) — Endpoint and training monitoring
 - [Integration](references/integration.md) — Environment setup and JIT SDK workflow
 - [Knowledge Base](references/knowledge-base.md) — FAQ and best practices
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Diagnostic Commands
 
@@ -1235,3 +1237,19 @@ ve ark ListEvaluationJobs --Region "{{env.VOLCENGINE_REGION}}"
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-31 | Initial release with Ark endpoint, model, training, dataset, and evaluation management |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteEndpoint, DeleteDataset | 1.0 |
+| **State-changing** | CreateEndpoint, StopEndpoint, CreateTrainingJob, StopTrainingJob, CreateEvaluationJob | 1.0 |
+| **Mutating** | — (all state-changing) | ≥0.5 |
+| **Read-only** | ListEndpoints, DescribeEndpoint, ListModels, ListTrainingJobs, ListDatasets | ≥0 |
+
+Safety: DeleteEndpoint model inference stops. StopTrainingJob training progress lost. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: Billing→ve-billing-ops

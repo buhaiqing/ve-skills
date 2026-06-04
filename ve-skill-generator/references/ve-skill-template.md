@@ -55,7 +55,7 @@ Every generated skill MUST satisfy these five standards. Use them as a design ch
 | 1 | **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules | ≥ 3 SHOULD entries with specific triggers; ≥ 3 SHOULD NOT entries with named delegation targets |
 | 2 | **Structured I/O** | Placeholder conventions (`{{env.*}}`, `{{user.*}}`, `{{output.*}}`) with type and source documented | Zero bare variable names; every input uses a typed placeholder; every output maps to a JSON path |
 | 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover, with numbered imperative steps | ≥ 1 operation with all 4 phases present; all steps numbered and imperative (not descriptive) |
-| 4 | **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type | Error table has ≥ 10 rows; each row has: code, max retries, backoff, agent action, UX template |
+| 4 | **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type; GCL rubric with Safety = 0 → ABORT | Error table has ≥ 10 rows; each row has: code, max retries, backoff, agent action, UX template; `references/rubric.md` exists with the 5-dimension GCL rubric |
 | 5 | **Absolute Single Responsibility** | One product, one primary resource model; cross-product delegation to other skills | SKILL.md covers exactly 1 product; cross-product ops delegate (not duplicate); naming follows `ve-[product]-ops` |
 
 Refer to the [meta-skill](../SKILL.md#five-core-standards-quality-gates) for detailed descriptions of each standard.
@@ -181,6 +181,103 @@ ve [product] Describe[Resources] --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-15 | Initial template with ve CLI and JIT Go SDK support |
+| 1.1.0 | 2026-06-04 | Added `## Quality Gate (GCL)` chapter so newly generated skills inherit GCL by default; added 4-tier operation classification; appended GCL appendix (rubric + prompt templates) to Reference File Templates |
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every generated skill. It implements the
+> Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. The Generator
+> (the agent executing the operation) and the Critic (an isolated prompt
+> that scores the execution) MUST live in separate contexts — see
+> `../../AGENTS.md` §9 anti-patterns.
+
+### 4-Tier Operation Classification
+
+Every operation the new skill exposes MUST be classified into exactly one of
+the four tiers below. The classification drives `max_iter` and the Safety
+floor in the GCL loop. **If a skill exposes any Destructive or State-changing
+operation, GCL is REQUIRED with `max_iter=2`.**
+
+| Tier | Typical operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `Delete*`, `Release*`, `ScheduleKeyDeletion`, `Terminate*`, `Purge*` | 2 | 1.0 (mandatory) |
+| **State-changing** | `Stop*`, `Reboot*`, `Modify*` (non-idempotent), `Rotate*`, `Disable*`, `Detach*` | 2 | 1.0 (mandatory) |
+| **Mutating** | `Create*`, `Run*`, `Attach*`, `Associate*`, `Invoke*` | 2 | ≥ 0.5 |
+| **Read-only** | `Describe*`, `List*`, `Get*`, `Query*` | 3 | ≥ 0 |
+
+### Loop contract (Generator → Critic → Orchestrator)
+
+1. **Pre-flight (Orchestrator)** — resolve `{{env.*}}` and `{{user.*}}`; classify
+   the operation into one of the four tiers above; load the skill's
+   `references/rubric.md`.
+2. **Generate** — execute the operation per the skill's `## Execution Flows`
+   chapter. Capture full command, parameters, raw response excerpt, `RequestId`,
+   validation step output, retries, and final state into
+   `./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json` with `redaction_pass: true`.
+3. **Critique** — isolated prompt; score correctness / safety / idempotency /
+   traceability / spec_compliance per the rubric. Emit ≤ 3 actionable
+   suggestions. The Critic MUST NOT see the raw user request.
+4. **Decide** — first match wins:
+   - Safety = 0 on a Destructive or State-changing op → **ABORT** (no partial return).
+   - All dimensions meet threshold → return Generator output.
+   - `iter < max_iter` → inject suggestions into Generator and loop.
+   - Else → return best-so-far + unresolved rubric items.
+
+### Mandatory deliverables in every generated skill
+
+A generated skill is **incomplete** if it does NOT ship all three:
+
+| Deliverable | Path | Required content |
+|---|---|---|
+| **GCL chapter** | `SKILL.md` section `## Quality Gate (GCL)` | 4-tier table; loop contract (4 steps); cross-skill delegation table; trace spec; explicit pointer to the rubric and prompt templates below |
+| **Rubric** | `references/rubric.md` | 5-dimension scoring (Correctness / Safety / Idempotency / Traceability / Spec Compliance); product-specific safety rules; product-specific correctness checks; ≥ 10 product-specific error codes mapped to HALT vs retry; **Safety = 0 → ABORT** rule |
+| **Prompt templates** | `references/prompt-templates.md` | Generator prompt (with `{{env.*}}` / `{{user.*}}` / `{{output.*}}` placeholders); Critic prompt (Critic MUST NOT see the raw user request); Orchestrator prompt; ≥ 1 verbatim safety prompt per Destructive / State-changing op |
+
+### Safety prompts (mandatory for Destructive / State-changing ops)
+
+For every operation in the Destructive or State-changing tier, the Generator
+MUST surface a **verbatim** confirmation prompt to the user naming the resource
+id and the irreversible effect. Templates go in
+`references/prompt-templates.md` §4. The user's literal "yes" / "confirm"
+reply is what the Critic verifies in the trace.
+
+### Trace (mandatory for every GCL run)
+
+Every GCL run MUST persist a JSON trace to
+`./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json` with these fields:
+
+- `skill`, `request` (sanitized), `rubric_version`
+- `iterations[]` — each with `iter`, `generator` (command / args / exit_code / result_excerpt), `critic` (scores / suggestions / blocking), `decision`
+- `final` — `status` (`PASS` / `MAX_ITER` / `SAFETY_FAIL`), `iter`, `output`
+- `redaction_pass: true` — the trace MUST NOT contain a real `VOLCENGINE_SECRET_KEY`; only `<masked>` or `sha256:<first-8-hex>` and length
+
+`audit-results/` is in the repo's `.gitignore` (added 2026-06-04).
+
+### Cross-skill delegation (extends `## Delegation Rules` above)
+
+When the Critic surfaces a cross-product gap, the **Generator** (not the
+Critic) delegates on the next iteration. The Critic only emits suggestions.
+
+| Critic finding | Delegate to |
+|---|---|
+| IAM policy gap (no permission for `ve <svc> <Action>`) | `ve-iam-ops` |
+| KMS key / secret needed for the operation | `ve-kms-ops` |
+| EIP / VPC network concern raised in a non-network op | `ve-eip-ops` / `ve-vpc-ops` |
+| Monitoring / alarm rule change needed after a destructive op | `ve-cms-ops` |
+| Billing quota exceeded during the operation | `ve-billing-ops` |
+
+### Anti-patterns (from `../../AGENTS.md` §9 — banned)
+
+Generated skills MUST NOT introduce any of these:
+- Shared context for G and C (defeats independence).
+- Subjective scoring without the rubric.
+- Unbounded iteration loops.
+- Critic seeing the raw user request (encourages rubber-stamping).
+- Silently downgrading on Safety = 0.
+- Trace not persisted.
+- Critic mutating resources.
+- Real `VOLCENGINE_SECRET_KEY` in trace.
+- GCL bypass for "obviously safe" ops.
 
 ## Execution Flows (Agent-Readable)
 
@@ -644,3 +741,249 @@ func main() {
 
 > Use `os.Getenv("KEY")` for all credentials. Never hardcode secrets in scripts.
 ````
+
+## references/rubric.md — GCL Rubric Instance
+
+```markdown
+---
+name: ve-[product-name]-ops-rubric
+description: >-
+  GCL rubric instance for ve-[product-name]-ops. Use to score Generator outputs
+  on a 5-dimension scale (Correctness / Safety / Idempotency / Traceability /
+  Spec Compliance). Safety must equal 1 for any destructive operation or
+  GCL aborts. See repo-level AGENTS.md §3 for the meta-rubric.
+license: MIT
+metadata:
+  author: volcengine
+  version: "1.0.0"
+  last_updated: "$(date +%Y-%m-%d)"
+  parent_skill: ve-[product-name]-ops
+  gcl_role: critic_input
+  rubric_dimensions: 5
+  default_max_iter: 2
+---
+
+# GCL Rubric — ve-[product-name]-ops
+
+## 0. Operation Tier
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | [list: Delete*, Release*, ...] | 2 | 1.0 (mandatory) |
+| **State-changing** | [list: Stop*, Modify*, Disable*, ...] | 2 | 1.0 (mandatory) |
+| **Mutating** | [list: Create*, Attach*, ...] | 2 | ≥ 0.5 |
+| **Read-only** | [list: Describe*, List*, Get*, ...] | 3 | ≥ 0 |
+
+**Safety = 0 → ABORT** regardless of total score.
+
+## 1. Correctness (0 / 0.5 / 1)
+
+| Score | Criteria |
+|---|---|
+| **1** | Resource id, state, and config exactly match the request. Post-execution validation confirms it. |
+| **0.5** | Minor mismatch: wrong region but valid; name tag differs; expected side-effect absent but core id matches. |
+| **0** | Wrong resource affected, no observable state change, or resource state is unchanged / not found. |
+
+### Product-specific correctness checks (fill per OpenAPI)
+
+- [ ] Create: response has the expected ID and status transitions to the expected terminal state.
+- [ ] Delete: Describe returns Not-Found or equivalent within poll budget.
+- [ ] Modify: the modified field reflects in Describe after the operation completes.
+
+## 2. Safety (0 / 1)
+
+| Score | Criteria |
+|---|---|
+| **1** | Explicit user confirmation captured in trace. All hard guards passed. |
+| **0** | Confirmation missing, OR any required guard skipped. |
+
+### Product-specific safety rules (any one violated → Safety = 0)
+
+- [ ] Destructive/State-changing op: user explicitly named the resource id and confirmed.
+- [ ] Deletion protection checked (if the product supports it).
+- [ ] `VOLCENGINE_SECRET_KEY` NEVER appears in command line, trace, log, or error — only `<masked>`.
+
+## 3. Idempotency (0 / 0.5 / 1)
+
+| Score | Criteria |
+|---|---|
+| **1** | Re-running the exact same command is safe (no-op on repeat). |
+| **0.5** | Side-effect on retry is bounded (e.g., extra empty snapshot). |
+| **0** | Retry creates a new billable resource every time. |
+
+## 4. Traceability (0 / 0.5 / 1)
+
+| Score | Criteria |
+|---|---|
+| **1** | Trace contains: full command (or SDK call site), resolved parameters, raw response excerpt, `RequestId`, validation output, retries, final state. Persisted with `redaction_pass: true`. |
+| **0.5** | Minor omission but the run is reproducible from trace. |
+| **0** | No trace, or trace omits the actual command, or trace leaks credential. |
+
+## 5. Spec Compliance (0 / 0.5 / 1)
+
+| Score | Criteria |
+|---|---|
+| **1** | All Five Core Standards satisfied; dual-path documented; error taxonomy ≥ 10 codes; no cross-product work absorbed. |
+| **0.5** | One minor deviation (e.g., hard-coded region instead of `{{user.*}}`). |
+| **0** | Secret printed to log; error taxonomy collapsed; cross-product work absorbed; dual-path skill executed only via SDK. |
+
+## 6. Score Aggregation
+
+```
+total_score = (correctness + safety + idempotency + traceability + spec_compliance) / 5
+```
+
+| Outcome | Condition |
+|---|---|
+| **PASS** | All dimensions ≥ threshold, AND safety = 1 for destructive / state-changing |
+| **RETRY** | Any dimension below threshold, AND `iter < max_iter` |
+| **MAX_ITER** | After max_iter → return best-so-far + unresolved rubric items |
+| **SAFETY_FAIL** | Safety = 0 on destructive / state-changing → **ABORT** |
+
+## 7. Changelog
+
+| Version | Date | Change |
+|---|---|---|
+| 1.0.0 | $(date +%Y-%m-%d) | Initial GCL rubric for ve-[product-name]-ops |
+```
+
+## references/prompt-templates.md — GCL Prompt Skeletons
+
+```markdown
+---
+name: ve-[product-name]-ops-prompt-templates
+description: >-
+  GCL prompt templates for ve-[product-name]-ops. Three roles — Generator (G),
+  Critic (C), Orchestrator (O) — plus operation-specific safety prompts.
+  All placeholders: {{env.*}} / {{user.*}} / {{output.*}} (no bare {...}).
+license: MIT
+metadata:
+  author: volcengine
+  version: "1.0.0"
+  last_updated: "$(date +%Y-%m-%d)"
+  parent_skill: ve-[product-name]-ops
+  gcl_role: prompt_skeletons
+  roles: [generator, critic, orchestrator]
+  default_max_iter: 2
+---
+
+# GCL Prompt Templates — ve-[product-name]-ops
+
+## 1. Generator Prompt (role: G)
+
+```text
+You are the Generator for the Volcengine [Product Name] skill.
+You execute operations on the user's behalf using the `ve` CLI (primary)
+or JIT Go SDK (fallback). You MUST NOT self-score or modify the rubric.
+
+# Inputs
+- user_request: {{user.request}}
+- critic_feedback_from_previous_iter: {{output.critic_feedback}} (empty on iter 1)
+- rubric: {{output.rubric}}
+- operation_tier: {{output.operation_tier}}
+
+# Execution contract
+1. Resolve placeholders. {{env.*}} from runtime — NEVER ask the user.
+2. Pre-flight: walk the skill's pre-flight table. HALT on any failure.
+3. Execute: `ve <svc> <Action> --<Param> value`. If dual-path, ALSO write
+   the Go SDK snippet.
+4. Validate: poll until resource reaches expected terminal state. NEVER
+   accept a transient state as terminal.
+5. Trace: persist to ./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json
+   with redaction_pass: true.
+
+# Safety gate (mandatory for destructive / state_changing ops)
+- Surface verbatim confirmation prompt naming the resource id and
+  irreversible effect. WAIT for explicit "yes" / "confirm".
+- NEVER print VOLCENGINE_SECRET_KEY.
+
+# Output
+Return JSON: { "status": "OK" | "HALT", "operation": "...",
+  "resource_id": "...", "command": "...", "request_id": "...",
+  "validation": { ... }, "trace_path": "...",
+  "issues_encountered": [...], "next_action": "..." }
+```
+
+## 2. Critic Prompt (role: C)
+
+> Hard rule: The Critic MUST NOT see the raw user request.
+
+```text
+You are an independent Volcengine cloud-operation auditor.
+You will see ONE execution result and its trace. Score it STRICTLY
+against the rubric below. Do NOT consider the original user request.
+
+# Inputs
+- rubric: {{output.rubric}}
+- generator_output: {{output.generator_output}}
+- trace: {{output.trace}}
+
+# Scoring (each: 0 | 0.5 | 1)
+- correctness      : resource matches request
+- safety           : destructive op confirmed (0/1; 0 → ABORT)
+- idempotency      : retry safe
+- traceability     : command, params, response, errors all captured
+- spec_compliance  : conforms to core-concepts.md + Five Core Standards
+
+# Special checks for this product
+- Verify the operation tier is correctly classified.
+- Verify VOLCENGINE_SECRET_KEY never appears in trace.
+- Verify terminal state, not transient state, for validation.
+
+# Output (strict JSON)
+{
+  "scores": { "correctness": 0|0.5|1, "safety": 0|0.5|1,
+              "idempotency": 0|0.5|1, "traceability": 0|0.5|1,
+              "spec_compliance": 0|0.5|1 },
+  "suggestions": ["≤ 3 concrete improvements"],
+  "blocking": true|false
+}
+```
+
+## 3. Orchestrator Prompt (role: O)
+
+```text
+You are the Orchestrator for the GCL loop on [Product Name].
+You control iteration, termination, and final return.
+You MUST NOT call `ve` / SDK yourself.
+
+# Inputs
+- skill: ve-[product-name]-ops
+- rubric_path: references/rubric.md
+- max_iter: {{output.max_iter}}
+- operation_tier: {{output.operation_tier}}
+- current_iter: {{output.iter}}
+
+# Decision rules (first match wins)
+1. If critic.scores.safety == 0 AND op in {destructive, state_changing}:
+   → ABORT with reason. Never partial-return.
+2. If all dimensions meet threshold: → return Generator output.
+3. If iter < max_iter: → inject critic.suggestions into G and loop.
+4. Else: → return best-so-far + unresolved rubric items.
+
+# Final output
+{ "status": "PASS" | "MAX_ITER" | "SAFETY_FAIL",
+  "iter": <int>, "final_output": <generator output>,
+  "unresolved_rubric_items": [...] }
+```
+
+## 4. Operation-Specific Safety Prompts
+
+For each Destructive or State-changing operation, add a verbatim block:
+
+### 4.x `[OpName]`
+
+```text
+[STATE-CHANGING / DESTRUCTIVE] About to [action] [resource ID / name].
+
+This is IRREVERSIBLE. [Specific consequence].
+
+Type "yes" to proceed, or "cancel" to abort.
+```
+
+## 5. Changelog
+
+| Version | Date | Change |
+|---|---|---|
+| 1.0.0 | $(date +%Y-%m-%d) | Initial GCL prompt templates for ve-[product-name]-ops |
+```

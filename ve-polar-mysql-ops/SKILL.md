@@ -16,8 +16,8 @@ compatibility: >-
   endpoints.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -197,6 +197,33 @@ ve polardb_mysql DescribeDBClusters --Region "{{env.VOLCENGINE_REGION}}" --PageN
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with PolarDB MySQL lifecycle |
+| 1.1.0 | 2026-06-04 | GCL rollout: added `## Quality Gate (GCL)`, references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory for every execution of `ve-polar-mysql-ops`. Implements GCL per `../../AGENTS.md` §3-§9.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety |
+|---|---|---|---|
+| **Destructive** | `DeleteDBCluster` | 2 | 1.0 |
+| **State-changing** | `ModifyDBNodeSpec`, `ScaleStorage`, `Failover`, `RestartDBInstance`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList`, `ModifyDBEndpoint` | 2 | 1.0 |
+| **Mutating** | `CreateDBCluster`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance`, `CreateReadOnlyNode` | 2 | ≥0.5 |
+| **Read-only** | `DescribeDBClusters`, `DescribeDBClusterDetail`, `DescribeDBNodes`, `DescribeDBInstanceParameters`, `DescribeDBAccounts` | 3 | ≥0 |
+
+### Loop & Safety
+- **DeleteDBCluster**: ALL compute nodes + shared storage + data lost.
+- **Failover**: 30-60s write interruption.
+- **ScaleStorage**: irreversible (can only increase).
+- DB password masked in trace.
+
+### Cross-skill delegation
+| Finding | Delegate |
+|---|---|
+| VPC/subnet | `ve-vpc-ops` |
+| Host-level | `ve-ecs-ops` |
+| Billing | `ve-billing-ops` |
 
 ## Execution Flows
 
@@ -471,3 +498,5 @@ ve polardb_mysql CreateParameterGroup \
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — PolarDB monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)

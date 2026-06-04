@@ -15,8 +15,8 @@ compatibility: >-
   endpoints.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -198,6 +198,33 @@ ve mongodb DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with MongoDB lifecycle, users, databases, collections, backups |
+| 1.1.0 | 2026-06-04 | GCL rollout: added `## Quality Gate (GCL)`, references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory for every execution of `ve-mongodb-ops`. Implements GCL per `../../AGENTS.md` §3-§9.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety |
+|---|---|---|---|
+| **Destructive** | `DeleteDBInstance` | 2 | 1.0 |
+| **State-changing** | `ModifyDBInstanceSpec`, `RestartDBInstance`, `ModifyDBInstanceIPList`, `CreateDatabase`, `CreateDBAccount` | 2 | 1.0 |
+| **Mutating** | `CreateDBInstance`, `CreateBackup`, `RestoreToNewInstance` | 2 | ≥0.5 |
+| **Read-only** | `DescribeDBInstances`, `DescribeDBInstanceDetail`, `DescribeDBAccounts`, `DescribeDatabases`, `DescribeBackups` | 3 | ≥0 |
+
+### Loop & Safety
+- **DeleteDBInstance**: check deletion protection; ALL data lost.
+- **ModifyDBInstanceSpec**: 60-900s downtime (replica set election).
+- **RestartDBInstance**: connection interruption.
+- Password masked in trace.
+
+### Cross-skill delegation
+| Finding | Delegate |
+|---|---|
+| VPC/subnet | `ve-vpc-ops` |
+| Host-level | `ve-ecs-ops` |
+| Billing | `ve-billing-ops` |
 
 ## Execution Flows
 
@@ -478,6 +505,8 @@ ve mongodb ModifyDBInstanceParameters \
 - [Monitoring & Alerts](references/monitoring.md) — MongoDB monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
 - [Knowledge Base](references/knowledge-base.md) — fault pattern library
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ---
 

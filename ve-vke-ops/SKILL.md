@@ -14,8 +14,8 @@ compatibility: >-
   endpoints.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-16"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -167,6 +167,22 @@ ve vke ListClusters --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-16 | Initial release with VKE cluster and node pool lifecycle |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteCluster, DeleteNodePool | 1.0 |
+| **State-changing** | UpdateCluster, UpdateNodePool | 1.0 |
+| **Mutating** | CreateCluster, CreateNodePool | ≥0.5 |
+| **Read-only** | ListClusters, DescribeCluster, ListNodePools, DescribeNodePool | ≥0 |
+
+Safety: DeleteCluster ALL k8s workloads lost. DeleteNodePool pods rescheduled.
+
+### Cross-skill: VPC→ve-vpc-ops, ECS→ve-ecs-ops, Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -469,3 +485,5 @@ ve vke ListSupportedVersions --Region "{{env.VOLCENGINE_REGION}}"
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — VKE monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)

@@ -194,6 +194,22 @@ ve rds_mysql DescribeDBInstances --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-25 | Initial release with instance lifecycle, databases, accounts, parameters, backups |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=2.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteDBInstance, DeleteDBAccount | 1.0 |
+| **State-changing** | ModifyDBNodeSpec, ModifyDBInstanceParameter | 1.0 |
+| **Mutating** | CreateDBInstance, CreateDBAccount, CreateBackup | ≥0.5 |
+| **Read-only** | DescribeDBInstances, DescribeDBInstanceDetail, DescribeDBInstanceParameters, DescribeBackups | ≥0 |
+
+Safety: DeleteDBInstance check deletion protection. ModifyDBNodeSpec downtime. Password masked. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: VPC→ve-vpc-ops, Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 

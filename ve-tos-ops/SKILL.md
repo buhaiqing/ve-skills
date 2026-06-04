@@ -17,8 +17,8 @@ compatibility: >-
   network access to TOS endpoints (tos-{region}.volces.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-15"
+  version: "1.2.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.13"
   cli_applicability: dual-path
@@ -179,6 +179,53 @@ tosutil ls -s
 |---------|------|---------|
 | 1.0.0 | 2026-05-15 | Initial release with bucket/object management, lifecycle, versioning |
 | 1.1.0 | 2026-05-27 | Added FinOps operations (storage analysis, stale detection, cleanup, cost reports) and AIOps knowledge base |
+| 1.2.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md` |
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every execution of `ve-tos-ops`. It implements
+> the Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. Read
+> [`references/rubric.md`](references/rubric.md) for scoring and
+> [`references/prompt-templates.md`](references/prompt-templates.md) for safety prompts.
+> **Note:** TOS uses `TOS_ACCESS_KEY` / `TOS_SECRET_KEY` (not `VOLCENGINE_*`).
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `DeleteBucket`, `DeleteObject` (single + prefix recursive) | 2 | 1.0 (mandatory) |
+| **State-changing** | `PutBucketLifecycle`, `PutBucketVersioning`, `PutBucketACL`, `OptimizeStorageClass`, `AbortMultipartUpload` | 2 | 1.0 (mandatory) |
+| **Mutating** | `CreateBucket`, `PutObject`, `CopyObject`, `CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload`, `PresignURL` | 2 | ≥ 0.5 |
+| **Read-only** | `ListBuckets`, `ListObjects`, `GetObject`, `GetBucketLocation`, `DescribeStorageAnalysis`, `DetectStaleObjects`, `CleanupMultipartUploads` (list-only), `DescribeCostSummary` | 3 | ≥ 0 |
+
+### Loop
+
+1. **Pre-flight** — resolve `{{env.*}}` / `{{user.*}}`; classify tier; load rubric.
+2. **Generate** — execute per `## Execution Flows`. Trace to `./audit-results/gcl-trace-*.json`.
+3. **Critique** — isolated prompt; score 5 dimensions; MUST NOT see raw request.
+4. **Decide** — Safety=0 on Destructive/State-changing → **ABORT**; all pass → return; `iter<max_iter` → loop.
+
+### TOS-specific safety rules
+
+- **DeleteBucket**: MUST check bucket emptiness (objects + versions + multipart uploads); warn all data lost.
+- **DeleteObject prefix-pattern (`-r`)**: MUST show file list before execution.
+- **PutBucketACL** with `public-read`/`public-read-write`: warn about public internet access.
+- **PutBucketVersioning suspend**: warn about losing new-overwrite protection.
+- **OptimizeStorageClass to Archive/ColdArchive**: warn about retrieval costs (per-GB fee + 1-12h restore time).
+- **PutBucketLifecycle with Expiration**: warn that objects will be permanently deleted.
+- **TOS_SECRET_KEY** NEVER in trace (only `<masked>`).
+
+### Trace
+
+`./audit-results/gcl-trace-*.json` — with `redaction_pass: true`. Both `tosutil` and `ve tos` commands recorded. Note: TOS uses `{{env.TOS_SECRET_KEY}}` not `{{env.VOLCENGINE_SECRET_KEY}}`.
+
+### Cross-skill delegation
+
+| Critic finding | Delegate to |
+|---|---|
+| IAM policy/permission gap | `ve-iam-ops` |
+| VPC/network context | `ve-vpc-ops` |
+| Billing/quota exceeded | `ve-billing-ops` |
 
 ## Execution Flows (Agent-Readable)
 
@@ -485,7 +532,6 @@ ACTUAL_SIZE=$(stat -f%z "{{user.local_file}}" 2>/dev/null || stat -c%s "{{user.l
 
 # For extra integrity verification, compare MD5/ETag
 echo "Download verified successfully"
-```
 ```
 
 ---
@@ -832,6 +878,8 @@ ve billing DescribeBillDetail --BillingCycle "{{user.billing_cycle}}" --ProductT
 - [Enhanced Self-Healing Framework](../../ve-skill-generator/references/enhanced-self-healing-framework.md)
 - [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
 - [Knowledge Base](references/knowledge-base.md)
+- [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
+- [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + TOS-specific safety prompts
 
 ## Operational Best Practices
 

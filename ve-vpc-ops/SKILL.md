@@ -13,8 +13,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-25"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -163,6 +163,26 @@ ve vpc DescribeVpcs --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-25 | Initial release with VPC, Subnet, Route Table management |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory for every execution of `ve-vpc-ops`. Implements GCL per `../../AGENTS.md` §3-§9. Recommended tier: max_iter=3.
+
+| Tier | Operations | max_iter | Safety |
+|---|---|---|---|
+| **Destructive** | DeleteVpc, DeleteSubnet | 3 | 1.0 |
+| **State-changing** | CreateRouteEntry, DeleteRouteEntry, ModifyVpcAttribute | 3 | 1.0 |
+| **Mutating** | CreateVpc, CreateSubnet, CreateRouteTable | 3 | ≥0.5 |
+| **Read-only** | DescribeVpcs, DescribeSubnets, DescribeRouteTables | 3 | ≥0 |
+
+Safety: DeleteVpc MUST verify empty. VOLCENGINE_SECRET_KEY never in trace.
+
+### Cross-skill
+| Finding | Delegate |
+|---|---|
+| Subnet/ECS | ve-ecs-ops |
+| Billing | ve-billing-ops |
 
 ## Execution Flows (Agent-Readable)
 
@@ -331,6 +351,8 @@ ve vpc CreateRouteEntry \
 - [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

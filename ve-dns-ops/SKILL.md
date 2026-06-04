@@ -14,8 +14,8 @@ compatibility: >-
   network access to Volcengine endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-31"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_script_syntax_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -969,6 +969,8 @@ ve dns ListDomains --Region {{env.VOLCENGINE_REGION}}
 - [Monitoring & Alerts](references/monitoring.md) — DNS metrics and alerting
 - [Integration](references/integration.md) — Environment setup and SDK workflow
 - [Knowledge Base](references/knowledge-base.md) — DNS fault patterns and diagnostics
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 
@@ -988,3 +990,19 @@ ve dns ListDomains --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-31 | Initial release with DNS domain, record, and resolution management |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Optional tier. max_iter=5.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteDNSRecord, DeleteDNSDomain | 1.0 |
+| **State-changing** | CreateDNSRecord, ModifyDNSRecord, ModifyDNSDomain | 1.0 |
+| **Mutating** | CreateDNSDomain | ≥0.5 |
+| **Read-only** | DescribeDNSDomains, DescribeDNSRecords, DescribeDomainStatistics | ≥0 |
+
+Safety: DeleteDomain ALL records lost. DeleteRecord resolution breaks. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: Billing→ve-billing-ops

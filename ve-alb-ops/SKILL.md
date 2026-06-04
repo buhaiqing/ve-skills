@@ -15,8 +15,8 @@ compatibility: >-
   network access to Volcengine ALB endpoints.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-31"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -226,6 +226,22 @@ ve alb DescribeLoadBalancers --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-31 | Initial release with ALB, listeners, rules, server groups, health checks, FinOps |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteLoadBalancer, DeleteListener, DeleteRule, DeleteServerGroup | 1.0 |
+| **State-changing** | AddBackendServers, RemoveBackendServers, ModifyListenerAttributes, ModifyRuleAttributes | 1.0 |
+| **Mutating** | CreateLoadBalancer, CreateListener, CreateRule, CreateServerGroup | ≥0.5 |
+| **Read-only** | DescribeLoadBalancers, DescribeListeners, DescribeRules, DescribeServerGroups | ≥0 |
+
+Safety: DeleteLoadBalancer ALL listeners/rules/server-groups lost. ServerGroup in-use warning.
+
+### Cross-skill: ECS→ve-ecs-ops, VPC→ve-vpc-ops, CLB→ve-clb-ops, Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -1013,6 +1029,8 @@ ve alb DeleteListener --Region "{{user.region}}" --ListenerId "{{user.listener_i
 - [Monitoring & Alerts](references/monitoring.md) — Key metrics and alarm configuration
 - [Integration](references/integration.md) — ALB integration with VPC, EIP, ECS
 - [Knowledge Base](references/knowledge-base.md) — Fault pattern library
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

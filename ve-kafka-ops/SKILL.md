@@ -15,8 +15,8 @@ compatibility: >-
   network access to Kafka endpoints (kafka.{region}.volces.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -189,6 +189,22 @@ ve kafka ListInstances --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with instance, topic, ACL, and user management |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Optional tier. max_iter=5.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteInstance, DeleteTopic | 1.0 |
+| **State-changing** | CreateTopic, ModifyInstance, ResetConsumerGroupOffset, CreateSaslUser | 1.0 |
+| **Mutating** | CreateInstance | ≥0.5 |
+| **Read-only** | DescribeInstances, DescribeTopics, DescribeConsumerGroups, DescribeSaslUsers | ≥0 |
+
+Safety: DeleteInstance ALL topics+data LOST. DeleteTopic data+offsets LOST. SASL password masked. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -793,6 +809,8 @@ ve kafka DescribeConsumerLag \
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring & Alerts](references/monitoring.md)
 - [Integration](references/integration.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

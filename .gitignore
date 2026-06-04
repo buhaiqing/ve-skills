@@ -32,3 +32,9 @@ go.work.sum
 # .vscode/
 .omc/
 .omo/
+
+# macOS
+.DS_Store
+
+# GCL (Generator-Critic-Loop) audit traces — never commit
+audit-results/

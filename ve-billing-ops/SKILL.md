@@ -440,13 +440,31 @@ ve billing DescribeReservedInstances --Region "{{env.VOLCENGINE_REGION}}"
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
 - [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.5.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
 | 1.4.0 | 2026-06-02 | Complete observability integration (CMS/SLS/Prometheus/Slack/PagerDuty), 3 new example assets, full SDK/CLI scripts for all integration patterns |
 | 1.3.0 | 2026-06-02 | Full UX compliance: Complete Execution Flows (4-phase), 16 Error Taxonomy entries, Prerequisites, Response Conventions, State Transitions |
 | 1.2.0 | 2026-06-02 | Added FinOps Knowledge Base, Cost Prediction, Cross-Skill Orchestration |
 | 1.1.0 | 2026-06-02 | Added Cost Optimization Guide, Operations Framework, Cross-Service Cost Analysis |
 | 1.0.0 | 2026-05-31 | Initial release with billing query, budget, balance, cost analysis |
+
+## Quality Gate (GCL)
+
+> Optional tier. max_iter=5. Read-mostly.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteBudget | 1.0 |
+| **State-changing** | CreateBudget, UpdateBudget | 1.0 |
+| **Mutating** | — | ≥0.5 |
+| **Read-only** | DescribeBills, DescribeBillDetail, DescribeBalance, DescribeBudgets, DescribeReservedInstances | ≥0 |
+
+Safety: DeleteBudget stops cost alerts. Financial data sensitive. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: All product cost analysis→respective product ops
