@@ -2,7 +2,7 @@
 
 ## Install and Config
 
-See [Execution Environment Setup](../references/execution-environment.md) for CLI installation.
+See [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md) for CLI installation.
 
 **CRITICAL Credentials:** The `ve` CLI reads from env vars `VOLCENGINE_ACCESS_KEY` / `VOLCENGINE_SECRET_KEY` OR `~/.volcengine/config.json`.
 

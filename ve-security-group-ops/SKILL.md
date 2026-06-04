@@ -38,7 +38,7 @@ metadata:
 
 Security Groups (安全组) on Volcengine (火山引擎) act as virtual firewalls for ECS instances, controlling inbound and outbound traffic. This skill is an **operational runbook** for agents: security group rule auditing, risk detection, least-privilege optimization, lifecycle management, and cross-security-group conflict detection. **Do not use the web console as the primary agent execution path.**
 
-> **UX Compliance:** This skill follows the [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
 
 ### CLI applicability
 
@@ -585,10 +585,10 @@ ve vpc DescribeSecurityGroupAttributes --Region "{{user.region}}" --SecurityGrou
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
 - [Integration](references/integration.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
-- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
+- [FinOps Best Practices](../ve-skill-generator/references/finops-best-practices.md)
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 

@@ -469,7 +469,7 @@ ve vke ListSupportedVersions --Region "{{env.VOLCENGINE_REGION}}"
 
 ## Prerequisites
 
-1. **Install `ve` CLI:** See [Execution Environment](references/execution-environment.md) for details.
+1. **Install `ve` CLI:** See [Execution Environment](../ve-skill-generator/references/execution-environment.md) for details.
 2. **Bootstrap Go runtime** (for JIT SDK fallback): See references/integration.md
 3. **Configure Credentials:** Environment variables `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION`
 4. **Verify:** `ve vke ListSupportedVersions --Region "{{env.VOLCENGINE_REGION}}"`

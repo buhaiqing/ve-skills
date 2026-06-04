@@ -38,7 +38,7 @@ metadata:
 
 SLS (Simple Log Service / 日志服务, also known as TLS - Total Log Service) on Volcengine (火山引擎) provides log collection, storage, indexing, analysis, and delivery capabilities. This skill is an **operational runbook** for agents: log collection volume analysis, index optimization, storage cost optimization, LogShipper configuration audit, alert rule optimization, and common troubleshooting patterns. **Do not use the web console as the primary agent execution path.**
 
-> **UX Compliance:** This skill follows the [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
+> **UX Compliance:** This skill follows the [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md). All operations include onboarding guidance, minimal prompts, smart defaults, clear feedback, and user-friendly error handling.
 
 ### CLI applicability
 
@@ -589,10 +589,10 @@ ve tls SearchLogs --Region "{{user.region}}" --ProjectId "{{user.project_id}}" -
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
 - [Integration](references/integration.md)
-- [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
-- [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
-- [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
-- [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
+- [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
+- [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
+- [FinOps Best Practices](../ve-skill-generator/references/finops-best-practices.md)
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 
