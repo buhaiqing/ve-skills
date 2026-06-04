@@ -14,8 +14,8 @@ compatibility: >-
   endpoints.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-16"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -171,6 +171,49 @@ ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-16 | Initial release with Redis instance lifecycle |
+| 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md`; `max_iter=2` for destructive / state_changing ops, `max_iter=3` for read-only ops |
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every execution of `ve-redis-ops`. It implements
+> the Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. Read
+> [`references/rubric.md`](references/rubric.md) for scoring and
+> [`references/prompt-templates.md`](references/prompt-templates.md) for safety prompts.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `DeleteDBInstance`, `DeleteAllowList` | 2 | 1.0 (mandatory) |
+| **State-changing** | `ModifyDBInstanceSpec`, `RestartDBInstance`, `ModifyDBInstanceParameters`, `ModifyAllowList`, `CreateAccount` | 2 | 1.0 (mandatory) |
+| **Mutating** | `CreateDBInstance`, `CreateBackup`, `CreateAllowList` | 2 | ≥ 0.5 |
+| **Read-only** | `DescribeDBInstanceDetail`, `DescribeDBInstances`, `DescribeAllowLists`, `DescribeAccounts`, `DescribeBackups`, `DescribeDBInstanceParameters` | 3 | ≥ 0 |
+
+### Loop
+
+1. **Pre-flight** — resolve `{{env.*}}` / `{{user.*}}`; classify tier; load rubric.
+2. **Generate** — execute per `## Execution Flows`. Trace to `./audit-results/gcl-trace-*.json`.
+3. **Critique** — isolated prompt; score 5 dimensions; MUST NOT see raw request.
+4. **Decide** — Safety=0 on Destructive/State-changing → **ABORT**; all pass → return; `iter<max_iter` → loop.
+
+### Redis-specific safety rules
+
+- **DeleteDBInstance**: check deletion protection first; explicit confirmation.
+- **ModifyDBInstanceSpec**: warn about 60-180s downtime.
+- **RestartDBInstance**: warn about connection cutoff; production confirm.
+- **ModifyAllowList**: production change risks locking out clients.
+
+### Trace
+
+`./audit-results/gcl-trace-*.json` — password masked as `<masked>`.
+
+### Cross-skill delegation
+
+| Critic finding | Delegate to |
+|---|---|
+| VPC/subnet not found | `ve-vpc-ops` |
+| ECS host issue | `ve-ecs-ops` |
+| Billing quota | `ve-billing-ops` |
 
 ## Execution Flows
 
@@ -372,3 +415,5 @@ ve redis ModifyDBInstanceParameters --InstanceId "{{user.instance_id}}" --body '
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — Redis monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
+- [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
+- [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + Redis-specific safety prompts

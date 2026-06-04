@@ -15,8 +15,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -213,6 +213,22 @@ ve vpn DescribeVpnGateways --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with VPN Gateway, IPSec, SSL VPN, and Customer Gateway management |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteVpnGateway, DeleteCustomerGateway, DeleteVpnConnection, DeleteSslVpnServer, DeleteSslVpnClientCert | 1.0 |
+| **State-changing** | CreateVpnConnection, ModifyVpnConnectionAttribute, CreateSslVpnClientCert | 1.0 |
+| **Mutating** | CreateVpnGateway, CreateCustomerGateway, CreateSslVpnServer | ≥0.5 |
+| **Read-only** | DescribeVpnGateways, DescribeCustomerGateways, DescribeVpnConnections, DescribeSslVpnServers, DescribeSslVpnClientCerts, DownloadSslVpnClientConfig | ≥0 |
+
+Safety: DeleteVpnGateway ALL connections disconnected. CreateSslVpnClientCert: PrivateKey never in trace (masked). VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: VPC→ve-vpc-ops, Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -685,6 +701,8 @@ ve vpn DeleteSslVpnClientCert \
 - [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

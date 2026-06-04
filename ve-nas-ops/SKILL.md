@@ -15,8 +15,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -189,6 +189,22 @@ ve nas DescribeFileSystems --Region {{env.VOLCENGINE_REGION}}
 |---------|------|---------|
 | 1.0.1 | 2026-05-28 | Added FinOps cost calculation reference pricing table; enhanced stale file detection with access age classification; added mount command reference |
 | 1.0.0 | 2026-05-27 | Initial release with NAS lifecycle, performance, cost optimization |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteFileSystem, DeleteMountTarget | 1.0 |
+| **State-changing** | ModifyFileSystem, ModifyMountTarget | 1.0 |
+| **Mutating** | CreateFileSystem, CreateMountTarget | ≥0.5 |
+| **Read-only** | DescribeFileSystems, ListMountTargets | ≥0 |
+
+Safety: DeleteFileSystem ALL data + snapshots + mount targets LOST. DeleteMountTarget instances disconnect from NFS/SMB.
+
+### Cross-skill: VPC→ve-vpc-ops, ECS→ve-ecs-ops, Billing→ve-billing-ops
 
 ## Testing Guide
 
@@ -711,6 +727,8 @@ ve nas RestoreSnapshot --Region "{{user.region}}" --SnapshotId "{{user.snapshot_
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
 - [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

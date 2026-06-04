@@ -15,8 +15,8 @@ compatibility: >-
   network access to KMS endpoints (kms.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   cli_applicability: dual-path
@@ -192,6 +192,71 @@ ve kms CreateKey --KeySpec AES_256 --KeyUsage ENCRYPT_DECRYPT --Region {{env.VOL
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with key lifecycle, encryption/decryption, data keys, rotation, policies, grants |
+| 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md`; `max_iter=2` for destructive / state_changing ops, `max_iter=3` for read-only ops |
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every execution of `ve-kms-ops`. It implements
+> the Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. Read
+> [`references/rubric.md`](references/rubric.md) for the scoring dimensions and
+> [`references/prompt-templates.md`](references/prompt-templates.md) for the G/C/O
+> prompt skeletons and verbatim safety prompts. The Critic and Generator MUST
+> live in **isolated prompt contexts**.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `ScheduleKeyDeletion` | 2 | 1.0 (mandatory) — `PendingWindowInDays` ≥ 7 required |
+| **State-changing** | `DisableKey`, `UpdateKeyRotation`, `PutKeyPolicy`, `RevokeGrant`, `DeleteKeyMaterial` | 2 | 1.0 (mandatory) |
+| **Mutating** | `CreateKey`, `EnableKey`, `CreateGrant`, `CancelKeyDeletion`, `Encrypt`, `Decrypt`, `GenerateDataKey`, `GenerateDataKeyWithoutPlaintext` | 2 | ≥ 0.5 |
+| **Read-only** | `DescribeKey`, `DescribeKeys`, `DescribeKeyRotation`, `ListGrants`, `GetKeyPolicy` | 3 | ≥ 0 |
+
+### Loop
+
+1. **Pre-flight (Orchestrator)** — resolve `{{env.*}}` and `{{user.*}}`; classify
+   the operation into one of the four tiers; load `references/rubric.md`.
+2. **Generate** — execute per the `## Execution Flows` chapter. Capture full
+   command, parameters, raw response excerpt, `RequestId`, validation output,
+   retries, and final state into `./audit-results/gcl-trace-*.json` with
+   `redaction_pass: true`.
+3. **Critique** — isolated prompt; score correctness / safety / idempotency /
+   traceability / spec_compliance per the rubric. The Critic MUST NOT see the
+   raw user request.
+4. **Decide** — Safety=0 on Destructive/State-changing → **ABORT**; all pass
+   → return; `iter < max_iter` → inject suggestions; else → return best +
+   unresolved rubric items.
+
+### KMS-specific safety rules
+
+- **ScheduleKeyDeletion**: `PendingWindowInDays` MUST be ≥ 7 (default 7;
+   production keys should use ≥ 30). User must confirm the exact window in days.
+- **Encrypt / Decrypt / GenerateDataKey**: plaintext values are NEVER in the
+   trace — only `<masked>[length=N]`. The user sees plaintext once.
+- **PutKeyPolicy** with `Principal: "*"` or `Action: "kms:*"`: user MUST be
+   warned about broad permissions.
+- **DisableKey** on a key actively used by production resources: user must
+   confirm the impact.
+- **GenerateDataKey**: user warned that the plaintext key is returned once
+   and must be saved securely.
+
+### Trace
+
+Every GCL run persists a JSON trace to `./audit-results/gcl-trace-*.json`.
+Trace MUST NOT contain `VOLCENGINE_SECRET_KEY`, `Encrypt.Plaintext`,
+`Decrypt.Plaintext`, or `GenerateDataKey.Plaintext` — only `<masked>`.
+`CiphertextBlob` is safe to record (encrypted). See rubric §4 for mandatory
+fields.
+
+### Cross-skill delegation
+
+| Critic finding | Delegate to |
+|---|---|
+| IAM principal/user/policy needed for key policy or grant | `ve-iam-ops` |
+| Encrypted resource (disk, database) reporting key access issues | respective product skill |
+| Billing quota exceeded | `ve-billing-ops` |
+
+The Critic MUST NOT call any skill — it only emits suggestions.
 
 ## Execution Flows (Agent-Readable)
 
@@ -734,6 +799,8 @@ ve kms ListGrants --KeyId "{{user.key_id}}" --Region {{env.VOLCENGINE_REGION}}
 - [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
+- [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + KMS-specific safety prompts
 
 ## Operational Best Practices
 

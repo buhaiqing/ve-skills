@@ -13,8 +13,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-25"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -165,6 +165,51 @@ ve eip DescribeEipAddresses --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-25 | Initial release with EIP lifecycle and bandwidth management |
+| 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md` |
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every execution of `ve-eip-ops`. It implements
+> the Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. Read
+> [`references/rubric.md`](references/rubric.md) for scoring and
+> [`references/prompt-templates.md`](references/prompt-templates.md) for safety prompts.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `ReleaseEipAddress` | 2 | 1.0 (mandatory) |
+| **State-changing** | `DisassociateEipAddress`, `AssociateEipAddress`, `ModifyEipBandwidth` | 2 | 1.0 (mandatory) |
+| **Mutating** | `AllocateEipAddress`, `ModifyEipAddressAttributes`, `RenewEipAddress`, `TagEipAddress` | 2 | ≥ 0.5 |
+| **Read-only** | `DescribeEipAddresses`, `DescribeEipBandwidth`, `DescribeEipAddressAttributes` | 3 | ≥ 0 |
+
+### Loop
+
+1. **Pre-flight** — resolve `{{env.*}}` / `{{user.*}}`; classify tier; load rubric.
+2. **Generate** — execute per `## Execution Flows`. Trace to `./audit-results/gcl-trace-*.json`.
+3. **Critique** — isolated prompt; score 5 dimensions; MUST NOT see raw request.
+4. **Decide** — Safety=0 on Destructive/State-changing → **ABORT**; all pass → return; `iter<max_iter` → loop.
+
+### EIP-specific safety rules
+
+- **ReleaseEipAddress**: MUST check EIP status first (`Available` or warn auto-disassociate). Explicit confirmation naming the IP.
+- **DisassociateEipAddress on production**: warn about connectivity loss.
+- **AssociateEipAddress** when EIP already bound: force-rebind warning.
+- **ModifyEipBandwidth** with significant increase: cost impact warning.
+
+### Trace
+
+`./audit-results/gcl-trace-*.json` — with `redaction_pass: true`.
+
+### Cross-skill delegation
+
+| Critic finding | Delegate to |
+|---|---|
+| ECS instance details needed | `ve-ecs-ops` |
+| CLB binding | `ve-clb-ops` |
+| NAT Gateway binding | `ve-nat-ops` |
+| VPC network context | `ve-vpc-ops` |
+| Billing/quota exceeded | `ve-billing-ops` |
 
 ## Execution Flows (Agent-Readable)
 
@@ -399,6 +444,8 @@ ve eip DescribeEipAddressAttributes --Region "{{user.region}}" --AllocationId "{
 - [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
+- [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + EIP-specific safety prompts
 
 ## Operational Best Practices
 

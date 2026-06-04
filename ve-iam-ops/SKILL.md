@@ -12,8 +12,8 @@ compatibility: >-
   network access to Volcengine IAM endpoints.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -170,6 +170,67 @@ ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with user, policy, role, group, identity provider, and audit operations |
+| 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md`; `max_iter=2` for destructive / state_changing ops, `max_iter=3` for read-only ops |
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every execution of `ve-iam-ops`. It implements
+> the Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. Read
+> [`references/rubric.md`](references/rubric.md) for the scoring dimensions and
+> [`references/prompt-templates.md`](references/prompt-templates.md) for the G/C/O
+> prompt skeletons and verbatim safety prompts. The Critic and Generator MUST
+> live in **isolated prompt contexts**.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `DeleteUser`, `DeletePolicy`, `DeleteRole`, `DeleteGroup`, `DeleteAccessKey`, `DeleteSAMLProvider`, `DeleteOIDCProvider` | 2 | 1.0 (mandatory) |
+| **State-changing** | `DetachUserPolicy`, `DetachRolePolicy`, `DetachGroupPolicy`, `RemoveUserFromGroup`, `UpdateLoginProfile`, `UpdateUser`, `UpdatePolicy`, `UpdateRole`, `UpdateAccessKey` | 2 | 1.0 (mandatory) |
+| **Mutating** | `CreateUser`, `CreatePolicy`, `CreateRole`, `CreateGroup`, `AddUserToGroup`, `AttachUserPolicy`, `AttachRolePolicy`, `AttachGroupPolicy`, `CreateAccessKey`, `CreateSAMLProvider`, `CreateOIDCProvider`, `AssumeRole` | 2 | ≥ 0.5 |
+| **Read-only** | `ListUsers`, `ListPolicies`, `ListRoles`, `ListGroups`, `GetUser`, `GetRole`, `GetGroup`, `GetPolicy`, `GetCredentialReport`, `ListAccessKeys`, `ListAttachedUserPolicies`, `ListAttachedRolePolicies`, `ListAttachedGroupPolicies`, `ListGroupsForUser`, `ListEntitiesForPolicy`, `GetLoginProfile`, `GenerateCredentialReport` | 3 | ≥ 0 |
+
+### Loop
+
+1. **Pre-flight (Orchestrator)** — resolve `{{env.*}}` and `{{user.*}}`; classify
+   the operation into one of the four tiers; load `references/rubric.md`.
+2. **Generate** — execute per the `## Execution Flows` chapter. Capture full
+   command, parameters, raw response excerpt, `RequestId`, validation output,
+   retries, and final state into `./audit-results/gcl-trace-*.json` with
+   `redaction_pass: true`.
+3. **Critique** — isolated prompt; score correctness / safety / idempotency /
+   traceability / spec_compliance per the rubric. The Critic MUST NOT see the
+   raw user request.
+4. **Decide** — Safety=0 on Destructive/State-changing → **ABORT**; all pass
+   → return; `iter < max_iter` → inject suggestions; else → return best +
+   unresolved rubric items.
+
+### IAM-specific safety rules
+
+- **DeleteUser**: dependency pre-check required before any execution.
+- **AttachPolicy with `Action=*:*` or `Resource=*`**: user MUST be warned.
+- **CreateRole with open trust policy** (`Principal={Federated:["*"]}` / `STS:["*"]`):
+   user MUST be warned.
+- **DetachPolicy** when it's the last admin policy: user MUST confirm the risk.
+- **CreateAccessKey / AssumeRole**: secret credentials output once to user;
+   NEVER in trace (only `<masked>` or `sha256:<prefix>`).
+
+### Trace
+
+Every GCL run persists a JSON trace to `./audit-results/gcl-trace-*.json`.
+Trace MUST NOT contain `VOLCENGINE_SECRET_KEY`, `CreateAccessKey.SecretKey`, or
+`AssumeRole.Credentials.SecretKey` — only `<masked>`. See rubric §4 for
+mandatory trace fields.
+
+### Cross-skill delegation
+
+| Critic finding | Delegate to |
+|---|---|
+| KMS key / secret needed for the operation | `ve-kms-ops` |
+| Product-specific resource permissions (ECS, RDS, etc.) | respective product skill |
+| Billing quota exceeded | `ve-billing-ops` |
+
+The Critic MUST NOT call any skill — it only emits suggestions.
 
 ## Execution Flows (Agent-Readable)
 
@@ -707,6 +768,8 @@ ve iam GetCredentialReport \
 - [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
+- [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + IAM-specific safety prompts
 
 ## Operational Best Practices
 

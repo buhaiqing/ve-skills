@@ -200,13 +200,6 @@ ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 | CleanupOrphanedDisks | Delete unattached cloud disks | Low | **High** |
 | CleanupOldSnapshots | Delete snapshots older than threshold | Low | Medium |
 
-## Changelog
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0.0 | 2026-05-15 | Initial release with instance lifecycle, disk, snapshot, and image management |
-| 1.1.0 | 2026-05-27 | Added FinOps operations (idle detection, right-sizing, cleanup, cost reports) and AIOps knowledge base |
-
 ## Execution Flows (Agent-Readable)
 
 Every operation: **Pre-flight → Execute (ve CLI primary + JIT Go SDK fallback) → Validate → Recover**.
@@ -931,6 +924,85 @@ ve ecs DescribeInstances --Region "{{user.region}}" | jq '[.Result.Instances[]] 
 - 5 orphaned disks detected (est. ¥150/mo savings)
 - 12 old snapshots eligible for cleanup (est. ¥60/mo savings)
 ```
+
+---
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every execution of `ve-ecs-ops`. It implements
+> the Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. The Critic and
+> Generator MUST live in **isolated prompt contexts** — see AGENTS.md §9
+> anti-patterns. Read [`references/rubric.md`](references/rubric.md) for the
+> scoring dimensions and [`references/prompt-templates.md`](references/prompt-templates.md)
+> for the G/C/O prompt skeletons and verbatim safety prompts.
+
+### Operation Tiers (from `references/rubric.md` §0)
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `DeleteInstance`, `DeleteDisk`, `DeleteSnapshot`, `DeleteImage`, `DeleteKeyPair`, `DeleteNetworkInterface` | 2 | 1.0 (mandatory) |
+| **State-changing** | `StopInstance`, `RebootInstance`, `ModifyInstanceSpec`, `ModifyInstanceAttribute`, `TerminateInstances`, `StopInvocation` | 2 | 1.0 (mandatory) |
+| **Mutating** | `RunInstances`, `CreateDisk`, `CreateSnapshot`, `CreateImage`, `CreateKeyPair`, `AttachDisk`, `DetachDisk`, `InvokeCommand` | 2 | ≥ 0.5 |
+| **Read-only** | `DescribeInstances`, `DescribeDisks`, `DescribeSnapshots`, `DescribeImages`, `DescribeKeyPairs`, `DescribeRegions`, `DescribeInstanceTypes`, `DescribeInvocationResults`, `DescribeIdleInstances`, `DescribeCostSummary` | 3 | ≥ 0 |
+
+### Loop
+
+1. **Pre-flight (Orchestrator)** — resolve `{{env.*}}` and `{{user.*}}`; classify
+   the operation into one of the four tiers above; load
+   `references/rubric.md`.
+2. **Generate** — execute the operation per the existing
+   `## Execution Flows` chapter. Capture full command, parameters, raw response
+   excerpt, `RequestId`, validation step output, retries, and final state into
+   `./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json` with `redaction_pass: true`.
+3. **Critique** — isolated prompt; score correctness / safety / idempotency /
+   traceability / spec_compliance per `references/rubric.md`. Emit ≤ 3
+   actionable suggestions. The Critic MUST NOT see the raw user request.
+4. **Decide** — first match wins:
+   - Safety = 0 on a Destructive or State-changing op → **ABORT** (no partial return).
+   - All dimensions meet threshold → return Generator output.
+   - `iter < max_iter` → inject suggestions into Generator and loop.
+   - Else → return best-so-far + unresolved rubric items.
+
+### Safety prompts
+
+The Generator MUST surface a **verbatim** safety prompt to the user before
+any Destructive or State-changing operation. Templates are in
+[`references/prompt-templates.md` §4](references/prompt-templates.md#4-operation-specific-safety-prompts)
+(e.g., §4.1 for `DeleteInstance`, §4.4 for prod `StopInstance`).
+
+The user's literal "yes" / "confirm" reply is what the Critic verifies in the trace.
+
+### Trace
+
+Every GCL run MUST persist a JSON trace to
+`./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json`. The trace MUST NOT contain a
+real `VOLCENGINE_SECRET_KEY` — only `<masked>` or `sha256:<first-8-hex>` and length.
+Add `audit-results/` to `.gitignore` (already done at repo root). See
+`references/rubric.md` §4 for the mandatory fields and `references/prompt-templates.md` §3
+for the Orchestrator's output shape.
+
+### Cross-skill delegation (extends `## Delegation Rules` above)
+
+When the Critic surfaces a cross-product gap, the **Generator** (not the Critic)
+delegates on the next iteration:
+
+| Critic finding | Delegate to |
+|---|---|
+| IAM policy gap (no permission for `ve ecs <Action>`) | `ve-iam-ops` |
+| KMS key / secret needed for the operation | `ve-kms-ops` |
+| EIP / VPC network concern raised in a non-network op | `ve-eip-ops` / `ve-vpc-ops` |
+| Monitoring / alarm rule change needed after a destructive op | `ve-cms-ops` |
+| Billing quota exceeded during the operation | `ve-billing-ops` |
+
+The Critic itself MUST NOT call any of the above — it only emits suggestions.
+
+## Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-05-15 | Initial release with instance lifecycle, disk, snapshot, and image management |
+| 1.1.0 | 2026-05-27 | Added FinOps operations (idle detection, right-sizing, cleanup, cost reports) and AIOps knowledge base |
+| 1.2.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md`; `max_iter=2` for destructive / state_changing ops, `max_iter=3` for read-only ops |
 
 ---
 

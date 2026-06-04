@@ -15,8 +15,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -181,6 +181,22 @@ ve tls DescribeProjects --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with SLS lifecycle, cost optimization, troubleshooting |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Optional tier. max_iter=5.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteProject, DeleteTopic, DeleteShipper | 1.0 |
+| **State-changing** | CreateProject, CreateTopic, CreateShipper, ModifyProject, ModifyTopic, ModifyShipper, CreateIndex, ModifyIndex | 1.0 |
+| **Mutating** | — | ≥0.5 |
+| **Read-only** | DescribeProjects, DescribeTopics, DescribeShippers, SearchLog, DescribeLogHistogram | ≥0 |
+
+Safety: DeleteProject ALL topics+data LOST. SearchLog query MUST NOT contain credentials. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -577,6 +593,8 @@ ve tls SearchLogs --Region "{{user.region}}" --ProjectId "{{user.project_id}}" -
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
 - [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

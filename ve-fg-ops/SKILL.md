@@ -15,8 +15,8 @@ compatibility: >-
   network access to Volcengine endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-31"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_script_syntax_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -445,6 +445,8 @@ export VOLCENGINE_REGION="{{env.VOLCENGINE_REGION}}"
 - [Monitoring & Alerts](references/monitoring.md)
 - [Integration](references/integration.md)
 - [Knowledge Base](references/knowledge-base.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Diagnostic Commands
 
@@ -488,3 +490,19 @@ ve functiongraph ListVersions \
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-31 | Initial frontmatter + Five Core Standards + dual-path + error taxonomy |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteFunction, DeleteTrigger | 1.0 |
+| **State-changing** | UpdateFunction, PublishVersion, CreateTrigger | 1.0 |
+| **Mutating** | CreateFunction | ≥0.5 |
+| **Read-only** | GetFunction, ListFunctions, InvokeFunction | ≥0 |
+
+Safety: DeleteFunction ALL versions/triggers lost. UpdateFunction: in-flight invocations complete with old code.
+
+### Cross-skill: Billing→ve-billing-ops

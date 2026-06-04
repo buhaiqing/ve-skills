@@ -15,8 +15,8 @@ compatibility: >-
   endpoints.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-16"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -185,6 +185,52 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-16 | Initial release with RDS MySQL lifecycle |
+| 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md` |
+
+## Quality Gate (GCL)
+
+> This chapter is **mandatory** for every execution of `ve-rds-mysql-ops`. It implements
+> the Generator-Critic-Loop defined in `../../AGENTS.md` §3-§9. Read
+> [`references/rubric.md`](references/rubric.md) for scoring and
+> [`references/prompt-templates.md`](references/prompt-templates.md) for safety prompts.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | `DeleteDBInstance`, `DeleteDBAccount`, `RebuildDBInstance` | 2 | 1.0 (mandatory) |
+| **State-changing** | `ModifyDBNodeSpec`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList` | 2 | 1.0 (mandatory) |
+| **Mutating** | `CreateDBInstance`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance` | 2 | ≥ 0.5 |
+| **Read-only** | `DescribeDBInstanceDetail`, `DescribeDBInstances`, `DescribeDBInstanceParameters`, `DescribeRegions`, `DescribeAvailabilityZones`, `ListDBInstanceIPLists`, `DescribeDBAccounts`, `DescribeBackups` | 3 | ≥ 0 |
+
+### Loop
+
+1. **Pre-flight** — resolve `{{env.*}}` / `{{user.*}}`; classify tier; load rubric.
+2. **Generate** — execute per `## Execution Flows`. Trace to `./audit-results/gcl-trace-*.json`.
+3. **Critique** — isolated prompt; score 5 dimensions; MUST NOT see raw request.
+4. **Decide** — Safety=0 on Destructive/State-changing → **ABORT**; all pass → return; `iter<max_iter` → loop.
+
+### RDS-specific safety rules
+
+- **DeleteDBInstance**: check deletion protection; warn about irreversible data loss.
+- **RebuildDBInstance**: warn that the instance will be rebuilt from its initial snapshot — any data changes since creation are lost.
+- **ModifyDBNodeSpec**: warn about 60-900s downtime.
+- **DeleteDBAccount**: warn that applications using this account lose access.
+- **ModifyDBInstanceParameter**: if `ForceRestart=true`, warn about restart.
+- **ModifyDBInstanceIPList** on production: warn about locking out clients.
+- DB password masked as `<masked>` in trace.
+
+### Trace
+
+`./audit-results/gcl-trace-*.json` — password masked.
+
+### Cross-skill delegation
+
+| Critic finding | Delegate to |
+|---|---|
+| VPC/subnet not found | `ve-vpc-ops` |
+| Host-level issue | `ve-ecs-ops` |
+| Billing/quota | `ve-billing-ops` |
 
 ## Execution Flows
 
@@ -390,3 +436,5 @@ ve rds_mysql ModifyDBInstanceIPList --InstanceId "{{user.instance_id}}" --body '
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — RDS monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
+- [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
+- [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + RDS-specific safety prompts

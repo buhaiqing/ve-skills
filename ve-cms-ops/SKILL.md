@@ -17,8 +17,8 @@ compatibility: >-
   (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-15"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -184,6 +184,22 @@ ve metrics GetMetricData --Namespace Volcengine_ECS --MetricName CpuUtilization 
 |---------|------|---------|
 | 1.0.1 | 2026-05-28 | Enhanced error handling taxonomy with 12 CMS-specific error codes; added retry strategy matrix |
 | 1.0.0 | 2026-05-15 | Initial release with core capabilities: GetMetricData (time-series queries), ListMetrics (namespace metrics), CreateAlarm/EnableAlarm/DisableAlarm/DeleteAlarm (alarm lifecycle), CreateAlarmTemplate/ApplyAlarmTemplate (template management), ListEvents (system events), DescribeContactGroups/CreateContactGroup (notification groups); includes CLI dual-path execution (ve CLI + Go SDK fallback), Pre-flight→Execute→Validate→Recover workflow, namespace convention guide (ECS/RDS/Redis/VKE/TOS/SLB/VPC), security credential masking guidelines |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteAlarm, DeleteAlarmTemplate | 1.0 |
+| **State-changing** | CreateAlarm, ModifyAlarm, EnableAlarm, DisableAlarm, CreateAlarmTemplate, ApplyAlarmTemplate | 1.0 |
+| **Mutating** | — (all state-changing) | ≥0.5 |
+| **Read-only** | GetMetricData, ListMetrics, ListEvents, DescribeContactGroups, ListContactGroups | ≥0 |
+
+Safety: DeleteAlarm monitoring blackout for resources. DisableAlarm alerts not sent. CreateAlarm with empty notification: no alert sent. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: Product alarm rules→respective product ops, Billing→ve-billing-ops
 
 ## Testing Guide
 
@@ -533,6 +549,8 @@ ve metrics DescribeContactGroups
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
 - [Enhanced Self-Healing Framework](../../ve-skill-generator/references/enhanced-self-healing-framework.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

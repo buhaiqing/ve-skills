@@ -23,8 +23,8 @@ compatibility: >-
   and agentskills.io frontmatter conventions.
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-15"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   type: meta-skill
   guidance_freedom_level: medium
@@ -508,6 +508,8 @@ Optional later improvements: PR template checkbox linking to that doc; periodic 
 | [user-experience-spec.md](references/user-experience-spec.md) | Mandatory UX requirements for all generated skills |
 | [aiops-best-practices.md](references/aiops-best-practices.md) | Mandatory AIOps patterns for monitoring/diagnosis skills |
 | [generation-guidance.md](references/generation-guidance.md) | Description optimization, eval queries, generation telemetry, version pinning |
+| [rubric.md](references/rubric.md) | GCL rubric — scoring dimensions for generated skills |
+| [prompt-templates.md](references/prompt-templates.md) | GCL prompt skeletons — Generator/Critic/Orchestrator templates |
 | [assets/eval_queries.json](assets/eval_queries.json) | Eval queries for testing the meta-skill's description trigger accuracy |
 
 ### External References

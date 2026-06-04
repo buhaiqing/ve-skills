@@ -16,8 +16,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -200,6 +200,22 @@ ve cdn ListCdnDomains --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with domain lifecycle, origin config, caching, HTTPS, access control, purging, and monitoring |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Optional tier. max_iter=5.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteDomain | 1.0 |
+| **State-changing** | StartDomain, StopDomain, CreateDomain, ModifyDomainConfig, SubmitRefreshTask | 1.0 |
+| **Mutating** | PreLoadCache | ≥0.5 |
+| **Read-only** | DescribeDomains, DescribeDomainDetail, DescribeCdnData, DescribeCdnOrigin, DescribeCdnTopData, DescribeContentQuota | ≥0 |
+
+Safety: DeleteDomain config lost. StopDomain traffic stops. RefreshTask purge irreversible. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -884,6 +900,8 @@ ve cdn DescribeCdnDomainHitRate \
 - [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

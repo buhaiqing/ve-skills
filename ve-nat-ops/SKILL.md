@@ -13,8 +13,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-25"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -166,6 +166,22 @@ ve nat Gateway DescribeNatGateways --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-25 | Initial release with NAT Gateway, SNAT, DNAT management |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteNatGateway, DeleteSnatRule, DeleteDnatRule | 1.0 |
+| **State-changing** | CreateSnatRule, CreateDnatRule | 1.0 |
+| **Mutating** | CreateNatGateway, ModifyNatGatewayAttribute | ≥0.5 |
+| **Read-only** | DescribeNatGateways, DescribeSnatRules, DescribeDnatRules | ≥0 |
+
+Safety: DeleteNatGateway warn internet access loss for all private subnets. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: VPC→ve-vpc-ops, Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -344,6 +360,8 @@ ve nat Gateway DeleteNatGateway --Region "{{user.region}}" --NatGatewayId "{{use
 - [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

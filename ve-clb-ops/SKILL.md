@@ -13,8 +13,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-25"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -167,6 +167,22 @@ ve clb DescribeLoadBalancers --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-25 | Initial release with CLB, listeners, backend servers, health checks |
+| 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory. max_iter=3.
+
+| Tier | Operations | Safety |
+|---|---|---|
+| **Destructive** | DeleteLoadBalancer, DeleteListener | 1.0 |
+| **State-changing** | RemoveBackendServers, AddBackendServers, SetHealthCheckConfig, ModifyLoadBalancerAttributes | 1.0 |
+| **Mutating** | CreateLoadBalancer, CreateListener | ≥0.5 |
+| **Read-only** | DescribeLoadBalancers, DescribeListeners, DescribeBackendServers | ≥0 |
+
+Safety: DeleteLoadBalancer traffic cut. RemoveBackendServers >50% warn capacity drop. VOLCENGINE_SECRET_KEY never.
+
+### Cross-skill: ECS→ve-ecs-ops, VPC→ve-vpc-ops, Billing→ve-billing-ops
 
 ## Execution Flows (Agent-Readable)
 
@@ -357,6 +373,8 @@ ve clb SetHealthCheckConfig \
 - [User Experience Specification](../../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

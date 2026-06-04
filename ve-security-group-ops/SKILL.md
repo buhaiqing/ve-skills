@@ -15,8 +15,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-27"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -170,6 +170,35 @@ ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with SG lifecycle, auditing, risk detection, optimization |
+| 1.1.0 | 2026-06-04 | GCL rollout: added `## Quality Gate (GCL)`, references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory for every execution of `ve-security-group-ops`. Implements GCL per `../../AGENTS.md` §3-§9.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety |
+|---|---|---|---|
+| **Destructive** | `DeleteSecurityGroup`, `RevokeSecurityGroupIngress`, `RevokeSecurityGroupEgress` | 2 | 1.0 |
+| **State-changing** | `AuthorizeSecurityGroupIngress`, `AuthorizeSecurityGroupEgress`, `ModifySecurityGroupAttributes` | 2 | 1.0 |
+| **Mutating** | `CreateSecurityGroup` | 2 | ≥0.5 |
+| **Read-only** | `DescribeSecurityGroups`, `DescribeSecurityGroupAttributes`, `AuditSecurityGroupRules`, `DetectExposedPorts`, `FindUnusedSecurityGroups`, `DetectRuleConflicts` | 3 | ≥0 |
+
+### Loop & Safety
+- **DeleteSecurityGroup**: check no instance attached; irreversibe.
+- **RevokeSecurityGroupIngress** on 0.0.0.0/0 sensitive port (22,3389,3306,6379): double confirm.
+- **AuthorizeSecurityGroupIngress** 0.0.0.0/0 sensitive port: warn internet exposure.
+- **AuthorizeSecurityGroupEgress** 0.0.0.0/0: warn data exfiltration risk.
+- **VOLCENGINE_SECRET_KEY** never in trace.
+
+### Cross-skill delegation
+| Finding | Delegate |
+|---|---|
+| ECS instance | `ve-ecs-ops` |
+| VPC | `ve-vpc-ops` |
+| CLB | `ve-clb-ops` |
+| Billing | `ve-billing-ops` |
 
 ## Execution Flows (Agent-Readable)
 
@@ -560,6 +589,8 @@ ve vpc DescribeSecurityGroupAttributes --Region "{{user.region}}" --SecurityGrou
 - [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md)
 - [CLI Behavioral Reference](../../ve-skill-generator/references/cli-behavior.md)
 - [FinOps Best Practices](../../ve-skill-generator/references/finops-best-practices.md)
+- [GCL Rubric](references/rubric.md)
+- [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Operational Best Practices
 

@@ -16,8 +16,8 @@ compatibility: >-
   network access to Elasticsearch endpoints (es.{region}.volces.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-31"
+  version: "1.1.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
@@ -200,6 +200,35 @@ ve elasticsearch DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-31 | Initial release with instance, index, snapshot, Kibana, and plugin management |
+| 1.1.0 | 2026-06-04 | GCL rollout: added `## Quality Gate (GCL)`, references/rubric.md, references/prompt-templates.md |
+
+## Quality Gate (GCL)
+
+> Mandatory for every execution of `ve-elasticsearch-ops`. Implements GCL per `../../AGENTS.md` §3-§9.
+
+### Operation Tiers
+
+| Tier | Operations | `max_iter` | Safety |
+|---|---|---|---|
+| **Destructive** | `DeleteInstance`, `DeleteIndex`, `DeleteSnapshot` | 2 | 1.0 |
+| **State-changing** | `ModifyInstanceSpec`, `RestartInstance`, `UpgradeVersion`, `EnableKibana`, `DisableKibana`, `InstallPlugin`, `UninstallPlugin`, `ModifyInstanceChargeType` | 2 | 1.0 |
+| **Mutating** | `CreateInstance`, `CreateIndex`, `CreateSnapshot`, `KibanaCreateUser` | 2 | ≥0.5 |
+| **Read-only** | `DescribeInstances`, `DescribeIndices`, `DescribeSnapshots`, `DescribePlugins`, `DescribeKibana` | 3 | ≥0 |
+
+### Loop & Safety
+- **DeleteInstance**: ALL indices+data+snapshots lost.
+- **DeleteIndex**: confirm index name; data loss.
+- **ModifyInstanceSpec**: 60-1800s cluster rebalancing.
+- **UpgradeVersion**: rolling upgrade per node; cannot downgrade.
+- **VOLCENGINE_SECRET_KEY** never in trace. Kibana password masked.
+
+### Cross-skill delegation
+| Finding | Delegate |
+|---|---|
+| VPC/subnet | `ve-vpc-ops` |
+| TOS backup storage | `ve-tos-ops` |
+| IAM access control | `ve-iam-ops` |
+| Billing | `ve-billing-ops` |
 
 ## Execution Flows (Agent-Readable)
 
