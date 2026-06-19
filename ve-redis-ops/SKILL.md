@@ -118,7 +118,7 @@ Volcengine Cache for Redis (缓存数据库 Redis 版) provides managed Redis-co
 | `Stopped` | Stopped |
 | `Deleting` | Being deleted |
 | `Error` | Error state |
-| `Changing` | Configuration change in progress |
+| `Changing` | Config change in progress |
 
 ### State Transitions
 
@@ -153,20 +153,20 @@ ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1
 | Operation | Description | ⚡ Complexity | 🛡️ Risk |
 |-----------|-------------|------------|------|
 | CreateDBInstance | Create Redis instance | Medium | Low |
-| DescribeDBInstanceDetail | Get instance details | Low | None |
-| DescribeDBInstances | List all instances | Low | None |
-| 🔴 DeleteDBInstance | Delete instance | Low | **High** |
+| DescribeDBInstanceDetail | Get instance details | Low | ✅ None |
+| DescribeDBInstances | List all instances | Low | ✅ None |
+| 🔴 DeleteDBInstance | Delete instance | Low | 🔴 **High** |
 | 🔴 ModifyDBInstanceSpec | Change instance spec | Medium | Medium |
 | 🔴 RestartDBInstance | Restart instance | Low | Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | None |
+| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
 | 🔴 ModifyDBInstanceParameters | Modify parameters | Medium | Medium |
 | CreateAllowList | Create IP whitelist | Low | Low |
-| DescribeAllowLists | List allowlists | Low | None |
+| DescribeAllowLists | List allowlists | Low | ✅ None |
 | 🔴 ModifyAllowList | Update allowlist | Low | Low |
 | 🔴 DeleteAllowList | Delete allowlist | Low | Medium |
-| DescribeAccounts | List accounts | Low | None |
+| DescribeAccounts | List accounts | Low | ✅ None |
 | 🔴 CreateAccount | Create DB account | Low | Medium |
-| DescribeBackups | List backups | Low | None |
+| DescribeBackups | List backups | Low | ✅ None |
 | CreateBackup | Create manual backup | Low | Low |
 
 ## Changelog
@@ -322,17 +322,7 @@ ve redis DescribeDBInstanceDetail --InstanceId "{{user.instance_id}}" --Region "
 ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 100
 ```
 
-Present to user:
-
-| Field | 🔍 Path | Notes |
-|-------|------|-------|
-| Instance ID | `$.Result.InstanceId` | Primary identifier |
-| Name | `$.Result.InstanceName` | Human-readable |
-| Status | `$.Result.Status` | Running/Creating/Error |
-| Engine Version | `$.Result.EngineVersion` | 4.0/5.0/6.0 |
-| Capacity | `$.Result.Capacity.Total` | Memory in MB |
-| Private Address | `$.Result.PrivateAddress` | Connection endpoint |
-| VPC ID | `$.Result.VpcId` | Network context |
+Present to user with the centralized **Key Response Field Table** above.
 
 ### Operation: Delete Instance
 

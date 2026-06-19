@@ -53,9 +53,9 @@ ConnectionUtilization = (ActiveConnections / MaxConnections) × 100%
 
 | Utilization | Concern Level | Action |
 |-------------|--------------|--------|
-| < 50% | Normal | — |
-| 50–75% | Warning | Monitor trend; consider max_connections increase |
-| > 75% | Critical | Increase max_connections or add read replicas |
+| < 50% | ✅ Normal | — |
+| 50–75% | ⚠️ Warning | Monitor trend; consider max_connections increase |
+| > 75% | 🚨 Critical | Increase max_connections or add read replicas |
 
 ---
 
@@ -71,9 +71,9 @@ ve rds_mysql DescribeSlowLogs --Region "$VOLCENGINE_REGION" --InstanceId "$INSTA
 
 | Metric | Threshold | Action |
 |--------|-----------|--------|
-| QPS > 10,000 | Warning | Check index usage, optimize queries |
-| Slow queries > 10/min | Warning | Analyze slow log, add indexes |
-| TPS > 2,000 | Monitor for HA | Watch replication lag |
+| QPS > 10,000 | ⚠️ Warning | Check index usage, optimize queries |
+| Slow queries > 10/min | ⚠️ Warning | Analyze slow log, add indexes |
+| TPS > 2,000 | ℹ️ Monitor for HA | Watch replication lag |
 
 ---
 
@@ -81,10 +81,10 @@ ve rds_mysql DescribeSlowLogs --Region "$VOLCENGINE_REGION" --InstanceId "$INSTA
 
 | Disk Usage | Concern Level | Action |
 |------------|--------------|--------|
-| < 70% | Normal | — |
-| 70–85% | Warning | Enable auto-scaling; clean old data |
-| > 85% | Critical | Expand storage or archive old data |
-| > 95% | Emergency | Instance may go read-only |
+| < 70% | ✅ Normal | — |
+| 70–85% | ⚠️ Warning | Enable auto-scaling; clean old data |
+| > 85% | 🚨 Critical | Expand storage or archive old data |
+| > 95% | 🛡️ Emergency | Instance may go read-only |
 
 ---
 
@@ -94,9 +94,9 @@ For HA and MultiNode instances, monitor replica lag:
 
 | Lag Time | Concern Level | Action |
 |----------|--------------|--------|
-| < 1s | Normal | — |
-| 1–10s | Warning | Check write load; optimize transactions |
-| > 10s | Critical | Reduce write throughput; investigate blocking |
+| < 1s | ✅ Normal | — |
+| 1–10s | ⚠️ Warning | Check write load; optimize transactions |
+| > 10s | 🚨 Critical | Reduce write throughput; investigate blocking |
 
 ---
 
@@ -106,13 +106,13 @@ For HA and MultiNode instances, monitor replica lag:
 
 | Alarm | Metric | Condition | Severity |
 |-------|--------|-----------|----------|
-| CPU High | `CpuUsage` | > 80% for 5min | Warning |
-| CPU Critical | `CpuUsage` | > 95% for 5min | Critical |
-| Memory High | `MemUsage` | > 85% for 5min | Critical |
-| Disk Space Low | `DiskUsage` | > 85% | Warning |
-| Space Critical | `DiskUsage` | > 95% | Critical |
-| Connection Exhaustion | `ConnectionUsage` | > 75% | Warning |
-| Replication Lag | `ReplicationLag` | > 10s | Critical |
+| CPU High | `CpuUsage` | > 80% for 5min | ⚠️ Warning |
+| CPU Critical | `CpuUsage` | > 95% for 5min | 🚨 Critical |
+| Memory High | `MemUsage` | > 85% for 5min | 🚨 Critical |
+| Disk Space Low | `DiskUsage` | > 85% | ⚠️ Warning |
+| Space Critical | `DiskUsage` | > 95% | 🚨 Critical |
+| Connection Exhaustion | `ConnectionUsage` | > 75% | ⚠️ Warning |
+| Replication Lag | `ReplicationLag` | > 10s | 🚨 Critical |
 
 ---
 

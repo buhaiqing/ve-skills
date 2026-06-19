@@ -170,21 +170,21 @@ ve kms CreateKey --KeySpec AES_256 --KeyUsage ENCRYPT_DECRYPT --Region {{env.VOL
 | Operation | Description | Complexity | Risk Level |
 |-----------|-------------|------------|------------|
 | CreateKey | Create a new CMK | Medium | Low |
-| DescribeKey | View key details and metadata | Low | None |
+| DescribeKey | View key details and metadata | Low | ✅ None |
 | EnableKey | Enable a disabled key | Low | Low |
 | DisableKey | Disable a key (reversible) | Low | Medium |
-| ScheduleKeyDeletion | Schedule key deletion (irreversible after waiting period) | Medium | **High** |
+| ScheduleKeyDeletion | Schedule key deletion (irreversible after waiting period) | Medium | 🔴 **High** |
 | CancelKeyDeletion | Cancel pending deletion | Low | Low |
 | Encrypt | Encrypt plaintext data | Low | Low |
-| Decrypt | Decrypt ciphertext | Low | None |
-| GenerateDataKey | Generate a data key (returns plaintext + encrypted) | Medium | **High** — handle plaintext securely |
+| Decrypt | Decrypt ciphertext | Low | ✅ None |
+| GenerateDataKey | Generate a data key (returns plaintext + encrypted) | Medium | 🔴 **High** — handle plaintext securely |
 | GenerateDataKeyWithoutPlaintext | Generate data key (encrypted only) | Low | Low |
-| DescribeKeyRotation | View rotation status | Low | None |
+| DescribeKeyRotation | View rotation status | Low | ✅ None |
 | UpdateKeyRotation | Enable/disable automatic rotation | Low | Medium |
-| PutKeyPolicy | Set key access policy | Medium | **High** — affects access control |
-| GetKeyPolicy | Get key access policy | Low | None |
+| PutKeyPolicy | Set key access policy | Medium | 🔴 **High** — affects access control |
+| GetKeyPolicy | Get key access policy | Low | ✅ None |
 | CreateGrant | Create a grant for key access | Medium | Medium |
-| ListGrants | List grants for a key | Low | None |
+| ListGrants | List grants for a key | Low | ✅ None |
 | RevokeGrant | Revoke a grant | Low | Medium |
 
 ## Changelog

@@ -78,8 +78,8 @@ Volcengine RDS for MySQL (云数据库 MySQL 版) provides managed MySQL databas
 
 | Placeholder | Meaning | Agent Action |
 |-------------|---------|--------------|
-| `{{env.VOLCENGINE_ACCESS_KEY}}` | Runtime credential | NEVER ask user; fail if unset |
-| `{{env.VOLCENGINE_SECRET_KEY}}` | Runtime credential | NEVER ask user; fail if unset |
+| 🔴 `{{env.VOLCENGINE_ACCESS_KEY}}` | Runtime credential | NEVER ask user; fail if unset |
+| 🔴 `{{env.VOLCENGINE_SECRET_KEY}}` | Runtime credential | NEVER ask user; fail if unset |
 | `{{env.VOLCENGINE_REGION}}` | Runtime region | Use from env |
 | `{{user.instance_name}}` | Instance name | Ask once |
 | `{{user.instance_id}}` | Instance ID | Ask if not in context |
@@ -162,23 +162,23 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 | Operation | Description | ⚡ Complexity | 🛡️ Risk |
 |-----------|-------------|------------|------|
 | CreateDBInstance | Create MySQL instance | Medium | Low |
-| DescribeDBInstanceDetail | Get instance details | Low | None |
-| DescribeDBInstances | List all instances | Low | None |
-| DeleteDBInstance | Delete instance | Low | **High** |
+| DescribeDBInstanceDetail | Get instance details | Low | ✅ None |
+| DescribeDBInstances | List all instances | Low | ✅ None |
+| DeleteDBInstance | Delete instance | Low | 🔴 **High** |
 | ModifyDBNodeSpec | Modify node spec/storage | Medium | Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | None |
+| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
 | ModifyDBInstanceParameter | Modify parameters | Medium | Medium |
-| DescribeRegions | List regions | Low | None |
-| DescribeAvailabilityZones | List AZs | Low | None |
-| ListDBInstanceIPLists | List IP whitelist | Low | None |
+| DescribeRegions | List regions | Low | ✅ None |
+| DescribeAvailabilityZones | List AZs | Low | ✅ None |
+| ListDBInstanceIPLists | List IP whitelist | Low | ✅ None |
 | ModifyDBInstanceIPList | Modify IP whitelist | Low | Low |
-| DescribeDBAccounts | List accounts | Low | None |
+| DescribeDBAccounts | List accounts | Low | ✅ None |
 | CreateDBAccount | Create DB account | Low | Medium |
 | DeleteDBAccount | Delete account | Low | Medium |
-| DescribeBackups | List backups | Low | None |
+| DescribeBackups | List backups | Low | ✅ None |
 | CreateBackup | Create backup | Low | Low |
 | RestoreToNewInstance | Restore from backup | High | Medium |
-| RebuildDBInstance | Rebuild instance | High | **High** |
+| RebuildDBInstance | Rebuild instance | High | 🔴 **High** |
 
 ## Changelog
 
@@ -198,10 +198,10 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 
 | Tier | Operations | `max_iter` | Safety floor |
 |---|---|---|---|
-| **Destructive** | `DeleteDBInstance`, `DeleteDBAccount`, `RebuildDBInstance` | 2 | 1.0 (mandatory) |
-| **State-changing** | `ModifyDBNodeSpec`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList` | 2 | 1.0 (mandatory) |
+| 🔴 **Destructive** | `DeleteDBInstance`, `DeleteDBAccount`, `RebuildDBInstance` | 2 | 1.0 (mandatory) |
+| 🟡 **State-changing** | `ModifyDBNodeSpec`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList` | 2 | 1.0 (mandatory) |
 | **Mutating** | `CreateDBInstance`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance` | 2 | ≥ 0.5 |
-| **Read-only** | `DescribeDBInstanceDetail`, `DescribeDBInstances`, `DescribeDBInstanceParameters`, `DescribeRegions`, `DescribeAvailabilityZones`, `ListDBInstanceIPLists`, `DescribeDBAccounts`, `DescribeBackups` | 3 | ≥ 0 |
+| ✅ **Read-only** | `DescribeDBInstanceDetail`, `DescribeDBInstances`, `DescribeDBInstanceParameters`, `DescribeRegions`, `DescribeAvailabilityZones`, `ListDBInstanceIPLists`, `DescribeDBAccounts`, `DescribeBackups` | 3 | ≥ 0 |
 
 ### Loop
 
@@ -212,12 +212,12 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 
 ### RDS-specific safety rules
 
-- **DeleteDBInstance**: check deletion protection; warn about irreversible data loss.
-- **RebuildDBInstance**: warn that the instance will be rebuilt from its initial snapshot — any data changes since creation are lost.
-- **ModifyDBNodeSpec**: warn about 60-900s downtime.
-- **DeleteDBAccount**: warn that applications using this account lose access.
-- **ModifyDBInstanceParameter**: if `ForceRestart=true`, warn about restart.
-- **ModifyDBInstanceIPList** on production: warn about locking out clients.
+- 🔴 **DeleteDBInstance**: check deletion protection; warn about irreversible data loss.
+- 🔴 **RebuildDBInstance**: warn that the instance will be rebuilt from its initial snapshot — any data changes since creation are lost.
+- 🟡 **ModifyDBNodeSpec**: warn about 60-900s downtime.
+- 🟡 **DeleteDBAccount**: warn that applications using this account lose access.
+- 🟡 **ModifyDBInstanceParameter**: if `ForceRestart=true`, warn about restart.
+- 🟡 **ModifyDBInstanceIPList** on production: warn about locking out clients.
 - DB password masked as `<masked>` in trace.
 
 ### Trace
@@ -241,10 +241,10 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 | Check | Method | Expected | On Failure |
 |-------|--------|----------|------------|
 | CLI | `ve version` | Exit 0 | Go to JIT Go SDK |
-| Credentials | Verify env vars | Set and valid | HALT |
-| Region | Supported RDS region | Valid | HALT; list regions via DescribeRegions |
-| VPC/Subnet | Network exists | Valid in region | HALT; use ve-vpc-ops |
-| Quota | Instance quota | Sufficient | HALT; raise quota |
+| 🔴 Credentials | Verify env vars | Set and valid | HALT |
+| 🔴 Region | Supported RDS region | Valid | HALT; list regions via DescribeRegions |
+| 🔴 VPC/Subnet | Network exists | Valid in region | HALT; use ve-vpc-ops |
+| 🔴 Quota | Instance quota | Sufficient | HALT; raise quota |
 
 #### Execution — CLI (Primary)
 
