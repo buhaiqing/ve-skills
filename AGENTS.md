@@ -1,5 +1,3 @@
-@CLAUDE.md
-
 # Agent-Specific Rules
 
 These supplement `CLAUDE.md` (imported above). They encode lessons that have already cost agent sessions in this repo.
