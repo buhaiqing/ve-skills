@@ -65,7 +65,7 @@ ve rds_mysql RestartDBInstance --Region "{{env.VOLCENGINE_REGION}}" --InstanceId
 ### Delete Instance
 
 ```bash
-# ⚠️ IRREVERSIBLE
+# 🔴 IRREVERSIBLE
 ve rds_mysql DeleteDBInstance \
   --Region "{{env.VOLCENGINE_REGION}}" \
   --InstanceId "{{user.instance_id}}" \

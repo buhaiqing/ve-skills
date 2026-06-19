@@ -2,23 +2,23 @@
 
 ## Common Error Codes
 
-| Error Code | Meaning | Agent Action |
-|-----------|---------|--------------|
-| `InvalidParameter.InstanceName` | Name invalid | 1-128 chars, no leading number/dash |
-| `InvalidParameter.NodeSpec` | Spec invalid | Check via DescribeInstanceSpecs |
-| `InvalidParameter.StorageSpace` | Storage [20-3000]GB, step 10GB | Provide valid size |
-| `InvalidParameter.ZoneConfig` | Zone invalid | Verify primary/secondary zones exist |
-| `InvalidParameter.NetworkConfig` | VPC/subnet invalid | Verify network in region |
-| `InvalidParameter.Parameter` | Value outside allowed range | Check parameter constraints |
-| `ResourceNotFound.Instance` | Instance not found | Verify InstanceId |
-| `ResourceNotFound.Account` | Account not found | Verify AccountName |
-| `OperationDenied.InstanceStatus` | Invalid state | Wait for current operation |
-| `QuotaExceeded.InstanceCount` | Max instances | Delete unused or raise quota |
-| `InsufficientBalance` | No funds | Recharge |
-| `InternalError` | Server error | Retry 3x; HALT with RequestId |
-| `Throttling` | Rate limit | Exponential backoff |
-| `ResourceInUse` | In use | Wait for operation |
-| `Forbidden.RAM` | Insufficient permissions | Add RAM policy |
+| Error Code | Agent Action | Recovery |
+|-----------|--------------|----------|
+| `InvalidParameter.InstanceName` | HALT | 1-128 chars, no leading number/dash |
+| `InvalidParameter.NodeSpec` | HALT | Check via DescribeInstanceSpecs |
+| `InvalidParameter.StorageSpace` | HALT | Storage [20-3000]GB, step 10GB |
+| `InvalidParameter.ZoneConfig` | HALT | Verify primary/secondary zones exist |
+| `InvalidParameter.NetworkConfig` | HALT | Verify VPC/subnet in region |
+| `InvalidParameter.Parameter` | HALT | Check parameter constraints |
+| `ResourceNotFound.Instance` | HALT | Verify InstanceId |
+| `ResourceNotFound.Account` | HALT | Verify AccountName |
+| `OperationDenied.InstanceStatus` | HALT | Wait for current operation |
+| `QuotaExceeded.InstanceCount` | HALT | Delete unused or raise quota |
+| `InsufficientBalance` | HALT | Recharge account |
+| `InternalError` | Retry (3x) | HALT with RequestId if persists |
+| `Throttling` | Retry (exponential) | Back off and retry |
+| `ResourceInUse` | HALT | Wait for concurrent operation |
+| `Forbidden.RAM` | HALT | Add RAM policy |
 
 ## Diagnostic Order
 

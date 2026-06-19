@@ -133,13 +133,13 @@ Volcengine RDS for PostgreSQL (云数据库 PostgreSQL 版) provides managed Pos
 
 | Operation | Initial | Target | Poll | Max Wait |
 |-----------|---------|--------|------|----------|
-| Create | — | `RUNNING` | 10s | 600s |
+| Create | -- | `RUNNING` | 10s | 600s |
 | Delete | any | gone | 10s | 600s |
-| Modify Spec | RUNNING | `RUNNING` | 10s | 900s |
-| Restore | — | `RUNNING` | 10s | 1800s |
+| Modify Spec | `RUNNING` | `RUNNING` | 10s | 900s |
+| Restore | -- | `RUNNING` | 10s | 1800s |
 | Rebuild | any | `RUNNING` | 10s | 900s |
-| Restart | RUNNING | `RUNNING` | 5s | 300s |
-| Add RO Node | RUNNING | `RUNNING` | 10s | 600s |
+| Restart | `RUNNING` | `RUNNING` | 5s | 300s |
+| Add RO Node | `RUNNING` | `RUNNING` | 10s | 600s |
 
 ## Quick Start
 
@@ -161,21 +161,21 @@ ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --Pag
 
 | Operation | Description | Complexity | Risk |
 |-----------|-------------|------------|------|
-| CreateDBInstance | Create PostgreSQL instance | Medium | Low |
-| DescribeDBInstanceDetail | Get instance details | Low | None |
-| DescribeDBInstances | List all instances | Low | None |
-| DeleteDBInstance | Delete instance | Low | **High** |
-| ModifyDBInstanceSpec | Modify node spec/storage | Medium | Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | None |
-| ModifyDBInstanceParameter | Modify parameters | Medium | Medium |
-| DescribeRegions | List regions | Low | None |
-| CreateReadonlyInstance | Create read-only instance | Medium | Low |
-| DescribeAccounts | List accounts | Low | None |
-| CreateAccount | Create DB account | Low | Medium |
-| DescribeBackups | List backups | Low | None |
-| CreateBackup | Create backup | Low | Low |
-| RestoreToNewInstance | Restore from backup | High | Medium |
-| RebuildDBInstance | Rebuild instance | High | **High** |
+| CreateDBInstance | Create PostgreSQL instance | Medium | 🟢 Low |
+| DescribeDBInstanceDetail | Get instance details | Low | ✅ None |
+| DescribeDBInstances | List all instances | Low | ✅ None |
+| DeleteDBInstance | Delete instance | Low | 🔴 **High** |
+| ModifyDBInstanceSpec | Modify node spec/storage | Medium | 🟡 Medium |
+| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
+| ModifyDBInstanceParameter | Modify parameters | Medium | 🟡 Medium |
+| DescribeRegions | List regions | Low | ✅ None |
+| CreateReadonlyInstance | Create read-only instance | Medium | 🟢 Low |
+| DescribeAccounts | List accounts | Low | ✅ None |
+| CreateAccount | Create DB account | Low | 🟡 Medium |
+| DescribeBackups | List backups | Low | ✅ None |
+| CreateBackup | Create backup | Low | 🟢 Low |
+| RestoreToNewInstance | Restore from backup | High | 🟡 Medium |
+| RebuildDBInstance | Rebuild instance | High | 🔴 **High** |
 
 ## Changelog
 
@@ -192,10 +192,10 @@ ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --Pag
 
 | Tier | Operations | `max_iter` | Safety |
 |---|---|---|---|
-| **Destructive** | `DeleteDBInstance`, `DeleteDBAccount` | 2 | 1.0 |
-| **State-changing** | `ModifyDBInstanceSpec`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList`, `RestartDBInstance` | 2 | 1.0 |
-| **Mutating** | `CreateDBInstance`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance`, `CreateReadOnlyNode` | 2 | ≥0.5 |
-| **Read-only** | `DescribeDBInstances`, `DescribeDBInstanceDetail`, `DescribeDBInstanceParameters`, `DescribeAccounts`, `DescribeBackups` | 3 | ≥0 |
+| 🔴 **Destructive** | `DeleteDBInstance`, `DeleteDBAccount` | 2 | 1.0 |
+| 🟡 **State-changing** | `ModifyDBInstanceSpec`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList`, `RestartDBInstance` | 2 | 1.0 |
+| 🟢 **Mutating** | `CreateDBInstance`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance`, `CreateReadOnlyNode` | 2 | ≥0.5 |
+| ℹ️ **Read-only** | `DescribeDBInstances`, `DescribeDBInstanceDetail`, `DescribeDBInstanceParameters`, `DescribeAccounts`, `DescribeBackups` | 3 | ≥0 |
 
 ### Loop & Safety
 - **DeleteDBInstance**: check deletion protection; warn irreversible data loss.
@@ -288,23 +288,23 @@ done
 
 #### Failure Recovery
 
-| Error Pattern | Retries | Action | UX Feedback |
-|---------------|---------|--------|-------------|
-| `InvalidParameter.InstanceName` | 0 | HALT | `[ERROR] Invalid name. 1-128 chars, no leading number/dash.` |
-| `InvalidParameter.NodeSpec` | 0 | HALT | `[ERROR] Invalid spec. Check via DescribeInstanceSpecs.` |
-| `InvalidParameter.StorageSpace` | 0 | HALT | `[ERROR] Storage [20-3000]GB, step 10GB.` |
-| `InvalidParameter.ZoneConfig` | 0 | HALT | `[ERROR] Invalid zone. Verify primary/secondary zones.` |
-| `InvalidParameter.NetworkConfig` | 0 | HALT | `[ERROR] Invalid VPC/subnet.` |
-| `ResourceNotFound.Vpc` | 0 | HALT | `[ERROR] VPC not found.` |
-| `QuotaExceeded.InstanceCount` | 0 | HALT | `[ERROR] Max instances. Delete or request quota.` |
-| `OperationDenied.InstanceStatus` | 0 | HALT | `[ERROR] Cannot operate. Wait for state change.` |
-| `InsufficientBalance` | 0 | HALT | `[ERROR] InsufficientBalance. Recharge account.` |
-| `Throttling` | 3 | exponential | `⚠️ Rate limit. Retrying...` |
-| `InternalError` | 3 | 2s,4s,8s | `[ERROR] InternalError with RequestId: {RequestId}.` |
-| `ResourceAlreadyExists` | 0 | Ask | `[ERROR] Instance name exists. Use unique name.` |
-| `Forbidden.RAM` | 0 | HALT | `[ERROR] Insufficient permissions. Add RAM policy.` |
-| `ResourceNotFound.Instance` | 0 | HALT | `[ERROR] Instance not found.` |
-| `ResourceInUse` | 0 | HALT | `[ERROR] Instance in use by another operation.` |
+| Error Code | Agent Action | Recovery |
+|------------|--------------|----------|
+| `InvalidParameter.InstanceName` | HALT | 1-128 chars, no leading number/dash |
+| `InvalidParameter.NodeSpec` | HALT | Check via DescribeInstanceSpecs |
+| `InvalidParameter.StorageSpace` | HALT | Storage [20-3000]GB, step 10GB |
+| `InvalidParameter.ZoneConfig` | HALT | Verify primary/secondary zones exist |
+| `InvalidParameter.NetworkConfig` | HALT | Verify VPC/subnet in region |
+| `ResourceNotFound.Vpc` | HALT | Verify VPC ID |
+| `QuotaExceeded.InstanceCount` | HALT | Delete unused or request quota |
+| `OperationDenied.InstanceStatus` | HALT | Wait for current operation to finish |
+| `InsufficientBalance` | HALT | Recharge account |
+| `Throttling` | Retry (3x, exponential) | Back off and retry |
+| `InternalError` | Retry (3x, 2s/4s/8s) | Report RequestId if persists |
+| `ResourceAlreadyExists` | HALT | Use unique name |
+| `Forbidden.RAM` | HALT | Add RAM policy |
+| `ResourceNotFound.Instance` | HALT | Verify InstanceId |
+| `ResourceInUse` | HALT | Wait for concurrent operation to finish |
 
 ### Operation: Describe/ List Instances
 

@@ -20,17 +20,17 @@
 
 ## 1. Error Taxonomy
 
-| Category | Error Code | HALT or Retry | Example |
-|----------|-----------|---------------|---------|
-| **Parameter Error** | `Invalid*.Malformed` | HALT | `InvalidParameterValue.Malformed` |
-| **Resource Not Found** | `*.NotFound` | HALT | `InstanceNotFound` |
-| **Status Error** | `IncorrectInstanceStatus` | HALT | `IncorrectInstanceStatus` |
-| **Conflict Error** | `*.Conflict` | HALT | `DBAlreadyExists` |
-| **Quota Error** | `QuotaExceeded.*` | HALT | `QuotaExceeded.Instance` |
-| **IAM Error** | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
-| **Billing Error** | `BalanceNotEnough` | HALT | `BalanceNotEnough` |
-| **Rate Limit** | `FlowLimitExceeded` | Retry | `FlowLimitExceeded` |
-| **Server Error** | `InternalError` | Retry | `InternalError` |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `Invalid*.Malformed` | HALT | Fix parameter value |
+| `*.NotFound` (e.g. `InstanceNotFound`) | HALT | Verify resource ID/name |
+| `IncorrectInstanceStatus` | HALT | Check instance status; wait for Running |
+| `*.Conflict` (e.g. `DBAlreadyExists`) | HALT | Use unique name |
+| `QuotaExceeded.*` | HALT | Request quota increase |
+| `Forbidden.RAM` | HALT | Check IAM permissions |
+| `BalanceNotEnough` | HALT | Recharge account |
+| `FlowLimitExceeded` | Retry | Backoff and retry |
+| `InternalError` | Retry | Retry; escalate if persistent |
 
 ---
 
@@ -141,7 +141,7 @@ ve rds_mysql RestartDBInstance --Region "$VOLCENGINE_REGION" --InstanceId "$INST
 
 ## 7. Debugging Strategies
 
-### Capture RequestId
+### 🔍 Capture RequestId
 
 ```bash
 ve rds_mysql CreateDBInstance --Region "$VOLCENGINE_REGION" --body '...' 2>&1 \

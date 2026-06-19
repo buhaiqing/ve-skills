@@ -167,27 +167,27 @@ ve rds_mysql DescribeDBInstances --Region {{env.VOLCENGINE_REGION}}
 
 | Operation | Description | Complexity | Risk Level |
 |-----------|-------------|------------|------------|
-| CreateDBInstance | Create RDS MySQL instance | High | Low |
-| DescribeDBInstances | Query instance list | Low | None |
-| DeleteDBInstance | Delete instance | Low | **High** — irreversible |
-| RestartDBInstance | Restart instance | Low | Medium — service interruption |
-| ModifyDBInstanceSpec | Change instance spec | Medium | Medium — restart required |
-| CreateDB | Create database | Low | Low |
-| DescribeDatabases | List databases | Low | None |
-| DeleteDB | Delete database | Low | **High** |
-| CreateAccount | Create database account | Low | Low |
-| DescribeAccounts | List accounts | Low | None |
-| DeleteAccount | Delete account | Low | Medium |
-| ResetAccountPassword | Reset account password | Low | Medium |
-| GrantAccountPrivileges | Grant DB privileges to account | Low | Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | None |
-| ModifyDBInstanceParameters | Modify parameters | Medium | Medium — some require restart |
-| CreateBackup | Create backup | Low | Low |
-| DescribeBackups | List backups | Low | None |
-| DeleteBackup | Delete backup | Low | Medium |
-| RestoreDBInstance | Restore from backup | High | Medium |
-| DescribeAllowLists | Query IP allow lists | Low | None |
-| ModifyAllowList | Modify IP allow list | Low | Medium |
+| CreateDBInstance | Create RDS MySQL instance | High | 🟢 Low |
+| DescribeDBInstances | Query instance list | Low | ✅ None |
+| DeleteDBInstance | Delete instance | Low | 🔴 **High** — irreversible |
+| RestartDBInstance | Restart instance | Low | 🟡 Medium — service interruption |
+| ModifyDBInstanceSpec | Change instance spec | Medium | 🟡 Medium — restart required |
+| CreateDB | Create database | Low | 🟢 Low |
+| DescribeDatabases | List databases | Low | ✅ None |
+| DeleteDB | Delete database | Low | 🔴 **High** |
+| CreateAccount | Create database account | Low | 🟢 Low |
+| DescribeAccounts | List accounts | Low | ✅ None |
+| DeleteAccount | Delete account | Low | 🟡 Medium |
+| ResetAccountPassword | Reset account password | Low | 🟡 Medium |
+| GrantAccountPrivileges | Grant DB privileges to account | Low | 🟡 Medium |
+| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
+| ModifyDBInstanceParameters | Modify parameters | Medium | 🟡 Medium — some require restart |
+| CreateBackup | Create backup | Low | 🟢 Low |
+| DescribeBackups | List backups | Low | ✅ None |
+| DeleteBackup | Delete backup | Low | 🟡 Medium |
+| RestoreDBInstance | Restore from backup | High | 🟡 Medium |
+| DescribeAllowLists | Query IP allow lists | Low | ✅ None |
+| ModifyAllowList | Modify IP allow list | Low | 🟡 Medium |
 
 ## Changelog
 
@@ -202,10 +202,10 @@ ve rds_mysql DescribeDBInstances --Region {{env.VOLCENGINE_REGION}}
 
 | Tier | Operations | Safety |
 |---|---|---|
-| **Destructive** | DeleteDBInstance, DeleteDBAccount | 1.0 |
-| **State-changing** | ModifyDBNodeSpec, ModifyDBInstanceParameter | 1.0 |
-| **Mutating** | CreateDBInstance, CreateDBAccount, CreateBackup | ≥0.5 |
-| **Read-only** | DescribeDBInstances, DescribeDBInstanceDetail, DescribeDBInstanceParameters, DescribeBackups | ≥0 |
+| **Destructive** | DeleteDBInstance, DeleteDBAccount | 🛡️ 1.0 |
+| **State-changing** | ModifyDBNodeSpec, ModifyDBInstanceParameter | 🛡️ 1.0 |
+| **Mutating** | CreateDBInstance, CreateDBAccount, CreateBackup | 🛡️ ≥0.5 |
+| **Read-only** | DescribeDBInstances, DescribeDBInstanceDetail, DescribeDBInstanceParameters, DescribeBackups | ✅ ≥0 |
 
 Safety: DeleteDBInstance check deletion protection. ModifyDBNodeSpec downtime. Password masked. VOLCENGINE_SECRET_KEY never.
 
@@ -221,7 +221,7 @@ Every operation: **Pre-flight → Execute → Validate → Recover**.
 
 | Check | Method | Expected | On Failure |
 |-------|--------|----------|------------|
-| Credentials | `test -n "$VOLCENGINE_ACCESS_KEY"` | Set | HALT |
+| Credentials | `test -n "$VOLCENGINE_ACCESS_KEY"` | Set | ❌ HALT |
 | CLI | `ve version` | Exit code 0 | Install ve CLI |
 
 #### Execution
@@ -253,9 +253,9 @@ ve rds_mysql DescribeDBInstances --Region "{{user.region}}" --PageNumber 1 --Pag
 
 | Check | Method | Expected | On Failure |
 |-------|--------|----------|------------|
-| VPC exists | DescribeVpcs (ve-vpc-ops) | VPC found | HALT |
-| Subnet exists | DescribeSubnets (ve-vpc-ops) | Subnet found | HALT |
-| Quota | Check RDS quota | Sufficient | HALT; request increase |
+| VPC exists | DescribeVpcs (ve-vpc-ops) | VPC found | ❌ HALT |
+| Subnet exists | DescribeSubnets (ve-vpc-ops) | Subnet found | ❌ HALT |
+| Quota | Check RDS quota | Sufficient | ❌ HALT; request increase |
 
 #### Execution
 
@@ -431,12 +431,12 @@ ve rds_mysql RestoreDBInstance \
 
 ## Operational Best Practices
 
-- **Instance Type:** Use `HA` for production (primary + read replica), `Single` for dev/test
-- **Storage:** ESSD for production I/O, LocalSSD for low latency; size ≥ 100GB for production
-- **Node Spec:** Match workload (rds.mysql.2c4g for light, rds.mysql.4c16g for medium, rds.mysql.8c32g for heavy)
-- **Multi-AZ:** Use `NodeInfo` with different zones for HA instances
-- **Account Security:** Use strong passwords, grant minimum privileges (read-only for analytics accounts)
-- **Backup:** Create before parameter changes or spec modifications; enable automated backup
-- **Parameter Tuning:** Always check `ForceRestart` field; plan maintenance window for restart-required parameters
-- **White List:** Never use `0.0.0.0/0` in production; restrict to specific CIDRs
-- **Least privilege:** Use IAM policies scoped to RDS APIs only
+- **🏗️ Instance Type:** Use `HA` for production (primary + read replica), `Single` for dev/test
+- **💾 Storage:** ESSD for production I/O, LocalSSD for low latency; size ≥ 100GB for production
+- **⚡ Node Spec:** Match workload (rds.mysql.2c4g for light, rds.mysql.4c16g for medium, rds.mysql.8c32g for heavy)
+- **🌐 Multi-AZ:** Use `NodeInfo` with different zones for HA instances
+- **🛡️ Account Security:** Use strong passwords, grant minimum privileges (read-only for analytics accounts)
+- **💾 Backup:** Create before parameter changes or spec modifications; enable automated backup
+- **🔧 Parameter Tuning:** Always check `ForceRestart` field; plan maintenance window for restart-required parameters
+- **🔒 White List:** Never use `0.0.0.0/0` in production; restrict to specific CIDRs
+- **🛡️ Least privilege:** Use IAM policies scoped to RDS APIs only

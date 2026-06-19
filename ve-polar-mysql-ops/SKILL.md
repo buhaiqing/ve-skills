@@ -174,23 +174,23 @@ ve polardb_mysql DescribeDBClusters --Region "{{env.VOLCENGINE_REGION}}" --PageN
 
 | Operation | Description | Complexity | Risk |
 |-----------|-------------|------------|------|
-| CreateDBCluster | Create PolarDB cluster | Medium | Low |
-| DescribeDBClusterDetail | Get cluster details | Low | None |
-| DescribeDBClusters | List all clusters | Low | None |
-| DeleteDBCluster | Delete cluster | Low | **High** |
-| ModifyDBNodeClass | Scale compute nodes | Medium | Medium |
-| ScaleStorage | Expand storage pool | Low | Low |
-| CreateDBNode | Add read-only node | Medium | Low |
-| DeleteDBNode | Remove read-only node | Low | Medium |
-| FailoverDBCluster | Manual failover | High | **High** |
-| RestartDBNode | Restart node | Medium | Medium |
-| DescribeDBNodes | List cluster nodes | Low | None |
-| CreateBackup | Create backup | Low | Low |
-| DescribeBackups | List backups | Low | None |
-| RestoreDBCluster | Restore from backup | High | Medium |
-| ModifyDBClusterEndpoint | Manage endpoints | Medium | Low |
-| CreateParameterGroup | Create parameter template | Low | Low |
-| ModifyDBClusterParameters | Modify cluster params | Medium | Medium |
+| CreateDBCluster | Create PolarDB cluster | Medium | 🟢 Low |
+| DescribeDBClusterDetail | Get cluster details | Low | ✅ None |
+| DescribeDBClusters | List all clusters | Low | ✅ None |
+| DeleteDBCluster | Delete cluster | Low | 🔴 **High** |
+| ModifyDBNodeClass | Scale compute nodes | Medium | 🟡 Medium |
+| ScaleStorage | Expand storage pool | Low | 🟢 Low |
+| CreateDBNode | Add read-only node | Medium | 🟢 Low |
+| DeleteDBNode | Remove read-only node | Low | 🟡 Medium |
+| FailoverDBCluster | Manual failover | High | 🔴 **High** |
+| RestartDBNode | Restart node | Medium | 🟡 Medium |
+| DescribeDBNodes | List cluster nodes | Low | ✅ None |
+| CreateBackup | Create backup | Low | 🟢 Low |
+| DescribeBackups | List backups | Low | ✅ None |
+| RestoreDBCluster | Restore from backup | High | 🟡 Medium |
+| ModifyDBClusterEndpoint | Manage endpoints | Medium | 🟢 Low |
+| CreateParameterGroup | Create parameter template | Low | 🟢 Low |
+| ModifyDBClusterParameters | Modify cluster params | Medium | 🟡 Medium |
 
 ## Changelog
 
@@ -307,23 +307,23 @@ done
 
 #### Failure Recovery
 
-| Error Pattern | Retries | Backoff | Agent Action | UX Feedback |
-|---------------|---------|---------|--------------|-------------|
-| `InvalidParameter.ClusterName` | 0 | — | HALT | `[ERROR] Invalid cluster name. How to fix: Use 1-64 chars, letters/numbers/hyphens/underscores.` |
-| `InvalidParameter.NodeClass` | 0 | — | HALT | `[ERROR] Invalid node class. How to fix: Check available classes via DescribeDBNodeClasses.` |
-| `InvalidParameter.StorageSpace` | 0 | — | HALT | `[ERROR] Storage out of range [100-100000]GB. How to fix: Provide valid storage size.` |
-| `InvalidParameter.VpcId` | 0 | — | HALT | `[ERROR] Invalid VPC. How to fix: Verify VPC exists in region via ve-vpc-ops.` |
-| `InvalidParameter.SubnetId` | 0 | — | HALT | `[ERROR] Invalid subnet. How to fix: Verify subnet exists in VPC.` |
-| `InvalidParameter.ZoneId` | 0 | — | HALT | `[ERROR] Invalid zone. How to fix: Check available zones via DescribeAvailabilityZones.` |
-| `ResourceNotFound.Vpc` | 0 | — | HALT | `[ERROR] VPC not found.` |
-| `QuotaExceeded.ClusterCount` | 0 | — | HALT | `[ERROR] Max clusters reached. Delete unused or request quota.` |
-| `QuotaExceeded.NodeCount` | 0 | — | HALT | `[ERROR] Max nodes reached. Remove unused nodes or request quota.` |
-| `InsufficientBalance` | 0 | — | HALT | `[ERROR] Insufficient balance. Recharge account.` |
-| `OperationDenied.ClusterStatus` | 0 | — | HALT | `[ERROR] Cannot operate in current state. Wait for operation to complete.` |
-| `Throttling` | 3 | exponential | Back off | `⚠️ Rate limit. Retrying...` |
-| `InternalError` | 3 | 2s,4s,8s | Retry; HALT | `[ERROR] InternalError with RequestId: {RequestId}.` |
-| `ResourceAlreadyExists` | 0 | — | Ask reuse | `[ERROR] Cluster name exists. Use unique name.` |
-| `Forbidden.RAM` | 0 | — | HALT | `[ERROR] Insufficient permissions. Add RAM policy.` |
+| Error Code | Agent Action | Recovery |
+|-----------|--------------|----------|
+| `InvalidParameter.ClusterName` | HALT | 1-64 chars, letters/numbers/hyphens/underscores |
+| `InvalidParameter.NodeClass` | HALT | Check via DescribeDBNodeClasses |
+| `InvalidParameter.StorageSpace` | HALT | Storage [100-100000]GB |
+| `InvalidParameter.VpcId` | HALT | Verify VPC exists in region via ve-vpc-ops |
+| `InvalidParameter.SubnetId` | HALT | Verify subnet exists in VPC |
+| `InvalidParameter.ZoneId` | HALT | Check zones via DescribeAvailabilityZones |
+| `ResourceNotFound.Vpc` | HALT | Verify VPC ID |
+| `QuotaExceeded.ClusterCount` | HALT | Delete unused or request quota |
+| `QuotaExceeded.NodeCount` | HALT | Remove unused nodes or request quota |
+| `InsufficientBalance` | HALT | Recharge account |
+| `OperationDenied.ClusterStatus` | HALT | Wait for current operation to complete |
+| `Throttling` | Retry (3x, exponential) | Back off and retry |
+| `InternalError` | Retry (3x, 2s/4s/8s) | Report RequestId if persists |
+| `ResourceAlreadyExists` | HALT | Use unique name |
+| `Forbidden.RAM` | HALT | Add RAM policy |
 
 ### Operation: Describe/List Clusters
 
