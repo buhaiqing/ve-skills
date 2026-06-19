@@ -36,5 +36,13 @@ go.work.sum
 # macOS
 .DS_Store
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Session-local progress / scratch files
+progress.md
+
 # GCL (Generator-Critic-Loop) audit traces — never commit
 audit-results/
