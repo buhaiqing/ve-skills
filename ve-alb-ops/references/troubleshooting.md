@@ -20,17 +20,17 @@
 
 ## 1. Error Taxonomy
 
-| Category | Code Pattern | HALT or Retry | Example |
-|----------|-------------|---------------|---------|
-| **Parameter Error** | `Invalid*.*` | HALT | `InvalidLoadBalancer.NotFound` |
-| **Resource Error** | `*.NotFound` | HALT | `InvalidVpc.NotFound`, `InvalidCertificate.NotFound` |
-| **Conflict Error** | `*.Conflict` | HALT | `PortConflict.Listener` |
-| **Quota Error** | `QuotaExceeded.*` | HALT | `QuotaExceeded.LoadBalancer`, `QuotaExceeded.Listener` |
-| **Status Error** | `IncorrectStatus.*` | HALT | `IncorrectStatus.LoadBalancer` |
-| **Dependency Error** | `DependencyViolation` | HALT | `DependencyViolation.Listener` |
-| **IAM Error** | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
-| **Rate Limit** | `Throttling` | Retry (3×) | `Throttling` |
-| **Server Error** | `InternalError` | Retry (3×) | `InternalError` |
+| Category | Code Pattern | HALT/Retry | Example |
+|----------|-------------|------------|---------|
+| Parameter Error | `Invalid*.*` | HALT | `InvalidLoadBalancer.NotFound` |
+| Resource Error | `*.NotFound` | HALT | `InvalidVpc.NotFound`, `InvalidCertificate.NotFound` |
+| Conflict Error | `*.Conflict` | HALT | `PortConflict.Listener` |
+| Quota Error | `QuotaExceeded.*` | HALT | `QuotaExceeded.LoadBalancer`, `QuotaExceeded.Listener` |
+| Status Error | `IncorrectStatus.*` | HALT | `IncorrectStatus.LoadBalancer` |
+| Dependency Error | `DependencyViolation` | HALT | `DependencyViolation.Listener` |
+| IAM Error | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
+| Rate Limit | `Throttling` | Retry (3x) | `Throttling` |
+| Server Error | `InternalError` | Retry (3x) | `InternalError` |
 
 ---
 
@@ -38,10 +38,7 @@
 
 ### QuotaExceeded.LoadBalancer
 
-```
-Error Code: QuotaExceeded.LoadBalancer
-Message: The maximum number of ALBs per region has been reached.
-```
+`Error: QuotaExceeded.LoadBalancer — max ALBs per region reached.`
 
 **Resolution:** Request quota increase via Volcengine console.
 
@@ -49,10 +46,7 @@ Message: The maximum number of ALBs per region has been reached.
 
 ### InvalidVpc.NotFound
 
-```
-Error Code: InvalidVpc.NotFound
-Message: The specified VpcId does not exist.
-```
+`Error: InvalidVpc.NotFound — specified VpcId does not exist.`
 
 **Resolution:**
 ```bash
@@ -64,10 +58,7 @@ ve vpc DescribeVpcs --Region "{{env.VOLCENGINE_REGION}}" --VpcIds '[{"{{user.vpc
 
 ### InvalidSubnet.NotFound
 
-```
-Error Code: InvalidSubnet.NotFound
-Message: The specified subnet does not exist in the region.
-```
+`Error: InvalidSubnet.NotFound — subnet does not exist in region.`
 
 **Resolution:**
 ```bash
@@ -79,10 +70,7 @@ ve vpc DescribeSubnets --Region "{{env.VOLCENGINE_REGION}}" --VpcId "{{user.vpc_
 
 ### InvalidParameter (CreateLoadBalancer)
 
-```
-Error Code: InvalidParameter
-Message: The request parameter "Type" is invalid.
-```
+`Error: InvalidParameter — "Type" parameter invalid.`
 
 **Resolution:** The `Type` field must be `public` or `private`. For `public` type, ensure `EipBillingConfig` is provided correctly.
 
@@ -92,10 +80,7 @@ Message: The request parameter "Type" is invalid.
 
 ### PortConflict.Listener
 
-```
-Error Code: PortConflict.Listener
-Message: A listener with the same protocol and port already exists on this ALB.
-```
+`Error: PortConflict.Listener — same protocol+port already exists.`
 
 **Resolution:** Use a different port, or delete the conflicting listener first.
 
@@ -108,10 +93,7 @@ ve alb DescribeListeners --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerId "
 
 ### InvalidCertificate.NotFound
 
-```
-Error Code: InvalidCertificate.NotFound
-Message: The specified CertificateId does not exist.
-```
+`Error: InvalidCertificate.NotFound — CertificateId does not exist.`
 
 **Resolution:** Verify the certificate ID. HTTPS listeners require a valid TLS certificate stored in Volcengine Certificate Manager.
 
@@ -119,10 +101,7 @@ Message: The specified CertificateId does not exist.
 
 ### QuotaExceeded.Listener
 
-```
-Error Code: QuotaExceeded.Listener
-Message: The maximum number of listeners has been reached.
-```
+`Error: QuotaExceeded.Listener — max listeners reached.`
 
 **Resolution:** Delete unused listeners or request a quota increase.
 
@@ -132,10 +111,7 @@ Message: The maximum number of listeners has been reached.
 
 ### InvalidListener.NotFound
 
-```
-Error Code: InvalidListener.NotFound
-Message: The specified ListenerId does not exist.
-```
+`Error: InvalidListener.NotFound — ListenerId does not exist.`
 
 **Resolution:**
 ```bash
@@ -147,10 +123,7 @@ ve alb DescribeListeners --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerId "
 
 ### InvalidServerGroup.NotFound
 
-```
-Error Code: InvalidServerGroup.NotFound
-Message: The specified ServerGroupId does not exist.
-```
+`Error: InvalidServerGroup.NotFound — ServerGroupId does not exist.`
 
 **Resolution:**
 ```bash
@@ -162,10 +135,7 @@ ve alb DescribeServerGroups --Region "{{env.VOLCENGINE_REGION}}" --ServerGroupId
 
 ### InvalidRule.Pattern
 
-```
-Error Code: InvalidRule.Pattern
-Message: The URL pattern is invalid.
-```
+`Error: InvalidRule.Pattern — URL pattern invalid.`
 
 **Resolution:** URL patterns must follow wildcard format:
 - `/api/*` — matches all paths under /api/
@@ -176,10 +146,7 @@ Message: The URL pattern is invalid.
 
 ### QuotaExceeded.Rule
 
-```
-Error Code: QuotaExceeded.Rule
-Message: The maximum number of rules has been reached.
-```
+`Error: QuotaExceeded.Rule — max rules reached.`
 
 **Resolution:** Delete unused rules or request a quota increase.
 
@@ -189,10 +156,7 @@ Message: The maximum number of rules has been reached.
 
 ### Backend Server Unhealthy (AddServersToGroup)
 
-```
-Error Code: BackendServer.Unhealthy
-Message: The backend server failed health check immediately after registration.
-```
+`Error: BackendServer.Unhealthy — backend failed health check immediately.`
 
 **Resolution:**
 - Verify the backend process is running on the specified port
@@ -203,10 +167,7 @@ Message: The backend server failed health check immediately after registration.
 
 ### QuotaExceeded.ServerGroup
 
-```
-Error Code: QuotaExceeded.ServerGroup
-Message: The maximum number of server groups has been reached.
-```
+`Error: QuotaExceeded.ServerGroup — max server groups reached.`
 
 **Resolution:** Delete unused server groups or request a quota increase.
 
@@ -246,23 +207,17 @@ curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 http://10.0.1.10:8080
 
 ### Throttling (429)
 
-```
-Error Code: Throttling
-Message: Request has been throttled due to rate limiting.
-```
+`Error: Throttling — rate limit exceeded.`
 
-**Resolution:** Standard exponential backoff — retry at 1s, 2s, 4s intervals. Max 3 retries.
+**Resolution:** Exponential backoff — retry at 1s, 2s, 4s. Max 3 retries.
 
 ---
 
 ### InternalError (500)
 
-```
-Error Code: InternalError
-Message: An internal error occurred.
-```
+`Error: InternalError — server-side error.`
 
-**Resolution:** Retry with backoff (2s, 4s, 8s). If persistent, contact Volcengine support with `RequestId`.
+**Resolution:** Retry with backoff (2s, 4s, 8s). If persistent, contact support with `RequestId`.
 
 ---
 

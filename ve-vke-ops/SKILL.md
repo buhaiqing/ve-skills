@@ -118,11 +118,11 @@ Volcengine VKE (Volcengine Kubernetes Engine / 火山引擎容器服务) provide
 
 | Operation | Initial State | Target State | Poll Interval | Max Wait |
 |-----------|---------------|--------------|---------------|----------|
-| Create Cluster | — | `Running` | 5s | 600s |
-| Delete Cluster | any | deleted (404) | 10s | 600s |
-| Create NodePool | — | `Running` | 5s | 300s |
-| Delete NodePool | any | deleted | 5s | 300s |
-| Update Cluster | `Running` | `Running` | 5s | 300s |
+| Create Cluster | — | ✅ `Running` | 5s | 600s |
+| Delete Cluster | any | ✅ deleted (404) | 10s | 600s |
+| Create NodePool | — | ✅ `Running` | 5s | 300s |
+| Delete NodePool | any | ✅ deleted | 5s | 300s |
+| Update Cluster | ✅ `Running` | ✅ `Running` | 5s | 300s |
 
 ## Quick Start
 
@@ -130,9 +130,9 @@ Volcengine VKE (Volcengine Kubernetes Engine / 火山引擎容器服务) provide
 Deploy, configure, and manage VKE clusters and node pools on Volcengine using `ve` CLI (primary) or JIT Go SDK (fallback).
 
 ### Prerequisites
-- [ ] `ve` CLI installed
-- [ ] Credentials: `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`
-- [ ] Region set: `VOLCENGINE_REGION`
+- ✅ `ve` CLI installed
+- ✅ Credentials: `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`
+- ✅ Region set: `VOLCENGINE_REGION`
 
 ### Verify Setup
 ```bash
@@ -148,19 +148,19 @@ ve vke ListClusters --Region {{env.VOLCENGINE_REGION}}
 
 | Operation | Description | Complexity | Risk |
 |-----------|-------------|------------|------|
-| CreateCluster | Create managed K8s cluster | High | Medium |
-| DescribeCluster | Get cluster details | Low | None |
-| ListClusters | List all clusters | Low | None |
-| UpdateClusterConfig | Modify cluster config | Medium | Medium |
-| DeleteCluster | Delete cluster | Medium | **High** |
-| CreateNodePool | Create node pool | Medium | Low |
-| DescribeNodePool | Get node pool details | Low | None |
-| UpdateNodePool | Modify node pool | Medium | Medium |
-| DeleteNodePool | Delete node pool | Medium | **High** |
-| AddNodes | Add nodes to pool | Medium | Low |
-| RemoveNodes | Remove nodes from pool | Medium | Medium |
-| DeleteNodes | Delete nodes | Medium | **High** |
-| ListSupportedVersions | List K8s versions | Low | None |
+| CreateCluster | Create managed K8s cluster | High | ⚠️ Medium |
+| DescribeCluster | Get cluster details | Low | ✅ None |
+| ListClusters | List all clusters | Low | ✅ None |
+| UpdateClusterConfig | Modify cluster config | Medium | ⚠️ Medium |
+| DeleteCluster | Delete cluster | Medium | ❌ **High** |
+| CreateNodePool | Create node pool | Medium | ⚠️ Low |
+| DescribeNodePool | Get node pool details | Low | ✅ None |
+| UpdateNodePool | Modify node pool | Medium | ⚠️ Medium |
+| DeleteNodePool | Delete node pool | Medium | ❌ **High** |
+| AddNodes | Add nodes to pool | Medium | ⚠️ Low |
+| RemoveNodes | Remove nodes from pool | Medium | ⚠️ Medium |
+| DeleteNodes | Delete nodes | Medium | ❌ **High** |
+| ListSupportedVersions | List K8s versions | Low | ✅ None |
 
 ## Changelog
 
@@ -278,13 +278,13 @@ done
 
 | Error Pattern | Max Retries | Backoff | Agent Action | UX Feedback |
 |---------------|-------------|---------|--------------|-------------|
-| `InvalidParameter.ClusterName` | 0 | — | HALT; fix name per naming rules | `[ERROR] InvalidParameter.ClusterName: Cluster name does not meet requirements. How to fix: Use 1-64 chars, lowercase letters, digits, hyphens. Next step: Provide a valid cluster name.` |
-| `QuotaExceeded.ClusterCount` | 0 | — | HALT | `[ERROR] QuotaExceeded.ClusterCount: Max cluster count reached. How to fix: Delete unused clusters or request quota increase. Next step: List existing clusters or contact support.` |
-| `InvalidParameter.VpcConfig` | 0 | — | HALT; verify VPC | `[ERROR] InvalidParameter.VpcConfig: VPC or subnet configuration invalid. How to fix: Verify VPC and subnet exist in target region. Next step: Use ve-vpc-ops to check network config.` |
-| `ResourceAlreadyExists` | 0 | — | Ask reuse vs new name | `[ERROR] ResourceAlreadyExists: A cluster with this name already exists. How to fix: Use a unique name or reuse existing cluster.` |
-| `Throttling` | 3 | exponential | Back off | `⚠️ Rate limit reached. Retrying in {backoff}s...` |
-| `InternalError` | 3 | 2s, 4s, 8s | Retry; HALT with RequestId | `[ERROR] InternalError with RequestId: {RequestId}. How to fix: Retry or escalate with RequestId.` |
-| `InsufficientBalance` | 0 | — | HALT | `[ERROR] InsufficientBalance: Account balance insufficient. How to fix: Recharge account. Next step: Go to billing console.` |
+| `InvalidParameter.ClusterName` | 0 | — | HALT; fix name per naming rules | ❌ `[ERROR] InvalidParameter.ClusterName: Cluster name does not meet requirements. How to fix: Use 1-64 chars, lowercase letters, digits, hyphens. Next step: Provide a valid cluster name.` |
+| `QuotaExceeded.ClusterCount` | 0 | — | HALT | ❌ `[ERROR] QuotaExceeded.ClusterCount: Max cluster count reached. How to fix: Delete unused clusters or request quota increase. Next step: List existing clusters or contact support.` |
+| `InvalidParameter.VpcConfig` | 0 | — | HALT; verify VPC | ❌ `[ERROR] InvalidParameter.VpcConfig: VPC or subnet configuration invalid. How to fix: Verify VPC and subnet exist in target region. Next step: Use ve-vpc-ops to check network config.` |
+| `ResourceAlreadyExists` | 0 | — | Ask reuse vs new name | ❌ `[ERROR] ResourceAlreadyExists: A cluster with this name already exists. How to fix: Use a unique name or reuse existing cluster.` |
+| `Throttling` | 3 | exponential | Back off | ⚠️ `Rate limit reached. Retrying in {backoff}s...` |
+| `InternalError` | 3 | 2s, 4s, 8s | Retry; HALT with RequestId | ❌ `[ERROR] InternalError with RequestId: {RequestId}. How to fix: Retry or escalate with RequestId.` |
+| `InsufficientBalance` | 0 | — | HALT | ❌ `[ERROR] InsufficientBalance: Account balance insufficient. How to fix: Recharge account. Next step: Go to billing console.` |
 
 ### Operation: Describe Cluster
 
@@ -352,7 +352,7 @@ done
 | Error Pattern | Max Retries | Action |
 |---------------|-------------|--------|
 | `OperationDenied.DeleteProtection` | 0 | HALT; disable delete protection first |
-| `ResourceNotFound.Cluster` | — | Already deleted; success |
+| `ResourceNotFound.Cluster` | — | Already deleted → ✅ success |
 
 ### Operation: Create NodePool
 

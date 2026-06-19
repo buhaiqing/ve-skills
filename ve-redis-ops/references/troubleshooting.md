@@ -18,16 +18,16 @@
 
 ## 1. Error Taxonomy
 
-| Category | Error Code | HALT or Retry | Example |
-|----------|-----------|---------------|---------|
-| **Parameter Error** | `Invalid*.Malformed` | HALT | `InvalidParameterValue.Malformed` |
-| **Resource Not Found** | `InstanceNotFound` | HALT | `InstanceNotFound` |
-| **Status Error** | `IncorrectInstanceStatus` | HALT | `IncorrectInstanceStatus` |
-| **Quota Error** | `QuotaExceeded.*` | HALT | `QuotaExceeded.Redis` |
-| **Billing Error** | `BalanceNotEnough` | HALT | `BalanceNotEnough` |
-| **IAM Error** | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
-| **Rate Limit** | `FlowLimitExceeded` | Retry | `FlowLimitExceeded` |
-| **Server Error** | `InternalError` | Retry | `InternalError` |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `Invalid*.Malformed` | **HALT** — parameter validation failed | Check parameter values against API docs |
+| `InstanceNotFound` | **HALT** — instance does not exist | Verify instance ID via describe command |
+| `IncorrectInstanceStatus` | **HALT** — instance in wrong state | Wait for state transition or cancel current operation |
+| `QuotaExceeded.*` | **HALT** — Redis quota exhausted | Delete unused instances or request quota increase |
+| `BalanceNotEnough` | **HALT** — account balance insufficient | Recharge account via billing console |
+| `Forbidden.RAM` | **HALT** — insufficient IAM permissions | Verify IAM policy allows the action |
+| `FlowLimitExceeded` | Retry with exponential backoff | Max 3 retries |
+| `InternalError` | Retry with exponential backoff | Max 3 retries; capture RequestId for escalation |
 
 ---
 

@@ -6,7 +6,7 @@ These supplement `CLAUDE.md` (imported above). They encode lessons that have alr
 
 > **Content hierarchy**: This file is the entry point. Detailed specifications live in `docs/`:
 > - `docs/gcl-spec.md` — full GCL specification (purpose, roles, loop flow, trace, prompt templates, changelog)
-> - `docs/token-efficiency.md` — full TE rules with code examples (TE-1 through TE-7)
+> - `docs/token-efficiency.md` — full TE rules with code examples (TE-1 through TE-9)
 >
 > Keep this file in sync with `docs/` files. When updating either, verify the other stays aligned.
 
@@ -18,7 +18,7 @@ This repo contains **only Markdown skill specifications**. There is:
 
 - **No build system, no tests, no lint, no package manager.** Do not run `go build`, `go test`, `npm`, `pip`, `make`, etc. — they will fail or do nothing.
 - **No runtime code.** The `ve` CLI and Go SDK referenced in skills are *consumed by* generated skills at execution time, not built here.
-- **No CI workflows yet.** Verification is human review against the P0/P1 checklist in `ve-skill-generator/SKILL.md`.
+- **No CI workflows yet.** Verification is human review against the P0/P1 checklist in `ve-skill-generator/SKILL.md` (see also **Files that DO NOT exist** below).
 
 Verification for skill edits = re-reading the file plus walking the P0/P1 checklist. Do not invent build/test commands.
 
@@ -66,6 +66,19 @@ Verify against reality, not memory:
 
 **Fix every issue found in both rounds before responding "done".** If a finding requires information you don't have, mark it `[blocked: needs OpenAPI verification]`.
 
+### Validation Command Matrix
+
+| Change scope | Required command |
+|---|---|
+| Full local validation before PR / handoff | Walk P0/P1 checklist in `ve-skill-generator/SKILL.md` (no automated runner in this repo) |
+| Any `SKILL.md` frontmatter or metadata change | Re-check P0/P1 checklist items C1–C12 manually |
+| Any GCL rubric, prompt template, or `## Quality Gate (GCL)` section change | Verify against `docs/gcl-spec.md` §Rubric + §Prompt Templates |
+| Any Markdown spec, README, or path-reference change | Run the link-integrity scan in **§Document Integrity & Link Validation** below |
+| Any `docs/*.md` change | Verify cross-reference symmetry (see Layer 2 below) |
+| Any Go SDK example code change | `python3 -m py_compile <file>` if Python; Go examples are illustrative — no build step |
+
+> **Note:** This repo has automated validation scripts in `scripts/` for pre-commit checks (see **Files that DO NOT exist** below). After changes, run `python3 scripts/validate_local.py` if available, then supplement with manual checks against the P0/P1 checklist.
+
 ---
 
 ## Token Efficiency Requirements (P0 — 强制)
@@ -82,10 +95,50 @@ Verify against reality, not memory:
 | **TE-5** YAML anchors | `example-config.yaml` 用 `&anchor` 消除重复 | ~200-400/文件 |
 | **TE-6** 消除跨文件重复 | SKILL.md 已有完整流程，references 不重复 | 因 Skill 而异 |
 | **TE-7** 专业内容分层 | AIOps/FinOps 放 `references/advanced/`；安全敏感操作单独标注并显式确认 | ~3,000-8,000/文件 |
+| **TE-8** 符号与缩写 | 使用 `→` `⇒` `✅` `❌` 等符号和标准缩写替代冗余自然语言 | ~100-300/文件 |
+| **TE-9** 压缩级别选择 | 按文档用途选择 Minimal / Efficient / Compressed / Critical / Emergency | ~500-2,000/文件 |
 
 **不可压缩的内容**：Agent 可执行命令本身（参数、JSON paths）、错误恢复逻辑、安全门、Credential 规则、跨技能编排链。
 
 **发现任一违规 → 立即修复 → 重新检查直到全部通过。**
+
+### Symbol System
+
+Standard Token Efficiency symbols for compact skill documentation:
+
+| Category | Symbols | Usage |
+|----------|---------|-------|
+| **Core Logic** | `→` (leads to), `⇒` (transforms to), `←` (rollback), `⇄` (bidirectional), `&` (and), `\|` (separator), `:` (define), `»` (sequence), `∴` (therefore), `∵` (because), `≡` (equivalent), `≈` (approximately), `≠` (not equal) | Flow mapping, state transitions, causality |
+| **Status** | `✅` (completed), `❌` (failed), `⚠️` (warning), `ℹ️` (info), `🔄` (in progress), `⏳` (pending), `🚨` (critical), `🎯` (target), `📊` (metrics), `💡` (insight) | Checkpoint gates, validation results |
+| **Domain** | `⚡` (perf), `🔍` (analysis), `🔧` (config), `🛡️` (security), `📦` (deploy), `🎨` (design), `🌐` (network), `📱` (mobile), `🏗️` (architecture), `🧩` (components) | Section markers, scope indicators |
+
+### Abbreviations
+
+Standard abbreviations to reduce token count while preserving meaning:
+
+| Abbr | Meaning | Abbr | Meaning |
+|------|---------|------|---------|
+| `cfg` | configuration | `impl` | implementation |
+| `arch` | architecture | `perf` | performance |
+| `ops` | operations | `env` | environment |
+| `req` | requirements | `deps` | dependencies |
+| `val` | validation | `test` | testing |
+| `docs` | documentation | `std` | standards |
+| `qual` | quality | `sec` | security |
+| `err` | error | `rec` | recovery |
+| `sev` | severity | `opt` | optimization |
+
+### Compression Levels
+
+Adaptive compression strategy for token management:
+
+| Level | Range | Use Case |
+|-------|-------|----------|
+| **Minimal** | 0-40% | Full detail, persona-optimized clarity |
+| **Efficient** | 40-70% | Balanced compression with domain awareness |
+| **Compressed** | 70-85% | Aggressive optimization, quality gates active |
+| **Critical** | 85-95% | Maximum compression, preserve essential context |
+| **Emergency** | 95%+ | Ultra-compression, information validation |
 
 ### TE 规则速查
 
@@ -98,6 +151,8 @@ Verify against reality, not memory:
 | TE-5 | 检查 example-config.yaml 是否有重复字段 | 用 YAML anchors 消除 |
 | TE-6 | 检查 SKILL.md 与 references/ 是否有内容重复 | 删除 references 中的重复 |
 | TE-7 | 检查 AIOps/FinOps 是否在 `references/advanced/`；SQL 执行是否标注 Security-Sensitive | 分层修复 |
+| TE-8 | 检查 Markdown 中是否混用了自然语言描述与 TE symbols | 统一使用 `→` `⇒` `✅` `❌` 等符号替代冗余文字 |
+| TE-9 | 检查当前压缩级别是否匹配文档目的（Minimal/Efficient/Compressed） | 调整压缩策略 |
 
 ---
 
@@ -129,6 +184,27 @@ docs/
 ```
 
 `.omc/` and `.omo/` are tool-local state and are gitignored — do not commit anything inside them.
+
+### Asset & Schema Placement Rules (mandatory)
+
+Skill-owned artifacts MUST NOT be placed at repo root. Use this split:
+
+| Location | Allowed contents | Forbidden |
+|---|---|---|
+| `ve-*-ops/assets/` | `eval_queries.json`, `example-config.yaml`, `*.schema.json`, skill-specific templates | Cross-skill executables |
+| `ve-*-ops/references/` | Runbooks, output contracts in Markdown, delegation stubs | Duplicate JSON schemas that belong in `assets/` |
+| `scripts/` (repo root) | Shared validation scripts (`validate_local.py`, `check_gcl_conformance.py`, etc.) — pre-commit use | JSON Schema, handoff contracts, example YAML |
+
+**Owner skill rule:** the skill that **defines and primarily consumes** the contract owns the file. Secondary consumers link to the owner via relative path — they do not copy or re-home the schema.
+
+**When adding a new `*.schema.json` or handoff contract:**
+1. Pick the owner skill (primary consumer of the JSON contract).
+2. Create under `ve-<owner>-ops/assets/<name>.schema.json`.
+3. Reference from owner `SKILL.md` / `references/` and owner `example-config.yaml` if config-driven.
+4. Secondary skills cite the owner path (e.g. `../ve-<owner>-ops/assets/...`) — never `assets/` at repo root.
+5. If a future `scripts/*.py` emits JSON matching the schema, its docstring MUST point at the owner skill path (script ≠ schema owner).
+
+**Anti-pattern (banned):** creating `assets/` at repo root because a script is shared — shared **code** lives in `scripts/`; shared **contracts** still belong to an owning skill.
 
 ---
 
@@ -234,6 +310,18 @@ The Critic itself MUST NOT call any skill — it only emits suggestions.
 All 13 `required`-tier, 10 `recommended`-tier, and 6 `optional`-tier skills have GCL rubric + prompt templates.
 See [docs/gcl-spec.md](docs/gcl-spec.md) §11 for the full rollout changelog.
 
+## Evaluation
+
+`assets/eval_queries.json` per skill holds intent-classification test cases (`should_trigger: true/false`). These are consumed by external evaluation harnesses, not by an in-repo test runner. When adding capability, add eval cases in the same change.
+
+### Build-time regression
+
+Automated validation scripts are available in `scripts/` for pre-commit checks (see **Files that DO NOT exist** below). After changing any skill, run `python3 scripts/validate_local.py` if available, then manually verify against the P0/P1 checklist in `ve-skill-generator/SKILL.md` and the 2-round self-review above.
+
+### Runtime GCL
+
+`scripts/gcl_runner.py` does not exist in this repo. GCL runs are performed manually following the spec in `docs/gcl-spec.md`. Critic scores MUST be injected from an isolated agent context. Production GCL MUST use externally supplied isolated Critic scores; `--structural-critic-only` is allowed only for CI/local structural smoke tests and MUST NOT be used for production execution, human acceptance, or quality pass decisions.
+
 ---
 
 ## Document Integrity & Link Validation (C12 / F9 / F10 — 强制)
@@ -326,11 +414,67 @@ done
 
 ---
 
-## See also
+## Files that DO NOT exist
 
-- `docs/gcl-spec.md` — full GCL specification (purpose, roles, loop flow, trace, prompt templates, changelog)
-- `docs/token-efficiency.md` — detailed TE rules with code examples (TE-1 through TE-7)
-- `ve-skill-generator/SKILL.md` — the meta-skill that scaffolds new skills
-- `ve-skill-generator/references/ve-skill-template.md` — canonical SKILL.md template with GCL block
-- Each skill's `references/rubric.md` — the rubric instance
-- Each skill's `references/prompt-templates.md` — G/C/O prompt skeletons
+- **`scripts/` directory** at repo root contains validation scripts (`validate_local.py`, `check_gcl_conformance.py`, `check_markdown_links.py`, etc.). These are used for pre-commit validation. There is no `.github/workflows/` directory — CI has not been set up yet.
+- **No `package.json`, `Makefile`, `CI configs`, `build scripts`, `typechecker`, or non-stdlib test runner** — except:
+- **No `CLAUDE.md` at repo root** — this file (`AGENTS.md`) is the agent guidance entry point, imported via `@CLAUDE.md`.
+- **No `opencode.json`, `.cursorrules`, or similar IDE configs.**
+- **No `audit-results/` directory** — GCL traces are stored in tool-local state only.
+- `.omc/`, `.omo/` are gitignored cache data — not source.
+
+---
+
+## Runtime Quality Gates: GCL & Reflexion
+
+Detailed runtime-quality specifications are intentionally externalized to reduce always-loaded context size:
+
+| Spec | Read before modifying |
+|---|---|
+| `docs/gcl-spec.md` | any `## Quality Gate (GCL)` section, `references/rubric.md`, `references/prompt-templates.md`, or GCL-related runner code |
+| `docs/reflexion-memory.md` | `docs/failure-patterns.md`, trace `failure_pattern` extraction, Reflexion retrieval/persistence logic, or failure-memory governance |
+| `docs/failure-patterns.md` | only when retrieving or updating reusable failure patterns; keep it bounded and deduplicated |
+
+### GCL hard constraints
+
+- Production GCL requires isolated Generator and Critic contexts; shared-context G+C is banned.
+- Critic is read-only: it MUST NOT call `ve`, use SDK clients, mutate resources, or self-score Generator output.
+- Critic MUST NOT see the raw user request; it may use sanitized `{{output.operation_intent}}`, Generator output, trace, and rubric.
+- Orchestrator owns `operation_intent` generation before Critic scoring; it MUST omit raw user wording, credentials, and unmasked sensitive identifiers.
+- `Safety = 0` / `SAFETY_FAIL` MUST abort immediately; never return partial or best-effort output.
+- Every GCL loop MUST be bounded by `max_iterations`; unbounded retry loops are banned.
+- Every GCL run MUST persist a masked trace (tool-local; `.omc/` is gitignored — see **Files that DO NOT exist** below).
+- Production GCL MUST use externally supplied isolated Critic scores; `--structural-critic-only` is allowed only for CI/local structural smoke tests and MUST NOT be used for production execution, human acceptance, or quality pass decisions.
+- GCL prompt templates MUST use `{{env.*}}` / `{{user.*}}` / `{{output.*}}`; bare `{...}` placeholders are banned.
+- GCL `required` / `recommended` skills MUST keep `## Quality Gate (GCL)` in `SKILL.md`, plus `references/rubric.md` and `references/prompt-templates.md`.
+
+### Reflexion hard constraints
+
+- Reflexion retrieval is an optional hint, not a mandatory gate.
+- `docs/failure-patterns.md` MUST stay ≤ 200 lines; prune low-frequency entries when needed.
+- Deduplicate patterns by `skill` + `command` + `error`; increment `count` on matches.
+- Patterns MUST come from GCL trace `failure_pattern` fields or self-review findings, not ad-hoc subjective notes.
+- Promote high-frequency patterns to anti-pattern docs and remove duplicates from memory.
+
+### Relationship to build-time self-review
+
+Build-time 2-round self-review and runtime GCL are independent gates. A clean self-review does not exempt runtime scoring; a passing GCL rubric does not exempt sloppy skill updates.
+
+---
+
+## Key References
+
+| Document | Description |
+|----------|-------------|
+| `docs/gcl-spec.md` | **Runtime GCL spec** — purpose, roles, loop flow, trace, prompt templates, per-skill defaults, changelog |
+| `docs/token-efficiency.md` | Detailed TE rules with code examples (TE-1 through TE-9) |
+| `docs/reflexion-memory.md` | **Reflexion rules** — lightweight cross-session failure-pattern memory governance |
+| `docs/failure-patterns.md` | **Reflexion memory store** — bounded structured failure patterns for cross-session learning |
+| `ve-skill-generator/SKILL.md` | Meta-skill generator — full workflow, P0/P1 checklist, Token Efficiency rules |
+| `ve-skill-generator/references/ve-skill-template.md` | Canonical SKILL.md template with GCL block |
+| `ve-skill-generator/references/governance-and-adversarial-review.md` | Governance & adversarial review — R1-R4 pre-merge security/resilience/UX scenarios |
+| `ve-skill-generator/references/cli-behavior.md` | Verified `ve` CLI conventions |
+| `ve-skill-generator/references/execution-environment.md` | CLI + Go SDK setup details |
+| `ve-skill-generator/references/user-experience-spec.md` | UX requirements every generated skill must follow |
+| Each skill's `references/rubric.md` | The rubric instance |
+| Each skill's `references/prompt-templates.md` | G/C/O prompt skeletons |

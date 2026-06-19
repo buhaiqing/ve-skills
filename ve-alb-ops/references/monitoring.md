@@ -68,8 +68,8 @@
 Health Ratio = healthy_count / (healthy_count + unhealthy_count)
 ```
 
-| Health Ratio | Status | Action Required |
-|-------------|--------|----------------|
+| Health Ratio | Status | Action |
+|-------------|--------|--------|
 | 100% | Normal | None |
 | 50–99% | Warning | Investigate failing backends |
 | < 50% | Critical | Immediate investigation required |

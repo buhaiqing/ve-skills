@@ -1,41 +1,39 @@
-# RDS MySQL Instance Example Configuration
+# RDS MySQL instance configuration example
+# YAML anchors deduplicate shared values across environments.
+---
+shared: &shared
+  DBEngineVersion: "MySQL_8_0"
+  SpecFamily: "rdsmysql.g2"
+  StorageSpace: 200
+  SuperAccountPassword: "${DB_PASSWORD}"
 
-instance:
-  name: production-mysql
-  db_engine: Mysql
-  db_engine_version: "MySQL_8_0"
-  region: cn-beijing
-  charge_type: PostPaid
+environments:
+  production:
+    <<: *shared
+    InstanceName: "prod-mysql-01"
+    SpecCode: "rdsmysql.g2.large"
+    VpcId: "vpc-xxxxx"
+    SubnetId: "subnet-yyyyy"
+    ChargeType: "PostPaid"
+    ProjectName: "default"
+    ZoneId: "cn-beijing-a"
+    Tags:
+      - Key: "Environment"
+        Value: "production"
+      - Key: "Team"
+        Value: "platform"
 
-  nodes:
-    primary:
-      node_spec: "rds.mysql.4c8g"
-      zone_id: "cn-beijing-a"
-    secondary:
-      node_spec: "rds.mysql.4c8g"
-      zone_id: "cn-beijing-b"
-    read_only:
-      - node_spec: "rds.mysql.2c4g"
-        zone_id: "cn-beijing-a"
-
-  storage:
-    type: LocalSSD
-    space_gb: 200
-
-  network:
-    vpc_id: vpc-xxxxx
-    subnet_id: subnet-xxxxx
-
-  ip_whitelist:
-    - "10.0.0.0/8"
-    - "172.16.0.0/12"
-
-  backup:
-    retention_period: 7
-    preferred_backup_time: "02:00Z-03:00Z"
-    preferred_backup_period:
-      - Monday
-      - Tuesday
-      - Wednesday
-      - Thursday
-      - Friday
+  staging:
+    <<: *shared
+    InstanceName: "staging-mysql-01"
+    SpecCode: "rdsmysql.g2.medium"
+    VpcId: "vpc-xxxxx"
+    SubnetId: "subnet-zzzzz"
+    ChargeType: "PostPaid"
+    ProjectName: "staging"
+    ZoneId: "cn-beijing-b"
+    Tags:
+      - Key: "Environment"
+        Value: "staging"
+      - Key: "Team"
+        Value: "platform"

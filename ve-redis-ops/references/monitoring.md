@@ -51,10 +51,10 @@ MemoryUtilization = (Capacity.Used / Capacity.Total) × 100%
 
 | Utilization | Concern Level | Action |
 |-------------|--------------|--------|
-| < 60% | Normal | — |
-| 60–80% | Warning | Monitor growth rate |
-| > 80% | Critical | Increase capacity or tune eviction policy |
-| > 90% | Emergency | Risk of OOM errors |
+| < 60% | ✅ Normal | — |
+| 60–80% | ⚠️ Warning | Monitor growth rate |
+| > 80% | 🔴 Critical | Increase capacity or tune eviction policy |
+| > 90% | 🚨 Emergency | Risk of OOM errors |
 
 ### Key Analysis
 
@@ -68,9 +68,9 @@ MemoryUtilization = (Capacity.Used / Capacity.Total) × 100%
 
 | Connection Utilization | Concern Level | Action |
 |-----------------------|--------------|--------|
-| < 50% | Normal | — |
-| 50–75% | Warning | Review connection pooling |
-| > 75% | Critical | Increase max connections or add instances |
+| < 50% | ✅ Normal | — |
+| 50–75% | ⚠️ Warning | Review connection pooling |
+| > 75% | 🔴 Critical | Increase max connections or add instances |
 
 ---
 
@@ -93,9 +93,9 @@ Redis is single-threaded per shard. CPU > 90% usually means:
 
 | Latency | Concern Level |
 |---------|--------------|
-| < 1ms | Normal |
-| 1–10ms | Warning — network or load issue |
-| > 10ms | Critical — investigate immediately |
+| < 1ms | ✅ Normal |
+| 1–10ms | ⚠️ Warning — network or load issue |
+| > 10ms | 🔴 Critical — investigate immediately |
 
 ---
 
@@ -105,11 +105,11 @@ Redis is single-threaded per shard. CPU > 90% usually means:
 
 | Alarm | Metric | Condition | Severity |
 |-------|--------|-----------|----------|
-| Memory High | `memoryusedratio` | > 80% for 5min | Warning |
-| Memory Critical | `memoryusedratio` | > 90% for 5min | Critical |
-| CPU High | `cpuusage` | > 90% for 5min | Critical |
-| Connection High | `totalconnections` | > 75% of max | Warning |
-| Instance Error | Instance status | Not `Running` | Critical |
+| Memory High | `memoryusedratio` | > 80% for 5min | ⚠️ Warning |
+| Memory Critical | `memoryusedratio` | > 90% for 5min | 🔴 Critical |
+| CPU High | `cpuusage` | > 90% for 5min | 🔴 Critical |
+| Connection High | `totalconnections` | > 75% of max | ⚠️ Warning |
+| Instance Error | Instance status | Not `Running` | 🔴 Critical |
 
 ---
 

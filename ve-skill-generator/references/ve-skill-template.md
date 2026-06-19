@@ -52,11 +52,11 @@ Every generated skill MUST satisfy these five standards. Use them as a design ch
 
 | # | Standard | How This Skill Fulfills It | Concrete Validation Criteria |
 |---|----------|---------------------------|------------------------------|
-| 1 | **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules | ≥ 3 SHOULD entries with specific triggers; ≥ 3 SHOULD NOT entries with named delegation targets |
-| 2 | **Structured I/O** | Placeholder conventions (`{{env.*}}`, `{{user.*}}`, `{{output.*}}`) with type and source documented | Zero bare variable names; every input uses a typed placeholder; every output maps to a JSON path |
-| 3 | **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover, with numbered imperative steps | ≥ 1 operation with all 4 phases present; all steps numbered and imperative (not descriptive) |
-| 4 | **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type; GCL rubric with Safety = 0 → ABORT | Error table has ≥ 10 rows; each row has: code, max retries, backoff, agent action, UX template; `references/rubric.md` exists with the 5-dimension GCL rubric |
-| 5 | **Absolute Single Responsibility** | One product, one primary resource model; cross-product delegation to other skills | SKILL.md covers exactly 1 product; cross-product ops delegate (not duplicate); naming follows `ve-[product]-ops` |
+| 1 | ✅ **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules | ≥ 3 SHOULD entries with specific triggers; ≥ 3 SHOULD NOT entries with named delegation targets |
+| 2 | ✅ **Structured I/O** | Placeholder conventions (`{{env.*}}`, `{{user.*}}`, `{{output.*}}`) with type and source documented | Zero bare variable names; every input uses a typed placeholder; every output maps to a JSON path |
+| 3 | ✅ **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover, with numbered imperative steps | ≥ 1 operation with all 4 phases present; all steps numbered and imperative (not descriptive) |
+| 4 | ✅ **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type; GCL rubric with Safety = 0 → ABORT | Error table has ≥ 10 rows; each row has: code, max retries, backoff, agent action, UX template; `references/rubric.md` exists with the 5-dimension GCL rubric |
+| 5 | ✅ **Absolute Single Responsibility** | One product, one primary resource model; cross-product delegation to other skills | SKILL.md covers exactly 1 product; cross-product ops delegate (not duplicate); naming follows `ve-[product]-ops` |
 
 Refer to the [meta-skill](../SKILL.md#five-core-standards-quality-gates) for detailed descriptions of each standard.
 
@@ -171,10 +171,10 @@ ve [product] Describe[Resources] --Region {{env.VOLCENGINE_REGION}}
 | Operation | Description | Complexity | Risk Level |
 |-----------|-------------|------------|------------|
 | Create | Create a new [Resource] | Medium | Low |
-| Describe | View [Resource] details | Low | None |
+| Describe | View [Resource] details | Low | ✅ None |
 | Modify | Change [Resource] configuration | Medium | Medium |
-| Delete | Remove a [Resource] | Low | **High** — irreversible |
-| List | View all [Resources] | Low | None |
+| Delete | Remove a [Resource] | Low | 🔴 **High** — irreversible |
+| List | View all [Resources] | Low | ✅ None |
 
 ## Changelog
 
@@ -382,14 +382,14 @@ done
 
 #### Failure Recovery
 
-| Error pattern (from API/SDK or parsed CLI JSON) | Max retries | Backoff | Agent Action | UX Feedback |
-|------------------------------|-------------|---------|--------------|-------------|
-| `InvalidParameter` / 400 invalid input | 0–1 | — | Fix args from OpenAPI; retry once if safe | `[ERROR] InvalidParameter: The request parameter is invalid. What happened: One or more parameters do not meet the API specification. How to fix: Check the parameter against OpenAPI docs and retry. Next step: Review the parameter table above.` |
-| `QuotaExceeded` / resource quota limit | 0 | — | HALT | `[ERROR] QuotaExceeded: Resource quota limit reached. What happened: Your account has reached the maximum allowed number of this resource type. How to fix: Delete unused resources or request a quota increase. Next step: Contact support or delete unused resources.` |
-| `InsufficientBalance` / balance insufficient | 0 | — | HALT | `[ERROR] InsufficientBalance: Account balance insufficient. What happened: Your account does not have enough balance to complete this operation. How to fix: Recharge your account. Next step: Go to Volcengine billing console to recharge.` |
-| `ResourceAlreadyExists` | 0 | — | Ask reuse vs new name | `[ERROR] ResourceAlreadyExists: A resource with this name already exists. What happened: The specified resource name is already in use. How to fix: Use a different name or reuse the existing resource. Next step: Choose a unique name or describe the existing resource.` |
-| Throttling / 429 | 3 | exponential | Back off; respect `Retry-After` if present | `⚠️ Rate limit reached. Retrying in {backoff}s... (Attempt {current}/{max})` |
-| `InternalError` / 5xx | 3 | 2s, 4s, 8s | Retry; then HALT with correlation id (RequestId) if any | `[ERROR] InternalError: Server-side error occurred. What happened: Volcengine encountered an internal error processing your request. How to fix: Retry the operation. If it persists, escalate with RequestId. Next step: Retry now or escalate with RequestId: {RequestId}.` |
+| Error pattern | Agent Action | Recovery |
+|---------------|-------------|----------|
+| `InvalidParameter` / 400 | Fix args from OpenAPI; retry once | `[ERROR] InvalidParameter: The request parameter is invalid. Check parameter against OpenAPI docs and retry.` |
+| `QuotaExceeded` / resource quota limit | **HALT** — quota exhausted | `[ERROR] QuotaExceeded: Resource quota limit reached. Delete unused resources or request a quota increase.` |
+| `InsufficientBalance` / balance insufficient | **HALT** — account balance insufficient | `[ERROR] InsufficientBalance: Account balance insufficient. Recharge your account.` |
+| `ResourceAlreadyExists` | Ask reuse vs new name | `[ERROR] ResourceAlreadyExists: Resource with this name exists. Use a different name or reuse the existing resource.` |
+| Throttling / 429 | Retry 3x with exponential backoff; respect `Retry-After` | `⚠️ Rate limit reached. Retrying in {backoff}s... (Attempt {current}/{max})` |
+| `InternalError` / 5xx | Retry 3x (2s, 4s, 8s); then HALT with RequestId | `[ERROR] InternalError: Server-side error. Retry now or escalate with RequestId: {RequestId}.` |
 
 ### Operation: Describe [Resource]
 
@@ -537,7 +537,7 @@ Poll describe (or head/get) until **404**, **NotFound**, or status indicates del
 - [Observability Integration](references/observability.md) — Metrics/Logs/Traces linkage (AIOps diagnostic skills)
 - [Prompts Handbook](references/prompts.md) — common prompt templates (AIOps diagnostic skills)
 - [User Experience Specification](references/user-experience-spec.md) — mandatory UX compliance reference
-- [AIOps Best Practices](references/aiops-best-practices.md) — mandatory AIOps patterns for monitoring/diagnosis skills
+- [AIOps Best Practices](references/advanced/aiops-best-practices.md) — mandatory AIOps patterns for monitoring/diagnosis skills
 - [Optimization Analysis](references/optimization-analysis.md) — three-dimensional optimization framework
 - [Execution Environment Setup](references/execution-environment.md) — CLI install, Go JIT download, credential config, verification
 - [CLI Behavioral Reference](references/cli-behavior.md) — verified `ve` CLI conventions (JSON output, env vars, invocation patterns)

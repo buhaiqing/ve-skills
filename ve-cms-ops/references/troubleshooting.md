@@ -2,23 +2,23 @@
 
 ## Common Error Codes
 
-| Error Code | HTTP Status | Meaning | Agent Action |
-|-----------|-------------|---------|-------------|
-| `InvalidParameter` | 400 | Invalid request parameter | Verify all parameters against API docs |
-| `NoSuchMetric` | 404 | Metric not found in namespace | HALT; check namespace and metric name |
-| `NoSuchResource` | 404 | Resource does not exist | HALT; verify resource ID in Dimensions |
-| `Throttling` | 429 | Rate limit exceeded | Exponential backoff; reduce query frequency |
-| `Unauthorized` | 403 | Insufficient permissions | HALT; attach VMSReadOnlyAccess IAM policy |
-| `InvalidDimensions` | 400 | Malformed Dimensions JSON | Fix JSON format; use `[{"key":"value"}]` |
-| `MetricDataInsufficient` | 200 | Not enough data for evaluation | HALT; wait for data accumulation |
-| `RuleAlreadyExists` | 409 | Alarm rule name conflicts | HALT; use unique rule name |
-| `ContactGroupNotFound` | 404 | Notification group not found | HALT; create group first |
-| `QuotaExceeded.AlarmRule` | 400 | Alarm rule limit reached | HALT; delete unused rules or request increase |
-| `InternalError` | 500 | Server-side error | Retry with backoff; HALT after 3 retries |
-| `ResourceNotFound` | 404 | Alarm template or rule not found | Verify resource ID |
-| `InvalidTimestamp` | 400 | StartTime > EndTime or invalid format | Verify timestamps are valid Unix ms |
-| `Forbidden.NoData` | 403 | API call quota exceeded | HALT; wait for quota reset or upgrade plan |
-| `TemplateAlreadyApplied` | 409 | Template already applied to resource | HALT; remove first or use different template |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `InvalidParameter` | Invalid request parameter | Verify all parameters against API docs |
+| `NoSuchMetric` | Metric not found in namespace | HALT; check namespace and metric name |
+| `NoSuchResource` | Resource does not exist | HALT; verify resource ID in Dimensions |
+| `Throttling` | Rate limit exceeded | Exponential backoff; reduce query frequency |
+| `Unauthorized` | Insufficient permissions | HALT; attach VMSReadOnlyAccess IAM policy |
+| `InvalidDimensions` | Malformed Dimensions JSON | Fix JSON format; use `[{"key":"value"}]` |
+| `MetricDataInsufficient` | Not enough data for evaluation | HALT; wait for data accumulation |
+| `RuleAlreadyExists` | Alarm rule name conflicts | HALT; use unique rule name |
+| `ContactGroupNotFound` | Notification group not found | HALT; create group first |
+| `QuotaExceeded.AlarmRule` | Alarm rule limit reached | HALT; delete unused rules or request increase |
+| `InternalError` | Server-side error | Retry with backoff; HALT after 3 retries |
+| `ResourceNotFound` | Alarm template or rule not found | Verify resource ID |
+| `InvalidTimestamp` | StartTime > EndTime or invalid format | Verify timestamps are valid Unix ms |
+| `Forbidden.NoData` | API call quota exceeded | HALT; wait for quota reset or upgrade plan |
+| `TemplateAlreadyApplied` | Template already applied to resource | HALT; remove first or use different template |
 
 ## Diagnostic Order
 

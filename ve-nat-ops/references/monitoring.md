@@ -43,11 +43,11 @@ ve cms DescribeMetricData \
 
 Each EIP in a SNAT rule supports ~200,000 concurrent connections. Monitor active connections:
 
-| Connection Count per EIP | Concern Level |
-|-------------------------|--------------|
+| Connection Count per EIP | Level |
+|-------------------------|-------|
 | < 100,000 | Normal |
 | 100,000–160,000 | Warning |
-| > 160,000 | Critical — add more EIPs |
+| > 160,000 | Critical → add more EIPs |
 
 ### Bandwidth Saturation
 
