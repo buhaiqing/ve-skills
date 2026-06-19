@@ -2,23 +2,23 @@
 
 ## Common API Error Codes
 
-| Code / HTTP | Meaning | Agent Action |
-|-------------|---------|--------------|
-| `InvalidParameter` / 400 | Request parameter validation failed | Check parameter values against API docs |
-| `InvalidArn` / 400 | ARN format is invalid | Verify ARN follows correct pattern |
-| `NotFound` / 404 | Key or resource not found | Verify KeyId exists and is correct |
-| `Disabled` / 409 | Key is disabled | Enable key using EnableKey operation |
-| `KMSInvalidState` / 409 | Key is in wrong state | Check key state and ensure compatible |
-| `InvalidKeyUsage` / 400 | Key usage doesn't support operation | Use compatible key (e.g., ENCRYPT_DECRYPT for encryption) |
-| `DependencyViolation` / 409 | Key is in use by other resources | Remove dependencies before deletion |
-| `UnsupportedOperation` / 400 | Operation not supported for key type | Use different key or operation |
-| `IncorrectEncryptionContext` / 400 | Encryption context doesn't match | Use same encryption context as encryption |
-| `InvalidCiphertext` / 400 | Ciphertext is malformed | Verify ciphertext is complete and correct |
-| `KeyUnavailable` / 503 | Key temporarily unavailable | Retry with exponential backoff |
-| `AccessDenied` / 403 | Insufficient IAM permissions | Add required IAM policy |
-| `QuotaExceeded` / 429 | Resource quota limit reached | Delete unused keys or request quota increase |
-| `Throttling` / 429 | Rate limit exceeded | Back off and retry |
-| `InternalError` / 500 | Server-side error | Retry; then escalate with RequestId |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `InvalidParameter` / 400 | **HALT** — parameter validation failed | Check parameter values against API docs |
+| `InvalidArn` / 400 | **HALT** — ARN format invalid | Verify ARN follows correct pattern |
+| `NotFound` / 404 | **HALT** — key/resource not found | Verify KeyId exists and is correct |
+| `Disabled` / 409 | **HALT** — key is disabled | Enable key using EnableKey operation |
+| `KMSInvalidState` / 409 | **HALT** — key in wrong state | Check key state and ensure compatible |
+| `InvalidKeyUsage` / 400 | **HALT** — key usage doesn't support operation | Use compatible key (e.g., ENCRYPT_DECRYPT for encryption) |
+| `DependencyViolation` / 409 | **HALT** — key in use by other resources | Remove dependencies (grants) before deletion |
+| `UnsupportedOperation` / 400 | **HALT** — operation not supported for key type | Use different key or operation |
+| `IncorrectEncryptionContext` / 400 | **HALT** — encryption context mismatch | Use same encryption context as encryption |
+| `InvalidCiphertext` / 400 | **HALT** — ciphertext malformed | Verify ciphertext is complete and correct |
+| `KeyUnavailable` / 503 | Retry with exponential backoff | Key temporarily unavailable |
+| `AccessDenied` / 403 | **HALT** — insufficient IAM permissions | Add required IAM policy |
+| `QuotaExceeded` / 429 | **HALT** — resource quota limit reached | Delete unused keys or request quota increase |
+| `Throttling` / 429 | Back off and retry | Exponential backoff, max 3 retries |
+| `InternalError` / 500 | Retry; then escalate with RequestId | Retry with backoff; **HALT** after 3 |
 
 ## Diagnostic Order
 

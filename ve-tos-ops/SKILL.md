@@ -155,21 +155,21 @@ tosutil ls -s
 | Operation | Description | Complexity | Risk Level |
 |-----------|-------------|------------|------------|
 | CreateBucket | Create a new TOS bucket | Low | Medium |
-| ListBuckets | List all accessible buckets | Low | None |
-| DeleteBucket | Delete an empty bucket | Low | **High** |
+| ListBuckets | List all accessible buckets | Low | ✅ None |
+| DeleteBucket | Delete an empty bucket | Low | 🔴 **High** |
 | PutObject | Upload an object | Low | Low |
-| GetObject | Download an object | Low | None |
-| ListObjects | List objects in a bucket | Low | None |
-| DeleteObject | Delete an object | Low | High |
+| GetObject | Download an object | Low | ✅ None |
+| ListObjects | List objects in a bucket | Low | ✅ None |
+| DeleteObject | Delete an object | Low | 🔴 High |
 | CopyObject | Copy object within/across buckets | Medium | Medium |
 | MultipartUpload | Upload large files in parts | High | Low |
 | PresignURL | Generate pre-signed URL | Low | Medium |
 | PutBucketLifecycle | Set lifecycle rules | Medium | Medium |
 | PutBucketVersioning | Enable/disable versioning | Low | Medium |
-| PutBucketACL | Set bucket access control | Low | High |
-| DescribeStorageAnalysis | Analyze storage class distribution and costs | Low | None |
-| DetectStaleObjects | Find objects not accessed for X days | Low | None |
-| DescribeCostSummary | Generate cost report for TOS resources | Low | None |
+| PutBucketACL | Set bucket access control | Low | 🔴 High |
+| DescribeStorageAnalysis | Analyze storage class distribution and costs | Low | ✅ None |
+| DetectStaleObjects | Find objects not accessed for X days | Low | ✅ None |
+| DescribeCostSummary | Generate cost report for TOS resources | Low | ✅ None |
 | CleanupMultipartUploads | Abort incomplete multipart uploads | Low | Low |
 | OptimizeStorageClass | Recommend storage class changes | Medium | Low |
 

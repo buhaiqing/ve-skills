@@ -132,7 +132,7 @@ Volcengine RDS for MySQL (云数据库 MySQL 版) provides managed MySQL databas
 
 ### State Transitions
 
-| Operation | Initial | Target | Poll | Max Wait |
+| Operation | Initial | Target | ⏱ Poll | ⏱ Max Wait |
 |-----------|---------|--------|------|----------|
 | Create | — | `RUNNING` | 10s | 600s |
 | Delete | any | gone | 10s | 600s |
@@ -159,7 +159,7 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk |
+| Operation | Description | ⚡ Complexity | 🛡️ Risk |
 |-----------|-------------|------------|------|
 | CreateDBInstance | Create MySQL instance | Medium | Low |
 | DescribeDBInstanceDetail | Get instance details | Low | None |
@@ -313,23 +313,23 @@ done
 
 #### Failure Recovery
 
-| Error Pattern | Retries | Backoff | Agent Action | UX Feedback |
-|---------------|---------|---------|--------------|-------------|
-| `InvalidParameter.InstanceName` | 0 | — | HALT | `[ERROR] Invalid instance name. How to fix: Use valid name format.` |
-| `InvalidParameter.NodeSpec` | 0 | — | HALT | `[ERROR] Invalid node specification. How to fix: Check available specs via DescribeDBInstanceSpecs.` |
-| `InvalidParameter.StorageSpace` | 0 | — | HALT | `[ERROR] Storage out of range [20-3000]GB. How to fix: Provide valid storage size.` |
-| `InvalidParameter.NetworkConfig` | 0 | — | HALT | `[ERROR] Invalid VPC/subnet. How to fix: Verify network exists in region.` |
-| `ResourceNotFound.Vpc` | 0 | — | HALT | `[ERROR] VPC not found.` |
-| `QuotaExceeded.InstanceCount` | 0 | — | HALT | `[ERROR] Max instances reached. Delete unused or request quota.` |
-| `OperationDenied.InstanceStatus` | 0 | — | HALT | `[ERROR] Cannot operate in current state. Wait for operation to complete.` |
-| `InsufficientBalance` | 0 | — | HALT | `[ERROR] InsufficientBalance. Recharge account.` |
-| `Throttling` | 3 | exponential | Back off | `⚠️ Rate limit. Retrying...` |
-| `InternalError` | 3 | 2s,4s,8s | Retry; HALT | `[ERROR] InternalError with RequestId: {RequestId}.` |
-| `ResourceAlreadyExists` | 0 | — | Ask reuse | `[ERROR] Instance name exists. Use unique name.` |
-| `Forbidden.RAM` | 0 | — | HALT | `[ERROR] Insufficient permissions. Add RAM policy.` |
-| `InvalidParameter.Parameter` | 0 | — | HALT | `[ERROR] Parameter value outside CheckingCode range. Fix value.` |
-| `ResourceNotFound.Instance` | 0 | — | HALT | `[ERROR] Instance not found. Verify ID.` |
-| `ResourceInUse` | 0 | — | HALT | `[ERROR] Instance in use by another operation. Wait.` |
+| Error Pattern | Agent Action | Recovery |
+|---------------|-------------|----------|
+| `InvalidParameter.InstanceName` | **HALT** | Use valid name format |
+| `InvalidParameter.NodeSpec` | **HALT** | Check available specs via DescribeDBInstanceSpecs |
+| `InvalidParameter.StorageSpace` | **HALT** | Provide valid storage size [20-3000]GB |
+| `InvalidParameter.NetworkConfig` | **HALT** | Verify network exists in region |
+| `ResourceNotFound.Vpc` | **HALT** | VPC not found; verify VPC ID |
+| `QuotaExceeded.InstanceCount` | **HALT** | Delete unused instances or request quota increase |
+| `OperationDenied.InstanceStatus` | **HALT** | Wait for current operation to complete |
+| `InsufficientBalance` | **HALT** | Recharge account |
+| `Throttling` | Retry 3x, exponential backoff | Rate limit reached; retry with backoff |
+| `InternalError` | Retry 3x with backoff (2s,4s,8s); **HALT** after 3 | Capture RequestId; retry or escalate |
+| `ResourceAlreadyExists` | Ask reuse | Use unique instance name |
+| `Forbidden.RAM` | **HALT** | Add RAM policy for RDS MySQL |
+| `InvalidParameter.Parameter` | **HALT** | Fix value to match CheckingCode range |
+| `ResourceNotFound.Instance` | **HALT** | Verify instance ID |
+| `ResourceInUse` | **HALT** | Wait for current operation to complete |
 
 ### Operation: Describe/ List Instances
 
@@ -341,7 +341,7 @@ ve rds_mysql DescribeDBInstanceDetail --InstanceId "{{user.instance_id}}"
 ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 100
 ```
 
-| Field | Path | Notes |
+| Field | 🔍 Path | Notes |
 |-------|------|-------|
 | Instance ID | `$.Result.InstanceId` | Primary identifier |
 | Name | `$.Result.InstanceName` | Human-readable |

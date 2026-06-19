@@ -143,7 +143,7 @@ ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capaci
 
 ### Instance State Transitions
 
-| Operation | Initial State | Target State | Poll Interval | Max Wait |
+| Operation | Initial State | Target State | ⏱ Poll Interval | ⏱ Max Wait |
 |-----------|---------------|--------------|---------------|----------|
 | RunInstances | — | `RUNNING` | 5s | 600s |
 | StartInstances | `STOPPED` | `RUNNING` | 5s | 300s |
@@ -174,7 +174,7 @@ ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
+| Operation | Description | ⚡ Complexity | 🛡️ Risk Level |
 |-----------|-------------|------------|------------|
 | RunInstances | Create one or more ECS instances | High | Medium |
 | DescribeInstances | Query instance list and details | Low | None |
@@ -276,8 +276,8 @@ func main() {
 |--------------|-------------|--------------|
 | `InvalidRegion.NotFound` | 0 | List valid regions via `DescribeRegions`; HALT |
 | `Unauthorized` | 0 | HALT; check IAM permissions |
-| `InternalError` | 3 | Retry with exponential backoff; HALT after 3 |
-| Throttling / 429 | 3 | Back off (2s, 4s, 8s); retry |
+| `InternalError` | 3 | Retry with backoff; HALT after 3 |
+| Throttling / 429 | 3 | Backoff 2s, 4s, 8s; retry |
 | `LimitExceeded.MaxResults` | 0 | Reduce MaxResults; retry once |
 
 ---
@@ -310,7 +310,7 @@ ve ecs RunInstances \
 ```
 
 **Common parameters:**
-| Parameter | Description | Example |
+| Parameter | ℹ️ Description | Example |
 |-----------|-------------|---------|
 | `InstanceType` | Instance spec | `ecs.g3i.large` |
 | `ImageId` | OS image | `image-xxxxx` |
@@ -364,20 +364,20 @@ done
 
 #### Failure Recovery
 
-| Error Pattern | Max Retries | Agent Action | UX Feedback |
-|--------------|-------------|--------------|-------------|
-| `InvalidImageId.NotFound` | 0 | HALT; verify image ID exists | `[ERROR] InvalidImageId.NotFound: Image not found. What happened: The specified image does not exist or is not available in this region. How to fix: Use DescribeImages to find valid image IDs. Next step: Run "ve ecs DescribeImages --Region {{user.region}}"` |
-| `InvalidInstanceType.ValueNotSupported` | 0 | HALT; list available types | `[ERROR] InvalidInstanceType: Instance type not supported. How to fix: Use DescribeInstanceTypes to find available types. Next step: Check available types in this region/zone.` |
-| `QuotaExceeded.Instance` | 0 | HALT | `[ERROR] QuotaExceeded: Instance quota reached. How to fix: Request quota increase or use a different region. Next step: Contact Volcengine support.` |
-| `InsufficientAvailableStock` | 1 | Retry with different instance type | `[ERROR] InsufficientAvailableStock: Specified instance type currently unavailable. How to fix: Try a different instance type or wait. Next step: Choose alternative type.` |
-| `InvalidSubnetId.NotFound` | 0 | HALT; verify subnet | `[ERROR] InvalidSubnetId: Subnet not found. How to fix: Verify the subnet ID and region match. Next step: Run "ve vpc DescribeSubnets --VpcId {{user.vpc_id}}"` |
-| `InvalidPasswordFormat` | 0 | HALT; fix password | `[ERROR] InvalidPasswordFormat: Password does not meet requirements. How to fix: 8-30 chars, must include 3 of: uppercase, lowercase, digits, special chars.` |
-| `InvalidSecurityGroupId.NotFound` | 0 | HALT; create security group | `[ERROR] InvalidSecurityGroupId: Security group not found. How to fix: Verify the security group ID or create one.` |
-| `Unauthorized` | 0 | HALT; check IAM | `[ERROR] Unauthorized: Insufficient permissions. How to fix: Ensure ECSFullAccess policy is attached.` |
-| `InternalError` | 3 | Retry with backoff | `[ERROR] InternalError: Server-side error. Will retry automatically.` |
-| `Throttling` | 3 | Exponential backoff | `⚠️ Rate limit reached. Retrying...` |
-| `ExpiredOrder` | 0 | Retry | `[ERROR] ExpiredOrder: Request expired. How to fix: Retry the creation.` |
-| `IncorrectInstanceStatus` | 0 | HALT; check status | `[ERROR] IncorrectInstanceStatus: Instance is not in a valid state for this operation.` |
+| Error Pattern | Max Retries | Agent Action → Recovery |
+|--------------|-------------|------------------------|
+| `InvalidImageId.NotFound` | 0 | HALT; verify image ID → `ve ecs DescribeImages` |
+| `InvalidInstanceType.ValueNotSupported` | 0 | HALT; list types → `ve ecs DescribeInstanceTypes` |
+| `QuotaExceeded.Instance` | 0 | HALT → request quota increase or change region |
+| `InsufficientAvailableStock` | 1 | Retry → try different type or zone |
+| `InvalidSubnetId.NotFound` | 0 | HALT; verify subnet → `ve vpc DescribeSubnets --VpcId {{user.vpc_id}}` |
+| `InvalidPasswordFormat` | 0 | HALT; fix → 8-30 chars, 3 of: upper, lower, digit, special |
+| `InvalidSecurityGroupId.NotFound` | 0 | HALT; verify or create SG |
+| `Unauthorized` | 0 | HALT; attach `ECSFullAccess` policy |
+| `InternalError` | 3 | Retry with backoff → HALT after 3 |
+| `Throttling` | 3 | Backoff 2s, 4s, 8s → retry |
+| `ExpiredOrder` | 0 | Retry the request |
+| `IncorrectInstanceStatus` | 0 | HALT; check status → prerequisite action |
 
 ---
 
@@ -714,7 +714,7 @@ ve ecs DescribeNetworkInterfaces \
 |--------------|-------------|--------------|
 | `InvalidInstanceId.NotFound` | 0 | HALT; verify instance ID |
 | `InvalidNetworkInterfaceId.NotFound` | 0 | HALT; verify ENI ID |
-| `IpAlreadyAssigned` | 0 | IP already assigned; skip |
+| `IpAlreadyAssigned` | 0 | Skip — IP already assigned |
 | `PrivateIpAddressCountExceeded` | 0 | HALT; ENI IP limit reached |
 | `InsufficientAvailableIpAddresses` | 0 | HALT; subnet IP exhausted |
 | `IncorrectInstanceStatus` | 0 | Instance must be `RUNNING` or `STOPPED` |
@@ -744,7 +744,7 @@ ve ecs DescribeInstances --Region "{{user.region}}" --Status "RUNNING" | jq -r '
 
 For each instance, analyze utilization:
 
-| Signal | Threshold | Classification |
+| Signal | Threshold | 🔍 Classification |
 |--------|-----------|---------------|
 | CPU avg < 5% for 7 days + Network < 1KB/s | Idle — candidate for deletion |
 | CPU avg < 15% for 7 days | Underutilized — candidate for downgrade |
@@ -794,7 +794,7 @@ ve ecs DescribeInstanceTypes --Region "{{user.region}}" | jq '.Result.InstanceTy
 
 #### Recommendation Logic
 
-| Current CPU Avg | Current Memory Avg | Recommendation |
+| Current CPU Avg | Current Memory Avg | 💡 Recommendation |
 |----------------|-------------------|----------------|
 | < 25% | < 40% | Downgrade 1 size (e.g., 2xlarge → xlarge) |
 | < 10% | < 20% | Downgrade 2 sizes (e.g., 2xlarge → large) |
@@ -911,7 +911,7 @@ ve ecs DescribeInstances --Region "{{user.region}}" | jq '[.Result.Instances[]] 
 ```markdown
 ## ECS Cost Summary — {{user.billing_cycle}}
 
-| Category | Count | Monthly Cost | Trend |
+| Category | Count | 💰 Monthly Cost | 📈 Trend |
 |----------|-------|-------------|-------|
 | Running Instances | 15 | ¥12,500 | ↑ 3% |
 | Stopped Instances | 3 | ¥1,200 | — |
@@ -919,7 +919,7 @@ ve ecs DescribeInstances --Region "{{user.region}}" | jq '[.Result.Instances[]] 
 | Snapshots | 45 | ¥450 | ↓ 10% |
 | **Total** | | **¥16,950** | |
 
-### Optimization Opportunities
+### 💡 Optimization Opportunities
 - 3 idle instances detected (est. ¥900/mo savings)
 - 5 orphaned disks detected (est. ¥150/mo savings)
 - 12 old snapshots eligible for cleanup (est. ¥60/mo savings)

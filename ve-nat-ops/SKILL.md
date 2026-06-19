@@ -148,11 +148,11 @@ ve nat Gateway DescribeNatGateways --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
+| Operation | Description | Complexity | Risk |
+|-----------|-------------|------------|------|
 | CreateNatGateway | Create NAT Gateway instance | Medium | Low |
 | DescribeNatGateways | Query NAT Gateway list | Low | None |
-| DeleteNatGateway | Delete NAT Gateway | Low | **High** — removes SNAT/DNAT |
+| DeleteNatGateway | Delete NAT Gateway | Low | **High** → removes SNAT/DNAT |
 | ModifyNatGatewayAttribute | Change name/spec | Low | Low |
 | CreateSnatRule | Create SNAT rule (outbound internet) | Medium | Low |
 | DescribeSnatRules | List SNAT rules | Low | None |

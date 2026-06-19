@@ -2,33 +2,24 @@
 
 ## Common Error Codes (≥ 10 Codes)
 
-| Error Code | HTTP Status | Meaning | Agent Action |
-|-----------|-------------|---------|-------------|
-| `EntityAlreadyExists` | 409 | User/role/policy/group already exists | HALT; use different name or use existing |
-| `NoSuchEntity` | 404 | User/role/policy/group does not exist | HALT; verify name or create first |
-| `DeleteConflict` | 409 | Cannot delete due to dependencies | HALT; remove all dependencies first |
-| `LimitExceeded` | 400 | Resource limit reached (e.g., 1000 users) | HALT; delete unused resources or request limit increase |
-| `MalformedPolicyDocument` | 400 | Policy JSON is invalid or has syntax errors | HALT; fix JSON syntax and validate |
-| `InvalidUserName` | 400 | User name violates naming rules | HALT; use 1-64 chars with alphanumeric + `+=,.@_-` |
-| `InvalidPolicyName` | 400 | Policy name violates naming rules | HALT; use 1-128 chars with alphanumeric + `_+=,.@-` |
-| `InvalidRoleName` | 400 | Role name violates naming rules | HALT; use 1-64 chars with alphanumeric + `_+=,.@-` |
-| `InvalidGroupName` | 400 | Group name violates naming rules | HALT; use 1-128 chars with alphanumeric + `_+=,.@-` |
-| `InvalidParameter` | 400 | Request parameter is invalid | HALT; check parameter format and constraints |
-| `EntityNotFound` | 404 | Referenced entity not found | HALT; verify entity exists |
-| `PolicyNotAttached` | 404 | Policy not attached to identity | HALT; policy already detached |
-| `DuplicatePolicyAttachment` | 409 | Policy already attached | HALT; policy already attached |
-| `Unauthorized` | 403 | Insufficient IAM permissions | HALT; user needs IAM permissions to perform action |
-| `AccessDenied` | 403 | Access denied by policy | HALT; check policy allows the action |
-| `PasswordPolicyViolation` | 400 | Password does not meet complexity | HALT; use stronger password |
-| `CredentialReportNotReady` | 400 | Credential report generation incomplete | Retry after delay |
-| `TooManyAccessKeys` | 400 | User already has 2 access keys | HALT; delete existing key first |
-| `InvalidPublicKey` | 400 | SSH public key is invalid | HALT; provide valid SSH key |
-| `InvalidCertificate` | 400 | SAML certificate is invalid | HALT; provide valid X.509 certificate |
-| `MalformedCertificate` | 400 | Certificate format is wrong | HALT; use PEM-encoded X.509 |
-| `DuplicateCertificate` | 409 | Certificate already in use | HALT; use different certificate |
-| `Throttling` | 429 | Rate limit exceeded | Exponential backoff (1s, 2s, 4s, 8s) |
-| `InternalError` | 500 | Server-side error | Retry with backoff; HALT after 3 retries |
-| `ServiceUnavailable` | 503 | Service temporarily unavailable | Retry with exponential backoff |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `EntityAlreadyExists` | **HALT** — user/role/policy/group already exists | Use different name or use existing resource |
+| `NoSuchEntity` | **HALT** — user/role/policy/group does not exist | Verify name or create first |
+| `DeleteConflict` | **HALT** — cannot delete due to dependencies | Remove all dependencies first (policies, groups, keys, profile) |
+| `LimitExceeded` | **HALT** — resource limit reached | Delete unused resources or request limit increase |
+| `MalformedPolicyDocument` | **HALT** — policy JSON has syntax errors | Fix JSON syntax and validate with `jq` |
+| `InvalidUserName` | **HALT** — name violates naming rules | Use 1-64 chars with alphanumeric + `+=,.@_-` |
+| `InvalidParameter` | **HALT** — request parameter invalid | Check parameter format and constraints |
+| `EntityNotFound` | **HALT** — referenced entity not found | Verify entity exists before referencing |
+| `DuplicatePolicyAttachment` | **HALT** — policy already attached | Policy already attached to identity |
+| `AccessDenied` | **HALT** — access denied by policy | Check policy allows the action |
+| `Unauthorized` | **HALT** — insufficient IAM permissions | User needs IAM permissions to perform action |
+| `PasswordPolicyViolation` | **HALT** — password not complex enough | Use stronger password per policy |
+| `TooManyAccessKeys` | **HALT** — user already has 2 access keys | Delete existing key first |
+| `Throttling` | Exponential backoff (1s, 2s, 4s, 8s) | Max 3 retries |
+| `InternalError` | Retry with backoff; **HALT** after 3 retries | Capture RequestId for escalation |
+| `ServiceUnavailable` | Retry with exponential backoff | Retry until service recovers |
 
 ## Diagnostic Order
 

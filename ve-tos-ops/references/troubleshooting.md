@@ -2,26 +2,25 @@
 
 ## Common Error Codes
 
-| Error Code | HTTP Status | Meaning | Agent Action |
-|-----------|-------------|---------|-------------|
-| `BucketAlreadyExists` | 409 | Bucket name taken globally | HALT; use a different bucket name |
-| `NoSuchBucket` | 404 | Bucket does not exist | HALT; create bucket first |
-| `NoSuchKey` | 404 | Object does not exist | HALT; verify object key |
-| `AccessDenied` | 403 | Insufficient permissions | Check IAM policy and bucket ACL |
-| `InvalidBucketName` | 400 | Bucket name format invalid | Fix name: 3-63 chars, lowercase, alphanumeric+hyphens |
-| `InvalidObjectName` | 400 | Object key is invalid | Fix key format |
-| `TooManyBuckets` | 400 | Bucket limit reached | HALT; delete unused or request increase |
-| `InvalidPart` | 400 | Invalid part for multipart upload | Retry upload part |
-| `EntityTooLarge` | 400 | Object exceeds size limit | Use multipart upload |
-| `IncompleteBody` | 400 | Request body incomplete | Retry with full body |
-| `InternalError` | 500 | Server-side error | Retry with backoff; HALT after 3 |
-| `Throttling` | 429 / 503 | Rate limit exceeded | Exponential backoff |
-| `SignatureDoesNotMatch` | 403 | Credential/signature mismatch | Verify AK/SK and timestamp |
-| `InvalidAccessKeyId` | 403 | Access key not found | Verify AK is correct |
-| `RequestTimeout` | 400 | Request timed out | Increase timeout; check network |
-| `MalformedXML` | 400 | XML body is malformed | Fix request body |
-| `BucketNotEmpty` | 409 | Bucket has objects | Delete objects first |
-| `ObjectNotAppendable` | 400 | Cannot append to non-appendable object | Use PUT or multipart |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `BucketAlreadyExists` | **HALT** — bucket name taken globally | Use a different bucket name |
+| `NoSuchBucket` | **HALT** — bucket does not exist | Create bucket first |
+| `NoSuchKey` | **HALT** — object does not exist | Verify object key |
+| `AccessDenied` | Check IAM policy and bucket ACL | Verify permissions allow the action |
+| `InvalidBucketName` | **HALT** — name format invalid | Use 3-63 chars, lowercase, alphanumeric+hyphens |
+| `InvalidObjectName` | **HALT** — object key invalid | Fix key format |
+| `TooManyBuckets` | **HALT** — bucket limit reached | Delete unused buckets or request increase |
+| `InvalidPart` | Retry upload part | Retry the failed multipart part |
+| `EntityTooLarge` | Use multipart upload | Object exceeds size limit for single PUT |
+| `IncompleteBody` | Retry with full body | Request body incomplete |
+| `InternalError` | Retry with backoff; **HALT** after 3 | Capture RequestId for escalation |
+| `Throttling` | Exponential backoff | Max 3 retries; respect `Retry-After` |
+| `SignatureDoesNotMatch` | **HALT** — credential/signature mismatch | Verify AK/SK and timestamp |
+| `InvalidAccessKeyId` | **HALT** — access key not found | Verify AK is correct |
+| `RequestTimeout` | Increase timeout; check network | Request timed out |
+| `BucketNotEmpty` | **HALT** — bucket has objects | Delete objects first |
+| `ObjectNotAppendable` | Use PUT or multipart | Cannot append to non-appendable object |
 
 ## Diagnostic Order
 

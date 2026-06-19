@@ -122,7 +122,7 @@ Volcengine Cache for Redis (缓存数据库 Redis 版) provides managed Redis-co
 
 ### State Transitions
 
-| Operation | Initial | Target | Poll | Max Wait |
+| Operation | Initial | Target | ⏱ Poll | ⏱ Max Wait |
 |-----------|---------|--------|------|----------|
 | Create | — | `Running` | 5s | 300s |
 | Delete | any | gone | 5s | 300s |
@@ -132,8 +132,11 @@ Volcengine Cache for Redis (缓存数据库 Redis 版) provides managed Redis-co
 ## Quick Start
 
 ### Prerequisites
-- [ ] `ve` CLI installed
-- [ ] `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION` set
+
+| Check | Status |
+|-------|--------|
+| `ve` CLI installed | ❌ |
+| `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION` set | ❌ |
 
 ### Verify Setup
 ```bash
@@ -147,22 +150,22 @@ ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk |
+| Operation | Description | ⚡ Complexity | 🛡️ Risk |
 |-----------|-------------|------------|------|
 | CreateDBInstance | Create Redis instance | Medium | Low |
 | DescribeDBInstanceDetail | Get instance details | Low | None |
 | DescribeDBInstances | List all instances | Low | None |
-| DeleteDBInstance | Delete instance | Low | **High** |
-| ModifyDBInstanceSpec | Change instance spec | Medium | Medium |
-| RestartDBInstance | Restart instance | Low | Medium |
+| 🔴 DeleteDBInstance | Delete instance | Low | **High** |
+| 🔴 ModifyDBInstanceSpec | Change instance spec | Medium | Medium |
+| 🔴 RestartDBInstance | Restart instance | Low | Medium |
 | DescribeDBInstanceParameters | Query parameters | Low | None |
-| ModifyDBInstanceParameters | Modify parameters | Medium | Medium |
+| 🔴 ModifyDBInstanceParameters | Modify parameters | Medium | Medium |
 | CreateAllowList | Create IP whitelist | Low | Low |
 | DescribeAllowLists | List allowlists | Low | None |
-| ModifyAllowList | Update allowlist | Low | Low |
-| DeleteAllowList | Delete allowlist | Low | Medium |
+| 🔴 ModifyAllowList | Update allowlist | Low | Low |
+| 🔴 DeleteAllowList | Delete allowlist | Low | Medium |
 | DescribeAccounts | List accounts | Low | None |
-| CreateAccount | Create DB account | Low | Medium |
+| 🔴 CreateAccount | Create DB account | Low | Medium |
 | DescribeBackups | List backups | Low | None |
 | CreateBackup | Create manual backup | Low | Low |
 
@@ -294,20 +297,20 @@ done
 
 #### Failure Recovery
 
-| Error Pattern | Retries | Backoff | Agent Action | UX Feedback |
-|---------------|---------|---------|--------------|-------------|
-| `InvalidParameter.InstanceName` | 0 | — | HALT | `[ERROR] InvalidParameter.InstanceName. How to fix: Use valid name (alphanumeric, hyphens, 1-128 chars).` |
-| `InvalidParameter.NetworkConfig` | 0 | — | HALT; verify VPC | `[ERROR] Invalid VPC/subnet config. How to fix: Verify network exists in target region.` |
-| `QuotaExceeded.InstanceCount` | 0 | — | HALT | `[ERROR] Max instance count reached. How to fix: Delete unused instances or request quota increase.` |
-| `OperationDenied.InstanceStatus` | 0 | — | HALT | `[ERROR] Operation not allowed in current instance state. How to fix: Wait for current operation to complete.` |
-| `ResourceNotFound.Vpc` | 0 | — | HALT | `[ERROR] VPC not found. How to fix: Verify VPC ID exists in region.` |
-| `InsufficientBalance` | 0 | — | HALT | `[ERROR] InsufficientBalance. How to fix: Recharge account.` |
-| `Throttling` | 3 | exponential | Back off | `⚠️ Rate limit reached. Retrying...` |
-| `InternalError` | 3 | 2s,4s,8s | Retry; HALT | `[ERROR] InternalError with RequestId: {RequestId}. How to fix: Retry or escalate.` |
-| `ResourceAlreadyExists` | 0 | — | Ask reuse | `[ERROR] Instance name already exists. Use unique name or reuse.` |
-| `InvalidParameter.Password` | 0 | — | HALT | `[ERROR] Invalid password format. How to fix: 8-32 chars, letters+digits+special chars.` |
-| `Forbidden.RAM` | 0 | — | HALT | `[ERROR] Insufficient permissions. How to fix: Add RAM policy for Redis.` |
-| `OperationDenied.DeletionProtection` | 0 | — | HALT | `[ERROR] Delete protection enabled. Disable first then retry.` |
+| Error Pattern | Agent Action | Recovery |
+|---------------|-------------|----------|
+| `InvalidParameter.InstanceName` | **HALT** | Use valid name (alphanumeric, hyphens, 1-128 chars) |
+| `InvalidParameter.NetworkConfig` | **HALT**; verify VPC | Verify network exists in target region |
+| `QuotaExceeded.InstanceCount` | **HALT** | Delete unused instances or request quota increase |
+| `OperationDenied.InstanceStatus` | **HALT** | Wait for current operation to complete |
+| `ResourceNotFound.Vpc` | **HALT** | Verify VPC ID exists in region |
+| `InsufficientBalance` | **HALT** | Recharge account |
+| `Throttling` | Retry 3x, exponential backoff | Rate limit reached; retry with backoff |
+| `InternalError` | Retry 3x with backoff (2s,4s,8s); **HALT** after 3 | Capture RequestId; retry or escalate |
+| `ResourceAlreadyExists` | Ask reuse | Use unique instance name or reuse existing |
+| `InvalidParameter.Password` | **HALT** | Use 8-32 chars with letters, digits, and special chars |
+| `Forbidden.RAM` | **HALT** | Add RAM policy for Redis |
+| `OperationDenied.DeletionProtection` | **HALT** | Disable deletion protection first then retry |
 
 ### Operation: Describe/ List Instances
 
@@ -321,7 +324,7 @@ ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1
 
 Present to user:
 
-| Field | Path | Notes |
+| Field | 🔍 Path | Notes |
 |-------|------|-------|
 | Instance ID | `$.Result.InstanceId` | Primary identifier |
 | Name | `$.Result.InstanceName` | Human-readable |

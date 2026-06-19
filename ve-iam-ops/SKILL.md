@@ -103,17 +103,23 @@ IAM (Identity and Access Management, 身份与访问管理) on Volcengine (火�
 - **Go SDK:** `github.com/volcengine/volc-sdk-golang/service/iam`
 - **Error responses:** JSON with `ResponseMetadata.Error` structure
 
-### Key Response Fields
+### Key Response Fields (Centralized JSON Paths)
 
-| Operation | Response Field | Type | Description |
-|-----------|---------------|------|-------------|
+| Operation | JSON Path | Type | Description |
+|-----------|-----------|------|-------------|
 | CreateUser | `$.Result.User.UserId` | string | Unique user ID |
 | CreateUser | `$.Result.User.Arn` | string | User ARN |
 | CreatePolicy | `$.Result.Policy.PolicyArn` | string | Policy ARN |
 | CreateRole | `$.Result.Role.RoleArn` | string | Role ARN |
-| AssumeRole | `$.Result.Credentials.AccessKeyId` | string | Temporary access key |
 | ListUsers | `$.Result.Users[].UserName` | array | User names |
 | ListPolicies | `$.Result.Policies[].PolicyName` | array | Policy names |
+| CreateAccessKey | `$.Result.AccessKey.AccessKeyId` | string | Access key ID |
+| CreateAccessKey | `$.Result.AccessKey.SecretKey` | string | **Show once** — mask in logs |
+| CreateAccessKey | `$.Result.AccessKey.Status` | string | Active/Inactive |
+| AssumeRole | `$.Result.Credentials.AccessKeyId` | string | Temporary access key |
+| AssumeRole | `$.Result.Credentials.SecretKey` | string | Temporary secret key |
+| AssumeRole | `$.Result.Credentials.SessionToken` | string | Session token |
+| AssumeRole | `$.Result.Credentials.Expiration` | string | Credential expiration time |
 
 ## Quick Start
 
@@ -142,27 +148,27 @@ ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
 | Operation | Description | Complexity | Risk Level |
 |-----------|-------------|------------|------------|
 | CreateUser | Create a new IAM user | Low | Low |
-| ListUsers | List all IAM users | Low | None |
-| GetUser | Get user details | Low | None |
+| ListUsers | List all IAM users | Low | ✅ None |
+| GetUser | Get user details | Low | ✅ None |
 | UpdateUser | Update user attributes | Low | Low |
-| DeleteUser | Delete an IAM user | Low | **High** — check dependencies |
+| DeleteUser | Delete an IAM user | Low | 🔴 **High** — check dependencies |
 | CreatePolicy | Create a custom policy | Medium | Medium |
 | AttachPolicy | Attach policy to user/role/group | Low | Medium |
 | DetachPolicy | Detach policy from identity | Low | Medium |
-| DeletePolicy | Delete a custom policy | Low | **High** — check attachments |
+| DeletePolicy | Delete a custom policy | Low | 🔴 **High** — check attachments |
 | CreateRole | Create an IAM role | Medium | Low |
 | AssumeRole | Get temporary credentials | Medium | Medium |
-| DeleteRole | Delete an IAM role | Low | **High** — check assumptions |
+| DeleteRole | Delete an IAM role | Low | 🔴 **High** — check assumptions |
 | CreateGroup | Create an IAM group | Low | Low |
 | AddUserToGroup | Add user to group | Low | Low |
 | RemoveUserFromGroup | Remove user from group | Low | Low |
-| DeleteGroup | Delete an IAM group | Low | **High** — check members |
+| DeleteGroup | Delete an IAM group | Low | 🔴 **High** — check members |
 | CreateSAMLProvider | Create SAML identity provider | High | Medium |
 | CreateOIDCProvider | Create OIDC identity provider | High | Medium |
-| ListAccessKeys | List user's access keys | Low | None |
-| CreateAccessKey | Create access key for user | Low | **High** — secret key shown once |
-| DeleteAccessKey | Delete user's access key | Low | **High** — irreversible |
-| GetCredentialReport | Generate credential report | Medium | None |
+| ListAccessKeys | List user's access keys | Low | ✅ None |
+| CreateAccessKey | Create access key for user | Low | 🔴 **High** — secret key shown once |
+| DeleteAccessKey | Delete user's access key | Low | 🔴 **High** — irreversible |
+| GetCredentialReport | Generate credential report | Medium | ✅ None |
 | UpdateLoginProfile | Set user console password | Low | Medium |
 
 ## Changelog
@@ -601,12 +607,7 @@ ve sts AssumeRole \
 
 #### Response Fields
 
-| Field | Path | Description |
-|-------|------|-------------|
-| Access Key ID | `$.Result.Credentials.AccessKeyId` | Temporary access key |
-| Secret Key | `$.Result.Credentials.SecretKey` | Temporary secret key |
-| Session Token | `$.Result.Credentials.SessionToken` | Session token |
-| Expiration | `$.Result.Credentials.Expiration` | Credential expiration time |
+See [Key Response Fields](#key-response-fields-centralized-json-paths) table above for `$.Result.Credentials.*` paths.
 
 ---
 
@@ -699,11 +700,7 @@ ve iam CreateAccessKey \
 
 #### Response Fields
 
-| Field | Path | Security Note |
-|-------|------|---------------|
-| Access Key ID | `$.Result.AccessKey.AccessKeyId` | Safe to display |
-| Secret Key | `$.Result.AccessKey.SecretKey` | **SHOW ONLY ONCE** — mask in logs |
-| Status | `$.Result.AccessKey.Status` | Active/Inactive |
+See [Key Response Fields](#key-response-fields-centralized-json-paths) table above for `$.Result.AccessKey.*` paths.
 
 ---
 

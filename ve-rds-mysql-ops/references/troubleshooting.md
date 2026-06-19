@@ -2,23 +2,23 @@
 
 ## Common Error Codes
 
-| Error Code | Meaning | Agent Action |
-|-----------|---------|--------------|
-| `InvalidParameter.InstanceName` | Name format invalid | Use valid name per naming rules |
-| `InvalidParameter.NodeSpec` | Spec invalid | Check available specs via DescribeDBInstanceSpecs |
-| `InvalidParameter.StorageSpace` | Storage out of range [20-3000]GB | Provide valid storage size |
-| `InvalidParameter.Parameter` | Value outside CheckingCode | Fix value to match CheckingCode range |
-| `InvalidParameter.NetworkConfig` | VPC/subnet invalid | Verify network exists in region |
-| `ResourceNotFound.Instance` | Instance doesn't exist | Verify InstanceId |
-| `ResourceNotFound.Account` | Account doesn't exist | Verify AccountName via DescribeDBAccounts |
-| `OperationDenied.InstanceStatus` | Invalid state | Wait for current operation to complete |
-| `QuotaExceeded.InstanceCount` | Max instances reached | Delete unused or raise quota |
-| `QuotaExceeded.AccountCount` | Max accounts reached | Delete unused accounts |
-| `InsufficientBalance` | No funds | Recharge account |
-| `InternalError` | Server error | Retry with backoff; HALT after 3 with RequestId |
-| `Throttling` | Rate limit | Exponential backoff |
-| `ResourceInUse` | In use by another operation | Wait for operation to complete |
-| `Forbidden.RAM` | Insufficient permissions | Add RAM policy for RDS |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `InvalidParameter.InstanceName` | **HALT** — name format invalid | Use valid name per naming rules |
+| `InvalidParameter.NodeSpec` | **HALT** — spec invalid | Check available specs via DescribeDBInstanceSpecs |
+| `InvalidParameter.StorageSpace` | **HALT** — storage out of range [20-3000]GB | Provide valid storage size |
+| `InvalidParameter.Parameter` | **HALT** — value outside CheckingCode | Fix value to match CheckingCode range |
+| `InvalidParameter.NetworkConfig` | **HALT** — VPC/subnet invalid | Verify network exists in region |
+| `ResourceNotFound.Instance` | **HALT** — instance doesn't exist | Verify InstanceId |
+| `ResourceNotFound.Account` | **HALT** — account doesn't exist | Verify AccountName via DescribeDBAccounts |
+| `OperationDenied.InstanceStatus` | **HALT** — invalid state | Wait for current operation to complete |
+| `QuotaExceeded.InstanceCount` | **HALT** — max instances reached | Delete unused or raise quota |
+| `QuotaExceeded.AccountCount` | **HALT** — max accounts reached | Delete unused accounts |
+| `InsufficientBalance` | **HALT** — no funds | Recharge account |
+| `InternalError` | Retry with backoff; **HALT** after 3 with RequestId | Server error |
+| `Throttling` | Exponential backoff | Rate limit |
+| `ResourceInUse` | Wait for operation to complete | In use by another operation |
+| `Forbidden.RAM` | **HALT** — insufficient permissions | Add RAM policy for RDS |
 
 ## Diagnostic Order
 

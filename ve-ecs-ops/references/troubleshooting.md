@@ -2,28 +2,28 @@
 
 ## Common Error Codes
 
-| Error Code | HTTP Status | Meaning | Agent Action |
-|-----------|-------------|---------|-------------|
-| `InvalidRegion.NotFound` | 404 | Region does not exist | List valid regions via `DescribeRegions`; HALT |
-| `InvalidImageId.NotFound` | 400 | Image does not exist | Verify image ID; list images via `DescribeImages` |
-| `InvalidInstanceType.ValueNotSupported` | 400 | Instance type not supported | List available types via `DescribeInstanceTypes` |
-| `InvalidSubnetId.NotFound` | 400 | Subnet does not exist | Verify subnet ID; check region match |
-| `InvalidVpcId.NotFound` | 400 | VPC does not exist | Verify VPC ID |
-| `InvalidSecurityGroupId.NotFound` | 400 | Security group not found | Verify security group ID |
-| `InvalidInstanceId.NotFound` | 400 | Instance does not exist | Verify instance ID |
-| `InvalidPasswordFormat` | 400 | Password doesn't meet requirements | Use 8-30 chars with 3 of: uppercase, lowercase, digit, special |
-| `QuotaExceeded.Instance` | 400 | Instance quota exceeded | HALT; request quota increase |
-| `QuotaExceeded.SecurityGroup` | 400 | Security group quota exceeded | HALT; delete unused or request increase |
-| `InsufficientAvailableStock` | 400 | Resource unavailable in zone | Try different instance type or zone |
-| `IncorrectInstanceStatus` | 400 | Instance in wrong state for operation | Check instance status; perform prerequisite action |
-| `InstanceExpired` | 400 | Instance has expired | Renew instance |
-| `Unauthorized` | 403 | Insufficient permissions | Attach required IAM policy (e.g., `ECSFullAccess`) |
-| `InternalError` | 500 | Server-side error | Retry with backoff; HALT after 3 retries |
-| `Throttling` | 429 | Rate limit exceeded | Exponential backoff; reduce request rate |
-| `ExpiredOrder` | 400 | Request has expired | Retry the operation |
-| `InvalidParameter` | 400 | Invalid request parameter | Check parameter against API docs |
-| `LimitExceeded.MaxResults` | 400 | MaxResults exceeds limit | Reduce to ≤ 100 |
-| `ResourceNotEnough` | 400 | Insufficient resources | Try different zone or instance type |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `InvalidRegion.NotFound` | HALT; query valid regions | `ve ecs DescribeRegions` |
+| `InvalidImageId.NotFound` | HALT; verify image ID | `ve ecs DescribeImages` |
+| `InvalidInstanceType.ValueNotSupported` | HALT; list available types | `ve ecs DescribeInstanceTypes` |
+| `InvalidSubnetId.NotFound` | HALT; verify subnet ID & region | `ve vpc DescribeSubnets` |
+| `InvalidVpcId.NotFound` | HALT; verify VPC ID | `ve vpc DescribeVpcs` |
+| `InvalidSecurityGroupId.NotFound` | HALT; verify SG ID | `ve ecs DescribeSecurityGroups` |
+| `InvalidInstanceId.NotFound` | HALT; verify instance ID | `ve ecs DescribeInstances` |
+| `InvalidPasswordFormat` | HALT; fix password | 8-30 chars, 3 of: upper, lower, digit, special |
+| `QuotaExceeded.Instance` | HALT; request increase | `ve ecs DescribeResourceQuota` |
+| `QuotaExceeded.SecurityGroup` | HALT; delete unused or increase | Check SG usage |
+| `InsufficientAvailableStock` | Retry different type/zone | `ve ecs DescribeInstanceTypes --InstanceTypeFamilyIds '["g3i"]'` |
+| `IncorrectInstanceStatus` | HALT; check status | Perform prerequisite action first |
+| `InstanceExpired` | HALT; renew instance | Renew in console or API |
+| `Unauthorized` | HALT; attach IAM policy | Attach `ECSFullAccess` |
+| `InternalError` | Retry 3x with backoff | HALT after 3 retries |
+| `Throttling` | Backoff 2s, 4s, 8s | Reduce request rate |
+| `ExpiredOrder` | Retry operation | Re-submit request |
+| `InvalidParameter` | HALT; check API docs | Fix parameter value |
+| `LimitExceeded.MaxResults` | Reduce to ≤ 100 | Retry once |
+| `ResourceNotEnough` | Try different zone/type | `ve ecs DescribeZones --Region "{{user.region}}"` |
 
 ## Diagnostic Order
 

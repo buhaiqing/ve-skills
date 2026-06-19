@@ -150,15 +150,15 @@ ve eip DescribeEipAddresses --Region {{env.VOLCENGINE_REGION}}
 | Operation | Description | Complexity | Risk Level |
 |-----------|-------------|------------|------------|
 | AllocateEipAddress | Allocate new EIP | Low | Low |
-| DescribeEipAddresses | Query EIP list and details | Low | None |
-| ReleaseEipAddress | Release EIP (must be unbound) | Low | **High** — irreversible |
+| DescribeEipAddresses | Query EIP list and details | Low | ✅ None |
+| ReleaseEipAddress | Release EIP (must be unbound) | Low | 🔴 **High** — irreversible |
 | AssociateEipAddress | Bind EIP to instance | Low | Medium |
 | DisassociateEipAddress | Unbind EIP from instance | Low | Medium |
 | ModifyEipAddressAttributes | Change EIP name/description | Low | Low |
 | ModifyEipBandwidth | Adjust bandwidth | Low | Medium |
-| DescribeEipBandwidth | Query bandwidth info | Low | None |
+| DescribeEipBandwidth | Query bandwidth info | Low | ✅ None |
 | RenewEipAddress | Renew prepaid EIP | Low | Low |
-| TagEipAddress | Add tags to EIP | Low | None |
+| TagEipAddress | Add tags to EIP | Low | ✅ None |
 
 ## Changelog
 

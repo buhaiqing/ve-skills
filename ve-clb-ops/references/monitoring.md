@@ -53,11 +53,11 @@ Monitor the ratio of healthy to unhealthy backends:
 Healthy Ratio = healthy_rs_count / (healthy_rs_count + unhealthy_rs_count)
 ```
 
-| Healthy Ratio | Concern Level |
-|---------------|--------------|
+| Healthy Ratio | Level |
+|---------------|-------|
 | 100% | Normal |
-| 50–99% | Warning — investigate failures |
-| < 50% | Critical — CLB may not serve traffic |
+| 50–99% | Warning → investigate failures |
+| < 50% | Critical → CLB may not serve traffic |
 
 ---
 

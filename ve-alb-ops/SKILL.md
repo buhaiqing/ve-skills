@@ -198,8 +198,8 @@ ve alb DescribeLoadBalancers --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
+| Operation | Description | Complexity | Risk |
+|-----------|-------------|------------|------|
 | CreateLoadBalancer | Create ALB instance | Medium | Low |
 | DescribeLoadBalancers | Query ALB list | Low | None |
 | DeleteLoadBalancer | Delete ALB | Low | **High** — irreversible |
@@ -342,10 +342,10 @@ ve alb DescribeLoadBalancers --Region "{{user.region}}" --LoadBalancerIds "[\"$A
 |--------------|-------------|---------|--------------|-------------|
 | `InvalidVpc.NotFound` | 0 | — | HALT; VPC does not exist | `[ERROR] VPC not found. Create VPC via ve-vpc-ops first.` |
 | `InvalidSubnet.NotFound` | 0 | — | HALT; subnet does not exist | `[ERROR] Subnet not found. Create subnet first.` |
-| `InvalidParameter` | 1 | — | Fix args from error message | `[ERROR] InvalidParameter: The request parameter is invalid.` |
-| `QuotaExceeded.LoadBalancer` | 0 | — | HALT; request quota increase | `[ERROR] ALB quota exceeded. Request quota increase from support.` |
+| `InvalidParameter` | 1 | — | Fix args from error message | `[ERROR] InvalidParameter: Request parameter is invalid.` |
+| `QuotaExceeded.LoadBalancer` | 0 | — | HALT; request quota increase | `[ERROR] ALB quota exceeded. Request increase from support.` |
 | `InsufficientBalance` | 0 | — | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
-| `Throttling` / 429 | 3 | 1s, 2s, 4s | Back off and retry | `⚠️ Rate limit reached. Retrying in {backoff}s...` |
+| `Throttling` / 429 | 3 | 1s, 2s, 4s | Back off and retry | `WARNING Rate limit reached. Retrying...` |
 | `InternalError` | 3 | 2s, 4s, 8s | Retry; then HALT | `[ERROR] InternalError. Retrying...` |
 
 ---
@@ -974,26 +974,26 @@ ve alb DeleteListener --Region "{{user.region}}" --ListenerId "{{user.listener_i
 
 ---
 
-## Error Taxonomy (≥ 10 Codes)
+## Error Taxonomy (>= 10 Codes)
 
-| Error Code | HTTP | Meaning | Max Retries | Backoff | Agent Action | UX Template |
-|------------|------|---------|-------------|---------|--------------|-------------|
-| `InvalidParameter` | 400 | Request parameter invalid | 1 | — | Fix parameter and retry | `[ERROR] InvalidParameter: Request parameter is invalid. Check the parameter against API docs.` |
-| `InvalidLoadBalancer.NotFound` | 404 | ALB instance not found | 0 | — | HALT; verify ALB ID | `[ERROR] ALB not found. Verify the ALB instance ID.` |
-| `InvalidListener.NotFound` | 404 | Listener not found | 0 | — | HALT; verify listener ID | `[ERROR] Listener not found. Verify the listener ID.` |
-| `InvalidServerGroup.NotFound` | 404 | Server group not found | 0 | — | HALT; verify server group ID | `[ERROR] Server group not found. Verify the server group ID.` |
-| `PortConflict.Listener` | 400 | Port already in use | 0 | — | HALT; use different port | `[ERROR] Port conflict. Choose a different port.` |
-| `QuotaExceeded.LoadBalancer` | 400 | ALB quota exceeded | 0 | — | HALT; request quota increase | `[ERROR] ALB quota exceeded. Request quota increase from support.` |
-| `QuotaExceeded.Listener` | 400 | Listener quota exceeded | 0 | — | HALT; request quota increase | `[ERROR] Listener quota exceeded.` |
-| `QuotaExceeded.ServerGroup` | 400 | Server group quota exceeded | 0 | — | HALT; request quota increase | `[ERROR] Server group quota exceeded.` |
-| `IncorrectStatus.LoadBalancer` | 400 | ALB in wrong state for operation | 3 | 10s | Wait for stable status | `[WARNING] ALB not in correct state. Waiting...` |
-| `DependencyViolation.Listener` | 400 | Listeners still attached | 0 | — | HALT; delete listeners first | `[ERROR] Listeners still attached. Delete them first.` |
-| `InvalidCertificate.NotFound` | 404 | TLS certificate not found | 0 | — | HALT; create cert first | `[ERROR] Certificate not found. Create the certificate first.` |
-| `InvalidRule.Pattern` | 400 | URL pattern invalid | 0 | — | HALT; fix pattern | `[ERROR] Invalid URL pattern. Use wildcard patterns like /api/*.` |
-| `Forbidden.RAM` | 403 | IAM permission denied | 0 | — | HALT; check IAM policies | `[ERROR] IAM permission denied. Check Volcengine IAM policies.` |
-| `Throttling` | 429 | Rate limit exceeded | 3 | 1s, 2s, 4s | Back off and retry | `⚠️ Rate limit reached. Retrying in {backoff}s...` |
-| `InternalError` | 500 | Server-side error | 3 | 2s, 4s, 8s | Retry with backoff | `[ERROR] InternalError: Server-side error occurred. Retrying...` |
-| `InsufficientBalance` | 400 | Account balance insufficient | 0 | — | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
+| Error Code | Action | Recovery |
+|------------|--------|----------|
+| `InvalidParameter` | Fix param & retry (1x) | `[ERROR] InvalidParameter: Request parameter is invalid. Check against API docs.` |
+| `InvalidLoadBalancer.NotFound` | HALT; verify ALB ID | `[ERROR] ALB not found. Verify the ALB instance ID.` |
+| `InvalidListener.NotFound` | HALT; verify listener ID | `[ERROR] Listener not found. Verify the listener ID.` |
+| `InvalidServerGroup.NotFound` | HALT; verify server group ID | `[ERROR] Server group not found. Verify the server group ID.` |
+| `PortConflict.Listener` | HALT; use different port | `[ERROR] Port conflict. Choose a different port.` |
+| `QuotaExceeded.LoadBalancer` | HALT; request quota increase | `[ERROR] ALB quota exceeded. Request quota increase from support.` |
+| `QuotaExceeded.Listener` | HALT; request quota increase | `[ERROR] Listener quota exceeded.` |
+| `QuotaExceeded.ServerGroup` | HALT; request quota increase | `[ERROR] Server group quota exceeded.` |
+| `IncorrectStatus.LoadBalancer` | Wait 10s; retry (3x) | `[WARNING] ALB not in correct state. Waiting...` |
+| `DependencyViolation.Listener` | HALT; delete listeners first | `[ERROR] Listeners still attached. Delete them first.` |
+| `InvalidCertificate.NotFound` | HALT; create cert first | `[ERROR] Certificate not found. Create the certificate first.` |
+| `InvalidRule.Pattern` | HALT; fix pattern | `[ERROR] Invalid URL pattern. Use wildcard patterns like /api/*.` |
+| `Forbidden.RAM` | HALT; check IAM policies | `[ERROR] IAM permission denied. Check Volcengine IAM policies.` |
+| `Throttling` | Backoff 1s/2s/4s; retry (3x) | `WARNING Rate limit reached. Retrying...` |
+| `InternalError` | Backoff 2s/4s/8s; retry (3x) | `[ERROR] InternalError: Server-side error occurred. Retrying...` |
+| `InsufficientBalance` | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
 
 ## Prerequisites
 

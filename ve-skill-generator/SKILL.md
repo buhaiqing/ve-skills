@@ -20,16 +20,19 @@ compatibility: >-
   `references/user-experience-spec.md` (mandatory UX requirements for generated skills),
   `references/execution-environment.md` (CLI + Go SDK setup details),
   `references/cli-behavior.md` (verified `ve` CLI behavioral notes),
+  `references/rubric.md` (GCL rubric for generated skills),
+  `references/prompt-templates.md` (GCL prompt skeletons for generated skills),
   and agentskills.io frontmatter conventions.
 metadata:
   author: volcengine
-  version: "1.1.0"
-  last_updated: "2026-06-04"
+  version: "1.2.0"
+  last_updated: "2026-06-19"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   type: meta-skill
   guidance_freedom_level: medium
   go_script_syntax_minimum: "1.14"
   go_jit_runtime_version: "1.21+"
+  cli_applicability: sdk-only
 ---
 
 # Volcengine Skill Generator (Meta-Skill)
@@ -175,16 +178,16 @@ Before and during generation, check against these common anti-patterns:
 
 | # | Anti-Pattern | How It Manifests | Correction |
 |---|-------------|-----------------|------------|
-| 1 | **Skill = Prompt** | Writing conversational instructions instead of executable steps | Use imperative numbered steps; define I/O; separate triggers from execution |
-| 2 | **Skill = Human Doc** | Explaining concepts instead of instructing the agent | Use model-parsable structured language; define behavior boundaries |
-| 3 | **Feature Bundling** | One skill tries to do everything (create + monitor + backup + billing) | Split into single-responsibility skills; delegate to existing skills |
-| 4 | **API Hallucination** | Inventing field names, JSON paths, or CLI flags not in official docs | Cross-reference every field against OpenAPI or verified CLI output |
-| 5 | **Credential Leaking** | Printing, logging, or echoing secret values in any execution path | Mask all credentials with `***` / `<masked>`; check existence only |
-| 6 | **No Safety Gate** | Destructive operations (delete, stop, release) without explicit confirmation | Add confirmation step before every destructive path (CLI + SDK) |
-| 7 | **Hardcoded Values** | Regions, timeouts, or limits baked into instructions | Use `{{env.*}}` / `{{user.*}}` placeholders; document defaults separately |
-| 8 | **Missing Failure Path** | Only documenting the success path; no error handling | Add failure recovery table with error codes, retry logic, HALT conditions |
-| 9 | **Over-Engineering** | Adding advanced features before core flow works | Follow evaluation-driven approach: start minimal, expand step by step |
-| 10 | **Redundant Redundancy** | Repeating the same info across SKILL.md and references | SKILL.md is entry point; references provide depth — no duplication |
+| 1 | ❌ **Skill = Prompt** | Writing conversational instructions instead of executable steps | Use imperative numbered steps; define I/O; separate triggers from execution |
+| 2 | ❌ **Skill = Human Doc** | Explaining concepts instead of instructing the agent | Use model-parsable structured language; define behavior boundaries |
+| 3 | ❌ **Feature Bundling** | One skill tries to do everything (create + monitor + backup + billing) | Split into single-responsibility skills; delegate to existing skills |
+| 4 | ❌ **API Hallucination** | Inventing field names, JSON paths, or CLI flags not in official docs | Cross-reference every field against OpenAPI or verified CLI output |
+| 5 | ❌ **Credential Leaking** | Printing, logging, or echoing secret values in any execution path | Mask all credentials with `***` / `<masked>`; check existence only |
+| 6 | ❌ **No Safety Gate** | Destructive operations (delete, stop, release) without explicit confirmation | Add confirmation step before every destructive path (CLI + SDK) |
+| 7 | ❌ **Hardcoded Values** | Regions, timeouts, or limits baked into instructions | Use `{{env.*}}` / `{{user.*}}` placeholders; document defaults separately |
+| 8 | ❌ **Missing Failure Path** | Only documenting the success path; no error handling | Add failure recovery table with error codes, retry logic, HALT conditions |
+| 9 | ❌ **Over-Engineering** | Adding advanced features before core flow works | Follow evaluation-driven approach: start minimal, expand step by step |
+| 10 | ❌ **Redundant Redundancy** | Repeating the same info across SKILL.md and references | SKILL.md is entry point; references provide depth — no duplication |
 
 ---
 
@@ -474,7 +477,7 @@ Optional later improvements: PR template checkbox linking to that doc; periodic 
 
 #### 9. AIOps Compliance (when monitoring/alarm/diagnosis in scope)
 - [ ] Multi-metric correlation (≥ 4 anomaly patterns), cross-skill diagnosis decision tree
-- [ ] Delegation matrix, proactive inspection, alarm storm handling per `aiops-best-practices.md`
+- [ ] Delegation matrix, proactive inspection, alarm storm handling per `references/advanced/aiops-best-practices.md`
 
 ### P1 — SHOULD PASS
 
@@ -490,7 +493,120 @@ Optional later improvements: PR template checkbox linking to that doc; periodic 
 
 > Add a Volcengine skill for ECS in this repo: instances, disks, snapshots. Docs: `https://www.volcengine.com/docs/6396`. Go SDK (JIT fallback). CLI: `ve ecs`.
 
-**Expected output:** `ve-ecs-ops` tree with **real** operationIds, Go SDK types, response paths, **and** matching `ve` commands (primary path), plus JIT Go SDK fallback documentation.
+**Expected output:** → `ve-ecs-ops` tree with **real** operationIds, Go SDK types, response paths, **and** matching `ve` commands (primary path), plus JIT Go SDK fallback documentation.
+
+---
+
+## Quality Gate (GCL)
+
+> This chapter implements the Generator-Critic-Loop defined in `../../AGENTS.md`
+> §3-§9. For this **meta-skill**, GCL is **optional** (`max_iter=3`) because the
+> skill's output is generated skill files, not cloud operations. The GCL loop
+> verifies that **generated skill artifacts** meet the Five Core Standards and
+> inherit GCL correctly. The Generator (the agent executing generation) and the
+> Critic (an isolated prompt scoring the output) MUST live in separate contexts
+> — see `../../AGENTS.md` §9 anti-patterns.
+
+### 4-Tier Operation Classification
+
+Every operation this meta-skill exposes MUST be classified into exactly one of
+the four tiers below. The classification drives `max_iter` and the Safety
+floor in the GCL loop.
+
+| Tier | Typical operations | `max_iter` | Safety floor |
+|---|---|---|---|
+| **Destructive** | — (generation is additive) | — | — |
+| **State-changing** | `GenerateSkill`, `UpdateSkill` | 3 | 1.0 (mandatory) |
+| **Mutating** | — (all generation is state-changing) | — | — |
+| **Read-only** | `AnalyzeOpenAPI`, `ReviewSkill` | 3 | ≥ 0 |
+
+### Loop contract (Generator → Critic → Orchestrator)
+
+1. **Pre-flight (Orchestrator)** — resolve `{{user.*}}` inputs; classify the
+   operation into one of the four tiers above; load `references/rubric.md` (GCL
+   rubric reference for generated skills) and `references/prompt-templates.md`
+   (GCL prompt skeleton reference for generated skills).
+2. **Generate** — execute the generation workflow per the
+   `## Evaluation-Driven Generation Workflow` chapter. Capture the generated
+   file tree, template-versus-output diff, unresolved placeholder report, and
+   P0/P1 checklist results into
+   `./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json` with `redaction_pass: true`.
+3. **Critique** — isolated prompt; score the generated output for correctness /
+   safety / idempotency / traceability / spec_compliance per the rubric. Emit
+   ≤ 3 actionable suggestions. The Critic MUST NOT see the raw user request.
+4. **Decide** — first match wins:
+   - Safety = 0 on a State-changing op → **ABORT** (no partial return).
+   - All dimensions meet threshold → return Generator output.
+   - `iter < max_iter` → inject suggestions into Generator and loop.
+   - Else → return best-so-far + unresolved rubric items.
+
+### Mandatory deliverables for every generated skill
+
+A generated skill is **incomplete** if it does NOT ship all three GCL
+deliverables:
+
+| Deliverable | Path in generated skill | Required content |
+|---|---|---|
+| **GCL chapter** | `SKILL.md` section `## Quality Gate (GCL)` | 4-tier table; loop contract (4 steps); cross-skill delegation table; trace spec; explicit pointer to the rubric and prompt templates below |
+| **Rubric** | `references/rubric.md` | 5-dimension scoring (Correctness / Safety / Idempotency / Traceability / Spec Compliance); product-specific safety rules; product-specific correctness checks; ≥ 10 product-specific error codes mapped to HALT vs retry; **Safety = 0 → ABORT** rule |
+| **Prompt templates** | `references/prompt-templates.md` | Generator prompt (with `{{env.*}}` / `{{user.*}}` / `{{output.*}}` placeholders); Critic prompt (Critic MUST NOT see the raw user request); Orchestrator prompt; ≥ 1 verbatim safety prompt per Destructive / State-changing op |
+
+### Meta-skill-specific safety rules
+
+These rules apply to the **generation process itself** — they verify the
+generated skill is safe to ship:
+
+- [ ] Generated skill MUST NOT contain real credentials — only `<masked>` and
+      `{{env.*}}` placeholders (zero credential literals).
+- [ ] Generated rubric (`references/rubric.md`) MUST include all 5 scoring
+      dimensions (Correctness / Safety / Idempotency / Traceability / Spec
+      Compliance).
+- [ ] Generated prompt templates (`references/prompt-templates.md`) MUST include
+      a Critic prompt that hides the raw user request (Critic MUST NOT see it).
+- [ ] Generated skill MUST reference `references/rubric.md` and
+      `references/prompt-templates.md` in its `## Reference Directory`.
+- [ ] Generated skill MUST have valid YAML frontmatter with `name` matching
+      `ve-[product]-ops` pattern and `cli_applicability` set correctly.
+
+### Trace (mandatory for every GCL run)
+
+Every GCL run MUST persist a JSON trace to
+`./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json` with these fields:
+
+- `skill`, `request` (sanitized), `rubric_version`
+- `iterations[]` — each with `iter`, `generator` (generated file tree /
+  placeholder report / checklist results), `critic` (scores / suggestions /
+  blocking), `decision`
+- `final` — `status` (`PASS` / `MAX_ITER` / `SAFETY_FAIL`), `iter`, `output`
+- `redaction_pass: true` — the trace MUST NOT contain real credential values;
+  only `<masked>` or `sha256:<first-8-hex>` and length
+
+`audit-results/` is in the repo's `.gitignore` (added 2026-06-04).
+
+### Cross-skill delegation (extends `## Role Boundary` above)
+
+When the Critic surfaces a cross-product gap, the **Generator** (not the
+Critic) delegates on the next iteration. The Critic only emits suggestions.
+
+| Critic finding | Delegate to |
+|---|---|
+| Generated skill references a product that already has an ops skill | `ve-[product]-ops` — delegate for verification of accuracy |
+| Generated skill needs billing/IAM operation verification | `ve-billing-ops` / `ve-iam-ops` (when present) |
+| Generated skill includes monitoring/alarm patterns | `ve-cms-ops` — delegate for monitoring accuracy check |
+| OpenAPI spec analysis reveals missing operations | `AnalyzeOpenAPI` read-only pass — re-analyze before next iteration |
+
+### Anti-patterns (from `../../AGENTS.md` §9 — banned)
+
+Generated skills MUST NOT introduce any of these:
+- Shared context for G and C (defeats independence).
+- Subjective scoring without the rubric.
+- Unbounded iteration loops.
+- Critic seeing the raw user request (encourages rubber-stamping).
+- Silently downgrading on Safety = 0.
+- Trace not persisted.
+- Critic mutating resources.
+- Real credential values in trace.
+- GCL bypass for "obviously safe" ops.
 
 ---
 
@@ -506,7 +622,7 @@ Optional later improvements: PR template checkbox linking to that doc; periodic 
 | [prompt-library.md](references/prompt-library.md) | Structured prompts for the generation lifecycle |
 | [optimization-analysis.md](references/optimization-analysis.md) | Three-dimensional optimization framework |
 | [user-experience-spec.md](references/user-experience-spec.md) | Mandatory UX requirements for all generated skills |
-| [aiops-best-practices.md](references/aiops-best-practices.md) | Mandatory AIOps patterns for monitoring/diagnosis skills |
+| [aiops-best-practices.md](references/advanced/aiops-best-practices.md) | Mandatory AIOps patterns for monitoring/diagnosis skills |
 | [generation-guidance.md](references/generation-guidance.md) | Description optimization, eval queries, generation telemetry, version pinning |
 | [rubric.md](references/rubric.md) | GCL rubric — scoring dimensions for generated skills |
 | [prompt-templates.md](references/prompt-templates.md) | GCL prompt skeletons — Generator/Critic/Orchestrator templates |

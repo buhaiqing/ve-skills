@@ -19,17 +19,17 @@
 
 ## 1. Error Taxonomy
 
-| Category | Code Pattern | HALT or Retry | Example |
-|----------|-------------|---------------|---------|
-| **Parameter Error** | `Invalid*.*` | HALT | `InvalidLoadBalancerId.NotFound` |
-| **Resource Error** | `*.NotFound` | HALT | `InvalidSubnetId.NotFound` |
-| **Conflict Error** | `*.Conflict` | HALT | `PortConflict.Listener` |
-| **Quota Error** | `QuotaExceeded.*` | HALT | `QuotaExceeded.LoadBalancer` |
-| **Status Error** | `IncorrectStatus.*` | HALT | `IncorrectStatus.LoadBalancer` |
-| **Dependency Error** | `DependencyViolation` | HALT | `DependencyViolation.Listener` |
-| **IAM Error** | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
-| **Rate Limit** | `Throttling` | Retry | `Throttling` |
-| **Server Error** | `InternalError` | Retry | `InternalError` |
+| Category | Code Pattern | HALT/Retry | Example |
+|----------|-------------|------------|---------|
+| Parameter Error | `Invalid*.*` | HALT | `InvalidLoadBalancerId.NotFound` |
+| Resource Error | `*.NotFound` | HALT | `InvalidSubnetId.NotFound` |
+| Conflict Error | `*.Conflict` | HALT | `PortConflict.Listener` |
+| Quota Error | `QuotaExceeded.*` | HALT | `QuotaExceeded.LoadBalancer` |
+| Status Error | `IncorrectStatus.*` | HALT | `IncorrectStatus.LoadBalancer` |
+| Dependency Error | `DependencyViolation` | HALT | `DependencyViolation.Listener` |
+| IAM Error | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
+| Rate Limit | `Throttling` | Retry | `Throttling` |
+| Server Error | `InternalError` | Retry | `InternalError` |
 
 ---
 
@@ -37,19 +37,13 @@
 
 ### QuotaExceeded.LoadBalancer
 
-```
-Error Code: QuotaExceeded.LoadBalancer
-Message: The maximum number of CLBs per region has been reached.
-```
+`Error: QuotaExceeded.LoadBalancer — max CLBs per region reached.`
 
 **Resolution:** Request quota increase via Volcengine console.
 
 ### InvalidSubnetId.NotFound
 
-```
-Error Code: InvalidSubnetId.NotFound
-Message: The specified SubnetId does not exist.
-```
+`Error: InvalidSubnetId.NotFound — SubnetId does not exist.`
 
 **Resolution:**
 ```bash
@@ -62,19 +56,13 @@ ve vpc DescribeSubnets --Region "$VOLCENGINE_REGION" --VpcId "$VPC_ID"
 
 ### PortConflict.Listener
 
-```
-Error Code: PortConflict.Listener
-Message: A listener with the same protocol and port already exists.
-```
+`Error: PortConflict.Listener — same protocol+port already exists.`
 
 **Resolution:** Use a different port, or delete the conflicting listener.
 
 ### ProtocolNotSupported
 
-```
-Error Code: ProtocolNotSupported
-Message: The specified protocol is not supported for this CLB.
-```
+`Error: ProtocolNotSupported — invalid protocol for this CLB.`
 
 **Resolution:** Use valid protocols: `TCP`, `UDP`, `HTTP`, `HTTPS`.
 
@@ -84,10 +72,7 @@ Message: The specified protocol is not supported for this CLB.
 
 ### BackendServer.NotFound
 
-```
-Error Code: BackendServer.NotFound
-Message: The specified backend server does not exist.
-```
+`Error: BackendServer.NotFound — backend server does not exist.`
 
 **Resolution:** Verify ECS instance exists:
 ```bash
@@ -96,10 +81,7 @@ ve ecs DescribeInstances --Region "$VOLCENGINE_REGION" --InstanceIds "[\"$ECS_ID
 
 ### InvalidPort.Range
 
-```
-Error Code: InvalidPort.Range
-Message: The specified port is out of range.
-```
+`Error: InvalidPort.Range — port out of range (1–65535).`
 
 **Resolution:** Port range is 1–65535.
 

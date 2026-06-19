@@ -187,8 +187,8 @@ ve vpn DescribeVpnGateways --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
+| Operation | Description | Complexity | Risk |
+|-----------|-------------|------------|------|
 | CreateVpnGateway | Create a VPN Gateway | Medium | Low |
 | DescribeVpnGateways | Query VPN Gateway list | Low | None |
 | DeleteVpnGateway | Delete a VPN Gateway | Low | **High** — irreversible |
@@ -371,14 +371,14 @@ done
 
 | Error Pattern | Max Retries | Agent Action | UX Feedback |
 |--------------|-------------|--------------|-------------|
-| `InvalidVpcId.NotFound` | 0 | HALT; verify VPC ID | `[ERROR] InvalidVpcId: VPC not found. What happened: The specified VPC does not exist. How to fix: Use DescribeVpcs to find valid VPC IDs.` |
-| `InvalidSubnetId.NotFound` | 0 | HALT; verify subnet ID | `[ERROR] InvalidSubnetId: Subnet not found. What happened: The specified subnet does not exist in this VPC. How to fix: Use DescribeSubnets to find valid subnet IDs.` |
-| `QuotaExceeded.VpnGateway` | 0 | HALT | `[ERROR] QuotaExceeded: VPN Gateway quota reached. How to fix: Request quota increase or delete unused gateways.` |
-| `InvalidBandwidth.ValueNotSupported` | 0 | HALT | `[ERROR] InvalidBandwidth: Bandwidth value not supported. How to fix: Use value between 1-1000 Mbps.` |
-| `InvalidVpnGatewayName.Duplicate` | 0 | HALT | `[ERROR] DuplicateName: VPN Gateway name already exists. How to fix: Use a unique name.` |
-| `InsufficientBalance` | 0 | HALT | `[ERROR] InsufficientBalance: Account balance insufficient. How to fix: Recharge your account.` |
-| `InternalError` | 3 | Retry with backoff | `[ERROR] InternalError: Server-side error. Will retry automatically.` |
-| `Throttling` | 3 | Exponential backoff | `⚠️ Rate limit reached. Retrying...` |
+| `InvalidVpcId.NotFound` | 0 | HALT; verify VPC ID | `[ERROR] InvalidVpcId: VPC not found. Use DescribeVpcs to find valid IDs.` |
+| `InvalidSubnetId.NotFound` | 0 | HALT; verify subnet ID | `[ERROR] InvalidSubnetId: Subnet not found. Use DescribeSubnets to find valid IDs.` |
+| `QuotaExceeded.VpnGateway` | 0 | HALT | `[ERROR] QuotaExceeded: VPN Gateway quota reached. Request increase or delete unused.` |
+| `InvalidBandwidth.ValueNotSupported` | 0 | HALT | `[ERROR] InvalidBandwidth: Use 1-1000 Mbps.` |
+| `InvalidVpnGatewayName.Duplicate` | 0 | HALT | `[ERROR] DuplicateName: Use a unique name.` |
+| `InsufficientBalance` | 0 | HALT | `[ERROR] InsufficientBalance: Recharge your account.` |
+| `InternalError` | 3 | Retry with backoff | `[ERROR] InternalError: Server-side error. Will retry.` |
+| `Throttling` | 3 | Exponential backoff | `WARNING Rate limit reached. Retrying...` |
 
 ---
 
@@ -544,11 +544,11 @@ done
 | `VpnGateway.NotAvailable` | 0 | Wait and retry | `[ERROR] VpnGateway.NotAvailable: VPN Gateway not in Available state.` |
 | `CustomerGateway.NotAvailable` | 0 | Wait and retry | `[ERROR] CustomerGateway.NotAvailable: Customer Gateway not in Available state.` |
 | `QuotaExceeded.VpnConnection` | 0 | HALT | `[ERROR] QuotaExceeded: IPSec connection quota reached.` |
-| `InvalidLocalSubnet.Malformed` | 0 | HALT | `[ERROR] InvalidLocalSubnet: Local subnet CIDR format invalid.` |
-| `InvalidRemoteSubnet.Malformed` | 0 | HALT | `[ERROR] InvalidRemoteSubnet: Remote subnet CIDR format invalid.` |
-| `SubnetConflict` | 0 | HALT | `[ERROR] SubnetConflict: Subnet CIDRs overlap.` |
+| `InvalidLocalSubnet.Malformed` | 0 | HALT | `[ERROR] InvalidLocalSubnet: CIDR format invalid.` |
+| `InvalidRemoteSubnet.Malformed` | 0 | HALT | `[ERROR] InvalidRemoteSubnet: CIDR format invalid.` |
+| `SubnetConflict` | 0 | HALT | `[ERROR] SubnetConflict: CIDRs overlap.` |
 | `InternalError` | 3 | Retry with backoff | `[ERROR] InternalError: Server-side error. Will retry.` |
-| `Throttling` | 3 | Exponential backoff | `⚠️ Rate limit reached. Retrying...` |
+| `Throttling` | 3 | Exponential backoff | `WARNING Rate limit reached. Retrying...` |
 
 ---
 

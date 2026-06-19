@@ -1,0 +1,23 @@
+# Billing Example Configuration
+# Base defaults shared across environments
+defaults: &defaults
+  region: "cn-beijing"
+  budget_alert_threshold: 80
+  budget_alert_email: "finance@company.com"
+  currency: "CNY"
+  cost_allocation:
+    - tag_key: "project"
+    - tag_key: "department"
+    - tag_key: "environment"
+
+development:
+  <<: *defaults
+  budget_alert_threshold: 90
+
+staging:
+  <<: *defaults
+  budget_alert_threshold: 85
+
+production:
+  <<: *defaults
+  budget_alert_threshold: 80

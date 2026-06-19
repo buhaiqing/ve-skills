@@ -1,27 +1,24 @@
-project:
-  name: prod-app-logs
-  description: Production application logging
-  region: cn-beijing
+# SLS (Simple Log Service) Example Configuration
+# Environment-specific overrides using YAML anchors
+# Base defaults shared across all environments
+defaults: &defaults
+  region: "cn-beijing"
+  retention_days: 30
+  enable_alerting: true
+  notification_type: "email"
+  notification_target: "ops@company.com"
 
-topics:
-  - name: nginx-access
-    ttl: 7
-    shard_count: 2
-    index:
-      full_text:
-        case_sensitive: false
-      key_value:
-        status: { type: long }
-        request_time: { type: float }
-  - name: app-error
-    ttl: 30
-    shard_count: 1
-    index:
-      full_text:
-        case_sensitive: false
+development:
+  <<: *defaults
+  enable_alerting: false
+  notification_target: "dev@company.com"
 
-shipper:
-  topic: nginx-access
-  destination_type: TOS
-  bucket: logs-archive
-  prefix: nginx/
+staging:
+  <<: *defaults
+  region: "cn-shanghai"
+
+production:
+  <<: *defaults
+  retention_days: 90
+  enable_alerting: true
+  notification_target: "ops@company.com"

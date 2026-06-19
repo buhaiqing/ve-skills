@@ -406,6 +406,7 @@ func main() {
     instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
     instance.SetRegion(os.Getenv("VOLCENGINE_REGION"))
 
+    // CreateLoadBalancer: creates an ALB instance
     resp, err := instance.CreateLoadBalancer(&alb.CreateLoadBalancerInput{
         VpcId:            "vpc-xxx",
         SubnetId:         "subnet-xxx",
@@ -422,6 +423,7 @@ func main() {
 ### DescribeLoadBalancers
 
 ```go
+// listALBs: lists all ALB instances
 func listALBs() {
     instance := alb.NewInstance()
     instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
@@ -440,6 +442,7 @@ func listALBs() {
 ### CreateListener
 
 ```go
+// createHTTPListener: creates an HTTP listener on the ALB
 func createHTTPListener(albID string, port int) {
     instance := alb.NewInstance()
     instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
@@ -461,6 +464,7 @@ func createHTTPListener(albID string, port int) {
 ### CreateServerGroup
 
 ```go
+// createServerGroup: creates a server group
 func createServerGroup(name string) {
     instance := alb.NewInstance()
     instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
@@ -480,6 +484,7 @@ func createServerGroup(name string) {
 ### CreateRule
 
 ```go
+// createPathRule: creates a path-based routing rule
 func createPathRule(listenerID, serverGroupID, path string) {
     instance := alb.NewInstance()
     instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
@@ -501,6 +506,7 @@ func createPathRule(listenerID, serverGroupID, path string) {
 ### AddServersToGroup
 
 ```go
+// addServers: adds ECS instances to a server group
 func addServers(groupID string, serverIDs []string, port int) {
     instance := alb.NewInstance()
     instance.SetCredential(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))

@@ -48,16 +48,14 @@ CREATING → RUNNING ↔ STOPPED ↔ STARTING
 
 ## Regions and Zones
 
-| Region Code | Region Name | Availability Zones |
-|-------------|-------------|-------------------|
-| `cn-beijing` | 北京 | cn-beijing-a, cn-beijing-b |
-| `cn-shanghai` | 上海 | cn-shanghai-a, cn-shanghai-b |
-| `cn-guangzhou` | 广州 | cn-guangzhou-a, cn-guangzhou-b |
-| `ap-southeast-1` | 新加坡 | ap-southeast-1a, ap-southeast-1b |
+Query available regions and zones via API — the list changes as new regions are added:
 
-**Query available regions:**
 ```bash
+# List all available regions
 ve ecs DescribeRegions
+
+# List zones within a region
+ve ecs DescribeZones --Region "{{user.region}}"
 ```
 
 ## Instance Families
@@ -86,7 +84,7 @@ ve ecs DescribeInstanceTypes --InstanceTypeFamilyIds '["g3i"]'
 
 ## Cloud Disk Types
 
-| Type | Description | Max IOPS | Max Throughput |
+| Type | Description | ⚡ Max IOPS | ⚡ Max Throughput |
 |------|-------------|----------|----------------|
 | `ESSD_PL0` | Standard SSD | 10,000 | 150 MB/s |
 | `ESSD_FlexPL` | Flexible SSD (performance scalable) | Up to 100,000 | Up to 1,000 MB/s |
@@ -133,20 +131,20 @@ DeleteInstance affects:
 | PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
 | Spot | ~60-90% | Interruptible | Batch processing, fault-tolerant |
 
-### Cost Per Instance Type (cn-beijing, PostPaid)
+### Cost Per Instance Type
 
-| Type | vCPU | Memory | Hourly | Monthly (~730h) |
-|------|------|--------|--------|-----------------|
-| ecs.f3i.large | 2 | 4 GB | ¥0.18 | ¥131 |
-| ecs.g3i.large | 2 | 8 GB | ¥0.31 | ¥226 |
-| ecs.g3i.xlarge | 4 | 16 GB | ¥0.62 | ¥453 |
-| ecs.g3i.2xlarge | 8 | 32 GB | ¥1.23 | ¥898 |
-| ecs.c3i.large | 2 | 4 GB | ¥0.28 | ¥204 |
-| ecs.r3i.large | 2 | 16 GB | ¥0.52 | ¥380 |
+Pricing varies by region, billing model, and instance family. Query current prices:
+
+```bash
+# Describe price for a specific instance type (cn-beijing, PostPaid)
+ve ecs DescribeInstanceTypes --InstanceTypeIds '["ecs.g3i.large"]' | jq '.Result.InstanceTypes[] | {InstanceType, Price}'
+```
+
+> Prices change over time — always query the Price API for current rates rather than relying on hardcoded tables.
 
 ### Cost Optimization Quick Reference
 
-| Situation | Action | Savings |
+| Situation | Action | 💰 Savings |
 |-----------|--------|---------|
 | Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
 | CPU avg < 15% for 7 days | Right-size down | 25-75% |

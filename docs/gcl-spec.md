@@ -51,6 +51,7 @@ User Request
 [0] Pre-flight (Orchestrator)
     - resolve {{env.*}} and {{user.*}} variables
     - pick skill, load its rubric
+    - derive sanitized operation_intent (operation, expected_state, resource_scope, safety_class; no raw user wording or credentials)
      │
      ▼
 [1] Generate (G) ───────────────────────┐
@@ -75,6 +76,8 @@ User Request
      └──────────────────────────────────┘
 ```
 
+The Orchestrator owns `operation_intent` generation during Pre-flight. It MUST derive this sanitized object before Critic scoring; the object may include `operation`, `expected_state`, `resource_scope`, and `safety_class`, but MUST NOT include raw user wording, credentials, or unmasked sensitive identifiers. The Critic receives only this sanitized `operation_intent` (never the raw user request) to prevent "answer-aligned" rubber-stamping.
+
 ## 5. Termination (first match wins)
 
 | Condition | Behavior |
@@ -91,9 +94,18 @@ Every GCL run MUST persist a JSON trace:
 
 ```json
 {
+  "trace_schema_version": "v1",
   "skill": "ve-ecs-ops",
   "request": "<sanitized user request>",
+  "operation_intent": {
+    "operation": "delete_instance",
+    "resource_scope": ["i-***"],
+    "expected_state": "DELETED",
+    "safety_class": "destructive"
+  },
   "rubric_version": "v1",
+  "masked_fields": ["request", "operation_intent.resource_scope"],
+  "redaction_pass": true,
   "iterations": [
     {
       "iter": 1,
@@ -109,9 +121,16 @@ Every GCL run MUST persist a JSON trace:
       "decision": "RETRY"
     }
   ],
-  "final": { "status": "PASS", "iter": 2, "output": "..." }
+  "final": {
+    "status": "PASS",
+    "iter": 2,
+    "output": "...",
+    "failure_pattern": null
+  }
 }
 ```
+
+The `final.failure_pattern` field holds a short string (e.g. `"missing_iam_policy"`, `"timeout_on_delete"`) when the run completed with issues, or `null` when the run succeeded without incident. This field feeds into the Reflexion Integration mechanism (see SS12).
 
 Path: `./audit-results/gcl-trace-YYYYMMDD-HHMMSS.json` — create the `audit-results/`
 directory if absent. **Never** commit trace content; add `audit-results/` to
@@ -126,13 +145,13 @@ for existence checks. Add a `redaction_pass: true` boolean to the trace root.
 Each skill's `references/prompt-templates.md` MUST contain:
 
 1. **Generator Prompt Template** — placeholders: `{{user.request}}`, `{{output.critic_feedback}}`, `{{output.rubric}}`
-2. **Critic Prompt Template** — placeholders: `{{output.generator_output}}`, `{{output.trace}}`, `{{output.rubric}}`
+2. **Critic Prompt Template** — placeholders: `{{output.operation_intent}}`, `{{output.generator_output}}`, `{{output.trace}}`, `{{output.rubric}}`
 
 > **Placeholder syntax** MUST follow the repository-wide convention
 > (see `CLAUDE.md` **Placeholder System**): `{{env.*}}` / `{{user.*}}` / `{{output.*}}`.
 > Bare `{...}` placeholders are NOT allowed in skill prompt templates.
 
-**Critic prompt must hide the raw user request** to prevent "answer-aligned" rubber-stamping.
+**Critic prompt must hide the raw user request** to prevent "answer-aligned" rubber-stamping. It may use the sanitized `{{output.operation_intent}}` derived by the Orchestrator.
 Recommended skeleton:
 
 ```text
@@ -141,6 +160,7 @@ You will see one execution result and its trace. Score it STRICTLY against the r
 Do NOT consider the original user request — judge only what was actually done.
 
 rubric: {{output.rubric}}
+operation_intent: {{output.operation_intent}}
 generator_output: {{output.generator_output}}
 trace: {{output.trace}}
 
@@ -212,30 +232,58 @@ When GCL identifies cross-product gaps, the Orchestrator MUST delegate, not abso
 | EIP / VPC network concern raised in a non-network skill | `ve-eip-ops` / `ve-vpc-ops` |
 | Monitoring / alarm rule change needed after a destructive op | `ve-cms-ops` |
 | Billing quota exceeded during the operation | `ve-billing-ops` |
-| Audit / trace review needed for the run | (future) `ve-audit-ops` |
+| Audit / trace review needed for the run | (future) ve-audit-ops |
 
 The Critic itself MUST NOT call any of the above — it only emits suggestions. The
 Generator is the executor on the next iteration.
 
-## 11. Changelog
+## 11. Rollout Roadmap
+
+| Phase | Status | Primary artifact | Gate |
+|---|---|---|---|
+| 1 | Done | `ve-ecs-ops/references/{rubric.md,prompt-templates.md}` | ECS pilot for destructive operations |
+| 2 | Done | `scripts/gcl_runner.py` | External Critic via `--critic-json`/stdin |
+| 3 | Done | `scripts/gcl_trace_aggregate.py` + quality summary | Quality summary feeds monitoring / inspection |
+| 4 | Done | Full rollout: all 29 skills GCL-equipped | Complete coverage across all product skills |
+| 4.1 | In Progress | `scripts/check_gcl_conformance.py` | CI gate for Tier-A conformance |
+
+Detailed phase changes live in the changelog below.
+
+## 12. Reflexion Integration
+
+GCL traces include a `failure_pattern` field in the `final` object (see SS6). This enables a lightweight cross-session failure-pattern learning mechanism:
+
+- **Storage**: After each GCL run, extract `failure_pattern` (when non-null) and append it to `docs/failure-patterns.md` as a bounded memory store.
+- **Retrieval**: During Pre-flight (SS4), the Orchestrator MAY query `docs/failure-patterns.md` for patterns matching the current `operation_intent.safety_class` and `operation_intent.operation`. Known failure patterns are injected into the Generator prompt as additional guardrails.
+- **Scope**: This is a **bounded memory** mechanism -- only failure patterns (not full traces) are persisted across sessions. Full traces remain in `audit-results/` and MUST NOT be committed to the repository.
+- **Trace schema impact**: The `failure_pattern` field at `final.failure_pattern` holds a short string (e.g. `"missing_iam_policy"`, `"timeout_on_delete"`) or `null` when the run succeeded without incident.
+
+## 13. Changelog
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0.0 | 2026-06-04 | Initial GCL specification added to Volcengine `AGENTS.md` (adapted from JD Cloud GCL spec) |
-| 1.1.0 | 2026-06-04 | Phase 1 rollout: audit-results/.gitignore, ve-ecs-ops pilot, 4-tier operation classification |
-| 1.2.0 | 2026-06-04 | ve-iam-ops rollout |
-| 1.3.0 | 2026-06-04 | ve-kms-ops rollout |
-| 1.4.0 | 2026-06-04 | ve-skill-template.md updated with GCL block |
-| 1.5.0 | 2026-06-04 | ve-redis-ops rollout |
-| 1.6.0 | 2026-06-04 | ve-eip-ops rollout |
-| 1.7.0 | 2026-06-04 | ve-rds-mysql-ops rollout |
-| 1.8.0 | 2026-06-04 | ve-tos-ops rollout |
-| 1.9.0 | 2026-06-04 | ve-rds-pg-ops rollout |
-| 1.10.0 | 2026-06-04 | ve-polar-mysql-ops rollout |
-| 1.11.0 | 2026-06-04 | ve-mongodb-ops rollout |
-| 1.12.0 | 2026-06-04 | ve-elasticsearch-ops rollout |
-| 1.13.0 | 2026-06-04 | ve-security-group-ops rollout |
-| 1.14.0 | 2026-06-04 | recommended tier mass rollout (max_iter=3): vpc, nat, vpn, clb, alb, vke, nas, cms, fg, ark |
-| 1.15.0 | 2026-06-04 | optional tier rollout (max_iter=5): cdn, dns, kafka, sls, billing |
+| 1.18.0 | 2026-06-19 | **Phase 4.1 (in progress):** `scripts/check_gcl_conformance.py` -- CI gate for Tier-A conformance across all 29 skills; spec enhanced with `operation_intent`, enhanced trace schema, Reflexion Integration, Rollout Roadmap, and See also sections |
+| 1.17.0 | 2026-06-19 | ve-rds-ops (RDS MySQL variant) GCL rollout; full coverage of all 29 skills |
 | 1.16.0 | 2026-06-04 | ve-skill-generator meta-skill GCL rollout |
-| 1.17.0 | 2026-06-04 | ve-rds-ops (RDS MySQL variant) GCL rollout; full coverage of all 29 skills |
+| 1.15.0 | 2026-06-04 | optional tier rollout (max_iter=5): cdn, dns, kafka, sls, billing |
+| 1.14.0 | 2026-06-04 | recommended tier mass rollout (max_iter=3): vpc, nat, vpn, clb, alb, vke, nas, cms, fg, ark |
+| 1.13.0 | 2026-06-04 | ve-security-group-ops rollout |
+| 1.12.0 | 2026-06-04 | ve-elasticsearch-ops rollout |
+| 1.11.0 | 2026-06-04 | ve-mongodb-ops rollout |
+| 1.10.0 | 2026-06-04 | ve-polar-mysql-ops rollout |
+| 1.9.0 | 2026-06-04 | ve-rds-pg-ops rollout |
+| 1.8.0 | 2026-06-04 | ve-tos-ops rollout |
+| 1.7.0 | 2026-06-04 | ve-rds-mysql-ops rollout |
+| 1.6.0 | 2026-06-04 | ve-eip-ops rollout |
+| 1.5.0 | 2026-06-04 | ve-redis-ops rollout |
+| 1.4.0 | 2026-06-04 | ve-skill-template.md updated with GCL block |
+| 1.3.0 | 2026-06-04 | ve-kms-ops rollout |
+| 1.2.0 | 2026-06-04 | ve-iam-ops rollout |
+| 1.1.0 | 2026-06-04 | Phase 1 rollout: audit-results/.gitignore, ve-ecs-ops pilot, 4-tier operation classification |
+| 1.0.0 | 2026-06-04 | Initial GCL specification added to Volcengine `AGENTS.md` (adapted from JD Cloud GCL spec) |
+
+## 14. See also
+
+- Each skill's `references/rubric.md` -- the rubric instance
+- Each skill's `references/prompt-templates.md` -- the G/C prompt skeletons
+- `ve-skill-generator/references/governance-and-adversarial-review.md` -- build-time R1-R4 review (sister gate)

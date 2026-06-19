@@ -98,15 +98,10 @@ Each shard has a maximum capacity (1 GB, 2 GB, 4 GB, 8 GB, 16 GB, 32 GB, 64 GB).
 
 ## 8. Regions Supporting Redis
 
-| Region | RegionID | Status |
-|--------|----------|--------|
-| 华北2 (北京) | `cn-beijing` | Commercial |
-| 华东2 (上海) | `cn-shanghai` | Commercial |
-| 华南1 (广州) | `cn-guangzhou` | Commercial |
-| 中国香港 | `cn-hongkong` | Commercial |
-| 亚太东南 (新加坡) | `ap-southeast-1` | Commercial |
-| 亚太东南 (雅加达) | `ap-southeast-3` | Commercial |
-
+Query available regions via API:
+```bash
+ve redis DescribeRegions
+```
 ---
 
 ## 9. Limits and Quotas

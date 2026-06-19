@@ -19,17 +19,17 @@
 
 ## 1. Error Taxonomy
 
-| Category | Code Pattern | HALT or Retry | Example |
-|----------|-------------|---------------|---------|
-| **Parameter Error** | `Invalid*.*` | HALT | `InvalidNatGatewayId.NotFound` |
-| **Resource Error** | `*.NotFound` | HALT | `InvalidVpcId.NotFound` |
-| **Conflict Error** | `*.Conflict` | HALT or fix | `SnatRule.Conflict` |
-| **Status Error** | `IncorrectStatus.*` | HALT | `IncorrectStatus.NatGateway` |
-| **Quota Error** | `QuotaExceeded.*` | HALT | `QuotaExceeded.NatGateway` |
-| **Dependency Error** | `DependencyViolation` | HALT | `DependencyViolation.SnatRule` |
-| **Billing Error** | `InsufficientBalance` | HALT | `InsufficientBalance` |
-| **Rate Limit** | `Throttling` | Retry with backoff | `Throttling` |
-| **Server Error** | `InternalError` | Retry with backoff | `InternalError` |
+| Category | Code Pattern | HALT/Retry | Example |
+|----------|-------------|------------|---------|
+| Parameter Error | `Invalid*.*` | HALT | `InvalidNatGatewayId.NotFound` |
+| Resource Error | `*.NotFound` | HALT | `InvalidVpcId.NotFound` |
+| Conflict Error | `*.Conflict` | HALT | `SnatRule.Conflict` |
+| Status Error | `IncorrectStatus.*` | HALT | `IncorrectStatus.NatGateway` |
+| Quota Error | `QuotaExceeded.*` | HALT | `QuotaExceeded.NatGateway` |
+| Dependency Error | `DependencyViolation` | HALT | `DependencyViolation.SnatRule` |
+| Billing Error | `InsufficientBalance` | HALT | `InsufficientBalance` |
+| Rate Limit | `Throttling` | Retry | `Throttling` |
+| Server Error | `InternalError` | Retry | `InternalError` |
 
 ---
 
@@ -37,12 +37,7 @@
 
 ### QuotaExceeded.NatGateway
 
-```
-Error Code: QuotaExceeded.NatGateway
-Message: The maximum number of NAT Gateways per VPC has been reached.
-```
-
-**Default:** 5 NAT Gateways per VPC.
+`Error: QuotaExceeded.NatGateway — max 5 NAT Gateways per VPC reached.`
 
 **Resolution:**
 ```bash
@@ -52,10 +47,7 @@ ve nat Gateway DescribeNatGateways --Region "$VOLCENGINE_REGION" --VpcId "$VPC_I
 
 ### InvalidSubnetId.NotFound
 
-```
-Error Code: InvalidSubnetId.NotFound
-Message: The specified SubnetId does not exist in the specified VPC.
-```
+`Error: InvalidSubnetId.NotFound — SubnetId does not exist in VPC.`
 
 **Resolution:**
 ```bash
@@ -68,10 +60,7 @@ ve vpc DescribeSubnets --Region "$VOLCENGINE_REGION" --VpcId "$VPC_ID" --SubnetI
 
 ### SnatRule.Conflict
 
-```
-Error Code: SnatRule.Conflict
-Message: An SNAT rule with the same SourceCidr already exists.
-```
+`Error: SnatRule.Conflict — SNAT rule with same SourceCidr already exists.`
 
 **Root Cause:** Cannot create two SNAT rules with the same source CIDR on the same NAT Gateway.
 
@@ -79,10 +68,7 @@ Message: An SNAT rule with the same SourceCidr already exists.
 
 ### InvalidSourceCidr.Malformed
 
-```
-Error Code: InvalidSourceCidr.Malformed
-Message: The specified SourceCidr format is invalid.
-```
+`Error: InvalidSourceCidr.Malformed — SourceCidr format invalid.`
 
 **Resolution:** Use valid CIDR notation within the VPC CIDR range (e.g., `10.0.2.0/24`).
 
@@ -92,19 +78,13 @@ Message: The specified SourceCidr format is invalid.
 
 ### DnatRule.PortConflict
 
-```
-Error Code: DnatRule.PortConflict
-Message: A DNAT rule with the same EIP and ExternalPort already exists.
-```
+`Error: DnatRule.PortConflict — DNAT rule with same EIP + ExternalPort already exists.`
 
 **Resolution:** Use a different external port, or delete the conflicting rule.
 
 ### InvalidInternalIp.Malformed
 
-```
-Error Code: InvalidInternalIp.Malformed
-Message: The specified InternalIp is not valid.
-```
+`Error: InvalidInternalIp.Malformed — InternalIp not valid.`
 
 **Resolution:** Ensure the internal IP is within the VPC subnet CIDR range.
 

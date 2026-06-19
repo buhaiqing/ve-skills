@@ -148,8 +148,8 @@ ve clb DescribeLoadBalancers --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
+| Operation | Description | Complexity | Risk |
+|-----------|-------------|------------|------|
 | CreateLoadBalancer | Create CLB instance | Medium | Low |
 | DescribeLoadBalancers | Query CLB list | Low | None |
 | DeleteLoadBalancer | Delete CLB | Low | **High** — removes all listeners/backends |

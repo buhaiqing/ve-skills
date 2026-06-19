@@ -20,18 +20,18 @@
 
 ## 1. Error Taxonomy
 
-| Category | Code Pattern | HALT or Retry | Example |
-|----------|-------------|---------------|---------|
-| **Quota Error** | `QuotaExceeded.*` | HALT | `QuotaExceeded.EipAddress` |
-| **Resource Error** | `*.NotFound` | HALT | `InvalidAllocationId.NotFound` |
-| **Status Error** | `IncorrectStatus.*` | HALT | `IncorrectStatus.EipAddress` |
-| **Conflict Error** | `AlreadyAssociated` | HALT or rebind | `AlreadyAssociated.Instance` |
-| **Parameter Error** | `Invalid*.*` | HALT | `InvalidBandwidth.Malformed` |
-| **IAM Error** | `Forbidden.RAM` | HALT | `Forbidden.RAM` |
-| **Billing Error** | `InsufficientBalance` | HALT | `InsufficientBalance` |
-| **Rate Limit** | `Throttling` | Retry with backoff | `Throttling` |
-| **Server Error** | `InternalError` | Retry with backoff | `InternalError` |
-| **Service Down** | `ServiceUnavailable` | Retry, then HALT | `ServiceUnavailable` |
+| Error Code | Agent Action | Recovery |
+|-----------|-------------|----------|
+| `QuotaExceeded.*` | **HALT** — EIP quota exhausted per region | Check usage via `ve eip DescribeEipAddresses`; request quota increase or delete unused EIPs |
+| `*.NotFound` | **HALT** — resource ID not found | Verify resource ID via describe command |
+| `IncorrectStatus.*` | **HALT** — resource in wrong state for operation | Wait for state transition or cancel current operation |
+| `AlreadyAssociated` | **HALT** or rebind — target already has an EIP | Disassociate existing EIP first, or bind to a different instance |
+| `Invalid*.*` | **HALT** — parameter validation failed | Check parameter values against API docs |
+| `Forbidden.RAM` | **HALT** — insufficient IAM permissions | Verify IAM policy allows the action |
+| `InsufficientBalance` | **HALT** — account balance insufficient | Recharge account via billing console |
+| `Throttling` | Retry with exponential backoff (2s, 4s, 8s) | Max 3 retries; respect `Retry-After` header |
+| `InternalError` | Retry with exponential backoff | Max 3 retries; capture RequestId for escalation |
+| `ServiceUnavailable` | Retry, then **HALT** | Retry with backoff; escalate if persistent |
 
 ---
 
