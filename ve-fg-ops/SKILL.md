@@ -283,15 +283,15 @@ done
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidParameter` / 400 | 0–1 | — | Fix args from OpenAPI; retry once if safe | `[ERROR] InvalidParameter: Check parameters against OpenAPI docs` |
-| `FunctionAlreadyExists` | 0 | — | HALT; ask user to use different name or update existing | `[ERROR] Function "{{user.function_name}}" already exists. Use UpdateFunction or choose a different name.` |
-| `QuotaExceeded` | 0 | — | HALT | `[ERROR] Function quota exceeded. Delete unused functions or request quota increase.` |
-| `InsufficientBalance` | 0 | — | HALT | `[ERROR] Account balance insufficient. Recharge before proceeding.` |
-| `InvalidRuntime` | 0 | — | HALT; suggest valid runtime | `[ERROR] Runtime "{{user.runtime}}" not supported. Supported runtimes: Python3.9, Node.js16, Go1.x, Java11, PHP7.4, CustomImage` |
-| Throttling / 429 | 3 | exponential | Back off; respect `Retry-After` | `⚠️ Rate limit reached. Retrying in {backoff}s...` |
-| `InternalError` / 5xx | 3 | 2s, 4s, 8s | Retry; then HALT with RequestId | `[ERROR] Internal server error. Retry or escalate with RequestId: {id}` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidParameter` / 400 | 0–1 | Fix args from OpenAPI; retry once if safe — `[ERROR] InvalidParameter: Check parameters against OpenAPI docs` |
+| `FunctionAlreadyExists` | 0 | HALT; ask user for different name or update existing — `[ERROR] Function "{{user.function_name}}" already exists.` |
+| `QuotaExceeded` | 0 | HALT — `[ERROR] Function quota exceeded. Delete unused functions or request quota increase.` |
+| `InsufficientBalance` | 0 | HALT — `[ERROR] Account balance insufficient. Recharge before proceeding.` |
+| `InvalidRuntime` | 0 | HALT; suggest valid runtime — `[ERROR] Runtime "{{user.runtime}}" not supported.` |
+| Throttling / 429 | 3 | Exponential backoff; respect `Retry-After` — `⚠️ Rate limit reached. Retrying in {backoff}s...` |
+| `InternalError` / 5xx | 3 | 2s, 4s, 8s backoff; retry, then HALT with RequestId |
 
 ### Operation: Invoke Function
 
@@ -396,25 +396,25 @@ Expected: `{{user.trigger_name}}` appears in the list.
 
 ## Error Taxonomy
 
-| Error Code | HTTP | Meaning | Max Retries | Agent Action |
-|-----------|------|---------|-------------|--------------|
-| `FunctionNotFound` | 404 | Function does not exist | 0 | Check function name; suggest creation |
-| `FunctionAlreadyExists` | 409 | Function name in use | 0 | Suggest different name or UpdateFunction |
-| `InvalidParameter` | 400 | Request validation failed | 1 | Align with OpenAPI schema |
-| `InvalidRuntime` | 400 | Unsupported runtime | 0 | Suggest supported runtime list |
-| `InvalidCronExpression` | 400 | Cron expression invalid | 0 | Provide correct cron format |
-| `ResourceLimitExceeded` | 403 | Quota limit reached | 0 | HALT; request quota increase |
-| `InsufficientBalance` | 403 | Account not funded | 0 | HALT; recharge required |
-| `CodeStorageExceeded` | 413 | Code package too large | 0 | Optimize code or use OSS URL |
-| `InvocationError` | 500 | Function runtime error | 2 | Check function logs for details |
-| `TimeoutError` | 504 | Execution timed out | 2 | Increase timeout or optimize code |
-| `MemoryExceeded` | 507 | Memory limit reached | 2 | Increase MemorySize configuration |
-| `ConcurrentInvocationExceeded` | 429 | Concurrency limit hit | 3 | Wait or request quota increase |
-| `TriggerNotFound` | 404 | Trigger does not exist | 0 | Check trigger ID/name |
-| `TriggerAlreadyExists` | 409 | Trigger name conflict | 0 | Use different trigger name |
-| `VersionNotFound` | 404 | Version does not exist | 0 | Check version number |
-| `Throttling` | 429 | Rate limit exceeded | 3 | Backoff with exponential delay |
-| `InternalError` | 500 | Server-side error | 3 | Retry; escalate with RequestId |
+| Error Code | Meaning | Resolution |
+|-----------|---------|-----------|
+| `FunctionNotFound` | Function does not exist | 0 retries; Check name, suggest creation |
+| `FunctionAlreadyExists` | Function name in use | 0 retries; Suggest different name or UpdateFunction |
+| `InvalidParameter` | Request validation failed | 1 retry; Align with OpenAPI schema |
+| `InvalidRuntime` | Unsupported runtime | 0 retries; Suggest supported runtime list |
+| `InvalidCronExpression` | Cron expression invalid | 0 retries; Provide correct cron format |
+| `ResourceLimitExceeded` | Quota limit reached | 0 retries; HALT — request quota increase |
+| `InsufficientBalance` | Account not funded | 0 retries; HALT — recharge required |
+| `CodeStorageExceeded` | Code package too large | 0 retries; Optimize code or use OSS URL |
+| `InvocationError` | Function runtime error | 2 retries; Check function logs for details |
+| `TimeoutError` | Execution timed out | 2 retries; Increase timeout or optimize code |
+| `MemoryExceeded` | Memory limit reached | 2 retries; Increase MemorySize configuration |
+| `ConcurrentInvocationExceeded` | Concurrency limit hit | 3 retries; Wait or request quota increase |
+| `TriggerNotFound` | Trigger does not exist | 0 retries; Check trigger ID/name |
+| `TriggerAlreadyExists` | Trigger name conflict | 0 retries; Use different trigger name |
+| `VersionNotFound` | Version does not exist | 0 retries; Check version number |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; Backoff with delay |
+| `InternalError` | Server-side error | 3 retries; Retry, escalate with RequestId |
 
 ## Prerequisites
 
@@ -491,6 +491,15 @@ ve functiongraph ListVersions \
 |---------|------|---------|
 | 1.0.0 | 2026-05-31 | Initial frontmatter + Five Core Standards + dual-path + error taxonomy |
 | 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+
+## Operational Best Practices
+
+- **Cold start mitigation:** Set reserved concurrency for latency-sensitive functions. Use warm-up triggers (Timer) during low-traffic periods to keep instances warm. Choose provisioned concurrency for predictable traffic patterns.
+- **Concurrency limits:** Monitor `ConcurrentExecutions` metric. Set function-level reserved concurrency to prevent a single function from exhausting account-level quota. Default account quota is 100 concurrent executions; request increase via support ticket when needed.
+- **Function timeout configuration:** Set `Timeout` realistically based on function workload. For API-facing functions use 10-30s; for data-processing functions use 120-300s. Timeout values above 300s require async invocation pattern.
+- **Logging and monitoring:** Enable function logs via SLS (Simple Log Service). Configure `GetFunctionLogs` for real-time debugging. Set up `ve-cms-ops` alarm rules on error count, duration P99, and throttling rate.
+- **Version and alias management:** Use `PublishVersion` to freeze stable code and `CreateAlias` to route traffic (e.g., 90% v1, 10% v2 for canary). Never reference `$LATEST` in production triggers; always pin to a version or alias.
+- **Least privilege IAM:** Assign functions the minimum permissions needed via a dedicated service role. Do not reuse root-account credentials. Rotate function configuration secrets via `{{env.VOLCENGINE_SECRET_KEY}}` — never embed in code.
 
 ## Quality Gate (GCL)
 

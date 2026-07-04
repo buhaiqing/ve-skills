@@ -470,7 +470,7 @@ Poll describe (or head/get) until **404**, **NotFound**, or status indicates del
        [ "$ARCH" = "aarch64" ] && ARCH="arm64"
        
        mkdir -p /tmp/go-runtime
-       curl -fsSL "https://go.dev/dl/go1.21.0.${OS}-${ARCH}.tar.gz" | tar -xz -C /tmp/go-runtime
+       curl -fsSL "https://go.dev/dl/{{env.GO_VERSION}}.${OS}-${ARCH}.tar.gz" | tar -xz -C /tmp/go-runtime
        
        # Set environment variables
        export PATH="/tmp/go-runtime/go/bin:$PATH"
@@ -656,7 +656,7 @@ if ! command -v go &> /dev/null; then
     [ "$ARCH" = "aarch64" ] && ARCH="arm64"
     
     mkdir -p /tmp/go-runtime
-    curl -fsSL "https://go.dev/dl/go1.21.0.${OS}-${ARCH}.tar.gz" | tar -xz -C /tmp/go-runtime
+    curl -fsSL "https://go.dev/dl/{{env.GO_VERSION}}.${OS}-${ARCH}.tar.gz" | tar -xz -C /tmp/go-runtime
     export PATH="/tmp/go-runtime/go/bin:$PATH"
     export GOPATH="/tmp/go-workspace"
     export GOCACHE="/tmp/go-cache"

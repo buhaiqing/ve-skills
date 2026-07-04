@@ -60,9 +60,9 @@ def _check_required_sections(root: Path) -> int:
         if not has_gcl:
             errors.append(f"{skill}: missing ## Quality Gate (GCL)")
         if not has_what:
-            warnings.append(f"{skill}: missing ### What This Skill Does")
+            errors.append(f"{skill}: missing ### What This Skill Does (IMPORTANT — MUST exist)")
         if not has_ops:
-            warnings.append(f"{skill}: missing ## Operational Best Practices")
+            errors.append(f"{skill}: missing ## Operational Best Practices (IMPORTANT — MUST exist)")
         if not has_next:
             warnings.append(f"{skill}: missing ### Next Steps")
 

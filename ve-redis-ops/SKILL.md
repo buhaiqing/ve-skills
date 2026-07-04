@@ -33,6 +33,10 @@ metadata:
 
 # Volcengine Cache for Redis Operations Skill
 
+### What This Skill Does
+
+This skill manages Volcengine Cache for Redis instance lifecycle, configuration, and monitoring using the `ve` CLI (primary) or JIT Go SDK (fallback). It covers instance creation, deletion, scaling, parameter tuning, allowlist management, and backup operations. Security gates guard destructive actions such as instance deletion.
+
 ## Overview
 
 Volcengine Cache for Redis (缓存数据库 Redis 版) provides managed Redis-compatible in-memory cache instances. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and official **`ve` CLI**), response validation, and failure recovery.
@@ -379,6 +383,15 @@ ve redis ModifyDBInstanceParameters --InstanceId "{{user.instance_id}}" --body '
 2. **Go runtime** for JIT fallback (see references/integration.md)
 3. **Credentials:** `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION`
 4. **Verify:** `ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"`
+
+## Operational Best Practices
+
+- **Authentication and network isolation:** Enable IP allowlists via `ve redis CreateAllowList` to restrict access. Deploy instances in private VPC subnets; avoid public endpoint exposure.
+- **Persistence and backup:** Enable AOF persistence for durability-critical data. Schedule automatic backups via `ve redis CreateBackup` and test point-in-time recovery regularly.
+- **High availability:** Deploy with primary-replica replication for failover. Use multi-zone deployment for region-level resilience.
+- **Memory and eviction policy:** Set `maxmemory-policy` to `allkeys-lru` for cache workloads or `volatile-lru` for mixed use. Monitor `used_memory` and eviction rates.
+- **Big key and hot key management:** Use `redis-cli --bigkeys` and `redis-cli --hotkeys` to identify oversized keys. Split large hashes or sets, and distribute hot keys with read replicas.
+- **Cost-effective instance sizing:** Choose instance specs based on memory-to-CPU ratio. Start with small instances and scale vertically as needed. Delete idle instances to avoid unnecessary cost.
 
 ## Reference Directory
 

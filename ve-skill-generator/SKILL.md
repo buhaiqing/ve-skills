@@ -25,8 +25,8 @@ compatibility: >-
   and agentskills.io frontmatter conventions.
 metadata:
   author: volcengine
-  version: "1.2.0"
-  last_updated: "2026-06-19"
+  version: "1.3.0"
+  last_updated: "2026-07-05"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   type: meta-skill
   guidance_freedom_level: medium
@@ -478,6 +478,11 @@ Optional later improvements: PR template checkbox linking to that doc; periodic 
 #### 9. AIOps Compliance (when monitoring/alarm/diagnosis in scope)
 - [ ] Multi-metric correlation (≥ 4 anomaly patterns), cross-skill diagnosis decision tree
 - [ ] Delegation matrix, proactive inspection, alarm storm handling per `references/advanced/aiops-best-practices.md`
+
+#### 10. **IMPORTANT: Mandatory Sections**
+- [ ] `### What This Skill Does` — **MUST** exist with a clear 2-3 sentence description of the skill's purpose
+- [ ] `## Operational Best Practices` — **MUST** exist with actionable operational guidance (monitoring, backup, security patterns)
+- [ ] `### Next Steps` — **MUST** exist (even if brief)
 
 ### P1 — SHOULD PASS
 

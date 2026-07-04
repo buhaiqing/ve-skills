@@ -34,6 +34,10 @@ metadata:
 
 # Volcengine RDS for MySQL Operations Skill
 
+### What This Skill Does
+
+Performs Volcengine RDS for MySQL instance lifecycle management (create, describe, modify, delete) and operational tasks (backup/restore, account/parameter management, IP whitelist) using the `ve` CLI (primary) or Go SDK (fallback).
+
 ## Overview
 
 Volcengine RDS for MySQL (云数据库 MySQL 版) provides managed MySQL database instances. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and official **`ve` CLI**), response validation, and failure recovery.
@@ -419,6 +423,16 @@ ve rds_mysql RebuildDBInstance --InstanceId "{{user.instance_id}}"
 ve rds_mysql ListDBInstanceIPLists --InstanceId "{{user.instance_id}}"
 ve rds_mysql ModifyDBInstanceIPList --InstanceId "{{user.instance_id}}" --body '{"IPList": ["10.0.0.0/8"], "ModifyMode": "Cover"}'
 ```
+
+## Operational Best Practices
+
+- **Least privilege:** Grant IAM policies scoped to specific RDS MySQL operations and instance IDs; avoid blanket `rds_mysql:*` permissions.
+- **Encrypted connections:** Enforce TLS for all client connections; disable SSL/TLS enforcement only during migration.
+- **Backup strategy:** Configure automatic backups with a retention period of at least 7 days; perform manual backups before any spec modification or major version upgrade.
+- **Multi-AZ deployment:** Deploy primary and secondary nodes in different availability zones for production workloads to ensure high availability.
+- **Connection pooling:** Use a connection pooler (e.g., ProxySQL) or application-level pooling to avoid connection exhaustion under load.
+- **Slow query monitoring:** Enable slow query logging with `long_query_time` set to 1 second or lower; correlate with parameter tuning via `DescribeDBInstanceParameters`.
+- **Instance sizing:** Right-size based on observed CPU, memory, and IOPS metrics; use `ModifyDBNodeSpec` for incremental scaling rather than upfront over-provisioning.
 
 ## Reference Directory
 

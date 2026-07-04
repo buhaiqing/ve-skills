@@ -340,7 +340,7 @@ bootstrap_go_runtime_enhanced() {
     if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; fi
     if [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; fi
     
-    GO_VERSIONS=("go1.21.0" "go1.20.0" "go1.19.0" "go1.18.0" "go1.17.0" "go1.14.0")
+    GO_VERSIONS=("{{env.GO_VERSION}}" "go1.20.0" "go1.19.0" "go1.18.0" "go1.17.0" "go1.14.0")
     
     GO_MIRRORS=(
         "https://go.dev/dl"
