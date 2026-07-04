@@ -318,7 +318,11 @@ Automated validation scripts are available in `scripts/` for pre-commit checks (
 
 ### Runtime GCL
 
-`scripts/gcl_runner.py` does not exist in this repo. GCL runs are performed manually following the spec in `docs/gcl-spec.md`. Critic scores MUST be injected from an isolated agent context. Production GCL MUST use externally supplied isolated Critic scores; `--structural-critic-only` is allowed only for CI/local structural smoke tests and MUST NOT be used for production execution, human acceptance, or quality pass decisions.
+`scripts/gcl_runner.py` implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
+- External Critic via `--critic-json` or stdin (production mode)
+- `--structural-critic-only` for CI/local structural smoke tests only (NOT for production mutations)
+
+GCL runs MUST use externally supplied isolated Critic scores in production. Manual execution following `docs/gcl-spec.md` is also acceptable.
 
 ---
 

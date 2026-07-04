@@ -245,7 +245,7 @@ Generator is the executor on the next iteration.
 | 2 | Done | `scripts/gcl_runner.py` | External Critic via `--critic-json`/stdin |
 | 3 | Done | `scripts/gcl_trace_aggregate.py` + quality summary | Quality summary feeds monitoring / inspection |
 | 4 | Done | Full rollout: all 29 skills GCL-equipped | Complete coverage across all product skills |
-| 4.1 | In Progress | `scripts/check_gcl_conformance.py` | CI gate for Tier-A conformance |
+| 4.1 | Done | `scripts/check_gcl_conformance.py` | CI gate for Tier-A conformance |
 
 Detailed phase changes live in the changelog below.
 
@@ -262,7 +262,7 @@ GCL traces include a `failure_pattern` field in the `final` object (see SS6). Th
 
 | Version | Date | Change |
 |---|---|---|
-| 1.18.0 | 2026-06-19 | **Phase 4.1 (in progress):** `scripts/check_gcl_conformance.py` -- CI gate for Tier-A conformance across all 29 skills; spec enhanced with `operation_intent`, enhanced trace schema, Reflexion Integration, Rollout Roadmap, and See also sections |
+| 1.18.0 | 2026-06-19 | **Phase 4.1 (done):** `scripts/check_gcl_conformance.py` -- CI gate for Tier-A conformance across all 29 skills; spec enhanced with `operation_intent`, enhanced trace schema, Reflexion Integration, Rollout Roadmap, and See also sections |
 | 1.17.0 | 2026-06-19 | ve-rds-ops (RDS MySQL variant) GCL rollout; full coverage of all 29 skills |
 | 1.16.0 | 2026-06-04 | ve-skill-generator meta-skill GCL rollout |
 | 1.15.0 | 2026-06-04 | optional tier rollout (max_iter=5): cdn, dns, kafka, sls, billing |

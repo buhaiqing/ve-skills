@@ -5,6 +5,9 @@
 >
 > **Maintenance**: Updated automatically via Self-Review Round 3 (Lessons Learned).
 > **Token budget**: <= 200 lines. When exceeded, prune low-frequency patterns (count < 3).
+>
+> **Note**: Patterns with `Count = 0` are pre-defined based on common failure scenarios.
+> These counts will be populated as GCL runs execute and failures are recorded.
 
 ---
 

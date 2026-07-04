@@ -94,16 +94,26 @@ def check_skill(root: Path, skill: str) -> dict[str, Any]:
     skill_path = skill_dir / "SKILL.md"
 
     rubric_sections = 0
+    has_operation_tier = False
+    has_safety_rules = False
     if rubric_path.is_file():
-        rubric_sections = _count_numbered_sections(
-            rubric_path.read_text(encoding="utf-8"), 0, 7,
-        )
+        rubric_text = rubric_path.read_text(encoding="utf-8")
+        rubric_sections = _count_numbered_sections(rubric_text, 0, 7)
+        # Check for operation tier table (## 0. Operation Tier)
+        has_operation_tier = bool(re.search(r"^## 0\. Operation Tier", rubric_text, re.MULTILINE))
+        # Check for safety rules section (## 2. Safety)
+        has_safety_rules = bool(re.search(r"^## 2\. Safety", rubric_text, re.MULTILINE))
 
     prompt_sections = 0
+    has_generator_prompt = False
+    has_critic_prompt = False
     if prompt_path.is_file():
-        prompt_sections = _count_numbered_sections(
-            prompt_path.read_text(encoding="utf-8"), 1, 5,
-        )
+        prompt_text = prompt_path.read_text(encoding="utf-8")
+        prompt_sections = _count_numbered_sections(prompt_text, 1, 5)
+        # Check for Generator prompt template
+        has_generator_prompt = bool(re.search(r"^## 1\. Generator Prompt", prompt_text, re.MULTILINE))
+        # Check for Critic prompt template
+        has_critic_prompt = bool(re.search(r"^## 2\. Critic Prompt", prompt_text, re.MULTILINE))
 
     has_quality_gate = False
     if skill_path.is_file():
@@ -111,8 +121,8 @@ def check_skill(root: Path, skill: str) -> dict[str, Any]:
             re.search(r"^## Quality Gate \(GCL\)$", skill_path.read_text(encoding="utf-8"), re.MULTILINE)
         )
 
-    rubric_ok = rubric_sections == 8
-    prompt_ok = prompt_sections == 5
+    rubric_ok = rubric_sections == 8 and has_operation_tier and has_safety_rules
+    prompt_ok = prompt_sections == 5 and has_generator_prompt and has_critic_prompt
     skill_ok = has_quality_gate
 
     return {
@@ -120,6 +130,10 @@ def check_skill(root: Path, skill: str) -> dict[str, Any]:
         "rubric_sections": rubric_sections,
         "prompt_sections": prompt_sections,
         "has_quality_gate": has_quality_gate,
+        "has_operation_tier": has_operation_tier,
+        "has_safety_rules": has_safety_rules,
+        "has_generator_prompt": has_generator_prompt,
+        "has_critic_prompt": has_critic_prompt,
         "rubric_ok": rubric_ok,
         "prompt_ok": prompt_ok,
         "skill_ok": skill_ok,
