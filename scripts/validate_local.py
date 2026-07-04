@@ -76,6 +76,38 @@ def _check_required_sections(root: Path) -> int:
     return 0
 
 
+def _check_error_taxonomy(root: Path) -> int:
+    import re
+
+    warnings: list[str] = []
+    for f in sorted(root.glob("ve-*/SKILL.md")):
+        skill = f.parent.name
+        if skill == "ve-skill-generator":
+            continue
+        text = f.read_text(encoding="utf-8")
+
+        if "## Error Taxonomy" not in text:
+            warnings.append(f"{skill}: missing ## Error Taxonomy")
+            continue
+
+        severity_classifications = re.findall(r"^\|\s*`[^`]+`\s*\|\s*(HALT|RETRY)\s*\|", text, re.MULTILINE)
+
+        if len(severity_classifications) < 10:
+            warnings.append(f"{skill}: ## Error Taxonomy has only {len(severity_classifications)} codes, need ≥10")
+        elif "HALT" not in severity_classifications:
+            warnings.append(f"{skill}: ## Error Taxonomy missing HALT classification")
+        elif "RETRY" not in severity_classifications:
+            warnings.append(f"{skill}: ## Error Taxonomy missing RETRY classification")
+
+    for w in warnings:
+        print(f"  WARN: {w}")
+    if warnings:
+        print(f"  → {len(warnings)} error taxonomy issue(s) found (advisory)")
+        return 0
+    print("  OK: all skills have ## Error Taxonomy with ≥10 codes including HALT/RETRY")
+    return 0
+
+
 def _check_te1_hardcodes(root: Path) -> int:
     import re
 
@@ -111,6 +143,7 @@ def build_steps(python: str = sys.executable) -> list[Step]:
         Step("File integrity (null byte check)", (python, "-c", _inline_script(_check_file_integrity))),
         Step("Frontmatter validation", (python, "scripts/validate_skills_frontmatter.py")),
         Step("Required sections presence", (python, "-c", _inline_script(_check_required_sections))),
+        Step("Error Taxonomy (≥10 codes, HALT/RETRY)", (python, "-c", _inline_script(_check_error_taxonomy))),
         Step("TE-1 hardcoded version scan", (python, "-c", _inline_script(_check_te1_hardcodes))),
         Step("Markdown local links", (python, "scripts/check_markdown_links.py")),
         Step(

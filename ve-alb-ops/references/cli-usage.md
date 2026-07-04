@@ -4,6 +4,8 @@
 > **Version:** 1.0.0
 > **Last Updated:** 2026-05-31
 
+> **jq Paths (`.Result.*`):** `.LoadBalancers[]` (ALB list), `.LoadBalancers[0]` (first ALB detail), `.Listeners[]` (listener list), `.Listeners` (listener array), `.ServerGroups[]` (server group list), `.ServerGroups[0].Servers[]` (server list in group)
+
 ---
 
 ## Table of Contents

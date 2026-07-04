@@ -791,7 +791,7 @@ func main() {
         }
     })
 
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe(":{{env.PORT}}", nil)
 }
 ```
 

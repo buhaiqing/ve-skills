@@ -1,5 +1,7 @@
 # Elasticsearch CLI Usage
 
+> **jq Paths (`.Result.*`):** `.Instances[0]` (first instance detail), `.Health` (cluster health), `.Indices[]` (index list)
+
 ## Installation and Configuration
 
 ### Install ve CLI

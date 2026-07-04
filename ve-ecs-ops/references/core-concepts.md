@@ -78,9 +78,9 @@ ve ecs DescribeInstanceTypes --InstanceTypeFamilyIds '["g3i"]'
 
 | Model | Chinese | Description |
 |-------|---------|-------------|
-| PostPaid | 按量计费 | Pay-per-use, billed by the hour/second |
-| PrePaid | 包年包月 | Subscription, monthly/yearly upfront |
-| Spot | 抢占式实例 | Discounted, can be reclaimed |
+| PostPaid | 按量计费 | ⏱️ Pay-per-use, hourly/second billing |
+| PrePaid | 包年包月 | 📅 Subscription, monthly/yearly upfront |
+| Spot | 抢占式实例 | 💸 Discounted; may be reclaimed |
 
 ## Cloud Disk Types
 

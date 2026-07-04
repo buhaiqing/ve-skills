@@ -1,5 +1,7 @@
 # CLI — Ark (方舟大模型平台) (`ve ark`)
 
+> **jq Paths (`.Result.*`):** `.Endpoints[]` (endpoint list), `.Total` (total count), `.Models[].ModelId` (model IDs), `.TrainingJobs[]` (training job list)
+
 ## Install and Config
 
 - **Install:** Download `ve` binary from [Volcengine CLI Releases](https://github.com/volcengine/volcengine-cli/releases)

@@ -156,6 +156,10 @@ def validate_assessment(data: object, source: str) -> list[str]:
             for c in cmds:
                 if isinstance(c, str) and "SecretKey=" in c and "<masked>" not in c:
                     errs.append(f"{source}: trace.commands contains unmasked SecretKey")
+                if isinstance(c, str) and "VOLCENGINE_SECRET_KEY=" in c and "<masked>" not in c:
+                    errs.append(f"{source}: trace.commands contains unmasked VOLCENGINE_SECRET_KEY")
+                if isinstance(c, str) and "AKLT" in c and "<masked>" not in c:
+                    errs.append(f"{source}: trace.commands contains unmasked AKLT token")
 
     # Worker Output Contract section required
     return errs

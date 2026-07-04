@@ -338,15 +338,15 @@ ve alb DescribeLoadBalancers --Region "{{user.region}}" --LoadBalancerIds "[\"$A
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidVpc.NotFound` | 0 | — | HALT; VPC does not exist | `[ERROR] VPC not found. Create VPC via ve-vpc-ops first.` |
-| `InvalidSubnet.NotFound` | 0 | — | HALT; subnet does not exist | `[ERROR] Subnet not found. Create subnet first.` |
-| `InvalidParameter` | 1 | — | Fix args from error message | `[ERROR] InvalidParameter: Request parameter is invalid.` |
-| `QuotaExceeded.LoadBalancer` | 0 | — | HALT; request quota increase | `[ERROR] ALB quota exceeded. Request increase from support.` |
-| `InsufficientBalance` | 0 | — | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
-| `Throttling` / 429 | 3 | 1s, 2s, 4s | Back off and retry | `WARNING Rate limit reached. Retrying...` |
-| `InternalError` | 3 | 2s, 4s, 8s | Retry; then HALT | `[ERROR] InternalError. Retrying...` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidVpc.NotFound` | 0 | HALT; VPC does not exist — `[ERROR] VPC not found. Create VPC via ve-vpc-ops first.` |
+| `InvalidSubnet.NotFound` | 0 | HALT; subnet does not exist — `[ERROR] Subnet not found. Create subnet first.` |
+| `InvalidParameter` | 1 | Fix args from error message — `[ERROR] InvalidParameter: Request parameter is invalid.` |
+| `QuotaExceeded.LoadBalancer` | 0 | HALT; request quota increase — `[ERROR] ALB quota exceeded.` |
+| `InsufficientBalance` | 0 | HALT; recharge account — `[ERROR] Insufficient balance.` |
+| `Throttling` / 429 | 3 | 1s, 2s, 4s backoff; retry — `WARNING Rate limit reached.` |
+| `InternalError` | 3 | 2s, 4s, 8s backoff; retry, then HALT — `[ERROR] InternalError.` |
 
 ---
 
@@ -431,12 +431,12 @@ done
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidLoadBalancer.NotFound` | 0 | — | Already deleted; skip | `[INFO] ALB already deleted.` |
-| `DependencyViolation.Listener` | 0 | — | HALT; delete listeners first | `[ERROR] Listeners still attached. Delete listeners first.` |
-| `IncorrectStatus.LoadBalancer` | 3 | 10s | Wait for stable status | `[WARNING] ALB not in deletable state. Waiting...` |
-| `Forbidden.RAM` | 0 | — | HALT; check IAM permissions | `[ERROR] IAM permission denied. Check Volcengine IAM policies.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidLoadBalancer.NotFound` | 0 | Already deleted; skip — `[INFO] ALB already deleted.` |
+| `DependencyViolation.Listener` | 0 | HALT; delete listeners first — `[ERROR] Listeners still attached. Delete listeners first.` |
+| `IncorrectStatus.LoadBalancer` | 3 | 10s wait for stable status — `[WARNING] ALB not in deletable state. Waiting...` |
+| `Forbidden.RAM` | 0 | HALT; check IAM permissions — `[ERROR] IAM permission denied. Check Volcengine IAM policies.` |
 
 ---
 
@@ -525,12 +525,12 @@ ve alb DescribeListeners --Region "{{user.region}}" --LoadBalancerId "{{user.alb
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidLoadBalancer.NotFound` | 0 | — | HALT; ALB does not exist | `[ERROR] ALB not found. Verify the ALB ID.` |
-| `PortConflict.Listener` | 0 | — | HALT; port already in use | `[ERROR] Port conflict. Use a different port.` |
-| `InvalidCertificate.NotFound` | 0 | — | HALT; cert does not exist | `[ERROR] Certificate not found. Create cert first.` |
-| `QuotaExceeded.Listener` | 0 | — | HALT; listener quota exceeded | `[ERROR] Listener quota exceeded.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidLoadBalancer.NotFound` | 0 | HALT; ALB does not exist — `[ERROR] ALB not found. Verify the ALB ID.` |
+| `PortConflict.Listener` | 0 | HALT; port already in use — `[ERROR] Port conflict. Use a different port.` |
+| `InvalidCertificate.NotFound` | 0 | HALT; cert does not exist — `[ERROR] Certificate not found. Create cert first.` |
+| `QuotaExceeded.Listener` | 0 | HALT; listener quota exceeded — `[ERROR] Listener quota exceeded.` |
 
 ---
 
@@ -642,12 +642,12 @@ ve alb DescribeRules --Region "{{user.region}}" --ListenerId "{{user.listener_id
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidListener.NotFound` | 0 | — | HALT; listener does not exist | `[ERROR] Listener not found. Verify listener ID.` |
-| `InvalidServerGroup.NotFound` | 0 | — | HALT; server group does not exist | `[ERROR] Server group not found. Create server group first.` |
-| `InvalidRule.Pattern` | 0 | — | HALT; URL pattern invalid | `[ERROR] Invalid URL pattern. Use wildcard patterns like /api/*.` |
-| `QuotaExceeded.Rule` | 0 | — | HALT; rule quota exceeded | `[ERROR] Rule quota exceeded.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidListener.NotFound` | 0 | HALT; listener does not exist — `[ERROR] Listener not found. Verify listener ID.` |
+| `InvalidServerGroup.NotFound` | 0 | HALT; server group does not exist — `[ERROR] Server group not found. Create server group first.` |
+| `InvalidRule.Pattern` | 0 | HALT; URL pattern invalid — `[ERROR] Invalid URL pattern. Use wildcard patterns like /api/*.` |
+| `QuotaExceeded.Rule` | 0 | HALT; rule quota exceeded — `[ERROR] Rule quota exceeded.` |
 
 ---
 
@@ -871,10 +871,10 @@ ve alb DescribeListeners --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerId "
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidListener.NotFound` | 0 | — | HALT; listener does not exist | `[ERROR] Listener not found. Verify listener ID.` |
-| `InvalidCertificate.NotFound` | 0 | — | HALT; cert does not exist | `[ERROR] Certificate not found.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidListener.NotFound` | 0 | HALT; listener does not exist — `[ERROR] Listener not found. Verify listener ID.` |
+| `InvalidCertificate.NotFound` | 0 | HALT; cert does not exist — `[ERROR] Certificate not found.` |
 
 ---
 
@@ -907,10 +907,10 @@ ve alb DescribeServerGroups --Region "{{env.VOLCENGINE_REGION}}" --ServerGroupId
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidServerGroup.NotFound` | 0 | — | Already deleted; skip | `[INFO] Server group already deleted.` |
-| `DependencyViolation` | 0 | — | HALT; listeners still reference this group | `[ERROR] Listeners still reference this server group. Remove associations first.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidServerGroup.NotFound` | 0 | Already deleted; skip — `[INFO] Server group already deleted.` |
+| `DependencyViolation` | 0 | HALT; listeners still reference this group — `[ERROR] Listeners still reference this server group. Remove associations first.` |
 
 ---
 

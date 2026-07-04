@@ -7,41 +7,48 @@
 # 1. Inference Endpoint Configuration
 # =============================================================================
 
+# Shared endpoint defaults
+x-endpoint-defaults: &endpoint_defaults
+  model_version_id: "{{user.model_version_id}}"
+  region: "{{env.VOLCENGINE_REGION}}"
+
 # Simple inference endpoint (production chat)
 endpoint_production:
+  <<: *endpoint_defaults
   endpoint_name: "prod-chat-doubao-pro-32k"
-  model_version_id: "{{user.model_version_id}}"
   endpoint_type: "Inference"
   description: "Production Doubao-pro chat endpoint with 32k context"
-  region: "{{env.VOLCENGINE_REGION}}"
   scaling:
     min_replicas: 2
     max_replicas: 10
     target_cpu_utilization: 70
 
+# Shared scaling defaults
+x-scaling-defaults: &scaling_defaults
+  min_replicas: 1
+  max_replicas: 5
+
 # Inference endpoint with VPC (private network)
 endpoint_private:
+  <<: *endpoint_defaults
   endpoint_name: "internal-embedding-bge"
-  model_version_id: "{{user.model_version_id}}"
   endpoint_type: "Inference"
   description: "Internal embedding endpoint with VPC access"
-  region: "{{env.VOLCENGINE_REGION}}"
   vpc_config:
     vpc_id: "vpc-xxxxx"
     subnet_ids:
       - "subnet-xxxxx"
       - "subnet-yyyyy"
   scaling:
-    min_replicas: 1
-    max_replicas: 5
+    <<: *scaling_defaults
+    target_cpu_utilization: 70
 
 # Low-latency inference endpoint
 endpoint_low_latency:
+  <<: *endpoint_defaults
   endpoint_name: "realtime-translation"
-  model_version_id: "{{user.model_version_id}}"
   endpoint_type: "InferenceLowLatency"
   description: "Low-latency translation endpoint for real-time use"
-  region: "{{env.VOLCENGINE_REGION}}"
   scaling:
     min_replicas: 3
     max_replicas: 20
@@ -49,11 +56,10 @@ endpoint_low_latency:
 
 # TPM-guaranteed inference endpoint
 endpoint_tpm_guaranteed:
+  <<: *endpoint_defaults
   endpoint_name: "batch-classification"
-  model_version_id: "{{user.model_version_id}}"
   endpoint_type: "InferenceTPM"
   description: "TPM-guaranteed classification endpoint"
-  region: "{{env.VOLCENGINE_REGION}}"
   tpm_guarantee:
     tpm_limit: 1000000
     concurrency_limit: 100
@@ -62,14 +68,18 @@ endpoint_tpm_guaranteed:
 # 2. Training Job Configuration
 # =============================================================================
 
-# SFT (Supervised Fine-Tuning) job
-training_job_sft:
-  training_job_name: "sft-customer-service-v1"
+# Shared training job defaults
+x-training-defaults: &training_defaults
   model_id: "{{user.model_id}}"
   dataset_id: "{{output.dataset_id}}"
+  region: "{{env.VOLCENGINE_REGION}}"
+
+# SFT (Supervised Fine-Tuning) job
+training_job_sft:
+  <<: *training_defaults
+  training_job_name: "sft-customer-service-v1"
   output_model_name: "custom-cs-v1"
   description: "SFT training for customer service use case"
-  region: "{{env.VOLCENGINE_REGION}}"
   hyper_parameters:
     learning_rate: 1.0e-5
     epochs: 5
@@ -80,12 +90,10 @@ training_job_sft:
 
 # DPO (Direct Preference Optimization) job
 training_job_dpo:
+  <<: *training_defaults
   training_job_name: "dpo-alignment-v1"
-  model_id: "{{user.model_id}}"
-  dataset_id: "{{output.dataset_id}}"
   output_model_name: "custom-aligned-v1"
   description: "DPO alignment training"
-  region: "{{env.VOLCENGINE_REGION}}"
   hyper_parameters:
     learning_rate: 5.0e-6
     epochs: 3

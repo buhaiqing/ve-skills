@@ -33,13 +33,14 @@
 | ListClusters | `$.Result.Items[]` | ClusterId, Name, Status, CreateTime |
 | CreateNodePool | `$.Result.NodePoolId` | NodePoolId |
 | DescribeNodePool | `$.Result.*` | Name, Status, AutoScaling, KubernetesConfig |
+| Pagination | `$.Result.Page.TotalCount` | Total items |
 
 ## Pagination
 
 ListClusters supports pagination:
 - `PageNumber`: Starting from 1
 - `PageSize`: Default 10, max 100
-- Response includes `$.Result.Page.TotalCount` for total items
+- Response includes TotalCount for total items
 
 ## Go SDK Examples
 

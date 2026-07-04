@@ -84,7 +84,7 @@
 ```json
 {"PageNumber": 1, "PageSize": 100}
 ```
-→ Response: `$.Result.{Total,PageNumber,PageSize}`
+→ Response fields: TotalCount, PageNumber, PageSize (see Common JSON Paths above)
 
 ## Common Parameter Types
 

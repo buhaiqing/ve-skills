@@ -13,7 +13,8 @@ project_name: production
 
 # RDS Instance Configuration
 rds_instances:
-  - name: "prod-mysql-primary"
+  - &prod_mysql
+    name: "prod-mysql-primary"
     db_engine_version: "MySQL_8_0"
     instance_type: "HA"
     node_spec: "rds.mysql.4c8g"
@@ -33,50 +34,50 @@ rds_instances:
 
 # Databases
 databases:
-  - instance_name: "prod-mysql-primary"
-    name: "app_main"
+  - name: "app_main"
     charset: "utf8mb4"
     description: "Main application database"
+    instance_name: *prod_mysql
 
-  - instance_name: "prod-mysql-primary"
-    name: "app_analytics"
+  - name: "app_analytics"
     charset: "utf8mb4"
     description: "Analytics data warehouse"
+    instance_name: *prod_mysql
 
 # Database Accounts
 accounts:
-  - instance_name: "prod-mysql-primary"
-    name: "app_rw"
+  - name: "app_rw"
     type: "Normal"
+    instance_name: *prod_mysql
     privileges:
       - db: "app_main"
         privilege: "ReadWrite"
       - db: "app_analytics"
         privilege: "ReadWrite"
 
-  - instance_name: "prod-mysql-primary"
-    name: "analytics_ro"
+  - name: "analytics_ro"
     type: "Normal"
+    instance_name: *prod_mysql
     privileges:
       - db: "app_analytics"
         privilege: "ReadOnly"
 
 # Parameter Tuning
 parameters:
-  - instance_name: "prod-mysql-primary"
-    name: "max_connections"
+  - name: "max_connections"
     value: "2000"
-  - instance_name: "prod-mysql-primary"
-    name: "innodb_buffer_pool_size"
+    instance_name: *prod_mysql
+  - name: "innodb_buffer_pool_size"
     value: "4G"
-  - instance_name: "prod-mysql-primary"
-    name: "max_allowed_packet"
+    instance_name: *prod_mysql
+  - name: "max_allowed_packet"
     value: "64M"
+    instance_name: *prod_mysql
 
 # Allow Lists
 allow_lists:
-  - instance_name: "prod-mysql-primary"
-    name: "app-servers"
+  - name: "app-servers"
+    instance_name: *prod_mysql
     ips:
       - "10.0.2.0/24"   # App subnet
       - "10.0.3.0/24"   # API subnet

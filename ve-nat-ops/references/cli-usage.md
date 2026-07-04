@@ -70,14 +70,7 @@ ve nat Gateway DescribeSnatRules --Region "{{env.VOLCENGINE_REGION}}" --NatGatew
 
 ### Create SNAT Rule
 
-```bash
-ve nat Gateway CreateSnatRule \
-  --Region "{{user.region}}" \
-  --NatGatewayId "{{user.nat_id}}" \
-  --SourceCidr "{{user.snat_cidr}}" \
-  --SnatRuleName "{{user.snat_rule_name}}" \
-  --EipAddresses '["{{user.eip_address}}"]'
-```
+> See `SKILL.md` §Operation: CreateSnatRule — Create SNAT Rule for full pre-flight, execution, and validation flow.
 
 ### Delete SNAT Rule
 
@@ -99,17 +92,7 @@ ve nat Gateway DescribeDnatRules --Region "{{env.VOLCENGINE_REGION}}" --NatGatew
 
 ### Create DNAT Rule
 
-```bash
-ve nat Gateway CreateDnatRule \
-  --Region "{{user.region}}" \
-  --NatGatewayId "{{user.nat_id}}" \
-  --EipAddress "{{user.eip_address}}" \
-  --IpProtocol "TCP" \
-  --ExternalPort "{{user.dnat_external_port}}" \
-  --InternalIp "{{user.dnat_internal_ip}}" \
-  --InternalPort "{{user.dnat_internal_port}}" \
-  --DnatRuleName "{{user.dnat_rule_name}}"
-```
+> See `SKILL.md` §Operation: CreateDnatRule — Create DNAT Rule for full pre-flight, execution, and validation flow.
 
 ### Delete DNAT Rule
 

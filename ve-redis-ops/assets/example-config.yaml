@@ -14,7 +14,8 @@ project_name: production
 # Redis Instance Configuration
 redis_instances:
   # Primary cache (HA)
-  - name: "prod-cache-primary"
+  - &prod_cache
+    name: "prod-cache-primary"
     engine_version: "6.0"
     instance_class: "PrimarySecondary"
     node_number: 2
@@ -45,12 +46,12 @@ redis_instances:
 
 # Redis Accounts
 accounts:
-  - instance_name: "prod-cache-primary"
-    name: "app_cache_rw"
+  - name: "app_cache_rw"
     role: "ReadWrite"
-  - instance_name: "prod-cache-primary"
-    name: "analytics_ro"
+    instance_name: *prod_cache
+  - name: "analytics_ro"
     role: "ReadOnly"
+    instance_name: *prod_cache
 
 # Allow Lists
 allow_lists:
@@ -62,15 +63,15 @@ allow_lists:
 
 # Parameter Tuning
 parameters:
-  - instance_name: "prod-cache-primary"
-    name: "maxmemory-policy"
+  - name: "maxmemory-policy"
     value: "allkeys-lru"
-  - instance_name: "prod-cache-primary"
-    name: "timeout"
+    instance_name: *prod_cache
+  - name: "timeout"
     value: "300"
-  - instance_name: "prod-cache-primary"
-    name: "tcp-keepalive"
+    instance_name: *prod_cache
+  - name: "tcp-keepalive"
     value: "60"
+    instance_name: *prod_cache
 
 # Backup Configuration
 backup:

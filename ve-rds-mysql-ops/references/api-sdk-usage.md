@@ -42,13 +42,14 @@
 | DescribeDBInstanceParameters | `$.Result.Parameters[]` | ParameterName, ParameterValue, ForceRestart, CheckingCode |
 | DescribeDBInstanceParametersLog | `$.Result.ParameterChangeLogs[]` | ParameterName, Old/New Value, ModifyTime, Status |
 | DeleteDBInstance | `$.Metadata.RequestId` | RequestId |
+| Pagination | `$.Result.TotalCount` | Total items |
 
 ## Pagination
 
 DescribeDBInstances supports:
 - `PageNumber`: Starting from 1
 - `PageSize`: Default 10
-- Response: `$.Result.TotalCount` for total items
+- Response: TotalCount for total items
 
 ## Go SDK Package
 

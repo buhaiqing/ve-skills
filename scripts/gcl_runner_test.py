@@ -48,6 +48,11 @@ class SecretMaskingTests(unittest.TestCase):
         out = gcl_runner.mask_secrets("VOLCENGINE_SECRET_KEY=supersecretvalue")
         self.assertIn("VOLCENGINE_SECRET_KEY=<masked>", out)
 
+    def test_mask_aklt_token(self) -> None:
+        out = gcl_runner.mask_secrets("AKLTABCDEFGHIJKLMNOPQRSTUV")
+        self.assertIn("AKLT<masked>", out)
+        self.assertNotIn("ABCDEFGHIJKLMNOPQRSTUV", out)
+
     def test_has_credential_leak_aklt(self) -> None:
         self.assertTrue(gcl_runner.has_credential_leak("AKLTABCDEFGHIJKLMNOPQRSTUV"))
         self.assertFalse(gcl_runner.has_credential_leak("AKLTshort"))
@@ -57,6 +62,8 @@ class SecretMaskingTests(unittest.TestCase):
 
     def test_no_leak_when_already_masked(self) -> None:
         self.assertFalse(gcl_runner.has_credential_leak("SecretKey=<masked>"))
+        self.assertFalse(gcl_runner.has_credential_leak("VOLCENGINE_SECRET_KEY=<masked>"))
+        self.assertFalse(gcl_runner.has_credential_leak("AKLT<masked>"))
 
 
 class RunCommandTests(unittest.TestCase):

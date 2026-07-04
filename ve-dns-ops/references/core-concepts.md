@@ -55,7 +55,7 @@ Aliases one hostname to another. The target must be another domain name, not an 
 mail.example.com.  600  IN  CNAME  mail.example.net.
 ```
 
-> **Important:** CNAME records cannot coexist with other record types at the same name (RFC 1034). CNAME cannot be used at the zone apex (`@`).
+> ⚠️ CNAME records cannot coexist with other record types at the same name (RFC 1034). CNAME cannot be used at zone apex (`@`).
 
 #### MX Record (Mail Exchange Record)
 Specifies mail servers for the domain, with priority values.
@@ -66,11 +66,11 @@ example.com.  600  IN  MX  20  backup-mail.example.com.
 Lower priority values are preferred.
 
 #### TXT Record (Text Record)
-Holds arbitrary text data. Commonly used for:
-- **SPF** (Sender Policy Framework): `v=spf1 include:_spf.example.com ~all`
-- **DKIM** (DomainKeys Identified Mail): public key for email signing
-- **DMARC** (Domain-based Message Authentication): `v=DMARC1; p=reject; rua=mailto:dmarc@example.com`
-- **Domain verification**: proving domain ownership to third-party services
+Holds arbitrary text data. Common uses:
+- 📧 **SPF** — `v=spf1 include:_spf.example.com ~all`
+- 🔑 **DKIM** — public key for email signing
+- 🛡️ **DMARC** — `v=DMARC1; p=reject; rua=mailto:dmarc@example.com`
+- ✅ **Domain verification** — prove ownership to 3rd-party services
 
 #### NS Record (Name Server Record)
 Delegates a subdomain to a different set of name servers.
@@ -130,10 +130,10 @@ Account
 
 ## DNS Security
 
-- **Anti-DDoS:** Volcengine DNS provides built-in protection against DNS-level DDoS attacks
-- **CAA Records:** Restrict which CAs can issue certificates for your domain
-- **DNSSEC:** (when available) Adds cryptographic signatures to DNS records to prevent spoofing
-- **Rate Limiting:** API-level rate limiting to prevent abuse
+- 🛡️ **Anti-DDoS** — built-in protection against DNS-level DDoS attacks
+- 🔒 **CAA Records** — restrict which CAs can issue certs for your domain
+- 🔐 **DNSSEC** — (when available) cryptographic signatures to prevent spoofing
+- ⚡ **Rate Limiting** — API-level rate limits to prevent abuse
 
 ## Related Services
 

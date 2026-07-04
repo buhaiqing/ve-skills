@@ -1,5 +1,7 @@
 # CLI — VPN (`ve`)
 
+> **jq Paths (`.Result.*`):** `.VpnGateways[0]` (first gateway), `.VpnGateways[]` (gateway ID list), `.VpnConnections[]` (connection list)
+
 ## Install and Config
 
 - Install: see [Volcengine CLI](https://github.com/volcengine/volcengine-cli)
