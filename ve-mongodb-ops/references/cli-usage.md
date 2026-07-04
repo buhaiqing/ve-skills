@@ -18,7 +18,7 @@
 |------|---------|-------|
 | List regions | `ve mongodb DescribeRegions` | All supported regions |
 | List zones | `ve mongodb DescribeAvailabilityZones --Region cn-beijing` | AZs in region |
-| List specs | `ve mongodb DescribeDBInstanceSpecs --Region cn-beijing --MongoVersion 5.0` | Available node specs |
+| List specs | `ve mongodb DescribeDBInstanceSpecs --Region cn-beijing --MongoVersion "{{user.mongo_version}}"` | Available node specs |
 
 > Basic CRUD commands → SKILL.md Execution Flows (CLI `--Param` style) + api-sdk-usage.md (`--body` JSON variants)
 
@@ -32,7 +32,7 @@
     "InstanceId": "mongo-xxx",
     "InstanceName": "my-mongo",
     "InstanceStatus": "RUNNING",
-    "MongoVersion": "5.0",
+    "MongoVersion": "{{user.mongo_version}}",
     "NodeSpec": "mongo.2c4g",
     "NodeNumber": 3,
     "StorageSpaceGB": 100,
@@ -61,7 +61,7 @@
         "InstanceId": "mongo-xxx",
         "InstanceName": "my-mongo",
         "InstanceStatus": "RUNNING",
-        "MongoVersion": "5.0",
+        "MongoVersion": "{{user.mongo_version}}",
         "NodeSpec": "mongo.2c4g",
         "StorageSpaceGB": 100,
         "ConnectionString": "mongo-xxx.mongodb.volces.com",

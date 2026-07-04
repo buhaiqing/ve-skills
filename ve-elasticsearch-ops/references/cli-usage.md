@@ -47,10 +47,12 @@ ve elasticsearch ListInstances --Region cn-beijing
 ve elasticsearch DescribeInstances --Region cn-beijing --InstanceId es-xxx
 
 # Create instance
+> Query available versions via `ve elasticsearch DescribeVersions`
+
 ve elasticsearch CreateInstance \
   --Region cn-beijing \
   --InstanceName "prod-search" \
-  --Version "7.16" \
+  --Version "{{user.es_version}}" \
   --NodeSpec "es.x4.medium" \
   --NodeNumber 3 \
   --StorageSpaceGb 100 \
@@ -88,7 +90,7 @@ ve elasticsearch DeleteInstance \
 ve elasticsearch UpgradeVersion \
   --Region cn-beijing \
   --InstanceId es-xxx \
-  --TargetVersion "8.5"
+  --TargetVersion "{{user.es_target_version}}"
 ```
 
 ### Index Management

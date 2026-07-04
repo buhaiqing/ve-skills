@@ -5,6 +5,8 @@ These supplement `CLAUDE.md` (imported above). They encode lessons that have alr
 > **Content hierarchy**: This file is the entry point. Detailed specifications live in `docs/`:
 > - `docs/gcl-spec.md` — full GCL specification (purpose, roles, loop flow, trace, prompt templates, changelog)
 > - `docs/token-efficiency.md` — full TE rules with code examples (TE-1 through TE-9)
+> - `docs/skill-harness-review-checklist.md` — reusable P0-P3 review checklist for all ve-*-ops skills
+> - `docs/inline-script-pattern.md` — `_inline_script()` implementation constraints for validation scripts
 >
 > Keep this file in sync with `docs/` files. When updating either, verify the other stays aligned.
 
@@ -77,13 +79,66 @@ Verify against reality, not memory:
 | Any GCL rubric, prompt template, or `## Quality Gate (GCL)` section change | Verify against `docs/gcl-spec.md` §Rubric + §Prompt Templates |
 | Any Markdown spec, README, or path-reference change | Run the link-integrity scan in **§Document Integrity & Link Validation** below |
 | Any `docs/*.md` change | Verify cross-reference symmetry (see Layer 2 below) |
+| Any skill harness review | Walk [docs/skill-harness-review-checklist.md](docs/skill-harness-review-checklist.md) D0-D4 |
 | Any Go SDK example code change | `python3 -m py_compile <file>` if Python; Go examples are illustrative — no build step |
 
 > **Note:** This repo has automated validation scripts in `scripts/` for pre-commit checks (see **Files that DO NOT exist** below). After changes, run `python3 scripts/validate_local.py` if available, then supplement with manual checks against the P0/P1 checklist.
 
 ---
 
-## Token Efficiency Requirements (P0 — 强制)
+## Skill Harness Review — 评审方法论
+
+> 评审 ve-*-ops skill 时的两层框架，沉淀自 2026-07-05 全量 skill 评审实践经验。
+> 完整检查表见 [docs/skill-harness-review-checklist.md](docs/skill-harness-review-checklist.md)。
+
+### 两层评审框架
+
+每次 skill 评审必须覆盖两个维度：
+
+| 维度 | 关注点 | 检查对象 |
+|------|--------|---------|
+| **Harness Runtime** | Skill 能否被 Agent Runtime 正确路由、执行、跟踪 | `## Trigger & Scope`、`## Steps`、`## Quality Gate (GCL)`、`{{output.*}}` |
+| **Quality Compliance** | Skill 是否符合模板规范、TE 规则、GCL 标准 | frontmatter、section 完整性、TE-1~TE-9、GCL rubric |
+
+### P0-P3 优先级定义
+
+| 级别 | 含义 | 处理方式 | 示例 |
+|------|------|---------|------|
+| **P0** | blocking — 不可接受 | **必须立即修复** | 缺 Trigger & Scope / GCL / null bytes / 凭证泄露 |
+| **P1** | 破坏性操作验证缺失 | **必须修复** | delete/stop 缺少确认门、错误码不足 10 个 |
+| **P2** | 质量欠佳但不阻塞 | **建议修复** | 硬编码版本号、跨文件内容重复、缺少 What This Skill Does |
+| **P3** | 优化项 | **有空再修** | TE-8 符号替换不彻底、压缩级别不匹配 |
+
+### 评审执行步骤（按顺序）
+
+```
+1. 运行自动化检查 → python3 scripts/validate_local.py
+2. 检查 frontmatter → name/description/license/compatibility 齐全
+3. 检查 Trigger & Scope → SHOULD/SHOULD NOT 子节存在，确认路由边界
+4. 检查 Steps → 每个操作有明确的 I/O 定义和失败处理
+5. 检查 GCL → rubric/prompt-templates 与 docs/gcl-spec.md 对齐
+6. 检查 TE 规则 → TE-1~TE-7 逐条验证（TE-1 见下方边界规则）
+7. 检查文件完整性 → 无 null bytes、无截断、code fence 闭合
+8. 检查 cross-skill 委派 → 跨产品操作是否正确委托
+9. 给出 P0-P3 分级结论
+```
+
+### 背景 Agent 搜索指引
+
+搜索 skill 文件时使用 **substring（子串）匹配**而非 exact match，因为：
+
+- `## Trigger & Scope` 可能多 `(Agent-Readable)` 后缀 → 搜索 `Trigger & Scope` 而非 `## Trigger & Scope`
+- heading 可能有额外空格或符号 → 搜索核心关键词即可
+
+### TE-1 扫描边界规则
+
+判断一个硬编码值是否算 TE-1 违规：
+
+| 类型 | 示例 | 判定 | 理由 |
+|------|------|------|------|
+| **用户可选参数** | `--EngineVersion "5.0"`、`"MongoVersion": "4.4"` | ✅ **违规** | 用户可能想选其他版本 |
+| **API 规范版本** | `ApiVersion: "2024-01-01"`、API endpoint 中的版本号 | ❌ 不算 | 这是 API 契约的一部分，不由用户选择 |
+| **配额/限制** | `MaxResults: 100` | ❌ 不算 | 服务端限制，不取决于用户 |
 
 > 在保持 Agent 可执行性的前提下，最小化每个 Skill 的 Token 消耗。
 > 完整规则详解（含代码示例）见 [docs/token-efficiency.md](docs/token-efficiency.md)。
@@ -478,6 +533,8 @@ Build-time 2-round self-review and runtime GCL are independent gates. A clean se
 | `docs/token-efficiency.md` | Detailed TE rules with code examples (TE-1 through TE-9) |
 | `docs/reflexion-memory.md` | **Reflexion rules** — lightweight cross-session failure-pattern memory governance |
 | `docs/failure-patterns.md` | **Reflexion memory store** — bounded structured failure patterns for cross-session learning |
+| `docs/skill-harness-review-checklist.md` | **Skill harness review checklist** — reusable P0-P3 review template for all ve-*-ops skills |
+| `docs/inline-script-pattern.md` | **Inline script pattern** — `_inline_script()` implementation constraints for validation scripts |
 | `ve-skill-generator/SKILL.md` | Meta-skill generator — full workflow, P0/P1 checklist, Token Efficiency rules |
 | `ve-skill-generator/references/ve-skill-template.md` | Canonical SKILL.md template with GCL block |
 | `ve-skill-generator/references/governance-and-adversarial-review.md` | Governance & adversarial review — R1-R4 pre-merge security/resilience/UX scenarios |

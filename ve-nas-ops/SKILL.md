@@ -239,7 +239,7 @@ for i in $(seq 1 60); do
 done
 
 # Cleanup
-ve nas DeleteFileSystem -- P17 Region cn-north-1 --FileSystemId "$FS_ID"
+ve nas DeleteFileSystem --Region cn-north-1 --FileSystemId "$FS_ID"
 ```
 
 ### Test Scenarios
