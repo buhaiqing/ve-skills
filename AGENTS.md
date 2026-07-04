@@ -295,7 +295,8 @@ Each skill may override `max_iter` in its own `SKILL.md` (`## Quality Gate (GCL)
 
 ### Cross-Skill Delegation
 
-When GCL identifies cross-product gaps, the Orchestrator MUST delegate, not absorb:
+When GCL identifies cross-product gaps, the Orchestrator MUST delegate, not absorb.
+Full alarm-pattern → skill routing rules are in [docs/skill-routing-graph.md](docs/skill-routing-graph.md).
 
 | Critic finding | Delegate to |
 |---|---|
@@ -440,6 +441,7 @@ Detailed runtime-quality specifications are intentionally externalized to reduce
 | `docs/gcl-spec.md` | any `## Quality Gate (GCL)` section, `references/rubric.md`, `references/prompt-templates.md`, or GCL-related runner code |
 | `docs/reflexion-memory.md` | `docs/failure-patterns.md`, trace `failure_pattern` extraction, Reflexion retrieval/persistence logic, or failure-memory governance |
 | `docs/failure-patterns.md` | only when retrieving or updating reusable failure patterns; keep it bounded and deduplicated |
+| `docs/skill-routing-graph.md` | cross-skill alarm routing, delegation rules, and multi-product fault diagnosis chains |
 
 ### GCL hard constraints
 
