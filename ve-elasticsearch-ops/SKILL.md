@@ -266,7 +266,7 @@ ve elasticsearch CreateInstance \
 ve elasticsearch CreateInstance \
   --Region "{{env.VOLCENGINE_REGION}}" \
   --InstanceName "{{user.instance_name}}" \
-  --Version "7.16" \
+  --Version "{{user.es_version}}" \
   --NodeSpec "es.x2.medium" \
   --NodeNumber 3 \
   --StorageSpaceGb 100 \
@@ -950,10 +950,10 @@ fi
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `SnapshotNotFound` | 0 | — | Already deleted; skip | `[INFO] Snapshot already deleted.` |
-| `SnapshotInProgress` | 3 | 10s | Wait for completion | `[WARNING] Snapshot in progress. Retrying...` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `SnapshotNotFound` | 0 | Already deleted; skip — `[INFO] Snapshot already deleted.` |
+| `SnapshotInProgress` | 3 | 10s wait for completion — `[WARNING] Snapshot in progress. Retrying...` |
 
 ---
 
@@ -992,10 +992,10 @@ ve elasticsearch DescribeKibana \
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `KibanaAlreadyDisabled` | 0 | — | Already disabled; skip | `[INFO] Kibana already disabled.` |
-| `InvalidInstance.NotFound` | 0 | — | HALT; instance does not exist | `[ERROR] Instance not found.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `KibanaAlreadyDisabled` | 0 | Already disabled; skip — `[INFO] Kibana already disabled.` |
+| `InvalidInstance.NotFound` | 0 | HALT; instance does not exist — `[ERROR] Instance not found.` |
 
 ---
 
@@ -1067,36 +1067,36 @@ done
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidInstance.NotFound` | 0 | — | HALT; instance does not exist | `[ERROR] Instance not found.` |
-| `InvalidInstanceStatus` | 3 | 10s | Wait for stable status | `[WARNING] Instance busy. Retrying...` |
-| `QuotaExceeded` | 0 | — | HALT; node quota exceeded | `[ERROR] Node quota exceeded. Request quota increase.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidInstance.NotFound` | 0 | HALT; instance does not exist — `[ERROR] Instance not found.` |
+| `InvalidInstanceStatus` | 3 | 10s wait for stable status — `[WARNING] Instance busy. Retrying...` |
+| `QuotaExceeded` | 0 | HALT; node quota exceeded — `[ERROR] Node quota exceeded. Request quota increase.` |
 
 ---
 
 ## Error Taxonomy (≥ 10 Codes)
 
-| Error Code | HTTP | Meaning | Max Retries | Backoff | Agent Action | UX Template |
-|------------|------|---------|-------------|---------|--------------|-------------|
-| `InvalidParameter` | 400 | Request parameter invalid | 0 | — | Fix parameter and retry | `[ERROR] InvalidParameter: Request parameter is invalid. Check the parameter against API docs.` |
-| `InvalidInstance.NotFound` | 404 | Instance does not exist | 0 | — | HALT; verify instance ID | `[ERROR] Instance not found. Verify the instance ID.` |
-| `InvalidVpc.NotFound` | 400 | VPC does not exist | 0 | — | HALT; create VPC first | `[ERROR] VPC not found. Create VPC via ve-vpc-ops first.` |
-| `InvalidSubnet.NotFound` | 400 | Subnet does not exist | 0 | — | HALT; create subnet first | `[ERROR] Subnet not found. Create subnet first.` |
-| `IndexAlreadyExists` | 400 | Index already exists | 0 | — | Use different name or delete first | `[ERROR] Index already exists. Use a different name.` |
-| `IndexNotFound` | 404 | Index does not exist | 0 | — | Verify index name or create index | `[ERROR] Index not found. Verify the index name.` |
-| `PluginAlreadyExists` | 400 | Plugin already installed | 0 | — | Plugin already installed — skip | `[ERROR] Plugin already installed.` |
-| `PluginNotFound` | 404 | Plugin not available | 0 | — | Verify plugin name and ES version | `[ERROR] Plugin not found. Check available plugins.` |
-| `PluginIncompatible` | 400 | Plugin incompatible with ES version | 0 | — | HALT; select compatible plugin | `[ERROR] Plugin incompatible with this ES version.` |
-| `QuotaExceeded` | 400 | Resource quota exceeded | 0 | — | HALT; request quota increase | `[ERROR] Quota exceeded. Request quota increase from support.` |
-| `InsufficientBalance` | 400 | Account balance insufficient | 0 | — | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
-| `Unauthorized` | 403 | IAM permission denied | 0 | — | HALT; check IAM policies | `[ERROR] Unauthorized. Check IAM permissions.` |
-| `InvalidInstanceStatus` | 400 | Instance status not valid for operation | 3 | 10s | Wait and retry | `[WARNING] Instance busy. Retrying...` |
-| `IncompatibleVersion` | 400 | Upgrade version not supported | 0 | — | HALT; check version compatibility matrix | `[ERROR] Incompatible version upgrade path.` |
-| `InternalError` | 500 | Server-side error | 3 | 2s, 4s, 8s | Retry with backoff | `[ERROR] Internal error. Retrying...` |
-| `Throttling` | 429 | Rate limit exceeded | 3 | 1s, 2s, 4s | Back off and retry | `[WARNING] Rate limit. Retrying in {backoff}s...` |
-| `ClusterHealthNotGreen` | 400 | Cluster health not Green/Yellow | 0 | — | HALT; fix cluster health first | `[ERROR] Cluster health must be at least Yellow.` |
-| `SnapshotInProgress` | 400 | Snapshot already in progress | 3 | 10s | Wait and retry | `[WARNING] Snapshot in progress. Retrying...` |
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidParameter` | Request parameter invalid | 0 retries; Fix parameter and retry |
+| `InvalidInstance.NotFound` | Instance does not exist | 0 retries; HALT — verify instance ID |
+| `InvalidVpc.NotFound` | VPC does not exist | 0 retries; HALT — create VPC first |
+| `InvalidSubnet.NotFound` | Subnet does not exist | 0 retries; HALT — create subnet first |
+| `IndexAlreadyExists` | Index already exists | 0 retries; Use different name or delete first |
+| `IndexNotFound` | Index does not exist | 0 retries; Verify index name or create index |
+| `PluginAlreadyExists` | Plugin already installed | 0 retries; Plugin already installed — skip |
+| `PluginNotFound` | Plugin not available | 0 retries; Verify plugin name and ES version |
+| `PluginIncompatible` | Plugin incompatible with ES version | 0 retries; HALT — select compatible plugin |
+| `QuotaExceeded` | Resource quota exceeded | 0 retries; HALT — request quota increase |
+| `InsufficientBalance` | Account balance insufficient | 0 retries; HALT — recharge account |
+| `Unauthorized` | IAM permission denied | 0 retries; HALT — check IAM policies |
+| `InvalidInstanceStatus` | Instance status not valid for operation | 3 retries/10s; Wait and retry |
+| `IncompatibleVersion` | Upgrade version not supported | 0 retries; HALT — check version compatibility |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry with backoff |
+| `Throttling` | Rate limit exceeded | 3 retries/1s/2s/4s; Back off and retry |
+| `ClusterHealthNotGreen` | Cluster health not Green/Yellow | 0 retries; HALT — fix cluster health first |
+| `SnapshotInProgress` | Snapshot already in progress | 3 retries/10s; Wait and retry |
 
 ## Prerequisites
 
