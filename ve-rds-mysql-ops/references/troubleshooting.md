@@ -2,23 +2,19 @@
 
 ## Common Error Codes
 
-| Error Code | Agent Action | Recovery |
-|-----------|-------------|----------|
-| `InvalidParameter.InstanceName` | **HALT** — name format invalid | Use valid name per naming rules |
-| `InvalidParameter.NodeSpec` | **HALT** — spec invalid | Check available specs via DescribeDBInstanceSpecs |
-| `InvalidParameter.StorageSpace` | **HALT** — storage out of range [20-3000]GB | Provide valid storage size |
-| `InvalidParameter.Parameter` | **HALT** — value outside CheckingCode | Fix value to match CheckingCode range |
-| `InvalidParameter.NetworkConfig` | **HALT** — VPC/subnet invalid | Verify network exists in region |
-| `ResourceNotFound.Instance` | **HALT** — instance doesn't exist | Verify InstanceId |
-| `ResourceNotFound.Account` | **HALT** — account doesn't exist | Verify AccountName via DescribeDBAccounts |
-| `OperationDenied.InstanceStatus` | **HALT** — invalid state | Wait for current operation to complete |
-| `QuotaExceeded.InstanceCount` | **HALT** — max instances reached | Delete unused or raise quota |
-| `QuotaExceeded.AccountCount` | **HALT** — max accounts reached | Delete unused accounts |
-| `InsufficientBalance` | **HALT** — no funds | Recharge account |
-| `InternalError` | Retry with backoff; **HALT** after 3 with RequestId | Server error |
-| `Throttling` | Exponential backoff | Rate limit |
-| `ResourceInUse` | Wait for operation to complete | In use by another operation |
-| `Forbidden.RAM` | **HALT** — insufficient permissions | Add RAM policy for RDS |
+> **TE-6:** Per-operation error codes in SKILL.md §Failure Recovery (detailed). Summary below for quick reference.
+
+| Error Pattern | Action | Recovery |
+|---|--------|----------|
+| `InvalidParameter.*` | **HALT** | Fix param per API docs |
+| `ResourceNotFound.*` | **HALT** | Verify ID via Describe* |
+| `OperationDenied.*` | **HALT** | Wait for current op to finish |
+| `QuotaExceeded.*` | **HALT** | Clean up or raise quota |
+| `InsufficientBalance` | **HALT** | Recharge account |
+| `InternalError` | RETRY 3x → **HALT** | Capture RequestId |
+| `Throttling` | RETRY — backoff | Rate limit |
+| `ResourceInUse` | WAIT | In use by another operation |
+| `Forbidden.RAM` | **HALT** | Add RAM policy for RDS |
 
 ## Diagnostic Order
 

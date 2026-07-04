@@ -1,8 +1,8 @@
 # Core Concepts — Volcengine Redis (缓存数据库 Redis 版)
 
 > **Purpose:** Fundamental concepts for Volcengine Redis.
-> **Version:** 1.0.0
-> **Last Updated:** 2026-05-25
+> **Version:** 1.1.0
+> **Last Updated:** 2026-07-04
 
 ---
 
@@ -38,11 +38,12 @@ A **Redis (缓存数据库 Redis 版)** is a fully managed in-memory data store 
 
 ## 3. Engine Versions
 
-| Version | Status | Notable Features |
-|---------|--------|-----------------|
-| `5.0` | Stable | Stream datatype, modules |
-| `6.0` | Stable | ACL, RESP3, SSL, multi-part keys |
-| `7.0` | Latest | Functions, new commands, improved eviction |
+Query available versions: `ve redis DescribeEngineVersions`
+
+| Version Range | Key Features |
+|--------------|-------------|
+| 6.x+ | ACL, RESP3, SSL, multi-part keys |
+| 7.x+ | Functions, new commands, improved eviction |
 
 ---
 
@@ -106,13 +107,15 @@ ve redis DescribeRegions
 
 ## 9. Limits and Quotas
 
-| Resource | Default Quota | Notes |
-|----------|---------------|-------|
-| Redis instances per region | 20 | Can request increase |
-| Max keys per instance | Memory limited | Bound by maxmemory |
-| Max connections per instance | `ve redis DescribeRegionQuotas` | Varies by spec |
-| Allow lists per instance | 100 | — |
-| Database accounts per instance | 50 | — |
+Query current quotas: `ve redis DescribeRegionQuotas`
+
+| Resource | Notes |
+|----------|-------|
+| Redis instances per region | Request increase via ticket |
+| Max keys per instance | Memory limited (maxmemory) |
+| Max connections per instance | Varies by spec → `DescribeRegionQuotas` |
+| Allow lists per instance | Hard limit per instance |
+| Database accounts per instance | Hard limit per instance |
 
 ---
 

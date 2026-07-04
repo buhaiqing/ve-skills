@@ -15,8 +15,8 @@ compatibility: >-
   endpoints.
 metadata:
   author: volcengine
-  version: "1.1.0"
-  last_updated: "2026-06-04"
+  version: "1.2.0"
+  last_updated: "2026-07-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -504,7 +504,7 @@ ve mongodb ModifyDBInstanceParameters \
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — MongoDB monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
-- [Knowledge Base](references/knowledge-base.md) — fault pattern library
+- [Knowledge Base](references/advanced/knowledge-base.md) — fault pattern library
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 

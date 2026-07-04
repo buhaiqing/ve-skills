@@ -2,37 +2,22 @@
 
 > **Purpose:** CLI usage reference for Redis operations using the `ve` CLI.
 > **Version:** 1.0.0
-> **Last Updated:** 2026-05-25
+> **Last Updated:** 2026-06-04
 
 ---
 
 ## Table of Contents
 
 1. [Instance Commands](#1-instance-commands)
-2. [Account Commands](#2-account-commands)
-3. [Parameter Commands](#3-parameter-commands)
-4. [Backup Commands](#4-backup-commands)
-5. [Allow List Commands](#5-allow-list-commands)
-6. [Connection Commands](#6-connection-commands)
-7. [Performance Commands](#7-performance-commands)
-8. [Output Formatting](#8-output-formatting)
-9. [Common Patterns](#9-common-patterns)
+2. [Allow List Commands](#2-allow-list-commands)
+3. [Connection Commands](#3-connection-commands)
+4. [Performance Commands](#4-performance-commands)
+5. [Output Formatting](#5-output-formatting)
+6. [Common Patterns](#6-common-patterns)
 
 ---
 
 ## 1. Instance Commands
-
-### List All Instances
-
-```bash
-ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"
-```
-
-### Filter by VPC
-
-```bash
-ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --VpcId "{{user.vpc_id}}"
-```
 
 ### Create Standalone Instance
 
@@ -87,81 +72,9 @@ ve redis CreateDBInstance --body '{
 }'
 ```
 
-### Delete Instance
-
-```bash
-# ⚠️ IRREVERSIBLE
-ve redis DeleteDBInstance --body '{
-  "InstanceId": "{{user.instance_id}}",
-  "BackupPointName": "pre-delete-backup"
-}'
-```
-
 ---
 
-## 2. Account Commands
-
-### List Accounts
-
-```bash
-ve redis ListDBAccount --Region "{{env.VOLCENGINE_REGION}}" --InstanceId "{{user.instance_id}}"
-```
-
-### Create Account
-
-```bash
-ve redis CreateDBAccount --body '{
-  "InstanceId": "{{user.instance_id}}",
-  "AccountName": "app_cache",
-  "AccountPassword": "{{user.password}}",
-  "Role": "ReadWrite"
-}'
-```
-
----
-
-## 3. Parameter Commands
-
-### Query Parameters
-
-```bash
-ve redis DescribeDBInstanceParams --Region "{{env.VOLCENGINE_REGION}}" --InstanceId "{{user.instance_id}}"
-```
-
-### Modify Parameters
-
-```bash
-ve redis ModifyDBInstanceParams --body '{
-  "InstanceId": "{{user.instance_id}}",
-  "Parameters": [
-    {"Name": "maxmemory-policy", "Value": "allkeys-lru"},
-    {"Name": "timeout", "Value": "300"}
-  ]
-}'
-```
-
----
-
-## 4. Backup Commands
-
-### Create Backup
-
-```bash
-ve redis CreateBackup --body '{
-  "InstanceId": "{{user.instance_id}}",
-  "BackupName": "pre-deploy-backup"
-}'
-```
-
-### List Backups
-
-```bash
-ve redis DescribeBackups --Region "{{env.VOLCENGINE_REGION}}" --InstanceId "{{user.instance_id}}"
-```
-
----
-
-## 5. Allow List Commands
+## 2. Allow List Commands
 
 ### Create Allow List
 
@@ -183,12 +96,12 @@ ve redis AssociateAllowList --body '{
 
 ---
 
-## 6. Connection Commands
+## 3. Connection Commands
 
 ### Enable Public Access
 
 ```bash
-# ⚠️ SECURITY: Always configure allow list FIRST
+# ⚠️ SECURITY: configure allow list FIRST
 ve redis CreateDBEndpointPublicAddress --body '{
   "InstanceId": "{{user.instance_id}}",
   "NetworkType": "SingleLine"
@@ -200,7 +113,7 @@ ve redis DescribeDBInstanceDetail --Region "{{env.VOLCENGINE_REGION}}" --Instanc
 
 ---
 
-## 7. Performance Commands
+## 4. Performance Commands
 
 ### Scan Big Keys
 
@@ -216,7 +129,7 @@ ve redis DescribeHotKeys --Region "{{env.VOLCENGINE_REGION}}" --InstanceId "{{us
 
 ---
 
-## 8. Output Formatting
+## 5. Output Formatting
 
 ### Instance Table
 
@@ -230,7 +143,7 @@ ve redis DescribeDBInstances --Region "$VOLCENGINE_REGION" | jq -r '
 
 ---
 
-## 9. Common Patterns
+## 6. Common Patterns
 
 ### Pattern: Full Redis Setup
 
@@ -263,4 +176,4 @@ echo "Connect: redis-cli -h $CONN -a SecureP@ss123"
 
 ---
 
-*This reference document is part of the ve-redis-ops skill.*
+*This reference covers `--body JSON` variants and commands not in the main SKILL.md. Basic CRUD CLI → SKILL.md Execution Flows.*

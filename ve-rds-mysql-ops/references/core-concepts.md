@@ -79,10 +79,17 @@ Each MySQL parameter has:
 
 ## Limits
 
-| Resource | Default Limit |
-|----------|--------------|
-| Instances per account | 50 |
-| Read-only nodes per instance | 10 |
-| Storage per instance | 20-3000 GB |
-| Accounts per instance | 500 |
-| IP list entries | 1000 |
+> **TE-1:** Limits vary by account tier. Query current quota via API:
+
+```bash
+ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 1
+# → $.Result.TotalCount shows current instance count (vs quota)
+```
+
+| Resource | Known Range | Query Method |
+|----------|-------------|-------------|
+| Instances per account | varies (~50 default) | `DescribeDBInstances → TotalCount` |
+| Read-only nodes per instance | up to 10 | `DescribeDBInstanceDetail → ReadOnlyNodeCount` |
+| Storage per instance | 20-3000 GB | `DescribeDBInstanceDetail → StorageSpace` |
+| Accounts per instance | up to 500 | `DescribeDBAccounts` |
+| IP list entries | up to 1000 | `ListDBInstanceIPLists` |

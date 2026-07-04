@@ -15,7 +15,7 @@ compatibility: >-
 metadata:
   author: volcengine
   version: "1.1.0"
-  last_updated: "2026-06-04"
+  last_updated: "2026-07-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -385,7 +385,7 @@ ve redis ModifyDBInstanceParameters --InstanceId "{{user.instance_id}}" --body '
 - [Core Concepts](references/core-concepts.md) — Redis architecture, instance types, engine versions
 - [API & SDK Usage](references/api-sdk-usage.md) — Full operation map, JSON paths
 - [CLI Usage](references/cli-usage.md) — `ve redis` command reference
-- [Knowledge Base](references/knowledge-base.md) — fault pattern library (AIOps diagnosis)
+- [Knowledge Base](references/advanced/knowledge-base.md) — fault pattern library (AIOps diagnosis)
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — Redis monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
