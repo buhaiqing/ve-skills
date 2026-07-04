@@ -35,6 +35,10 @@ metadata:
 
 # Volcengine PolarDB for MySQL Operations Skill
 
+### What This Skill Does
+
+Operate Volcengine PolarDB MySQL clusters, compute nodes, storage pools, read replicas, and backups using the `ve` CLI (primary) or JIT Go SDK (fallback). Manages cloud-native MySQL workloads with compute-storage separation architecture.
+
 ## Overview
 
 Volcengine PolarDB for MySQL (云原生数据库 PolarDB MySQL 版) is a cloud-native relational database service with compute-storage separation architecture. It provides high performance, elastic scalability, and high availability through shared storage, multi-node clusters, and automatic failover. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and official **`ve` CLI**), response validation, and failure recovery.
@@ -489,6 +493,16 @@ ve polardb_mysql CreateParameterGroup \
 2. **Go runtime** for JIT fallback (see references/integration.md)
 3. **Credentials:** `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION`
 4. **Verify:** `ve polardb_mysql DescribeDBClusters --Region "{{env.VOLCENGINE_REGION}}"`
+
+## Operational Best Practices
+
+- **Security:** Deploy clusters in dedicated VPCs with strict subnet ACLs; use least-privilege database accounts; enable TLS for client connections.
+- **Reliability:** Ensure multi-AZ deployments with primary and standby nodes; schedule regular `CreateBackup`; enable backup retention for point-in-time recovery.
+- **Compute-storage separation:** Storage scaling is irreversible — plan `ScaleStorage` carefully; monitor `StorageUsed` vs `StorageSpace` and scale before reaching 90%.
+- **Failover planning:** Test `FailoverDBCluster` regularly to verify RTO; failover causes <30s write interruption — schedule during maintenance windows.
+- **Endpoint management:** Use dedicated endpoints for read-write and read-only traffic; enable `AutoAddNewNodes` to automatically attach new read replicas to the endpoint.
+- **Naming conventions:** Use consistent prefixes for cluster names, parameter groups, and endpoints to simplify cross-team auditing.
+- **Cost optimization:** Right-size `NodeClass` to workload; scale down idle compute nodes during off-peak hours; monitor storage utilization to avoid over-provisioning.
 
 ## Reference Directory
 

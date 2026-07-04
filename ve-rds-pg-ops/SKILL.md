@@ -34,6 +34,10 @@ metadata:
 
 # Volcengine RDS for PostgreSQL Operations Skill
 
+### What This Skill Does
+
+Manages Volcengine RDS for PostgreSQL instances including lifecycle, read-only nodes, backup/restore, parameter tuning, and account administration using the `ve` CLI (primary) or Go SDK (fallback).
+
 ## Overview
 
 Volcengine RDS for PostgreSQL (云数据库 PostgreSQL 版) provides managed PostgreSQL database instances with support for versions 11-17. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and official **`ve` CLI**), response validation, and failure recovery.
@@ -390,6 +394,16 @@ ve rds_postgresql RebuildDBInstance --InstanceId "{{user.instance_id}}"
 2. **Go runtime** for JIT fallback (see references/integration.md)
 3. **Credentials:** `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION`
 4. **Verify:** `ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"`
+
+## Operational Best Practices
+
+- **Least privilege:** Grant IAM policies scoped to specific RDS PostgreSQL operations and instance IDs; avoid blanket `rds_postgresql:*` permissions.
+- **Encrypted connections:** Enforce TLS for all client connections; disable SSL/TLS enforcement only during migration.
+- **Backup strategy:** Configure automatic backups with a retention period of at least 7 days; perform manual backups before any spec modification or major version upgrade.
+- **Multi-AZ deployment:** Deploy primary and secondary nodes in different availability zones for production workloads to ensure high availability.
+- **Connection pooling:** Use PgBouncer or application-level pooling to manage connection counts and reduce overhead from frequent new connections.
+- **Slow query monitoring:** Enable logging of slow queries via `log_min_duration_statement` (set to 1000ms or lower); correlate with parameter tuning via `DescribeDBInstanceParameters`.
+- **Instance sizing:** Right-size based on observed CPU, memory, and IOPS metrics; use `ModifyDBInstanceSpec` for incremental scaling rather than upfront over-provisioning.
 
 ## Reference Directory
 

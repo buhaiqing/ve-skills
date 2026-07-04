@@ -476,6 +476,15 @@ ve vke ListSupportedVersions --Region "{{env.VOLCENGINE_REGION}}"
 
 > **Security:** Never commit credentials. See credential masking rules in Variable Convention section.
 
+## Operational Best Practices
+
+- **Cluster networking (CNI):** Use `VpcCniShared` mode for pod networking to leverage VPC ENI (Elastic Network Interface). Plan pod and service CIDR ranges before cluster creation, ensuring no overlap with existing VPC CIDR. Leave sufficient IP headroom in subnets for cluster scaling.
+- **Node pool sizing:** Configure `AutoScaling` with `MinReplicas` >= 2 for HA. Set `MaxReplicas` based on workload burst capacity. Use `ecs.g3i` or `ecs.g1ie` instance families for general workloads. Right-size instance types to avoid resource fragmentation.
+- **RBAC and IAM integration:** Bind IAM roles to VKE cluster RBAC via `ClusterRole` + `RoleBinding` for human operators. Use service accounts with mapped IAM roles for pod-level AWS-compatible IRSA-like access. Audit `kubectl describe clusterrolebinding` regularly.
+- **Backup and disaster recovery (etcd):** Enable VKE auto-backup for cluster control plane state. Schedule periodic etcd snapshots for critical namespaces. Use `Velero` (or Volcengine backup service) for persistent volume backup of stateful workloads.
+- **Monitoring and observability:** Deploy `metrics-server` for `kubectl top` and HPA. Install Prometheus + Grafana stack for cluster-wide metrics. Monitor control plane metrics via `ve-cms-ops`: API server latency, etcd leader changes, node `NotReady` count.
+- **Security scanning:** Enable image scanning on container registry for known CVEs before deployment. Apply `PodSecurityAdmission` (baseline or restricted) via VKE admission configuration. Rotate cluster certificate and admin kubeconfig periodically.
+
 ## Reference Directory
 
 - [Core Concepts](references/core-concepts.md) — VKE architecture, cluster types, node pools

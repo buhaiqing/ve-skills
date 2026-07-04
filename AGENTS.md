@@ -48,6 +48,8 @@ Verify against `ve-skill-generator/SKILL.md` and `ve-skill-generator/references/
 | C12 | **Content dedup** | No duplicate operation flows across SKILL.md ↔ references/; TE-6 verified (see §Link & Dedup) |
 | C13 | **AIOps coverage** | `references/advanced/aiops.md` and `references/advanced/finops.md` exist for all required+recommended skills (23 total) |
 | C14 | Advanced AIOps coverage | `references/advanced/aiops.md` exists for all required+recommended skills |
+| **C15** | **`### What This Skill Does` (IMPORTANT)** | **MUST** exist with a clear 2-3 sentence description of the skill's purpose and boundary |
+| **C16** | **`## Operational Best Practices` (IMPORTANT)** | **MUST** exist with actionable operational guidance (monitoring, backup, security patterns) |
 
 ### Round 2 — Accuracy & Anti-Pattern Sweep
 
@@ -83,6 +85,77 @@ Verify against reality, not memory:
 | Any Go SDK example code change | `python3 -m py_compile <file>` if Python; Go examples are illustrative — no build step |
 
 > **Note:** This repo has automated validation scripts in `scripts/` for pre-commit checks (see **Files that DO NOT exist** below). After changes, run `python3 scripts/validate_local.py` if available, then supplement with manual checks against the P0/P1 checklist.
+
+---
+
+## Execution Strategy — 任务执行策略
+
+> 多步骤任务执行时的决策规则，沉淀自多次迭代经验。完整 check items 见 [docs/token-efficiency.md](docs/token-efficiency.md)。
+
+### E1 — 智能并行分解
+
+每个 ≥2 步骤的多目标任务，**必须**在 Phase 0 做分解判断：
+
+| 条件 | 策略 | 示例 |
+|------|------|------|
+| 2+ 独立模块，无共享状态 | **并行委托** → 每个目标一个 `deep` 或 `unspecified-high` 子代理 | 同时修复 5 个 skill 的 TE 违规 → 5 个并行子代理 |
+| 步骤间有依赖链 | **串行执行**，但每个阶段内最大并行化 | TE-4 修复需先加声明再验证 → 声明阶段串行，验证并行 |
+| 目标模糊需探索 | **先探索再执行** → `explore`/`librarian` 背景搜索 | "有哪些 TE-6 违规" → 并行扫描 9 个 skill，汇总后再修复 |
+| 全量扫描 + 局部修复 | 扫描用 `explore` 并行，修复用 `deep` 分批并行 | TE-6 扫描（3 个 explore）+ TE-6 修复（每 skill 一个 deep） |
+
+**规则**：`run_in_background=true` 是默认偏好，除非任务明确阻塞后续步骤。
+
+### E2 — 运行时自适应
+
+遇到运行环境问题时，按以下顺序调整：
+
+| 问题 | 调整措施 |
+|------|---------|
+| 子代理超时 / 输出截断 | → 拆分任务到更细粒度，每代理 ≤ 3 个文件或 ≤ 1 个技能 |
+| 工具调用失败（file not found 等） | → 先用 `read`/`grep`/`glob` 确认路径再操作，不假设 |
+| context 窗口过大 | → 用 `planning-with-files` 或 `note` 将中间结果写入文件，避免全量保留 |
+| 外部服务不可达（MCP / web） | → 降级为本地工具 + 静态 fallback 模式，不阻塞流程 |
+| 反复修复失败（≥2 轮） | → 停止自动修复 → 记录失败模式 → 通知用户裁决 |
+
+**关键**：不做无谓的重试。每次失败记录根因，不重复同样的错误路径。
+
+### E3 — 定期反思与复盘
+
+完成任务阶段（或每 15 次工具调用）后，执行快速反思：
+
+```
+1. ❓ 当前步骤离目标还差多远？（已完成 / 阻塞 / 偏离）
+2. 🔍 有没有更简单的方法达到目标？（TE-4 手动 vs 批量）
+3. 💡 有没有发现可复用的模式或知识？
+```
+
+发现可复用内容 → 立即沉淀（见 E4）。
+
+### E4 — 可复用资产沉淀
+
+运行时发现的通用知识，按以下规则存储：
+
+| 资产类型 | 存放位置 | 示例 |
+|---------|---------|------|
+| 修复经验（跨 skill 通用） | `docs/failure-patterns.md` | "TE-4 扫描误标 — 需人工核查路径覆盖率" |
+| 执行流程改进 | `AGENTS.md` 本文件 | "扫描类任务先用 explore 并行，再基于结果分批修复" |
+| 规则解读 / 边界判定 | 对应 `docs/*.md` | "TE-4 集中声明需覆盖所有 jq path 使用点，不只看文件头" |
+| 临时工作记录 | `planning-with-files` 产生的 .md 文件 | `findings.md`、`task_plan.md`、`progress.md` |
+
+**规则**：沉淀内容必须去重（查重后再追加），单条 ≤ 200 字，用 `→` `⇒` `✅` `❌` 符号。
+
+### 复盘检查表
+
+每次任务完成后（或标记 `done` 前），执行：
+
+```
+□ E1: 是否充分利用了并行？（至少检查一次）
+□ E2: 是否有可优化的运行时决策？
+□ E3: 是否沉淀了可复用资产到正确位置？
+□ E4: 沉淀内容是否已去重且符号化？
+```
+
+**NO EVIDENCE = NOT COMPLETE**：沉淀的资产必须在文件中实际存在，不是口头承诺。
 
 ---
 
@@ -522,6 +595,13 @@ Detailed runtime-quality specifications are intentionally externalized to reduce
 ### Relationship to build-time self-review
 
 Build-time 2-round self-review and runtime GCL are independent gates. A clean self-review does not exempt runtime scoring; a passing GCL rubric does not exempt sloppy skill updates.
+
+---
+
+## Communication (Language)
+
+- **默认使用中文回复**。除非用户明确要求使用英文，否则所有回复、总结、报告均使用中文。
+- 代码注释、CLI 命令和代码块内的内容保持原文（英文），不做翻译。
 
 ---
 

@@ -400,24 +400,24 @@ ve billing DescribeReservedInstances --Region "{{env.VOLCENGINE_REGION}}"
 
 ## Error Taxonomy
 
-| Error Code | HTTP | Meaning | Max Retries | Backoff | Agent Action | UX Template |
-|------------|------|---------|-------------|---------|--------------|-------------|
-| `InvalidParameter` | 400 | Bad request / invalid period format | 1 | — | Fix parameters; retry | `[ERROR] InvalidParameter: {detail}. What happened: {explanation}. How to fix: {remediation}.` |
-| `Forbidden.RAM` | 403 | Insufficient IAM permissions | 0 | — | HALT; guide to IAM setup | `[ERROR] Forbidden.RAM: Insufficient permissions for {operation}. What happened: Your IAM policy does not grant billing access. How to fix: Add Billing read permissions to your IAM role.` |
-| `InsufficientBalance` | 403 | Account balance too low | 0 | — | HALT; alert user | `🚨 CRITICAL: Insufficient account balance. What happened: Balance cannot cover current burn rate. How to fix: Recharge account immediately.` |
-| `InternalError` | 500 | Server error | 3 | 2s, 4s, 8s | Retry; then HALT with RequestId | `[ERROR] InternalError: Server-side error (RequestId: {RequestId}). What happened: Volcengine encountered an internal error. How to fix: Retry the operation. If it persists, contact support with RequestId.` |
-| `Throttling` | 429 | Rate limit exceeded | 3 | exponential | Back off; respect Retry-After | `⚠️ Rate limit reached. Retrying in {backoff}s... (Attempt {n}/3)` |
-| `BudgetNotFound` | 404 | Budget ID does not exist | 0 | — | HALT; verify budget ID | `[ERROR] BudgetNotFound: Budget {id} not found. How to fix: Run DescribeBudgets to list available budgets.` |
-| `BudgetNameExists` | 409 | Budget name already in use | 0 | — | Ask new name | `[ERROR] BudgetNameExists: Budget name "{name}" already exists. How to fix: Use a different name or describe existing budget.` |
-| `BudgetLimitExceeded` | 400 | Maximum budgets reached | 0 | — | HALT; suggest cleanup | `[ERROR] BudgetLimitExceeded: Maximum budgets (20) reached. How to fix: Delete unused budgets.` |
-| `InvoiceNotFound` | 404 | Invoice ID does not exist | 0 | — | HALT; verify invoice ID | `[ERROR] InvoiceNotFound: Invoice {id} not found.` |
-| `InvoiceStatusError` | 400 | Invoice cannot be modified in current status | 0 | — | HALT; check invoice status | `[ERROR] InvoiceStatusError: Invoice {id} is in status {status} and cannot be modified.` |
-| `RIExpired` | 400 | Reserved instance has expired | 0 | — | Alert; suggest renewal | `⚠️ RI {id} has expired. What happened: Reserved instance coverage ended. How to fix: Consider renewing or converting to on-demand.` |
-| `RIUtilizationLow` | 400 | RI utilization below threshold | 0 | — | Alert; suggest optimization | `⚠️ Low RI utilization detected: {utilization}%. How to fix: Redeploy workloads or reduce RI purchases.` |
-| `TagQuotaExceeded` | 400 | Maximum tags per resource reached | 0 | — | HALT; suggest tag cleanup | `[ERROR] TagQuotaExceeded: Maximum tags (20) per resource reached.` |
-| `PaymentMethodInvalid` | 400 | Payment method cannot be used | 0 | — | HALT; suggest update | `[ERROR] PaymentMethodInvalid: Payment method is invalid or expired.` |
-| `RefundNotAllowed` | 400 | Refund not permitted for this transaction | 0 | — | HALT; explain policy | `[ERROR] RefundNotAllowed: This transaction is not eligible for refund.` |
-| `QuotaExceeded` | 403 | Overall quota exceeded | 0 | — | HALT; contact support | `[ERROR] QuotaExceeded: Account quota limit reached. How to fix: Contact Volcengine support.` |
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidParameter` | Bad request / invalid period format | 1 retry; Fix parameters and retry |
+| `Forbidden.RAM` | Insufficient IAM permissions | 0 retries; HALT — add IAM billing permissions |
+| `InsufficientBalance` | Account balance too low | 0 retries; HALT — alert user to recharge |
+| `InternalError` | Server error | 3 retries/2s/4s/8s; Retry then HALT with RequestId |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; Back off, respect Retry-After |
+| `BudgetNotFound` | Budget ID does not exist | 0 retries; HALT — verify budget ID |
+| `BudgetNameExists` | Budget name already in use | 0 retries; Ask for different name |
+| `BudgetLimitExceeded` | Maximum budgets reached | 0 retries; HALT — delete unused budgets |
+| `InvoiceNotFound` | Invoice ID does not exist | 0 retries; HALT — verify invoice ID |
+| `InvoiceStatusError` | Invoice cannot be modified in current status | 0 retries; HALT — check invoice status |
+| `RIExpired` | Reserved instance has expired | 0 retries; Alert — suggest renewal |
+| `RIUtilizationLow` | RI utilization below threshold | 0 retries; Alert — suggest optimization |
+| `TagQuotaExceeded` | Maximum tags per resource reached | 0 retries; HALT — suggest tag cleanup |
+| `PaymentMethodInvalid` | Payment method cannot be used | 0 retries; HALT — update payment method |
+| `RefundNotAllowed` | Refund not permitted for transaction | 0 retries; HALT — explain policy |
+| `QuotaExceeded` | Overall quota exceeded | 0 retries; HALT — contact support |
 
 ## Reference Directory
 
@@ -453,6 +453,15 @@ ve billing DescribeReservedInstances --Region "{{env.VOLCENGINE_REGION}}"
 | 1.2.0 | 2026-06-02 | Added FinOps Knowledge Base, Cost Prediction, Cross-Skill Orchestration |
 | 1.1.0 | 2026-06-02 | Added Cost Optimization Guide, Operations Framework, Cross-Service Cost Analysis |
 | 1.0.0 | 2026-05-31 | Initial release with billing query, budget, balance, cost analysis |
+
+## Operational Best Practices
+
+- **Cost governance framework:** Establish a tagging strategy (environment, project, owner) and enforce it across all resources. Use `ve billing DescribeBillDetail` to track spend by tag group.
+- **Budget alerts and notifications:** Create budgets via `ve billing CreateBudget` with alert thresholds at 50%, 80%, and 100% of budget. Integrate with CMS alarms for real-time cost anomaly detection.
+- **Resource tagging for cost allocation:** Apply consistent tags (e.g., `Department`, `Project`, `Environment`) to all provisioned resources. Review untagged resources monthly to prevent cost leaks.
+- **Cross-account cost visibility:** Aggregate billing data across multiple accounts using consolidated billing. Use `ve billing DescribeBills` to generate organization-wide cost reports.
+- **Reserved instance planning:** Purchase reserved instances for steady-state workloads to reduce on-demand spend. Monitor RI utilization via `ve billing DescribeReservedInstances` and modify terms if underutilized.
+- **Regular cost review cadence:** Schedule weekly cost reviews using cost explorer. Compare actual versus budgeted spend, identify top-cost resources, and rightsize overprovisioned instances.
 
 ## Quality Gate (GCL)
 

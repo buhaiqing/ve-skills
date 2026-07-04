@@ -34,6 +34,10 @@ metadata:
 
 # Volcengine MongoDB Operations Skill
 
+### What This Skill Does
+
+Manage Volcengine MongoDB instances, databases, collections, users, and backups using the `ve` CLI (primary) or JIT Go SDK (fallback). Covers replica set and sharded cluster architectures for document database workloads.
+
 ## Overview
 
 Volcengine MongoDB (云数据库 MongoDB 版) provides managed MongoDB instances with replica sets and sharded cluster architectures. This skill is an **operational runbook** for agents: explicit scope, credential rules, pre-flight checks, **dual-path execution** (official **SDK/API** and official **`ve` CLI**), response validation, and failure recovery.
@@ -495,6 +499,16 @@ ve mongodb ModifyDBInstanceParameters \
 2. **Go runtime** for JIT fallback (see references/integration.md)
 3. **Credentials:** `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION`
 4. **Verify:** `ve mongodb DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"`
+
+## Operational Best Practices
+
+- **Security:** Restrict network access via IP whitelists (`ModifyDBInstanceIPList`); grant least-privilege database accounts; enable TLS for client connections.
+- **Reliability:** Deploy replica sets (minimum 3 nodes); schedule regular backups via `CreateBackup`; enable backup retention for point-in-time recovery.
+- **Replica set management:** Monitor `oplog.rs` size — small oplogs cause replication lag; adjust `oplogSizeMB` during maintenance windows.
+- **Index and query tuning:** Use `explain()` on slow queries; create covered indexes to avoid collection scans; avoid unsharded collections in sharded clusters.
+- **Naming conventions:** Use consistent prefixes for instance names, database names, and collection names to simplify cross-team auditing.
+- **Cost optimization:** Right-size `NodeSpec` to workload; scale down idle instances during off-peak; release orphaned backups.
+- **Monitoring:** Track `CPUUtilization`, `MemoryUtilization`, `DiskUsage`, and `Connections` via CMS; set alerts at 80% thresholds.
 
 ## Reference Directory
 
