@@ -1,0 +1,16 @@
+[
+  {"query": "创建 ECS 云服务器实例", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "启动停止云服务器", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "ECS 实例 CPU 占用过高", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "云服务器无法连接", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "查看 ECS 实例列表", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "ECS 磁盘挂载和扩容", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "ECS 安全组配置", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "ECS 快照管理", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "ECS 实例类型变更", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
+  {"query": "云助手命令执行", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "medium"},
+  {"query": "创建 RDS 数据库", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"},
+  {"query": "配置负载均衡", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"},
+  {"query": "部署 Kubernetes", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"},
+  {"query": "查询账单明细", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"}
+]

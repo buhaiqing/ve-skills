@@ -152,26 +152,26 @@ tosutil ls -s
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
-| CreateBucket | Create a new TOS bucket | Low | Medium |
-| ListBuckets | List all accessible buckets | Low | ✅ None |
-| DeleteBucket | Delete an empty bucket | Low | 🔴 **High** |
-| PutObject | Upload an object | Low | Low |
-| GetObject | Download an object | Low | ✅ None |
-| ListObjects | List objects in a bucket | Low | ✅ None |
-| DeleteObject | Delete an object | Low | 🔴 High |
-| CopyObject | Copy object within/across buckets | Medium | Medium |
-| MultipartUpload | Upload large files in parts | High | Low |
-| PresignURL | Generate pre-signed URL | Low | Medium |
-| PutBucketLifecycle | Set lifecycle rules | Medium | Medium |
-| PutBucketVersioning | Enable/disable versioning | Low | Medium |
-| PutBucketACL | Set bucket access control | Low | 🔴 High |
-| DescribeStorageAnalysis | Analyze storage class distribution and costs | Low | ✅ None |
-| DetectStaleObjects | Find objects not accessed for X days | Low | ✅ None |
-| DescribeCostSummary | Generate cost report for TOS resources | Low | ✅ None |
-| CleanupMultipartUploads | Abort incomplete multipart uploads | Low | Low |
-| OptimizeStorageClass | Recommend storage class changes | Medium | Low |
+| Operation | Description | Level |
+|-----------|-------------|-------|
+| CreateBucket | Create a new TOS bucket | Low/Med |
+| ListBuckets | List all accessible buckets | Low/None |
+| DeleteBucket | Delete an empty bucket | Low/**High** |
+| PutObject | Upload an object | Low/Low |
+| GetObject | Download an object | Low/None |
+| ListObjects | List objects in a bucket | Low/None |
+| DeleteObject | Delete an object | Low/**High** |
+| CopyObject | Copy object within/across buckets | Med/Med |
+| MultipartUpload | Upload large files in parts | High/Low |
+| PresignURL | Generate pre-signed URL | Low/Med |
+| PutBucketLifecycle | Set lifecycle rules | Med/Med |
+| PutBucketVersioning | Enable/disable versioning | Low/Med |
+| PutBucketACL | Set bucket access control | Low/**High** |
+| DescribeStorageAnalysis | Analyze storage distribution & costs | Low/None |
+| DetectStaleObjects | Find objects not accessed for X days | Low/None |
+| DescribeCostSummary | Generate TOS cost report | Low/None |
+| CleanupMultipartUploads | Abort incomplete multipart uploads | Low/Low |
+| OptimizeStorageClass | Recommend storage class changes | Med/Low |
 
 ## Changelog
 
@@ -309,12 +309,12 @@ tosutil ls -s | grep "{{user.bucket}}"
 
 #### Failure Recovery
 
-| Error Pattern | Agent Action |
-|--------------|-------------|
-| `BucketAlreadyExists` | HALT; bucket name taken globally — use different name |
-| `InvalidBucketName` | HALT; name must be 3–63 chars, lowercase, alphanumeric, hyphens only |
-| `Unauthorized` | HALT; ensure TOSFullAccess IAM policy is attached |
-| `TooManyBuckets` | HALT; bucket limit reached (default 100 per account) |
+| Error Pattern | Action |
+|--------------|--------|
+| `BucketAlreadyExists` | HALT → use different name |
+| `InvalidBucketName` | HALT → 3-63 chars, lowercase, hyphens |
+| `Unauthorized` | HALT → attach TOSFullAccess policy |
+| `TooManyBuckets` | HALT → delete unused or request increase |
 
 ---
 
@@ -376,12 +376,12 @@ tosutil ls -s | grep "{{user.bucket}}" && echo "BUCKET STILL EXISTS" || echo "BU
 
 #### Failure Recovery
 
-| Error Pattern | Agent Action |
-|--------------|-------------|
-| `BucketNotEmpty` | HALT; delete all objects first, then retry |
-| `NoSuchBucket` | Bucket already deleted; skip |
-| `AccessDenied` | HALT; check IAM permissions |
-| `Unauthorized` | HALT; ensure TOSFullAccess IAM policy is attached |
+| Error Pattern | Action |
+|--------------|--------|
+| `BucketNotEmpty` | HALT → delete all objects, then retry |
+| `NoSuchBucket` | Skip (already deleted) |
+| `AccessDenied` | HALT → check IAM + ACL |
+| `Unauthorized` | HALT → attach TOSFullAccess policy |
 
 ---
 
@@ -474,12 +474,12 @@ tosutil stat tos://{{user.bucket}}/{{user.object_key}}
 
 #### Failure Recovery
 
-| Error Pattern | Agent Action |
-|--------------|-------------|
-| `NoSuchBucket` | HALT; bucket doesn't exist — create first |
-| `AccessDenied` | HALT; check bucket ACL and IAM permissions |
-| `NetworkError` | Retry with backoff; consider setting smaller part size (`-ps=5mb`) |
-| `QuotaExceeded` | HALT; bucket or account storage limit |
+| Error Pattern | Action |
+|--------------|--------|
+| `NoSuchBucket` | HALT → create bucket first |
+| `AccessDenied` | HALT → check ACL + IAM |
+| `NetworkError` | Retry with backoff; reduce part size (`-ps=5mb`) |
+| `QuotaExceeded` | HALT → bucket/account limit |
 
 ---
 
@@ -625,12 +625,12 @@ DEST_SIZE=$(tosutil stat tos://{{user.dest_bucket}}/{{user.dest_key}} | grep -i 
 
 #### Failure Recovery
 
-| Error Pattern | Agent Action |
-|--------------|-------------|
-| `NoSuchKey` | HALT; source object doesn't exist |
-| `NoSuchBucket` | HALT; source or destination bucket doesn't exist |
-| `AccessDenied` | HALT; check source read and destination write permissions |
-| `EntityTooLarge` | Object exceeds copy limit; use multipart upload + copy |
+| Error Pattern | Action |
+|--------------|--------|
+| `NoSuchKey` | HALT → source missing |
+| `NoSuchBucket` | HALT → source/dest bucket missing |
+| `AccessDenied` | HALT → check read/write perms |
+| `EntityTooLarge` | Use multipart upload + copy
 
 ---
 

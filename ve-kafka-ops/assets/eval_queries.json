@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 Kafka 实例",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "CreateInstance"
+    ]
+  },
+  {
+    "query": "Kafka Topic 管理",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "CreateTopic"
+    ]
+  },
+  {
+    "query": "Kafka 消费者组",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "ListConsumerGroups"
+    ]
+  },
+  {
+    "query": "Kafka 分区扩缩容",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "ModifyTopicPartition"
+    ]
+  },
+  {
+    "query": "Kafka 访问策略配置",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "CreateAcl"
+    ]
+  },
+  {
+    "query": "Kafka 监控指标",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "GetInstanceConsumerStats"
+    ]
+  },
+  {
+    "query": "删除 Kafka Topic",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "DeleteTopic"
+    ]
+  },
+  {
+    "query": "启动 Web 服务",
+    "should_trigger": false,
+    "skill": "ve-kafka-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置负载均衡",
+    "should_trigger": false,
+    "skill": "ve-kafka-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

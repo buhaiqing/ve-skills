@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 NAT 网关",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": [
+      "CreateNatGateway"
+    ]
+  },
+  {
+    "query": "配置 SNAT 规则",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": [
+      "CreateSnatRule"
+    ]
+  },
+  {
+    "query": "配置 DNAT 规则",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": [
+      "CreateDnatRule"
+    ]
+  },
+  {
+    "query": "NAT 网关升级带宽",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": [
+      "ModifyNatGateway"
+    ]
+  },
+  {
+    "query": "删除 NAT 网关",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": [
+      "DeleteNatGateway"
+    ]
+  },
+  {
+    "query": "SNAT 规则查看",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": [
+      "DescribeSnatTableEntries"
+    ]
+  },
+  {
+    "query": "DNAT 规则查看",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": [
+      "DescribeDnatTableEntries"
+    ]
+  },
+  {
+    "query": "创建 ECS 实例",
+    "should_trigger": false,
+    "skill": "ve-nat-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 VPN",
+    "should_trigger": false,
+    "skill": "ve-nat-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

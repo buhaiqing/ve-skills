@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 Elasticsearch 集群",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "CreateInstance"
+    ]
+  },
+  {
+    "query": "Elasticsearch 节点扩缩容",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "ModifyInstance"
+    ]
+  },
+  {
+    "query": "Elasticsearch 冷热节点配置",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "ModifyInstance"
+    ]
+  },
+  {
+    "query": "Elasticsearch 开启 HTTPS",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "ModifyInstanceSecurity"
+    ]
+  },
+  {
+    "query": "Elasticsearch 备份快照",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "CreateSnapshot"
+    ]
+  },
+  {
+    "query": "Elasticsearch 磁盘空间不足",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "DescribeInstance"
+    ]
+  },
+  {
+    "query": "删除 ES 集群",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "DeleteInstance"
+    ]
+  },
+  {
+    "query": "部署 Flask 应用",
+    "should_trigger": false,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 GitLab",
+    "should_trigger": false,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

@@ -41,17 +41,6 @@ ListClusters supports pagination:
 - `PageSize`: Default 10, max 100
 - Response includes `$.Result.Page.TotalCount` for total items
 
-## Go SDK Package
-
-```go
-import "github.com/volcengine/volc-sdk-golang/service/vke"
-
-instance := vke.NewInstance()
-instance.Client.SetAccessKey(os.Getenv("VOLCENGINE_ACCESS_KEY"))
-instance.Client.SetSecretKey(os.Getenv("VOLCENGINE_SECRET_KEY"))
-    resp, err := instance.Client.Request("vke", "CreateCluster", params)
-```
-
 ## Go SDK Examples
 
 ### CreateNodePool

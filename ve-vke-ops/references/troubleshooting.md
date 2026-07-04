@@ -2,29 +2,29 @@
 
 ## Common Error Codes
 
-| Error Code | Agent Action | Recovery |
-|-----------|--------------|----------|
-| `QuotaExceeded.ClusterCount` | Max clusters reached → delete unused or request quota increase | Escalate to account admin for limit increase |
-| `QuotaExceeded.NodeCount` | Max nodes in pool reached → remove nodes or raise quota | Escalate to account admin for limit increase |
-| `InvalidParameter.ClusterName` | Name format invalid → use 1-64 chars, lowercase, digits, hyphens | HALT; prompt user for valid name |
-| `InvalidParameter.NodePoolName` | Pool name invalid → fix naming per rules | HALT; prompt user for valid name |
-| `ResourceNotFound.Cluster` | Cluster doesn't exist → verify ClusterId via ListClusters | HALT; prompt user for correct ClusterId |
-| `ResourceNotFound.NodePool` | Node pool doesn't exist → verify NodePoolId via DescribeNodePool | HALT; prompt user for correct NodePoolId |
-| `OperationDenied.ClusterStatus` | Invalid state for operation → wait for state change; check current status | Poll until `Running` then retry |
-| `OperationDenied.DeleteProtection` | Delete protection enabled → disable delete protection first | HALT; guide user to disable protection |
-| `InsufficientBalance` | No funds → recharge account | HALT; direct user to billing console |
-| `InternalError` | Server error → retry with backoff; HALT after 3 retries with RequestId | Escalate with RequestId to support |
-| `Throttling` | Rate limit hit → exponential backoff; respect Retry-After | Retry with backoff; HALT after 3 retries |
-| `ResourceInUse` | Resource being used → wait for operation to complete | Poll and retry
+| Error Code | Action | Recovery |
+|-----------|--------|----------|
+| `QuotaExceeded.ClusterCount` | HALT | Delete unused or request increase |
+| `QuotaExceeded.NodeCount` | HALT | Remove nodes or raise quota |
+| `InvalidParameter.ClusterName` | HALT | 1-64 chars, lowercase, digits, hyphens |
+| `InvalidParameter.NodePoolName` | HALT | Fix naming per rules |
+| `ResourceNotFound.Cluster` | HALT | Verify ClusterId via ListClusters |
+| `ResourceNotFound.NodePool` | HALT | Verify NodePoolId via DescribeNodePool |
+| `OperationDenied.ClusterStatus` | Retry | Poll until `Running`, then retry |
+| `OperationDenied.DeleteProtection` | HALT | Disable protection first |
+| `InsufficientBalance` | HALT | Recharge account |
+| `InternalError` | Retry ×3 | HALT with RequestId |
+| `Throttling` | Retry ×3, exponential | Back off |
+| `ResourceInUse` | Retry | Poll and retry
 
 ## Diagnostic Order
 
-1. Check cluster status: `ve vke DescribeCluster --ClusterId <id>`
-2. Check node pool status: `ve vke DescribeNodePool --ClusterId <id> --NodePoolId <id>`
-3. Check node events: `ve vke ListNodes --ClusterId <id> --NodePoolId <id>`
-4. Verify VPC/subnet exists in target region
-5. Check quota: compare against limits in core-concepts.md
-6. Review API logs for RequestId correlation
+1. ✅ Check cluster status: `ve vke DescribeCluster --ClusterId <id>`
+2. ✅ Check node pool status: `ve vke DescribeNodePool --ClusterId <id> --NodePoolId <id>`
+3. ✅ Check node events: `ve vke ListNodes --ClusterId <id> --NodePoolId <id>`
+4. ✅ Verify VPC/subnet exists in target region
+5. ✅ Check quota: compare against limits in core-concepts.md
+6. ✅ Review API logs for RequestId correlation
 
 ## Common Patterns
 

@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 NAS 文件系统",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateFileSystem"
+    ]
+  },
+  {
+    "query": "挂载 NAS",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateMountTarget"
+    ]
+  },
+  {
+    "query": "NAS 容量监控",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "DescribeFileSystems"
+    ]
+  },
+  {
+    "query": "NAS 权限组配置",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateAccessGroup"
+    ]
+  },
+  {
+    "query": "NAS 生命周期管理",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateLifecycleRule"
+    ]
+  },
+  {
+    "query": "删除 NAS 挂载点",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "DeleteMountTarget"
+    ]
+  },
+  {
+    "query": "NAS 加密配置",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "SetFileSystemEncryption"
+    ]
+  },
+  {
+    "query": "启动 Web 服务器",
+    "should_trigger": false,
+    "skill": "ve-nas-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 Docker",
+    "should_trigger": false,
+    "skill": "ve-nas-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

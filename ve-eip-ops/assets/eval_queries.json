@@ -1,0 +1,86 @@
+[
+  {
+    "query": "申请 EIP",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": [
+      "AllocateEipAddress"
+    ]
+  },
+  {
+    "query": "绑定 EIP 到 ECS",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": [
+      "AssociateEipAddress"
+    ]
+  },
+  {
+    "query": "释放 EIP",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": [
+      "ReleaseEipAddress"
+    ]
+  },
+  {
+    "query": "EIP 流量统计",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": [
+      "DescribeEipAddresses"
+    ]
+  },
+  {
+    "query": "EIP 带宽调整",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": [
+      "ModifyEipAddressAttribute"
+    ]
+  },
+  {
+    "query": "EIP 续费",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": [
+      "RenewEipAddress"
+    ]
+  },
+  {
+    "query": "解绑 EIP",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": [
+      "DisassociateEipAddress"
+    ]
+  },
+  {
+    "query": "创建 RDS 实例",
+    "should_trigger": false,
+    "skill": "ve-eip-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置安全组",
+    "should_trigger": false,
+    "skill": "ve-eip-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

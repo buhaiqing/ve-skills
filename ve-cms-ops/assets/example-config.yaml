@@ -8,21 +8,17 @@ metric_defaults:
   period: 60
   granularity_seconds: 300
   time_range_hours: 1
-alarm_defaults:
+alarm_defaults: &alarm_cfg
   statistics: Average
   comparison_operator: GreaterThanThreshold
   times: 3
   silence_period_minutes: 5
-  escalation_levels:
-    info:
-      threshold: 70
-      notify_type: channel
-    warn:
-      threshold: 80
-      notify_type: email
-    critical:
-      threshold: 90
-      notify_type: sms
+  escalation_levels: &esc_levels
+    info:  { threshold: 70, notify_type: channel }
+    warn:  { threshold: 80, notify_type: email }
+    critical: { threshold: 90, notify_type: sms }
+
+# Reuse via: <<: *alarm_cfg; escalation_levels: *esc_levels
 namespaces:
   ECS: Volcengine_ECS
   RDS: Volcengine_RDS_MySQL

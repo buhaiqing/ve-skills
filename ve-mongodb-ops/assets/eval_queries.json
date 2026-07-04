@@ -1,0 +1,14 @@
+[
+  {"query": "创建 MongoDB 实例", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "high"},
+  {"query": "MongoDB 连接失败排查", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "high"},
+  {"query": "MongoDB 磁盘空间不足", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "high"},
+  {"query": "MongoDB 慢查询分析", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "high"},
+  {"query": "MongoDB 副本集配置", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "high"},
+  {"query": "MongoDB 分片集群管理", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "medium"},
+  {"query": "MongoDB 备份恢复", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "high"},
+  {"query": "MongoDB 参数调优", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "medium"},
+  {"query": "删除 MongoDB 实例", "should_trigger": true, "skill": "ve-mongodb-ops", "confidence": "high"},
+  {"query": "创建 ECS 云服务器", "should_trigger": false, "skill": "ve-mongodb-ops", "confidence": "low"},
+  {"query": "配置 Redis 缓存", "should_trigger": false, "skill": "ve-mongodb-ops", "confidence": "low"},
+  {"query": "查询账单", "should_trigger": false, "skill": "ve-mongodb-ops", "confidence": "low"}
+]

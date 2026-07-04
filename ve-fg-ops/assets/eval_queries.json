@@ -1,0 +1,96 @@
+[
+  {
+    "query": "创建函数",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "CreateFunction"
+    ]
+  },
+  {
+    "query": "部署函数代码",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "UpdateFunctionCode"
+    ]
+  },
+  {
+    "query": "配置函数触发器",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "CreateTrigger"
+    ]
+  },
+  {
+    "query": "函数异步调用",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "InvokeFunction"
+    ]
+  },
+  {
+    "query": "查看函数日志",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "GetFunctionLogs"
+    ]
+  },
+  {
+    "query": "函数预留实例",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "PutProvisionConfig"
+    ]
+  },
+  {
+    "query": "删除函数",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "DeleteFunction"
+    ]
+  },
+  {
+    "query": "函数并发配置",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope",
+    "operations": [
+      "PutFunctionConcurrency"
+    ]
+  },
+  {
+    "query": "创建 Kubernetes Deployment",
+    "should_trigger": false,
+    "skill": "ve-fg-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置数据库连接池",
+    "should_trigger": false,
+    "skill": "ve-fg-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

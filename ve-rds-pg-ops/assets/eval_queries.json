@@ -1,22 +1,86 @@
 [
-  {"query": "Create an RDS PostgreSQL instance on Volcengine", "should_trigger": true},
-  {"query": "怎么创建云数据库PostgreSQL实例", "should_trigger": true},
-  {"query": "PostgreSQL connection timeout on RDS", "should_trigger": true},
-  {"query": "Modify PostgreSQL shared_buffers parameter", "should_trigger": true},
-  {"query": "Scale up PG instance to 8c16g", "should_trigger": true},
-  {"query": "List all PostgreSQL instances in production", "should_trigger": true},
-  {"query": "Delete RDS PostgreSQL instance", "should_trigger": true},
-  {"query": "Restore PostgreSQL from backup", "should_trigger": true},
-  {"query": "云数据库PostgreSQL只读节点管理", "should_trigger": true},
-  {"query": "Add read-only node to PostgreSQL instance", "should_trigger": true},
-  {"query": "Create an RDS MySQL instance", "should_trigger": false},
-  {"query": "Create a VKE Kubernetes cluster", "should_trigger": false},
-  {"query": "Check my Volcengine bill", "should_trigger": false},
-  {"query": "Configure IAM policy for database access", "should_trigger": false},
-  {"query": "Set up VPC peering", "should_trigger": false},
-  {"query": "Create a Redis cache instance", "should_trigger": false},
-  {"query": "Create an ECS instance", "should_trigger": false},
-  {"query": "Optimize PostgreSQL query plan", "should_trigger": false},
-  {"query": "Run database migration scripts", "should_trigger": false},
-  {"query": "Monitor server disk usage", "should_trigger": false}
+  {
+    "query": "创建 RDS PostgreSQL 实例",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "CreateDBInstance"
+    ]
+  },
+  {
+    "query": "查看 RDS PG 实例列表",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "删除 RDS PG 实例",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DeleteDBInstance"
+    ]
+  },
+  {
+    "query": "RDS PG 慢查询分析",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DescribeSlowLogs"
+    ]
+  },
+  {
+    "query": "RDS PG 连接池配置",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DescribeConnectionPoolInfo"
+    ]
+  },
+  {
+    "query": "RDS PG 只读实例",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "CreateReadOnlyNode"
+    ]
+  },
+  {
+    "query": "RDS PG 升级大版本",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "ModifyDBInstanceMajorVersion"
+    ]
+  },
+  {
+    "query": "部署 WordPress 网站",
+    "should_trigger": false,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 Nginx 反向代理",
+    "should_trigger": false,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
 ]

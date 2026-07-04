@@ -205,79 +205,54 @@ Safety: DeleteAlarm monitoring blackout for resources. DisableAlarm alerts not s
 
 ### Unit Testing Strategy
 
-| Component | Test Approach | Coverage Target |
-|-----------|---------------|-----------------|
-| Credential validation | Mock environment vars | 100% |
-| Namespace resolution | Test with valid/invalid namespaces | 100% |
-| Parameter parsing | Test JSON format for Dimensions | 100% |
-| Error code mapping | Test all 12 CMS error codes | 100% |
+| Component | Test Approach | Cov |
+|-----------|---------------|-----|
+| Credential validation | Mock env vars | 100% |
+| Namespace resolution | Test valid/invalid | 100% |
+| Parameter parsing | Test JSON Dimensions | 100% |
+| Error code mapping | Test all 12 CMS codes | 100% |
 
-### Integration Testing
+### Integration → Smoke Tests
 
 ```bash
-# Test 1: Verify credentials are configured
-export VOLCENGINE_ACCESS_KEY="test_key"
-export VOLCENGINE_SECRET_KEY="test_secret"
-export VOLCENGINE_REGION="cn-north-1"
+# ✅ Verify setup
+ve version
+ve metrics ListMetrics --Namespace Volcengine_ECS
+ve metrics DescribeContactGroups
 
-# Test 2: Query ECS CPU metrics (should return data or specific error)
+# 🔍 Query ECS CPU (last hour)
 ve metrics GetMetricData \
   --Namespace Volcengine_ECS \
   --MetricName CpuUtilization \
   --Dimensions '[{"InstanceId":"i-xxxxx"}]' \
-  --StartTime $(($(date +%s)-3600)) P3 000 \
-  --EndTime $(date +%s P4 )000 \
+  --StartTime $(($(date +%s)-3600))000 \
+  --EndTime $(date +%s)000 \
   --Period 60
 
-# Test 3: List alarm rules
-ve metrics DescribeMetricRuleList
-
-# Test 4: Create and delete test alarm (with cleanup)
+# 🔄 Create + delete test alarm (with cleanup)
 ve metrics PutResourceMetricRule \
   --RuleName "test-alarm-$(date +%s)" \
-  --Namespace Volcengine_ECS \
-  --MetricName CpuUtilization \
+  --Namespace Volcengine_ECS --MetricName CpuUtilization \
   --Resources '[{"Dimensions":[{"InstanceId":"i-xxxxx"}]}]' \
-  --AlertState Critical \
-  --ComparisonOperator GreaterThanThreshold \
-  --Statistics Average \
-  --Threshold 99 \
-  --Times 1 \
-  --Period 60
+  --AlertState Critical --ComparisonOperator GreaterThanThreshold \
+  --Statistics Average --Threshold 99 --Times 1 --Period 60
 ```
 
 ### Test Scenarios
 
-| Scenario | Expected Result |
-|----------|-----------------|
-| Invalid credentials | `Unauthorized` error with clear message |
-| Non-existent namespace | `NoSuchMetric` error |
-| Invalid dimensions format | `InvalidParameter` error |
-| Throttling (rate limit) | Retry with exponential backoff (2s, 4s, 8s) |
-| Create alarm with duplicate name | `DuplicateRuleName` error |
+| Scenario | Expect |
+|----------|--------|
+| Invalid credentials | `Unauthorized` |
+| Non-existent namespace | `NoSuchMetric` |
+| Invalid dimensions | `InvalidParameter` |
+| Throttling | Retry: 2s → 4s → 8s backoff |
+| Duplicate alarm name | `DuplicateRuleName` |
 | Delete non-existent alarm | Success (idempotent) |
 
-### Test Environment Setup
-
 ```bash
-# Create dedicated test namespace/project
+# Test env setup
 export VOLCENGINE_TEST_PROJECT="cms-ops-test"
-
-# Use separate notification group for tests
 export CMS_TEST_CONTACT_GROUP="test-alerts"
-```
-
-### Smoke Tests
-
-```bash
-# Quick validation of setup
-ve version  # Should return version info
-
-# List metrics to verify API connectivity
-ve metrics ListMetrics --Namespace Volcengine_ECS
-
-# Verify notification groups
-ve metrics DescribeContactGroups
 ```
 
 ---
@@ -361,13 +336,13 @@ func main() {
 
 #### Failure Recovery
 
-| Error Pattern | Agent Action |
-|--------------|-------------|
-| `InvalidParameter` | Verify namespace, metric name, and dimensions format |
-| `NoSuchMetric` | HALT; metric not found in this namespace |
-| `Throttling` | Retry with exponential backoff (2s, 4s, 8s) |
-| `InternalError` | Retry up to 3 times; then HALT with request ID |
-| `Unauthorized` | HALT; ensure VMSReadOnlyAccess IAM policy is attached |
+| Error Pattern | Action |
+|--------------|--------|
+| `InvalidParameter` | Verify namespace, metric, dimensions |
+| `NoSuchMetric` | HALT → check namespace/metric |
+| `Throttling` | Retry: 2s → 4s → 8s backoff |
+| `InternalError` | Retry ×3 → HALT with request ID |
+| `Unauthorized` | HALT → attach VMSReadOnlyAccess policy |
 
 ---
 
@@ -416,12 +391,12 @@ ve metrics DescribeMetricRuleList --RuleName "{{user.alarm_name}}"
 
 #### Failure Recovery
 
-| Error Pattern | Agent Action |
-|--------------|-------------|
-| `ContactGroupNotFound` | HALT; create contact group first via CreateContactGroup |
-| `InvalidParameters` | Verify all required fields; check JSON format for Resources |
-| `DuplicateRuleName` | HALT; rule name must be unique — use a different name |
-| `QuotaExceeded` | HALT; alarm rule limit reached per namespace |
+| Error Pattern | Action |
+|--------------|--------|
+| `ContactGroupNotFound` | HALT → create group via CreateContactGroup |
+| `InvalidParameters` | Verify required fields + Resources JSON |
+| `DuplicateRuleName` | HALT → use unique name |
+| `QuotaExceeded` | HALT → delete unused or request increase |
 
 ---
 
@@ -554,9 +529,9 @@ ve metrics DescribeContactGroups
 
 ## Operational Best Practices
 
-- **Threshold tuning:** Start with conservative thresholds, adjust based on baseline metrics
-- **Silence period:** Configure at least 5 minutes to prevent alert storms
-- **Multi-level alerts:** Use Info → Warn → Critical escalation levels
-- **Resource coverage:** Apply alarm templates to all production resources
-- **Notification routing:** Route critical alerts to on-call, info to channels
-- **No-data policy:** Configure action when metric data stops (e.g., treat as alarm)
+- **Threshold tuning:** Conservative → adjust from baseline
+- **Silence period:** ≥5 min to prevent alert storms
+- **Multi-level:** Info → Warn → Critical
+- **Coverage:** Apply templates to all production
+- **Routing:** Critical→on-call, Info→channels
+- **No-data:** Treat as alarm when metric stops

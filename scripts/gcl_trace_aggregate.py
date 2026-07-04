@@ -45,12 +45,37 @@ def last_scores(trace: dict[str, Any]) -> dict[str, float]:
     return dict(iters[-1].get("critic", {}).get("scores") or {})
 
 
+def _build_failure_patterns_table(patterns: list[dict[str, Any]]) -> str:
+    """Build failure-patterns.md update section from extracted patterns."""
+    if not patterns:
+        return ""
+    lines = [
+        "",
+        "---",
+        "",
+        "## Extracted from GCL Traces (auto-generated)",
+        "",
+        "| Skill | Pattern | Category | Source |",
+        "|-------|---------|----------|--------|",
+    ]
+    seen = set()
+    for p in patterns:
+        key = (p["skill"], p["pattern"])
+        if key not in seen:
+            seen.add(key)
+            lines.append("| `{}` | `{}` | {} | `{}` |".format(
+                p["skill"], p["pattern"], p["category"], p["source"]
+            ))
+    return "\n".join(lines)
+
+
 def aggregate(traces: list[dict[str, Any]]) -> dict[str, Any]:
     by_skill: dict[str, dict[str, Any]] = {}
     totals = {s: 0 for s in FINAL_STATUSES}
     totals["total_runs"] = len(traces)
     score_sums: dict[str, float] = {d: 0.0 for d in RUBRIC_DIMS}
     score_count = 0
+    failure_patterns = []
 
     for t in traces:
         skill = t.get("skill", "unknown")
@@ -76,18 +101,23 @@ def aggregate(traces: list[dict[str, Any]]) -> dict[str, Any]:
             for d in RUBRIC_DIMS:
                 score_sums[d] += float(scores.get(d, 0))
 
+        fp = (t.get("final") or {}).get("failure_pattern")
+        if fp:
+            failure_patterns.append({"skill": skill, "pattern": fp if isinstance(fp, str) else fp.get("pattern") if isinstance(fp, dict) else str(fp), "category": (fp.get("category") if isinstance(fp, dict) else None) or "runtime", "source": t.get("_source_path")})
+
     pass_rate = totals["PASS"] / totals["total_runs"] if totals["total_runs"] else 0.0
     avg_scores = {
         d: round(score_sums[d] / score_count, 3) if score_count else None for d in RUBRIC_DIMS
     }
 
     return {
-        "version": "1.0",
+        "version": "1.1",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "window": {"trace_count": totals["total_runs"]},
         "totals": totals,
         "pass_rate": round(pass_rate, 4),
         "avg_rubric_scores": avg_scores,
+        "failure_patterns": failure_patterns,
         "by_skill": by_skill,
         "trace_files": [t.get("_source_path") for t in traces],
     }
@@ -123,6 +153,27 @@ def persist_summary(root: Path, summary: dict[str, Any]) -> Path:
     return path
 
 
+def update_failure_patterns_file(root: Path, summary: dict[str, Any]) -> Path | None:
+    """Append extracted failure patterns to docs/failure-patterns.md (Reflexion integration)."""
+    patterns = summary.get("failure_patterns") or []
+    if not patterns:
+        return None
+    fp_path = root / "docs" / "failure-patterns.md"
+    table_lines = _build_failure_patterns_table(patterns)
+    if not table_lines:
+        return None
+    marker = "## Extracted from GCL Traces (auto-generated)"
+    existing = fp_path.read_text(encoding="utf-8") if fp_path.exists() else ""
+    if marker in existing:
+        # replace existing block
+        import re
+        existing = re.sub(r"\n## Extracted from GCL Traces.*?(?=\n## |\Z)", table_lines, existing, flags=re.DOTALL)
+    else:
+        existing += table_lines + "\n"
+    fp_path.write_text(existing, encoding="utf-8")
+    return fp_path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
@@ -148,7 +199,11 @@ def main() -> int:
 
     summary = aggregate(traces)
     out = persist_summary(args.root, summary)
-    print(json.dumps({"summary_path": str(out), "pass_rate": summary["pass_rate"], "total_runs": summary["totals"]["total_runs"]}))
+    fp_out = update_failure_patterns_file(args.root, summary)
+    result = {"summary_path": str(out), "pass_rate": summary["pass_rate"], "total_runs": summary["totals"]["total_runs"], "failure_patterns_extracted": len(summary.get("failure_patterns") or [])}
+    if fp_out:
+        result["failure_patterns_updated"] = str(fp_out)
+    print(json.dumps(result))
     return 0
 
 

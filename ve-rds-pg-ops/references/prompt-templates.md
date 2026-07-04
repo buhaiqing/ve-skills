@@ -4,7 +4,7 @@ description: >-
   GCL prompt templates for ve-rds-pg-ops. Three roles — Generator (G),
   Critic (C), Orchestrator (O) — plus operation-specific safety prompts.
   All placeholders follow the repository-wide convention from CLAUDE.md:
-  {env.*} / {user.*} / {output.*}. Bare {...} is NOT allowed.
+  {{env.*}} / {{user.*}} / {{output.*}}. Bare {{...}} is NOT allowed.
 license: MIT
 metadata:
   author: volcengine
@@ -34,7 +34,7 @@ or the JIT Go SDK (fallback). You MUST NOT self-score or modify the rubric.
 # Inputs
 - user_request: {{user.request}}
 - critic_feedback_from_previous_iter: {{output.critic_feedback}}  (empty on iter 1)
-- rubric: {output.rubric}    (path: ve-rds-pg-ops/references/rubric.md)
+- rubric: {{output.rubric}}    (path: ve-rds-pg-ops/references/rubric.md)
 - operation_tier: {{output.operation_tier}}    (destructive | state_changing | mutating | read_only)
 
 # Execution contract
@@ -86,7 +86,7 @@ You will see ONE execution result and its trace from the RDS PostgreSQL skill
 consider the original user request — judge only what was actually done.
 
 # Inputs
-- rubric: {output.rubric}    (path: ve-rds-pg-ops/references/rubric.md)
+- rubric: {{output.rubric}}    (path: ve-rds-pg-ops/references/rubric.md)
 - generator_output: {{output.generator_output}}
 - trace: {{output.trace}}
 

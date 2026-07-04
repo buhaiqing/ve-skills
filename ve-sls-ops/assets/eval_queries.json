@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 SLS Project",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateProject"
+    ]
+  },
+  {
+    "query": "SLS 日志查询",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "GetProjectLogs"
+    ]
+  },
+  {
+    "query": "配置日志采集",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateConfig"
+    ]
+  },
+  {
+    "query": "SLS 索引配置",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateIndex"
+    ]
+  },
+  {
+    "query": "SLS 报表创建",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateSavedSearch"
+    ]
+  },
+  {
+    "query": "SLS 消费组管理",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateConsumerGroup"
+    ]
+  },
+  {
+    "query": "删除日志库",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "DeleteLogstore"
+    ]
+  },
+  {
+    "query": "启动 ECS",
+    "should_trigger": false,
+    "skill": "ve-sls-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "部署数据库",
+    "should_trigger": false,
+    "skill": "ve-sls-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

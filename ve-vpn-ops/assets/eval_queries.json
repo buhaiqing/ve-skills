@@ -1,0 +1,76 @@
+[
+  {
+    "query": "创建 VPN 网关",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateVpnGateway"
+    ]
+  },
+  {
+    "query": "创建用户网关",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateCustomerGateway"
+    ]
+  },
+  {
+    "query": "配置 IPSec 隧道",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateVpnConnection"
+    ]
+  },
+  {
+    "query": "VPN 隧道状态监控",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "DescribeVpnConnections"
+    ]
+  },
+  {
+    "query": "删除 VPN 连接",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "DeleteVpnConnection"
+    ]
+  },
+  {
+    "query": "VPN SSL 证书配置",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateSslVpnServer"
+    ]
+  },
+  {
+    "query": "创建云服务器",
+    "should_trigger": false,
+    "skill": "ve-vpn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置负载均衡",
+    "should_trigger": false,
+    "skill": "ve-vpn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

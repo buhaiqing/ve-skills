@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 CLB 实例",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "CreateLoadBalancer"
+    ]
+  },
+  {
+    "query": "配置 CLB 监听器",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "CreateListener"
+    ]
+  },
+  {
+    "query": "添加后端服务器",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "AddBackendServers"
+    ]
+  },
+  {
+    "query": "CLB 健康检查配置",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "SetListenerHealthCheck"
+    ]
+  },
+  {
+    "query": "删除 CLB 监听器",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "DeleteListener"
+    ]
+  },
+  {
+    "query": "CLB 证书管理",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "UploadCertificate"
+    ]
+  },
+  {
+    "query": "CLB 访问日志配置",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "SetLoadBalancerAccessLog"
+    ]
+  },
+  {
+    "query": "创建 VPC",
+    "should_trigger": false,
+    "skill": "ve-clb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "部署 Kubernetes",
+    "should_trigger": false,
+    "skill": "ve-clb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

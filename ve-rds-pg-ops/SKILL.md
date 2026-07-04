@@ -159,23 +159,23 @@ ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --Pag
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk |
-|-----------|-------------|------------|------|
-| CreateDBInstance | Create PostgreSQL instance | Medium | 🟢 Low |
-| DescribeDBInstanceDetail | Get instance details | Low | ✅ None |
-| DescribeDBInstances | List all instances | Low | ✅ None |
-| DeleteDBInstance | Delete instance | Low | 🔴 **High** |
-| ModifyDBInstanceSpec | Modify node spec/storage | Medium | 🟡 Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
-| ModifyDBInstanceParameter | Modify parameters | Medium | 🟡 Medium |
-| DescribeRegions | List regions | Low | ✅ None |
-| CreateReadonlyInstance | Create read-only instance | Medium | 🟢 Low |
-| DescribeAccounts | List accounts | Low | ✅ None |
-| CreateAccount | Create DB account | Low | 🟡 Medium |
-| DescribeBackups | List backups | Low | ✅ None |
-| CreateBackup | Create backup | Low | 🟢 Low |
-| RestoreToNewInstance | Restore from backup | High | 🟡 Medium |
-| RebuildDBInstance | Rebuild instance | High | 🔴 **High** |
+| Operation | Description | Level |
+|-----------|-------------|-------|
+| CreateDBInstance | Create PostgreSQL instance | Med/Low |
+| DescribeDBInstanceDetail | Get instance details | Low/None |
+| DescribeDBInstances | List all instances | Low/None |
+| DeleteDBInstance | Delete instance | Low/**High** |
+| ModifyDBInstanceSpec | Modify node spec/storage | Med/Med |
+| DescribeDBInstanceParameters | Query parameters | Low/None |
+| ModifyDBInstanceParameter | Modify parameters | Med/Med |
+| DescribeRegions | List regions | Low/None |
+| CreateReadonlyInstance | Create read-only instance | Med/Low |
+| DescribeAccounts | List accounts | Low/None |
+| CreateAccount | Create DB account | Low/Med |
+| DescribeBackups | List backups | Low/None |
+| CreateBackup | Create backup | Low/Low |
+| RestoreToNewInstance | Restore from backup | High/Med |
+| RebuildDBInstance | Rebuild instance | High/**High** |
 
 ## Changelog
 
@@ -288,23 +288,23 @@ done
 
 #### Failure Recovery
 
-| Error Code | Agent Action | Recovery |
-|------------|--------------|----------|
+| Error Code | Action | Recovery |
+|------------|--------|----------|
 | `InvalidParameter.InstanceName` | HALT | 1-128 chars, no leading number/dash |
 | `InvalidParameter.NodeSpec` | HALT | Check via DescribeInstanceSpecs |
-| `InvalidParameter.StorageSpace` | HALT | Storage [20-3000]GB, step 10GB |
-| `InvalidParameter.ZoneConfig` | HALT | Verify primary/secondary zones exist |
+| `InvalidParameter.StorageSpace` | HALT | [20-3000]GB, step 10GB |
+| `InvalidParameter.ZoneConfig` | HALT | Verify zones exist |
 | `InvalidParameter.NetworkConfig` | HALT | Verify VPC/subnet in region |
 | `ResourceNotFound.Vpc` | HALT | Verify VPC ID |
-| `QuotaExceeded.InstanceCount` | HALT | Delete unused or request quota |
-| `OperationDenied.InstanceStatus` | HALT | Wait for current operation to finish |
+| `QuotaExceeded.InstanceCount` | HALT | Delete unused or request increase |
+| `OperationDenied.InstanceStatus` | HALT | Wait for current op to finish |
 | `InsufficientBalance` | HALT | Recharge account |
-| `Throttling` | Retry (3x, exponential) | Back off and retry |
-| `InternalError` | Retry (3x, 2s/4s/8s) | Report RequestId if persists |
+| `Throttling` | Retry ×3, exponential | Back off |
+| `InternalError` | Retry ×3, 2s/4s/8s | Report RequestId |
 | `ResourceAlreadyExists` | HALT | Use unique name |
 | `Forbidden.RAM` | HALT | Add RAM policy |
 | `ResourceNotFound.Instance` | HALT | Verify InstanceId |
-| `ResourceInUse` | HALT | Wait for concurrent operation to finish |
+| `ResourceInUse` | HALT | Wait for concurrent op |
 
 ### Operation: Describe/ List Instances
 
