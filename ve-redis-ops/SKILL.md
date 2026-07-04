@@ -95,19 +95,7 @@ Volcengine Cache for Redis (缓存数据库 Redis 版) provides managed Redis-co
 
 ### Key Response Field Table
 
-| Operation | JSON Path | Type | Description |
-|-----------|-----------|------|-------------|
-| CreateDBInstance | `$.Result.InstanceId` | string | New instance ID |
-| DescribeDBInstances | `$.Result.Instances[].InstanceId` | string | Instance ID |
-| DescribeDBInstances | `$.Result.Instances[].InstanceName` | string | Instance name |
-| DescribeDBInstances | `$.Result.Instances[].Status` | string | Instance state |
-| DescribeDBInstances | `$.Result.Instances[].EngineVersion` | string | Redis version |
-| DescribeDBInstances | `$.Result.Instances[].Capacity.Total` | integer | Memory capacity (MB) |
-| DescribeDBInstances | `$.Result.Instances[].ChargeType` | string | PostPaid/PrePaid |
-| DescribeDBInstances | `$.Result.Instances[].PrivateAddress` | string | Connection address |
-| DescribeDBInstances | `$.Result.Instances[].VpcId` | string | VPC ID |
-| DescribeDBInstances | `$.Result.TotalInstancesNum` | integer | Total count |
-| DeleteDBInstance | `$.ResponseMetadata.RequestId` | string | Request ID |
+完整字段定义见 [references/api-sdk-usage.md §2](references/api-sdk-usage.md#2-instance-management)。
 
 ### Instance States
 
@@ -122,12 +110,10 @@ Volcengine Cache for Redis (缓存数据库 Redis 版) provides managed Redis-co
 
 ### State Transitions
 
-| Operation | Initial | Target | ⏱ Poll | ⏱ Max Wait |
-|-----------|---------|--------|------|----------|
-| Create | — | `Running` | 5s | 300s |
-| Delete | any | gone | 5s | 300s |
-| Restart | Running | `Running` | 5s | 180s |
-| Modify Spec | Running | `Running` | 10s | 600s |
+`Create` — → `Running` (⏱ 5s poll, max 300s)  
+`Delete` — any → gone (⏱ 5s poll, max 300s)  
+`Restart` — Running → `Running` (⏱ 5s poll, max 180s)  
+`Modify Spec` — Running → `Running` (⏱ 10s poll, max 600s)
 
 ## Quick Start
 
@@ -299,18 +285,13 @@ done
 
 | Error Pattern | Agent Action | Recovery |
 |---------------|-------------|----------|
-| `InvalidParameter.InstanceName` | **HALT** | Use valid name (alphanumeric, hyphens, 1-128 chars) |
-| `InvalidParameter.NetworkConfig` | **HALT**; verify VPC | Verify network exists in target region |
-| `QuotaExceeded.InstanceCount` | **HALT** | Delete unused instances or request quota increase |
-| `OperationDenied.InstanceStatus` | **HALT** | Wait for current operation to complete |
-| `ResourceNotFound.Vpc` | **HALT** | Verify VPC ID exists in region |
-| `InsufficientBalance` | **HALT** | Recharge account |
-| `Throttling` | Retry 3x, exponential backoff | Rate limit reached; retry with backoff |
-| `InternalError` | Retry 3x with backoff (2s,4s,8s); **HALT** after 3 | Capture RequestId; retry or escalate |
+| `OperationDenied.DeletionProtection` | **HALT** | Disable deletion protection first then retry |
 | `ResourceAlreadyExists` | Ask reuse | Use unique instance name or reuse existing |
 | `InvalidParameter.Password` | **HALT** | Use 8-32 chars with letters, digits, and special chars |
-| `Forbidden.RAM` | **HALT** | Add RAM policy for Redis |
-| `OperationDenied.DeletionProtection` | **HALT** | Disable deletion protection first then retry |
+| `Throttling` | Retry 3x, exponential backoff | Rate limit reached; retry with backoff |
+| `InternalError` | Retry 3x with backoff (2s,4s,8s); **HALT** after 3 | Capture RequestId; retry or escalate |
+
+> 其他通用错误见 [references/troubleshooting.md §1](references/troubleshooting.md#1-error-taxonomy)。
 
 ### Operation: Describe/ List Instances
 

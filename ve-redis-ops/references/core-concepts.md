@@ -110,7 +110,7 @@ ve redis DescribeRegions
 |----------|---------------|-------|
 | Redis instances per region | 20 | Can request increase |
 | Max keys per instance | Memory limited | Bound by maxmemory |
-| Max connections per instance | Varies by spec | 10,000–100,000 |
+| Max connections per instance | `ve redis DescribeRegionQuotas` | Varies by spec |
 | Allow lists per instance | 100 | — |
 | Database accounts per instance | 50 | — |
 
