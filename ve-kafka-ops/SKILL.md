@@ -246,7 +246,7 @@ ve kafka CreateInstance \
   --VpcId "{{user.vpc_id}}" \
   --SubnetId "{{user.subnet_id}}" \
   --ZoneId "{{user.zone_id}}" \
-  --Version "2.6"
+  --Version "{{user.kafka_version}}"
 ```
 
 #### Execution — JIT Go SDK (Fallback)
@@ -279,7 +279,7 @@ func main() {
         "VpcId":          os.Getenv("VPC_ID"),
         "SubnetId":       os.Getenv("SUBNET_ID"),
         "ZoneId":         os.Getenv("ZONE_ID"),
-        "Version":        "2.6",
+        "Version":        os.Getenv("KAFKA_VERSION"),
     }
 
     resp, err := instance.Client.Request("kafka", "CreateInstance", params)
