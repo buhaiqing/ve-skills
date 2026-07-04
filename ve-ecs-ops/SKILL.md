@@ -154,7 +154,7 @@ ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capaci
 ## Quick Start
 
 ### What This Skill Does
-This skill enables you to deploy, configure, troubleshoot, and manage Volcengine (火山引擎) ECS instances, disks, snapshots, images, and security groups using the `ve` CLI (primary) or JIT Go SDK (fallback).
+Deploy, cfg, troubleshoot & manage ECS (instances, disks, snapshots, images, SGs) via `ve` CLI (primary) | Go SDK (fallback).
 
 ### Prerequisites
 - [ ] `ve` CLI installed (or Go runtime for JIT fallback)
@@ -266,9 +266,7 @@ func main() {
 
 #### Validation
 
-1. Check `$.Result.TotalCount` for total matching instances
-2. Parse `$.Result.Instances[]` for instance details
-3. Report instance count, IDs, names, and statuses
+✅ `$.Result.TotalCount` matches expected → `$.Result.Instances[]` parsed → report {count, IDs, names, status}
 
 #### Failure Recovery
 
@@ -346,8 +344,8 @@ resp, err := instance.Client.Request("RunInstances", nil, params)
 
 #### Post-execution Validation
 
-1. Parse `$.InstanceIds[]` for created instance IDs → `{{output.instance_id}}`
-2. Poll status until `RUNNING`:
+1. Parse `$.InstanceIds[]` → `{{output.instance_id}}`
+2. Poll → `RUNNING`:
 
 ```bash
 for i in $(seq 1 120); do
@@ -359,8 +357,8 @@ done
 [ "$STATUS" != "RUNNING" ] && echo "[ERROR] Instance failed to reach RUNNING state (current: $STATUS)" && exit 1
 ```
 
-3. On success, report instance ID, public/private IPs, and access info
-4. On terminal failure (status becomes `ERROR`), go to Failure Recovery
+3. ✅ On success: report {ID, IPs, access}
+4. ❌ Terminal failure (`ERROR`): → Failure Recovery
 
 #### Failure Recovery
 
@@ -615,7 +613,7 @@ ve ecs DescribeInvocationResults \
 ```
 
 3. Parse `$.Result.CommandInvocationResult[].InvokeStatus` → `Running`, `Success`, `Failed`, `Timeout`
-4. On success, display `Output` field from results
+4. ✅ `Output` field displayed
 
 #### Failure Recovery
 
@@ -1013,6 +1011,8 @@ The Critic itself MUST NOT call any of the above — it only emits suggestions.
 - [CLI Usage](references/cli-usage.md)
 - [Troubleshooting Guide](references/troubleshooting.md)
 - [Monitoring](references/monitoring.md)
+- [AIOps (Advanced)](references/advanced/aiops.md)
+- [FinOps (Advanced)](references/advanced/finops.md)
 - [Integration](references/integration.md)
 - [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)

@@ -107,48 +107,30 @@ DeleteInstance affects:
   └── Snapshots/Images created from this instance (preserved)
 ```
 
-## Resource Limits (Defaults)
+## Resource Limits
 
-| Resource | Default Limit |
-|----------|---------------|
-| Instances per account per region | 100 |
-| Security groups per instance | 5 |
-| Cloud disks per instance | 15 |
-| Snapshots per disk | 50 |
-| Images per account | 200 |
-| Key pairs per region | 500 |
+> **TE-1:** Limits vary by account tier. Query current quota via API:
 
-> Limits can be increased via support ticket. Check current quota with: `ve ecs DescribeResourceQuota`
+```bash
+ve ecs DescribeResourceQuota --Region "{{user.region}}"
+```
+
+| Resource | Query Method |
+|----------|-------------|
+| Instances per region | `DescribeResourceQuota → $.Result.Quota.InstanceQuota` |
+| Security groups per instance | `DescribeResourceQuota → $.Result.Quota.SecurityGroupQuota` |
+| Cloud disks per instance | `DescribeResourceQuota → $.Result.Quota.VolumeQuota` |
+| Snapshots per disk | `DescribeResourceQuota → $.Result.Quota.SnapshotQuota` |
+| Images per account | `DescribeImages — MaxResults=1 → TotalCount` |
+| Key pairs per region | `DescribeKeyPairs — MaxResults=1 → TotalCount` |
+
+> Limits can be increased via support ticket.
 
 ## FinOps — Cost Optimization
 
-### Billing Model Comparison
+> **TE-7:** Deep FinOps analysis (billing comparison, pricing, cost optimization reference) → [`references/advanced/finops.md`](advanced/finops.md)
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production workloads |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Batch processing, fault-tolerant |
-
-### Cost Per Instance Type
-
-Pricing varies by region, billing model, and instance family. Query current prices:
-
-```bash
-# Describe price for a specific instance type (cn-beijing, PostPaid)
-ve ecs DescribeInstanceTypes --InstanceTypeIds '["ecs.g3i.large"]' | jq '.Result.InstanceTypes[] | {InstanceType, Price}'
-```
-
-> Prices change over time — always query the Price API for current rates rather than relying on hardcoded tables.
-
-### Cost Optimization Quick Reference
-
-| Situation | Action | 💰 Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| CPU avg < 15% for 7 days | Right-size down | 25-75% |
-| Non-critical batch workload | Use Spot | 60-90% |
-| Stopped instance > 7 days | Delete or snapshot + delete | 100% |
-| Unattached disk | Snapshot + delete | 100% |
-| Snapshot > 90 days old | Delete | 100% |
+See [`references/advanced/finops.md`](advanced/finops.md) for:
+- Billing Model Comparison
+- Cost Per Instance Type (query API for current prices)
+- Cost Optimization Quick Reference

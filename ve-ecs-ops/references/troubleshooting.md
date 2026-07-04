@@ -2,28 +2,21 @@
 
 ## Common Error Codes
 
-| Error Code | Agent Action | Recovery |
-|-----------|-------------|----------|
-| `InvalidRegion.NotFound` | HALT; query valid regions | `ve ecs DescribeRegions` |
-| `InvalidImageId.NotFound` | HALT; verify image ID | `ve ecs DescribeImages` |
-| `InvalidInstanceType.ValueNotSupported` | HALT; list available types | `ve ecs DescribeInstanceTypes` |
-| `InvalidSubnetId.NotFound` | HALT; verify subnet ID & region | `ve vpc DescribeSubnets` |
-| `InvalidVpcId.NotFound` | HALT; verify VPC ID | `ve vpc DescribeVpcs` |
-| `InvalidSecurityGroupId.NotFound` | HALT; verify SG ID | `ve ecs DescribeSecurityGroups` |
-| `InvalidInstanceId.NotFound` | HALT; verify instance ID | `ve ecs DescribeInstances` |
-| `InvalidPasswordFormat` | HALT; fix password | 8-30 chars, 3 of: upper, lower, digit, special |
-| `QuotaExceeded.Instance` | HALT; request increase | `ve ecs DescribeResourceQuota` |
-| `QuotaExceeded.SecurityGroup` | HALT; delete unused or increase | Check SG usage |
-| `InsufficientAvailableStock` | Retry different type/zone | `ve ecs DescribeInstanceTypes --InstanceTypeFamilyIds '["g3i"]'` |
-| `IncorrectInstanceStatus` | HALT; check status | Perform prerequisite action first |
-| `InstanceExpired` | HALT; renew instance | Renew in console or API |
-| `Unauthorized` | HALT; attach IAM policy | Attach `ECSFullAccess` |
-| `InternalError` | Retry 3x with backoff | HALT after 3 retries |
-| `Throttling` | Backoff 2s, 4s, 8s | Reduce request rate |
-| `ExpiredOrder` | Retry operation | Re-submit request |
-| `InvalidParameter` | HALT; check API docs | Fix parameter value |
-| `LimitExceeded.MaxResults` | Reduce to ≤ 100 | Retry once |
-| `ResourceNotEnough` | Try different zone/type | `ve ecs DescribeZones --Region "{{user.region}}"` |
+> Error codes are per-operation in SKILL.md §Failure Recovery tables.
+> Brief overview below — see `../SKILL.md` per-op recovery for full detail.
+
+| Error Pattern | Action | Recovery (summary) |
+|---|--------|--------------------|
+| `Invalid*NotFound` | HALT | Verify resource ID → `Describe*` |
+| `QuotaExceeded.*` | HALT | `DescribeResourceQuota` → increase or cleanup |
+| `InsufficientAvailableStock` | RETRY | Different type/zone → `DescribeInstanceTypes` |
+| `IncorrectInstanceStatus` | HALT | Check status → pre-req action first |
+| `Unauthorized` | HALT | Attach `ECSFullAccess` IAM policy |
+| `InternalError` | RETRY 3x | Backoff → HALT after 3 |
+| `Throttling` | RETRY 3x | Backoff 2s, 4s, 8s |
+| `InvalidPasswordFormat` | HALT | 8-30 chars, 3 of: upper, lower, digit, special |
+| `InvalidParameter` | HALT | Fix param per API docs |
+| `LimitExceeded.MaxResults` | FIX | Reduce to ≤ 100 |
 
 ## Diagnostic Order
 

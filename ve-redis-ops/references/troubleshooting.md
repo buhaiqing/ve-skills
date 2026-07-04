@@ -1,8 +1,8 @@
 # Troubleshooting Guide — Volcengine Redis
 
 > **Purpose:** Systematic troubleshooting guide for common Redis operational issues.
-> **Version:** 1.0.0
-> **Last Updated:** 2026-05-25
+> **Version:** 1.1.0
+> **Last Updated:** 2026-07-04
 
 ---
 
@@ -20,14 +20,14 @@
 
 | Error Code | Agent Action | Recovery |
 |-----------|-------------|----------|
-| `Invalid*.Malformed` | **HALT** — parameter validation failed | Check parameter values against API docs |
-| `InstanceNotFound` | **HALT** — instance does not exist | Verify instance ID via describe command |
-| `IncorrectInstanceStatus` | **HALT** — instance in wrong state | Wait for state transition or cancel current operation |
-| `QuotaExceeded.*` | **HALT** — Redis quota exhausted | Delete unused instances or request quota increase |
-| `BalanceNotEnough` | **HALT** — account balance insufficient | Recharge account via billing console |
-| `Forbidden.RAM` | **HALT** — insufficient IAM permissions | Verify IAM policy allows the action |
-| `FlowLimitExceeded` | Retry with exponential backoff | Max 3 retries |
-| `InternalError` | Retry with exponential backoff | Max 3 retries; capture RequestId for escalation |
+| `Invalid*.Malformed` | **HALT** — param val failed | Check values against API docs |
+| `InstanceNotFound` | **HALT** — instance missing | Verify ID via describe |
+| `IncorrectInstanceStatus` | **HALT** — wrong state | Wait for transition or cancel current op |
+| `QuotaExceeded.*` | **HALT** — quota exhausted | Delete unused instances or request increase |
+| `BalanceNotEnough` | **HALT** — insufficient balance | Recharge via billing console |
+| `Forbidden.RAM` | **HALT** — insufficient IAM perms | Verify IAM policy |
+| `FlowLimitExceeded` | RETRY w/ exponential backoff | Max 3 retries |
+| `InternalError` | RETRY w/ exponential backoff | Max 3 retries; capture RequestId |
 
 ---
 
@@ -37,18 +37,15 @@
 
 ```
 Error: Forbidden
-Message: Cross-service access authorization is required. Please complete the authorization before calling CreateDBInstance.
+Message: Cross-service access authorization is required.
 ```
 
-**Root Cause:** Since 2022-05-17, Redis requires a service-linked role for cross-service access.
+**Root Cause:** Since 2022-05-17, Redis requires a service-linked role.
 
 **Resolution:**
 ```bash
-# Create service-linked role (use ve CLI)
 ve iam CreateServiceLinkedRole --body '{"ServiceName": "Redis"}'
 ```
-
-Or authorize via Volcengine console.
 
 ### SubnetNotFound
 
@@ -65,21 +62,18 @@ ve vpc DescribeSubnets --Region "$VOLCENGINE_REGION" --SubnetIds "[\"$SUBNET_ID\
 
 **Checklist:**
 1. Instance status is `Running`
-2. Client IP is in the allow list
-3. Client is in the same VPC (for private access)
-4. Security group allows Redis port (6379)
+2. Client IP in allow list
+3. Client in same VPC (private access)
+4. Security group allows port 6379
 
 ### NOAUTH Authentication Required
 
-**Root Cause:** Not passing the password during connection.
+**Root Cause:** Missing password on connection.
 
 **Resolution:**
 ```bash
-# Using redis-cli
 redis-cli -h $PRIVATE_ADDRESS -p $PORT -a "$PASSWORD"
-
-# Or authenticate after connection
-redis-cli -h $PRIVATE_ADDRESS -p $PORT
+# Or authenticate after connect
 AUTH $PASSWORD
 ```
 
@@ -89,7 +83,7 @@ AUTH $PASSWORD
 
 ### OOM Command Not Allowed
 
-**Root Cause:** Redis memory is full and `maxmemory-policy` is set to `noeviction`.
+**Root Cause:** Memory full + `maxmemory-policy` = `noeviction`.
 
 **Resolution:**
 1. Change eviction policy:
@@ -101,11 +95,11 @@ AUTH $PASSWORD
 
 ### Slow Commands
 
-Redis single-threaded operations mean slow commands (KEYS, SCAN with large result, SMEMBERS on large sets) block all other operations.
+Redis single-threaded ⇒ slow cmds (KEYS, SCAN large results, SMEMBERS on large sets) block all ops.
 
 **Resolution:**
-- Replace `KEYS pattern` with `SCAN cursor MATCH pattern COUNT 100`
-- Move large set operations to pipeline
+- Replace `KEYS pattern` w/ `SCAN cursor MATCH pattern COUNT 100`
+- Move large set ops to pipeline
 
 ---
 
@@ -113,7 +107,7 @@ Redis single-threaded operations mean slow commands (KEYS, SCAN with large resul
 
 Required for: CreateDBInstance, ModifyDBInstanceSubnet, CreateDBEndpointPublicAddress.
 
-**Resolution:** Create the `Redis` service-linked role via console or:
+**Resolution:** Create `Redis` service-linked role:
 ```bash
 ve iam CreateServiceLinkedRole --body '{"ServiceName": "Redis"}'
 ```

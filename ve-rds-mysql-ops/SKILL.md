@@ -306,7 +306,7 @@ func main() {
 for i in $(seq 1 60); do
   STATUS=$(ve rds_mysql DescribeDBInstanceDetail --InstanceId "{{output.instance_id}}" | jq -r '.Result.InstanceStatus // ""')
   [ "$STATUS" = "RUNNING" ] && break
-  [ "$STATUS" = "ERROR" ] && echo "Instance creation failed" && exit 1
+  [ "$STATUS" = "ERROR" ] && echo "❌ Create failed" && exit 1
   sleep 10
 done
 ```
@@ -420,13 +420,6 @@ ve rds_mysql ListDBInstanceIPLists --InstanceId "{{user.instance_id}}"
 ve rds_mysql ModifyDBInstanceIPList --InstanceId "{{user.instance_id}}" --body '{"IPList": ["10.0.0.0/8"], "ModifyMode": "Cover"}'
 ```
 
-## Prerequisites
-
-1. **`ve` CLI** installed per execution environment
-2. **Go runtime** for JIT fallback (see references/integration.md)
-3. **Credentials:** `VOLCENGINE_ACCESS_KEY`, `VOLCENGINE_SECRET_KEY`, `VOLCENGINE_REGION`
-4. **Verify:** `ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"`
-
 ## Reference Directory
 
 - [Core Concepts](references/core-concepts.md) — RDS architecture, engine versions, node types
@@ -435,6 +428,7 @@ ve rds_mysql ModifyDBInstanceIPList --InstanceId "{{user.instance_id}}" --body '
 - [Knowledge Base](references/knowledge-base.md) — fault pattern library (AIOps diagnosis)
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — RDS monitoring metrics
+- [AIOps (Advanced)](references/advanced/aiops.md) — Diagnosis decision tree, alarm storm, inspection
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
 - [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
 - [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + RDS-specific safety prompts

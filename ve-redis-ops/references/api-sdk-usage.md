@@ -1,10 +1,20 @@
 # API & SDK Usage — Volcengine Redis
 
 > **Purpose:** Detailed API reference for Redis operations. API 2020-12-07.
-> **Version:** 1.0.0
-> **Last Updated:** 2026-05-25
+> **Version:** 1.1.0
+> **Last Updated:** 2026-07-04
 
 ---
+
+# Common JSON Paths
+# ---
+# Instance list: $.Result.Instances[] | $.Result.Instances[].{InstanceId,InstanceName,Status,EngineVersion}
+# Instance detail: $.Result.{Status,Capacity.{Total,Used},PrivateAddress,PrivatePort,VpcId}
+# Create result: $.Result.{InstanceId,OrderNo}
+# Account: $.Result.Accounts[] | $.Result.Accounts[].{AccountName,Role,Status}
+# Backup: $.Result.Backups[] | $.Result.Backups[].{BackupId,BackupName,BackupStatus,StartTime,BackupType}
+# Parameter: $.Result.Parameters[] | $.Result.Parameters[].{Name,Value,Description,ReadOnly,Range}
+# AllowList: $.Result.AllowLists[] (via DescribeAllowLists)
 
 ## Table of Contents
 
