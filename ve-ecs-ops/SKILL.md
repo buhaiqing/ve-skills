@@ -16,8 +16,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.0.0"
-  last_updated: "2026-05-15"
+  version: "1.2.0"
+  last_updated: "2026-06-04"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"

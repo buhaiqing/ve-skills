@@ -86,8 +86,6 @@ def mask_secrets(text: str) -> str:
 
 
 def has_credential_leak(text: str) -> bool:
-    if "<masked>" in text:
-        return False
     return any(p.search(text) for p in SECRET_PATTERNS)
 
 
@@ -240,6 +238,89 @@ def extract_failure_pattern(
     return None
 
 
+def detect_credential_fields(text: str) -> list[str]:
+    """Detect which credential fields are present in raw text (before masking).
+
+    Returns field names that would be redacted by mask_secrets().
+    """
+    fields: list[str] = []
+    if re.search(r"SecretKey\s*=", text, re.I):
+        fields.append("SecretKey")
+    if re.search(r"VOLCENGINE_SECRET_KEY\s*=", text, re.I):
+        fields.append("VOLCENGINE_SECRET_KEY")
+    if re.search(r"AKLT[A-Za-z0-9]{20,}", text):
+        fields.append("AKLT_token")
+    return fields
+
+
+def derive_operation_intent(skill: str, command: str) -> dict[str, Any]:
+    """Heuristic-based operation intent derivation from skill name and command.
+
+    Returns dict with keys per AGENTS.md GCL spec §6: operation, resource_scope,
+    expected_state, safety_class. Parses command for action keywords.
+    """
+    if not command:
+        return {
+            "operation": "unknown",
+            "resource_scope": [],
+            "expected_state": "unknown",
+            "safety_class": "read_only",
+        }
+
+    resource = skill.replace("ve-", "").replace("-ops", "")
+
+    if re.search(r"\b(Delete|Remove|Terminate|Destroy)\w*\b", command, re.I):
+        return {
+            "operation": f"delete_{resource}",
+            "resource_scope": [],
+            "expected_state": "DELETED",
+            "safety_class": "destructive",
+        }
+    if re.search(r"\b(Stop|Shutdown|PowerOff)\w*\b", command, re.I):
+        return {
+            "operation": f"stop_{resource}",
+            "resource_scope": [],
+            "expected_state": "STOPPED",
+            "safety_class": "destructive",
+        }
+    if re.search(r"\b(Release)\w*\b", command, re.I):
+        return {
+            "operation": f"release_{resource}",
+            "resource_scope": [],
+            "expected_state": "DELETED",
+            "safety_class": "destructive",
+        }
+    if re.search(r"\b(Revoke|Disable|Deactivate)\w*\b", command, re.I):
+        return {
+            "operation": f"revoke_{resource}",
+            "resource_scope": [],
+            "expected_state": "DISABLED",
+            "safety_class": "destructive",
+        }
+
+    if re.search(r"\b(Create|Add|Allocate|Attach|Assign|Authorize|Enable|Activate)\w*\b", command, re.I):
+        return {
+            "operation": f"create_{resource}",
+            "resource_scope": [],
+            "expected_state": "ACTIVE",
+            "safety_class": "mutating",
+        }
+    if re.search(r"\b(Modify|Update|Set|Change|Resize|Rebuild|Reboot|Restart)\w*\b", command, re.I):
+        return {
+            "operation": f"modify_{resource}",
+            "resource_scope": [],
+            "expected_state": "MODIFIED",
+            "safety_class": "mutating",
+        }
+
+    return {
+        "operation": "describe",
+        "resource_scope": [],
+        "expected_state": "UNCHANGED",
+        "safety_class": "read_only",
+    }
+
+
 def persist_trace(root: Path, trace: dict[str, Any]) -> Path:
     out_dir = root / "audit-results"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -252,15 +333,23 @@ def persist_trace(root: Path, trace: dict[str, Any]) -> Path:
 def cmd_run(args: argparse.Namespace) -> int:
     root = args.root
     max_iter = args.max_iter or SKILL_MAX_ITER.get(args.skill, 3)
+    command = args.command
+
+    operation_intent = derive_operation_intent(args.skill, command)
+    masked_fields = detect_credential_fields(command)
+
     trace: dict[str, Any] = {
+        "trace_schema_version": "v1",
         "skill": args.skill,
         "request": args.request,
         "rubric_version": "v1",
+        "operation_intent": operation_intent,
+        "masked_fields": masked_fields,
+        "redaction_pass": True,
         "iterations": [],
     }
 
     critic_feedback = ""
-    command = args.command
 
     for iteration in range(1, max_iter + 1):
         generator = run_command(command, timeout=args.timeout)

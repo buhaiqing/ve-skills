@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建安全组",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope",
+    "operations": [
+      "CreateSecurityGroup"
+    ]
+  },
+  {
+    "query": "安全组入方向授权",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope",
+    "operations": [
+      "AuthorizeSecurityGroupIngress"
+    ]
+  },
+  {
+    "query": "安全组出方向授权",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope",
+    "operations": [
+      "AuthorizeSecurityGroupEgress"
+    ]
+  },
+  {
+    "query": "删除安全组规则",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope",
+    "operations": [
+      "RevokeSecurityGroupIngress"
+    ]
+  },
+  {
+    "query": "安全组克隆",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope",
+    "operations": [
+      "CreateSecurityGroup"
+    ]
+  },
+  {
+    "query": "安全组加入实例",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope",
+    "operations": [
+      "AssociateSecurityGroup"
+    ]
+  },
+  {
+    "query": "批量授权端口 22/3389/443",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope",
+    "operations": [
+      "AuthorizeSecurityGroupIngress"
+    ]
+  },
+  {
+    "query": "创建 VPC 网络",
+    "should_trigger": false,
+    "skill": "ve-security-group-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "部署 Kubernetes",
+    "should_trigger": false,
+    "skill": "ve-security-group-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

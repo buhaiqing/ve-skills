@@ -2,72 +2,66 @@
 
 ## Common Error Codes
 
-| Error Code | Agent Action | Recovery |
-|-----------|-------------|----------|
-| `InvalidParameter` | Invalid request parameter | Verify all parameters against API docs |
-| `NoSuchMetric` | Metric not found in namespace | HALT; check namespace and metric name |
-| `NoSuchResource` | Resource does not exist | HALT; verify resource ID in Dimensions |
-| `Throttling` | Rate limit exceeded | Exponential backoff; reduce query frequency |
-| `Unauthorized` | Insufficient permissions | HALT; attach VMSReadOnlyAccess IAM policy |
-| `InvalidDimensions` | Malformed Dimensions JSON | Fix JSON format; use `[{"key":"value"}]` |
-| `MetricDataInsufficient` | Not enough data for evaluation | HALT; wait for data accumulation |
-| `RuleAlreadyExists` | Alarm rule name conflicts | HALT; use unique rule name |
-| `ContactGroupNotFound` | Notification group not found | HALT; create group first |
-| `QuotaExceeded.AlarmRule` | Alarm rule limit reached | HALT; delete unused rules or request increase |
-| `InternalError` | Server-side error | Retry with backoff; HALT after 3 retries |
-| `ResourceNotFound` | Alarm template or rule not found | Verify resource ID |
-| `InvalidTimestamp` | StartTime > EndTime or invalid format | Verify timestamps are valid Unix ms |
-| `Forbidden.NoData` | API call quota exceeded | HALT; wait for quota reset or upgrade plan |
-| `TemplateAlreadyApplied` | Template already applied to resource | HALT; remove first or use different template |
+| Error Code | Action | Recovery |
+|-----------|--------|----------|
+| `InvalidParameter` | Invalid param | Verify API docs |
+| `NoSuchMetric` | Metric not found | HALT; check namespace/metric |
+| `NoSuchResource` | Resource missing | HALT; verify Dimensions ID |
+| `Throttling` | Rate exceeded | Exponential backoff + reduced freq |
+| `Unauthorized` | No permission | HALT; attach VMSReadOnlyAccess policy |
+| `InvalidDimensions` | Bad JSON format | Fix → `[{"key":"value"}]` |
+| `MetricDataInsufficient` | Not enough data | HALT; wait for accumulation |
+| `RuleAlreadyExists` | Name conflict | HALT; use unique name |
+| `ContactGroupNotFound` | Group missing | HALT; create group first |
+| `QuotaExceeded.AlarmRule` | Limit reached | HALT; delete unused or request increase |
+| `InternalError` | Server error | Retry ×3 with backoff → HALT |
+| `ResourceNotFound` | Rule/template missing | Verify ID |
+| `InvalidTimestamp` | Time range bad | Verify Unix ms format |
+| `Forbidden.NoData` | Quota exceeded | HALT; wait for reset/upgrade |
+| `TemplateAlreadyApplied` | Already applied | HALT; remove or use different template |
 
 ## Diagnostic Order
 
-1. **Check credentials:**
+1. ✅ Credentials:
    ```bash
    test -n "$VOLCENGINE_ACCESS_KEY" && test -n "$VOLCENGINE_SECRET_KEY" && echo "OK"
    ```
 
-2. **Verify service is available:**
+2. ✅ Service available:
    ```bash
    ve version
    ```
 
-3. **Query metric metadata:** (Check if namespace and metric exist)
+3. ✅ Metric metadata:
    ```bash
    ve metrics ListMetrics --Namespace Volcengine_ECS
    ```
 
-4. **Query alarm rules:**
+4. ✅ Alarm rules:
    ```bash
    ve metrics DescribeMetricRuleList --Namespace Volcengine_ECS
    ```
 
 ## Common Scenarios
 
-### Scenario 1: No Data Returned
-
-**Diagnosis:** Metrics take time to report after resource creation.
+### 1: No Data Returned
 
 **Recovery:**
-- Wait 5-15 minutes after creating a resource before querying metrics
-- Verify the resource ID is correct and active
-- Check that monitoring agent is installed (for OS-level metrics)
+- Wait 5-15 min after resource creation before querying
+- Verify resource ID is correct & active
+- Check monitoring agent installed (OS-level metrics)
 
-### Scenario 2: Alarm Rule Never Fires
-
-**Diagnosis:** Threshold too high, or metric data insufficient.
+### 2: Alarm Rule Never Fires
 
 **Recovery:**
-- Query historical metrics to establish baseline
+- Query historical metrics → establish baseline
 - Lower threshold gradually
-- Verify alarm rule `EnableState` is `true`
-- Check notification group is properly configured
+- Verify `EnableState` is `true`
+- Check notification group configured
 
-### Scenario 3: API Throttling
-
-**Diagnosis:** Too many queries in short time window.
+### 3: API Throttling
 
 **Recovery:**
-- Implement client-side rate limiting
-- Use longer `Period` values to reduce data points
-- Cache query results when possible
+- Client-side rate limiting
+- Use longer `Period` to reduce data points
+- Cache query results

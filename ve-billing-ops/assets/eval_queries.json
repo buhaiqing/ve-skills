@@ -1,0 +1,76 @@
+[
+  {
+    "query": "查询账单明细",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope",
+    "operations": [
+      "DescribeBillOverview"
+    ]
+  },
+  {
+    "query": "查看账户余额",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope",
+    "operations": [
+      "QueryAccountBalance"
+    ]
+  },
+  {
+    "query": "设置消费预警",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope",
+    "operations": [
+      "SetAlarmRule"
+    ]
+  },
+  {
+    "query": "查看资源消费排名",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope",
+    "operations": [
+      "QueryInstanceBill"
+    ]
+  },
+  {
+    "query": "导出月度账单",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope",
+    "operations": [
+      "GetBillExportFile"
+    ]
+  },
+  {
+    "query": "查看节省计划",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope",
+    "operations": [
+      "DescribeSavingsPlan"
+    ]
+  },
+  {
+    "query": "创建代金券",
+    "should_trigger": false,
+    "skill": "ve-billing-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置网络",
+    "should_trigger": false,
+    "skill": "ve-billing-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

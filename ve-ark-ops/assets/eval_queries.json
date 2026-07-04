@@ -1,0 +1,66 @@
+[
+  {
+    "query": "创建 ARK 实例",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CreateInstance"
+    ]
+  },
+  {
+    "query": "ARK 节点扩缩容",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "ScaleOutInstance"
+    ]
+  },
+  {
+    "query": "ARK 监控指标",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "DescribeInstanceMonitor"
+    ]
+  },
+  {
+    "query": "删除 ARK 实例",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "DeleteInstance"
+    ]
+  },
+  {
+    "query": "ARK 备份恢复",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CreateBackup"
+    ]
+  },
+  {
+    "query": "启动 ECS",
+    "should_trigger": false,
+    "skill": "ve-ark-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "部署网站",
+    "should_trigger": false,
+    "skill": "ve-ark-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

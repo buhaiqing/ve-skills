@@ -1,0 +1,76 @@
+[
+  {
+    "query": "创建 ALB 实例",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateLoadBalancer"
+    ]
+  },
+  {
+    "query": "配置 ALB 服务器组",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateServerGroup"
+    ]
+  },
+  {
+    "query": "ALB 规则重写",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateRule"
+    ]
+  },
+  {
+    "query": "ALB 流量镜像",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateTrafficMirror"
+    ]
+  },
+  {
+    "query": "ALB 熔断配置",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "ModifyServerGroupAttribute"
+    ]
+  },
+  {
+    "query": "删除 ALB",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "DeleteLoadBalancer"
+    ]
+  },
+  {
+    "query": "启动 ECS",
+    "should_trigger": false,
+    "skill": "ve-alb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置数据库",
+    "should_trigger": false,
+    "skill": "ve-alb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

@@ -28,41 +28,6 @@
 | List contact groups | `DescribeContactGroups` | `client.Get("volc_content_platform", params)` |
 | Create contact group | `CreateContactGroup` | `client.Post("volc_content_platform", params, body)` |
 
-## SDK Client Pattern
-
-```go
-package main
-
-import (
-    "fmt"
-    "os"
-
-    "github.com/volcengine/volc-sdk-golang/base"
-)
-
-func main() {
-    client := base.NewClient(
-        os.Getenv("VOLCENGINE_ACCESS_KEY"),
-        os.Getenv("VOLCENGINE_SECRET_KEY"),
-    )
-    client.SetHost("open.volcengineapi.com")
-
-    // Query metric data
-    params := map[string]string{
-        "Action":  "GetMetricData",
-        "Version": "2018-03-14",
-        "Namespace": "Volcengine_ECS",
-        "MetricName": "CpuUtilization",
-    }
-
-    resp, err := client.Get("metrics_v2", params)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(string(resp))
-}
-```
-
 ## GetMetricData Response
 
 ```json
@@ -87,39 +52,26 @@ func main() {
 
 ## Go SDK Examples
 
+```go
+// Client boilerplate (reuse in each function):
+//   c := base.NewClient(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+//   c.SetHost("open.volcengineapi.com")
+```
+
 ### GetMetricData
 
 ```go
-package main
-
-import (
-    "fmt"
-    "os"
-    "github.com/volcengine/volc-sdk-golang/base"
-)
-
 func main() {
-    client := base.NewClient(
-        os.Getenv("VOLCENGINE_ACCESS_KEY"),
-        os.Getenv("VOLCENGINE_SECRET_KEY"),
-    )
-    client.SetHost("open.volcengineapi.com")
-
+    c := base.NewClient(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    c.SetHost("open.volcengineapi.com")
     params := map[string]string{
-        "Action":     "GetMetricData",
-        "Version":    "2018-03-14",
-        "Namespace":  "Volcengine_ECS",
-        "MetricName": "CpuUtilization",
+        "Action": "GetMetricData", "Version": "2018-03-14",
+        "Namespace": "Volcengine_ECS", "MetricName": "CpuUtilization",
         "Dimensions": `[{"InstanceId":"i-xxx"}]`,
-        "StartTime":  "1715000000000",
-        "EndTime":    "1715003600000",
-        "Period":     "60",
+        "StartTime": "1715000000000", "EndTime": "1715003600000", "Period": "60",
     }
-
-    resp, err := client.Get("metrics_v2", params)
-    if err != nil {
-        panic(err)
-    }
+    resp, err := c.Get("metrics_v2", params)
+    if err != nil { panic(err) }
     fmt.Println(string(resp))
 }
 ```
@@ -127,33 +79,18 @@ func main() {
 ### PutResourceMetricRule
 
 ```go
-func createAlarm(ruleName, namespace, metricName string, threshold float64) {
-    client := base.NewClient(
-        os.Getenv("VOLCENGINE_ACCESS_KEY"),
-        os.Getenv("VOLCENGINE_SECRET_KEY"),
-    )
-    client.SetHost("open.volcengineapi.com")
-
+func createAlarm(name, ns, metric string, threshold float64) {
+    c := base.NewClient(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    c.SetHost("open.volcengineapi.com")
     params := map[string]string{
-        "Action":             "PutResourceMetricRule",
-        "Version":            "2018-03-14",
-        "RuleName":           ruleName,
-        "Namespace":          namespace,
-        "MetricName":         metricName,
-        "AlertState":         "Critical",
-        "ComparisonOperator": "GreaterThanThreshold",
-        "Statistics":         "Average",
-        "Threshold":          fmt.Sprintf("%.0f", threshold),
-        "Times":              "3",
-        "Period":             "60",
-        "NotifyType":         "DefaultGroup",
+        "Action": "PutResourceMetricRule", "Version": "2018-03-14",
+        "RuleName": name, "Namespace": ns, "MetricName": metric,
+        "AlertState": "Critical", "ComparisonOperator": "GreaterThanThreshold",
+        "Statistics": "Average", "Threshold": fmt.Sprintf("%.0f", threshold),
+        "Times": "3", "Period": "60", "NotifyType": "DefaultGroup",
     }
-
-    resp, err := client.Get("metrics_v2", params)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Printf("Alarm created: %s\n", ruleName)
+    resp, err := c.Get("metrics_v2", params)
+    if err != nil { panic(err) }
     fmt.Println(string(resp))
 }
 ```
@@ -162,22 +99,14 @@ func createAlarm(ruleName, namespace, metricName string, threshold float64) {
 
 ```go
 func listAlarms() {
-    client := base.NewClient(
-        os.Getenv("VOLCENGINE_ACCESS_KEY"),
-        os.Getenv("VOLCENGINE_SECRET_KEY"),
-    )
-    client.SetHost("open.volcengineapi.com")
-
+    c := base.NewClient(os.Getenv("VOLCENGINE_ACCESS_KEY"), os.Getenv("VOLCENGINE_SECRET_KEY"))
+    c.SetHost("open.volcengineapi.com")
     params := map[string]string{
-        "Action":    "DescribeMetricRuleList",
-        "Version":   "2018-03-14",
+        "Action": "DescribeMetricRuleList", "Version": "2018-03-14",
         "Namespace": "Volcengine_ECS",
     }
-
-    resp, err := client.Get("metrics_v2", params)
-    if err != nil {
-        panic(err)
-    }
+    resp, err := c.Get("metrics_v2", params)
+    if err != nil { panic(err) }
     fmt.Println(string(resp))
 }
 ```

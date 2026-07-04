@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 KMS 密钥",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "CreateKey"
+    ]
+  },
+  {
+    "query": "KMS 密钥轮换策略",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "PutKeyRotation"
+    ]
+  },
+  {
+    "query": "KMS 加密数据",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "Encrypt"
+    ]
+  },
+  {
+    "query": "KMS 解密数据",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "Decrypt"
+    ]
+  },
+  {
+    "query": "计划删除 KMS 密钥",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "ScheduleKeyDeletion"
+    ]
+  },
+  {
+    "query": "KMS 密钥授权",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "CreateKeyGrant"
+    ]
+  },
+  {
+    "query": "取消密钥计划删除",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "CancelKeyDeletion"
+    ]
+  },
+  {
+    "query": "创建数据库实例",
+    "should_trigger": false,
+    "skill": "ve-kms-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置网络ACL",
+    "should_trigger": false,
+    "skill": "ve-kms-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

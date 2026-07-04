@@ -1,0 +1,76 @@
+[
+  {
+    "query": "创建私有 DNS Zone",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "CreateZone"
+    ]
+  },
+  {
+    "query": "添加 DNS 解析记录",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "AddZoneRecord"
+    ]
+  },
+  {
+    "query": "DNS 解析查看",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "DescribeZoneRecords"
+    ]
+  },
+  {
+    "query": "DNS PTR 反向解析",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "AddZoneRecord"
+    ]
+  },
+  {
+    "query": "DNS 记录批量导入",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "ImportZoneRecord"
+    ]
+  },
+  {
+    "query": "删除 DNS 记录",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "DeleteZoneRecord"
+    ]
+  },
+  {
+    "query": "创建 ECS 实例",
+    "should_trigger": false,
+    "skill": "ve-dns-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "部署 Kubernetes",
+    "should_trigger": false,
+    "skill": "ve-dns-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

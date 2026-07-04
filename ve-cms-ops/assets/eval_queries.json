@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建告警规则",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope",
+    "operations": [
+      "PutAlarmRule"
+    ]
+  },
+  {
+    "query": "查看告警历史",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope",
+    "operations": [
+      "DescribeAlarmHistory"
+    ]
+  },
+  {
+    "query": "创建自定义监控",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope",
+    "operations": [
+      "PutCustomMetricData"
+    ]
+  },
+  {
+    "query": "配置告警通知",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope",
+    "operations": [
+      "PutNotificationPolicy"
+    ]
+  },
+  {
+    "query": "删除告警规则",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope",
+    "operations": [
+      "DeleteAlarmRule"
+    ]
+  },
+  {
+    "query": "监控仪表盘配置",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope",
+    "operations": [
+      "CreateDashboard"
+    ]
+  },
+  {
+    "query": "告警抑制规则",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope",
+    "operations": [
+      "PutAlarmPolicy"
+    ]
+  },
+  {
+    "query": "启动 ECS",
+    "should_trigger": false,
+    "skill": "ve-cms-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "部署应用",
+    "should_trigger": false,
+    "skill": "ve-cms-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

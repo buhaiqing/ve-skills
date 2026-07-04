@@ -31,7 +31,7 @@ cluster:
     - name: general-purpose
       instance_types:
         - ecs.g1ie.xlarge
-      subnet_ids:
+      subnet_ids: &cluster_subnets       # ponytail: anchor to reuse AZ subnets
         - subnet-xxxxx-a
         - subnet-xxxxx-b
       image: veLinux 1.0 CentOS Compatible 64bit

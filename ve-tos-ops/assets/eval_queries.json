@@ -1,0 +1,96 @@
+[
+  {
+    "query": "创建 TOS Bucket",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "CreateBucket"
+    ]
+  },
+  {
+    "query": "上传文件到 TOS",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutObject"
+    ]
+  },
+  {
+    "query": "TOS Bucket 生命周期规则",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketLifecycle"
+    ]
+  },
+  {
+    "query": "TOS 静态网站托管",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketWebsite"
+    ]
+  },
+  {
+    "query": "TOS 跨区域复制",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketReplication"
+    ]
+  },
+  {
+    "query": "TOS 存储容量统计",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "GetBucketStatistics"
+    ]
+  },
+  {
+    "query": "删除 TOS Bucket",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "DeleteBucket"
+    ]
+  },
+  {
+    "query": "TOS 访问日志配置",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketLogging"
+    ]
+  },
+  {
+    "query": "配置 Apache 虚拟主机",
+    "should_trigger": false,
+    "skill": "ve-tos-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "启动 MySQL 数据库",
+    "should_trigger": false,
+    "skill": "ve-tos-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

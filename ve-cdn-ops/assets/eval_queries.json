@@ -1,0 +1,96 @@
+[
+  {
+    "query": "添加 CDN 加速域名",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "CreateDomain"
+    ]
+  },
+  {
+    "query": "CDN 缓存刷新",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "RefreshCache"
+    ]
+  },
+  {
+    "query": "CDN 带宽统计",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "DescribeDomainStatistics"
+    ]
+  },
+  {
+    "query": "CDN 证书配置",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "CreateSSLForDomain"
+    ]
+  },
+  {
+    "query": "CDN 日志下载",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "DescribeDomainLog"
+    ]
+  },
+  {
+    "query": "CDN 回源配置",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "SetOriginConfig"
+    ]
+  },
+  {
+    "query": "删除 CDN 域名",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "DeleteDomain"
+    ]
+  },
+  {
+    "query": "CDN 访问控制配置",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "SetRefererConfig"
+    ]
+  },
+  {
+    "query": "创建云服务器",
+    "should_trigger": false,
+    "skill": "ve-cdn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置数据库",
+    "should_trigger": false,
+    "skill": "ve-cdn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

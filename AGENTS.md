@@ -44,6 +44,8 @@ Verify against `ve-skill-generator/SKILL.md` and `ve-skill-generator/references/
 | C10 | Cross-product delegation | ECS skill delegates IAM work to IAM skill, etc. |
 | C11 | Version bump | `last_updated` and `version` bumped if behavior changed |
 | C12 | **Content dedup** | No duplicate operation flows across SKILL.md ↔ references/; TE-6 verified (see §Link & Dedup) |
+| C13 | **AIOps coverage** | `references/advanced/aiops.md` and `references/advanced/finops.md` exist for all required+recommended skills (23 total) |
+| C13 | Advanced AIOps coverage | `references/advanced/aiops.md` exists for all required+recommended skills |
 
 ### Round 2 — Accuracy & Anti-Pattern Sweep
 
@@ -61,6 +63,8 @@ Verify against reality, not memory:
 | F8 | Rendering | Tables aligned, code fences closed, headings hierarchical |
 | **F9** | **Link integrity** | Cross-references between docs/ and AGENTS.md verified; all internal `[...](...)` resolve to existing files (see §Link & Dedup) |
 | **F10** | **Dedup integrity** | No repeated content across multiple files; after every change run dedup check (see §Link & Dedup) |
+| **F11** | **Eval data coverage** | `assets/eval_queries.json` exists for all 29 skills with ≥ 5 trigger + ≥ 2 non-trigger cases |
+| **F11** | **FinOps coverage** | `references/advanced/finops.md` exists for required+recommended skills |
 
 **Fix every issue found in both rounds before responding "done".** If a finding requires information you don't have, mark it `[blocked: needs OpenAPI verification]`.
 

@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 IAM 用户",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": [
+      "CreateUser"
+    ]
+  },
+  {
+    "query": "为用户附加策略",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": [
+      "AttachPolicy"
+    ]
+  },
+  {
+    "query": "创建 IAM 角色",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": [
+      "CreateRole"
+    ]
+  },
+  {
+    "query": "IAM 访问密钥轮换",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": [
+      "CreateAccessKey"
+    ]
+  },
+  {
+    "query": "IAM 策略版本管理",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": [
+      "CreatePolicyVersion"
+    ]
+  },
+  {
+    "query": "删除 IAM 用户",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": [
+      "DeleteUser"
+    ]
+  },
+  {
+    "query": "IAM 权限边界设置",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": [
+      "PutUserPermissionsBoundary"
+    ]
+  },
+  {
+    "query": "创建云服务器",
+    "should_trigger": false,
+    "skill": "ve-iam-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置负载均衡",
+    "should_trigger": false,
+    "skill": "ve-iam-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

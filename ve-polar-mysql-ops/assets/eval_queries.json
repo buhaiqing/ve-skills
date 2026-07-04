@@ -1,0 +1,76 @@
+[
+  {
+    "query": "创建 PolarDB 集群",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "CreateDBCluster"
+    ]
+  },
+  {
+    "query": "PolarDB 一键升级主版本",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "UpgradeDBClusterVersion"
+    ]
+  },
+  {
+    "query": "PolarDB 存储自动扩容",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "ModifyDBClusterStorage"
+    ]
+  },
+  {
+    "query": "PolarDB 冷热数据分离",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "ModifyDBClusterAttribute"
+    ]
+  },
+  {
+    "query": "删除 PolarDB 集群",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "DeleteDBCluster"
+    ]
+  },
+  {
+    "query": "PolarDB 开启透明加密",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "ModifyDBClusterEncryption"
+    ]
+  },
+  {
+    "query": "启动 Docker 容器",
+    "should_trigger": false,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 Kubernetes",
+    "should_trigger": false,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

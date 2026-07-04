@@ -1,0 +1,106 @@
+[
+  {
+    "query": "创建 RDS MySQL 实例",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "CreateDBInstance"
+    ]
+  },
+  {
+    "query": "查看 RDS 实例列表",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "删除 RDS 实例",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DeleteDBInstance"
+    ]
+  },
+  {
+    "query": "RDS 实例 CPU 使用率过高",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "RDS 连接数超限",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "RDS 存储空间不足",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "RDS 备份策略配置",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "CreateBackup"
+    ]
+  },
+  {
+    "query": "RDS 参数组修改",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "ModifyParameterGroup"
+    ]
+  },
+  {
+    "query": "RDS 升降配",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "ModifyDBInstanceSpec"
+    ]
+  },
+  {
+    "query": "禁用生产 RDS",
+    "should_trigger": false,
+    "skill": "ve-rds-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "启动 Apache 服务器",
+    "should_trigger": false,
+    "skill": "ve-rds-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]

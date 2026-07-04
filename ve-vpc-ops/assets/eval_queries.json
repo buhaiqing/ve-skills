@@ -1,0 +1,86 @@
+[
+  {
+    "query": "创建 VPC",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": [
+      "CreateVpc"
+    ]
+  },
+  {
+    "query": "创建子网",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": [
+      "CreateSubnet"
+    ]
+  },
+  {
+    "query": "VPC 添加路由表",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": [
+      "CreateRouteTable"
+    ]
+  },
+  {
+    "query": "VPC Peering 连接",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": [
+      "CreateVpcPeeringConnection"
+    ]
+  },
+  {
+    "query": "删除 VPC",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": [
+      "DeleteVpc"
+    ]
+  },
+  {
+    "query": "VPC 流日志",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": [
+      "CreateFlowLog"
+    ]
+  },
+  {
+    "query": "网关终端节点",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": [
+      "CreateVpcEndpoint"
+    ]
+  },
+  {
+    "query": "启动 ECS 实例",
+    "should_trigger": false,
+    "skill": "ve-vpc-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "创建负载均衡",
+    "should_trigger": false,
+    "skill": "ve-vpc-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  }
+]
