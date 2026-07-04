@@ -45,7 +45,7 @@ Verify against `ve-skill-generator/SKILL.md` and `ve-skill-generator/references/
 | C11 | Version bump | `last_updated` and `version` bumped if behavior changed |
 | C12 | **Content dedup** | No duplicate operation flows across SKILL.md ↔ references/; TE-6 verified (see §Link & Dedup) |
 | C13 | **AIOps coverage** | `references/advanced/aiops.md` and `references/advanced/finops.md` exist for all required+recommended skills (23 total) |
-| C13 | Advanced AIOps coverage | `references/advanced/aiops.md` exists for all required+recommended skills |
+| C14 | Advanced AIOps coverage | `references/advanced/aiops.md` exists for all required+recommended skills |
 
 ### Round 2 — Accuracy & Anti-Pattern Sweep
 
