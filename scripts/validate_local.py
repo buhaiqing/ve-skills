@@ -17,10 +17,102 @@ class Step:
     argv: tuple[str, ...]
 
 
+def _check_file_integrity(root: Path) -> int:
+    errors: list[str] = []
+    for f in sorted(root.glob("ve-*/SKILL.md")):
+        data = f.read_bytes()
+        if b"\0" in data:
+            errors.append(f"{f.relative_to(root)}: contains null bytes")
+    if errors:
+        for e in errors:
+            print(f"  FAIL: {e}")
+        return 1
+    print("  OK: all SKILL.md files are clean UTF-8 text")
+    return 0
+
+
+def _check_required_sections(root: Path) -> int:
+    HARD: set[str] = {"## Trigger & Scope", "## Quality Gate (GCL)"}
+    SOFT: set[str] = {"### What This Skill Does", "## Operational Best Practices", "### Next Steps"}
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    for f in sorted(root.glob("ve-*/SKILL.md")):
+        skill = f.parent.name
+        # ve-skill-generator is a meta-skill, not a product-ops skill
+        if skill == "ve-skill-generator":
+            continue
+        text = f.read_text(encoding="utf-8")
+
+        # Some skills use "(Agent-Readable)" suffix on Trigger & Scope
+        has_ts = "## Trigger & Scope" in text or "## Trigger & Scope (Agent-Readable)" in text
+        has_shall = "### SHOULD Use This Skill When" in text
+        has_shall_not = "### SHOULD NOT Use This Skill When" in text
+        has_gcl = "## Quality Gate (GCL)" in text
+        has_what = "### What This Skill Does" in text
+        has_ops = "## Operational Best Practices" in text
+        has_next = "### Next Steps" in text
+
+        if not has_ts:
+            errors.append(f"{skill}: missing ## Trigger & Scope")
+        elif not has_shall or not has_shall_not:
+            errors.append(f"{skill}: ## Trigger & Scope lacks SHOULD/SHOULD NOT subsections")
+        if not has_gcl:
+            errors.append(f"{skill}: missing ## Quality Gate (GCL)")
+        if not has_what:
+            warnings.append(f"{skill}: missing ### What This Skill Does")
+        if not has_ops:
+            warnings.append(f"{skill}: missing ## Operational Best Practices")
+        if not has_next:
+            warnings.append(f"{skill}: missing ### Next Steps")
+
+    for e in errors:
+        print(f"  FAIL: {e}")
+    for w in warnings:
+        print(f"  WARN: {w}")
+    if errors:
+        return 1
+    print("  OK: all harness-critical sections present")
+    return 0
+
+
+def _check_te1_hardcodes(root: Path) -> int:
+    import re
+
+    # Scans for user-choice version params in example bodies (not API spec versions)
+    PATTERNS: list[tuple[str, str]] = [
+        ("EngineVersion", r'"EngineVersion":\s*"\d+\.\d+"'),
+        ("MongoVersion", r'"MongoVersion":\s*"\d+\.\d+"'),
+        ("--MongoVersion", r'--MongoVersion\s+\d+\.\d+'),
+        ("--Version", r'--Version\s+"\d+\.\d+"'),
+        ("--TargetVersion", r'--TargetVersion\s+"\d+\.\d+"'),
+    ]
+    warnings: list[str] = []
+
+    for glob_pat in ("ve-*/references/cli-usage.md", "ve-*/SKILL.md"):
+        for f in sorted(root.glob(glob_pat)):
+            text = f.read_text(encoding="utf-8")
+            rel = f.relative_to(root)
+            for label, pattern in PATTERNS:
+                for m in re.finditer(pattern, text):
+                    warnings.append(f"{rel}: TE-1 hardcoded {label} → {m.group()}")
+
+    for w in warnings:
+        print(f"  WARN: {w}")
+    if not warnings:
+        print("  OK: no hardcoded version numbers detected")
+    else:
+        print(f"  → {len(warnings)} TE-1 candidate(s) found (advisory)")
+    return 0
+
+
 def build_steps(python: str = sys.executable) -> list[Step]:
     return [
-        Step("Validate SKILL.md frontmatter", (python, "scripts/validate_skills_frontmatter.py")),
-        Step("Validate Markdown local links", (python, "scripts/check_markdown_links.py")),
+        Step("File integrity (null byte check)", (python, "-c", _inline_script(_check_file_integrity))),
+        Step("Frontmatter validation", (python, "scripts/validate_skills_frontmatter.py")),
+        Step("Required sections presence", (python, "-c", _inline_script(_check_required_sections))),
+        Step("TE-1 hardcoded version scan", (python, "-c", _inline_script(_check_te1_hardcodes))),
+        Step("Markdown local links", (python, "scripts/check_markdown_links.py")),
         Step(
             "GCL runner smoke test",
             (
@@ -45,6 +137,21 @@ def build_steps(python: str = sys.executable) -> list[Step]:
         ),
         Step("GCL Tier-A conformance", (python, "scripts/check_gcl_conformance.py")),
     ]
+
+
+def _inline_script(fn):
+    import inspect, textwrap
+    source = inspect.getsource(fn)
+    lines = source.splitlines()
+    body = textwrap.indent(textwrap.dedent("\n".join(lines[1:])), "    ")
+    return (
+        "import sys\n"
+        "from pathlib import Path\n"
+        "def main():\n"
+        "    root = Path.cwd()\n"
+        f"{body}\n"
+        'sys.exit(main())\n'
+    )
 
 
 def run_step(root: Path, step: Step) -> int:

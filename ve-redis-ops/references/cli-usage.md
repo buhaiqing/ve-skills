@@ -21,10 +21,12 @@
 
 ### Create Standalone Instance
 
+> Query available versions via `ve redis DescribeDBEngineVersions`
+
 ```bash
 ve redis CreateDBInstance --body '{
   "InstanceName": "dev-redis",
-  "EngineVersion": "7.0",
+  "EngineVersion": "{{user.engine_version}}",
   "InstanceClass": "Standalone",
   "NodeNumber": 1,
   "ShardCapacity": 1024,
@@ -40,7 +42,7 @@ ve redis CreateDBInstance --body '{
 ```bash
 ve redis CreateDBInstance --body '{
   "InstanceName": "prod-redis",
-  "EngineVersion": "6.0",
+  "EngineVersion": "{{user.engine_version}}",
   "InstanceClass": "PrimarySecondary",
   "NodeNumber": 2,
   "ShardCapacity": 4096,
@@ -61,7 +63,7 @@ ve redis CreateDBInstance --body '{
 ```bash
 ve redis CreateDBInstance --body '{
   "InstanceName": "prod-redis-cluster",
-  "EngineVersion": "7.0",
+  "EngineVersion": "{{user.engine_version}}",
   "InstanceClass": "ShardedCluster",
   "ShardNumber": 4,
   "ShardCapacity": 8192,
@@ -150,7 +152,7 @@ ve redis DescribeDBInstances --Region "$VOLCENGINE_REGION" | jq -r '
 ```bash
 INSTANCE_ID=$(ve redis CreateDBInstance --body '{
   "InstanceName": "prod-redis",
-  "EngineVersion": "6.0",
+  "EngineVersion": "{{user.engine_version}}",
   "InstanceClass": "PrimarySecondary",
   "NodeNumber": 2,
   "ShardCapacity": 4096,
