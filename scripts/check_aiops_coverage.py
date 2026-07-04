@@ -47,11 +47,29 @@ ALL_SKILLS = frozenset({
 
 def check_skill(root: Path, skill: str) -> dict:
     base = root / skill / "references" / "advanced"
+    eval_path = root / skill / "assets" / "eval_queries.json"
+
+    # Validate eval_queries.json exists AND is parseable as JSON
+    eval_ok = False
+    eval_trigger = 0
+    eval_non_trigger = 0
+    if eval_path.is_file():
+        try:
+            d = json.load(open(eval_path))
+            arr = d if isinstance(d, list) else d.get("queries", [])
+            eval_trigger = sum(1 for q in arr if q.get("should_trigger"))
+            eval_non_trigger = sum(1 for q in arr if not q.get("should_trigger"))
+            eval_ok = True
+        except (json.JSONDecodeError, ValueError):
+            eval_ok = False
+
     return {
         "skill": skill,
         "aiops_md": (base / "aiops.md").is_file(),
         "finops_md": (base / "finops.md").is_file(),
-        "eval_queries": (root / skill / "assets" / "eval_queries.json").is_file(),
+        "eval_queries": eval_ok,
+        "eval_trigger": eval_trigger,
+        "eval_non_trigger": eval_non_trigger,
         "has_advanced": base.is_dir(),
     }
 
@@ -77,19 +95,30 @@ def main() -> int:
     rr_aiops = [r for r in rr_skills if r["aiops_md"]]
     rr_finops = [r for r in rr_skills if r["finops_md"]]
 
+    # eval content quality: trigger >= 5, non_trigger >= 2
+    eval_quality_ok = [r for r in results if r["eval_queries"]
+                       and r["eval_trigger"] >= 5 and r["eval_non_trigger"] >= 2]
+    eval_quality_bad = [r for r in results if r["eval_queries"]
+                        and (r["eval_trigger"] < 5 or r["eval_non_trigger"] < 2)]
+    eval_parse_fail = [r["skill"] for r in results
+                       if not r["eval_queries"] and (root / r["skill"] / "assets" / "eval_queries.json").is_file()]
+
     report = {
         "total_skills": len(ALL_SKILLS),
         "required_recommended_count": len(REQUIRED_RECOMMENDED),
         "advanced_dir_count": len(advanced_skills),
         "aiops_md_count": len(aiops_md_skills),
         "finops_md_count": len(finops_md_skills),
-        "eval_queries_count": len(eval_skills),
+        "eval_parseable_count": len(eval_skills),
+        "eval_quality_ok_count": len(eval_quality_ok),
         "rr_aiops_coverage": f"{len(rr_aiops)}/{len(REQUIRED_RECOMMENDED)}",
         "rr_finops_coverage": f"{len(rr_finops)}/{len(REQUIRED_RECOMMENDED)}",
         "eval_coverage": f"{len(eval_skills)}/{len(ALL_SKILLS)}",
         "skills_missing_aiops": [r["skill"] for r in results if not r["aiops_md"]],
         "skills_missing_finops": [r["skill"] for r in results if not r["finops_md"]],
         "skills_missing_eval": [r["skill"] for r in results if not r["eval_queries"]],
+        "eval_quality_bad": eval_quality_bad,
+        "eval_parse_fail": eval_parse_fail,
         "details": results,
     }
 
@@ -106,7 +135,7 @@ def main() -> int:
     print(f"")
     print(f"advanced/aiops.md:  {len(aiops_md_skills)}/{len(ALL_SKILLS)} ({len(rr_aiops)}/{len(REQUIRED_RECOMMENDED)} for R+R tier)")
     print(f"advanced/finops.md: {len(finops_md_skills)}/{len(ALL_SKILLS)} ({len(rr_finops)}/{len(REQUIRED_RECOMMENDED)} for R+R tier)")
-    print(f"eval_queries.json:  {len(eval_skills)}/{len(ALL_SKILLS)}")
+    print(f"eval_queries.json:  {len(eval_skills)}/{len(ALL_SKILLS)} (trigger≥5, non_trigger≥2: {len(eval_quality_ok)}/{len(eval_skills)})")
 
     if report["skills_missing_aiops"]:
         print(f"\nMissing advanced/aiops.md:")
@@ -124,11 +153,21 @@ def main() -> int:
         print(f"\nMissing eval_queries.json:")
         for s in report["skills_missing_eval"]:
             print(f"  - {s}")
+    if report["eval_parse_fail"]:
+        print(f"\nUnparseable eval_queries.json (JSON syntax error):")
+        for s in report["eval_parse_fail"]:
+            print(f"  - {s}")
+    if report["eval_quality_bad"]:
+        print(f"\nLow-quality eval_queries.json (need trigger≥5, non_trigger≥2):")
+        for r in report["eval_quality_bad"]:
+            print(f"  - {r['skill']}: trigger={r['eval_trigger']}, non_trigger={r['eval_non_trigger']}")
 
-    # Pass if all required+recommended have aiops+finops and all have eval
+    # Pass if all required+recommended have aiops+finops and all have eval (parseable)
     ok = (len(rr_aiops) == len(REQUIRED_RECOMMENDED) and
           len(rr_finops) == len(REQUIRED_RECOMMENDED) and
-          len(eval_skills) == len(ALL_SKILLS))
+          len(eval_skills) == len(ALL_SKILLS) and
+          len(eval_parse_fail) == 0 and
+          len(eval_quality_bad) == 0)
     print(f"\n{'✅ PASS' if ok else '❌ FAIL'}: AIOps coverage check")
     return 0 if ok else 1
 
