@@ -1,5 +1,7 @@
 # CLI Usage — Volcengine CDN
 
+> **jq Paths (`.Result.*`):** `.Domains[].Domain` (domain name), `.Domains[0]` (first domain detail), `.Domains` (domain array), `.Tasks[]` (task list), `.Data[0]` (first data point)
+
 ## ve CLI CDN Commands
 
 All CDN operations are available through the `ve cdn` command prefix.

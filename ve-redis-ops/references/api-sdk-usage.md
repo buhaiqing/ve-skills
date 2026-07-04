@@ -74,8 +74,6 @@
 | `ConfigureNodes` | Array | No | Node zone placement | `[{AZ: "cn-beijing-a"}, {AZ: "cn-beijing-b"}]` |
 | `Tags` | Array | No | Tags | `[{Key: "env", Value: "prod"}]` |
 
-**Response:** `$.Result.InstanceId`, `$.Result.OrderNo`
-
 ### 2.2 DescribeDBInstances
 
 **Response (Result):**
@@ -133,9 +131,6 @@
 | `Role` | String | No | `ReadWrite`/`ReadOnly` |
 
 ### 3.2 ListDBAccount
-
-**Response:** `$.Result.Accounts[]` with `AccountName`, `Role`, `Status`
-
 ### 3.3 DeleteDBAccount
 
 ### 3.4 ModifyDBAccount
@@ -145,9 +140,6 @@
 ## 4. Parameter Management
 
 ### 4.1 DescribeDBInstanceParams
-
-**Response:** `$.Result.Parameters[]` with `Name`, `Value`, `Description`, `ReadOnly`, `Range`
-
 ### 4.2 ModifyDBInstanceParams
 
 | Parameter | Type | Required | Description |
@@ -167,9 +159,6 @@
 | `BackupName` | String | No | Backup name |
 
 ### 5.2 DescribeBackups
-
-**Response:** `$.Result.Backups[]` with `BackupId`, `BackupName`, `BackupStatus`, `StartTime`, `BackupType`
-
 ### 5.3 ModifyBackupPlan
 
 ### 5.4 RestoreDBInstance

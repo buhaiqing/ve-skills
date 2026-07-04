@@ -270,12 +270,12 @@ ve ark ListEndpoints --Region "{{env.VOLCENGINE_REGION}}" | jq -r '.Result.Endpo
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidParameter` / 400 | 0–1 | — | Fix args; retry once | `[ERROR] InvalidParameter: The request parameter is invalid. Check parameter format.` |
-| `AccessDenied` / 403 | 0 | — | HALT; check IAM permissions | `[ERROR] AccessDenied: Your account does not have permission for this operation. Check IAM policies.` |
-| `InternalError` / 5xx | 3 | 2s, 4s, 8s | Retry; HALT with RequestId | `[ERROR] Internal server error. Retry or escalate with RequestId: {id}.` |
-| Throttling / 429 | 3 | exponential | Back off | `⚠️ Rate limit reached. Retrying in {backoff}s...` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidParameter` / 400 | 0–1 | Fix args; retry once — `[ERROR] InvalidParameter: The request parameter is invalid. Check parameter format.` |
+| `AccessDenied` / 403 | 0 | HALT; check IAM permissions — `[ERROR] AccessDenied: Your account does not have permission for this operation.` |
+| `InternalError` / 5xx | 3 | 2s, 4s, 8s backoff; retry, then HALT with RequestId |
+| Throttling / 429 | 3 | Exponential backoff — `⚠️ Rate limit reached. Retrying in {backoff}s...` |
 
 ---
 
@@ -384,17 +384,17 @@ done
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `InvalidParameter` / 400 | 0–1 | — | Fix args from OpenAPI; retry once | `[ERROR] InvalidParameter: Check parameters against OpenAPI docs` |
-| `EndpointAlreadyExists` | 0 | — | HALT; ask user for different name | `[ERROR] Endpoint "{{user.endpoint_name}}" already exists. Use a different name.` |
-| `ModelNotFound` | 0 | — | HALT; show available models | `[ERROR] Model version "{{user.model_version_id}}" not found. List marketplace models to find valid IDs.` |
-| `QuotaExceeded` | 0 | — | HALT; delete unused endpoints | `[ERROR] Endpoint quota exceeded. Delete unused endpoints or request quota increase.` |
-| `InsufficientBalance` | 0 | — | HALT | `[ERROR] Account balance insufficient. Recharge before proceeding.` |
-| `InvalidVpcConfig` | 0 | — | HALT; verify VPC/subnet | `[ERROR] VPC configuration invalid. Ensure VPC and subnets exist in the same region.` |
-| `ResourceLimitExceeded` | 0 | — | HALT | `[ERROR] Resource limit reached (e.g., GPU quota). Request quota increase.` |
-| Throttling / 429 | 3 | exponential | Back off | `⚠️ Rate limit reached. Retrying in {backoff}s...` |
-| `InternalError` / 5xx | 3 | 2s, 4s, 8s | Retry; HALT with RequestId | `[ERROR] Internal server error. Retry or escalate with RequestId: {id}.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `InvalidParameter` / 400 | 0–1 | Fix args from OpenAPI; retry once — `[ERROR] InvalidParameter: Check parameters against OpenAPI docs` |
+| `EndpointAlreadyExists` | 0 | HALT; ask user for different name — `[ERROR] Endpoint "{{user.endpoint_name}}" already exists.` |
+| `ModelNotFound` | 0 | HALT; show available models — `[ERROR] Model version "{{user.model_version_id}}" not found.` |
+| `QuotaExceeded` | 0 | HALT; delete unused endpoints — `[ERROR] Endpoint quota exceeded.` |
+| `InsufficientBalance` | 0 | HALT — `[ERROR] Account balance insufficient. Recharge before proceeding.` |
+| `InvalidVpcConfig` | 0 | HALT; verify VPC/subnet — `[ERROR] VPC configuration invalid.` |
+| `ResourceLimitExceeded` | 0 | HALT — `[ERROR] Resource limit reached (e.g., GPU quota). Request quota increase.` |
+| Throttling / 429 | 3 | Exponential backoff — `⚠️ Rate limit reached. Retrying in {backoff}s...` |
+| `InternalError` / 5xx | 3 | 2s, 4s, 8s backoff; retry, then HALT with RequestId |
 
 ---
 
@@ -1114,34 +1114,34 @@ ve ark ListEvaluationJobs --Region "{{env.VOLCENGINE_REGION}}" --Status "Succeed
 
 ## Error Taxonomy
 
-| Error Code | HTTP | Meaning | Max Retries | Backoff | Agent Action |
-|-----------|------|---------|-------------|---------|--------------|
-| `EndpointNotFound` | 404 | Endpoint does not exist | 0 | — | Check endpoint ID; suggest creation |
-| `EndpointAlreadyExists` | 409 | Endpoint name conflict | 0 | — | Suggest different name |
-| `ModelNotFound` | 404 | Model/version not found | 0 | — | List marketplace models to find valid IDs |
-| `ModelNotTrainable` | 400 | Model does not support fine-tuning | 0 | — | Suggest trainable models |
-| `InvalidParameter` | 400 | Request validation failed | 1 | — | Align with OpenAPI schema |
-| `InvalidHyperParameters` | 400 | Training hyperparameters invalid | 0 | — | Check supported ranges |
-| `InvalidDatasetType` | 400 | Dataset type unsupported | 0 | — | Suggest supported types |
-| `DatasetAlreadyExists` | 409 | Dataset name conflict | 0 | — | Use different name |
-| `DatasetTooLarge` | 413 | Dataset exceeds size limit | 0 | — | Reduce dataset size |
-| `TosPathNotFound` | 400 | TOS data source unreachable | 0 | — | Verify TOS bucket/path |
-| `TrainingJobAlreadyExists` | 409 | Training job name conflict | 0 | — | Use different name |
-| `QuotaExceeded` | 403 | Resource quota reached | 0 | — | HALT; request quota increase |
-| `InsufficientBalance` | 403 | Account not funded | 0 | — | HALT; recharge required |
-| `InvalidVpcConfig` | 400 | VPC configuration invalid | 0 | — | Verify VPC/subnet in region |
-| `AccessDenied` | 403 | IAM permission denied | 0 | — | HALT; check IAM policies |
-| `EndpointInUse` | 409 | Endpoint has active traffic | 0 | — | Stop inference before delete |
-| `ResourceLimitExceeded` | 403 | GPU/resource limit hit | 0 | — | HALT; request quota increase |
-| Throttling | 429 | Rate limit exceeded | 3 | exponential | Backoff with delay |
-| `InternalError` | 500 | Server-side error | 3 | 2s, 4s, 8s | Retry; escalate with RequestId |
-| `InvalidJobStatus` | 400 | Job status invalid for action | 0 | — | HALT; check current status |
-| `InvalidModelVersion` | 400 | Model version doesn't support training/evaluation | 0 | — | HALT; select compatible model version |
-| `TrainingJobNotFound` | 404 | Training job does not exist | 0 | — | HALT; verify job ID |
-| `DatasetNotFound` | 404 | Dataset does not exist | 0 | — | HALT; verify dataset ID |
-| `DependencyViolation` | 400 | Resource has dependencies | 0 | — | HALT; remove dependencies first |
-| `EvaluationJobNotFound` | 404 | Evaluation job does not exist | 0 | — | HALT; verify job ID |
-| `DatasetInUse` | 400 | Dataset referenced by active jobs | 0 | — | HALT; stop dependent jobs first |
+| Error Code | Meaning | Resolution |
+|-----------|---------|-----------|
+| `EndpointNotFound` | Endpoint does not exist | 0 retries; Check endpoint ID, suggest creation |
+| `EndpointAlreadyExists` | Endpoint name conflict | 0 retries; Suggest different name |
+| `ModelNotFound` | Model/version not found | 0 retries; List marketplace models for valid IDs |
+| `ModelNotTrainable` | Model does not support fine-tuning | 0 retries; Suggest trainable models |
+| `InvalidParameter` | Request validation failed | 1 retry; Align with OpenAPI schema |
+| `InvalidHyperParameters` | Training hyperparameters invalid | 0 retries; Check supported ranges |
+| `InvalidDatasetType` | Dataset type unsupported | 0 retries; Suggest supported types |
+| `DatasetAlreadyExists` | Dataset name conflict | 0 retries; Use different name |
+| `DatasetTooLarge` | Dataset exceeds size limit | 0 retries; Reduce dataset size |
+| `TosPathNotFound` | TOS data source unreachable | 0 retries; Verify TOS bucket/path |
+| `TrainingJobAlreadyExists` | Training job name conflict | 0 retries; Use different name |
+| `QuotaExceeded` | Resource quota reached | 0 retries; HALT — request quota increase |
+| `InsufficientBalance` | Account not funded | 0 retries; HALT — recharge required |
+| `InvalidVpcConfig` | VPC configuration invalid | 0 retries; Verify VPC/subnet in region |
+| `AccessDenied` | IAM permission denied | 0 retries; HALT — check IAM policies |
+| `EndpointInUse` | Endpoint has active traffic | 0 retries; Stop inference before delete |
+| `ResourceLimitExceeded` | GPU/resource limit hit | 0 retries; HALT — request quota increase |
+| Throttling | Rate limit exceeded | 3 retries/exponential; Backoff with delay |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry, escalate with RequestId |
+| `InvalidJobStatus` | Job status invalid for action | 0 retries; HALT — check current status |
+| `InvalidModelVersion` | Model version doesn't support training/evaluation | 0 retries; HALT — select compatible version |
+| `TrainingJobNotFound` | Training job does not exist | 0 retries; HALT — verify job ID |
+| `DatasetNotFound` | Dataset does not exist | 0 retries; HALT — verify dataset ID |
+| `DependencyViolation` | Resource has dependencies | 0 retries; HALT — remove dependencies first |
+| `EvaluationJobNotFound` | Evaluation job does not exist | 0 retries; HALT — verify job ID |
+| `DatasetInUse` | Dataset referenced by active jobs | 0 retries; HALT — stop dependent jobs first |
 
 ## Prerequisites
 
@@ -1167,7 +1167,7 @@ if ! command -v go &> /dev/null; then
     [ "$ARCH" = "x86_64" ] && ARCH="amd64"
     [ "$ARCH" = "aarch64" ] && ARCH="arm64"
     mkdir -p /tmp/go-runtime
-    curl -fsSL "https://go.dev/dl/go1.21.0.${OS}-${ARCH}.tar.gz" | tar -xz -C /tmp/go-runtime
+    curl -fsSL "https://go.dev/dl/{{env.GO_VERSION}}.${OS}-${ARCH}.tar.gz" | tar -xz -C /tmp/go-runtime
     export PATH="/tmp/go-runtime/go/bin:$PATH"
 fi
 ```

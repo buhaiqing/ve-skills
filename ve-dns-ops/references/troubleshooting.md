@@ -2,7 +2,7 @@
 
 ## Diagnostic Order
 
-When troubleshooting DNS issues, follow this order:
+> Follow this sequence for DNS troubleshooting:
 
 1. **Verify credentials** — check `VOLCENGINE_ACCESS_KEY` / `VOLCENGINE_SECRET_KEY` are set
 2. **Check region** — verify `VOLCENGINE_REGION` is correct
@@ -70,14 +70,14 @@ ipconfig /flushdns  # Windows
 
 ### Issue: CNAME Conflict
 
-**Problem:** CNAME records cannot coexist with other record types at the same name.
+**⚠️ Problem:** CNAME records cannot coexist with other record types at the same name.
 
 ```bash
 # Check for conflicting records
 ve dns ListRecords --Region "cn-beijing" --DomainName "example.com" | jq '.Records[] | select(.RR=="www")'
 ```
 
-**Fix:** Delete conflicting records before adding the CNAME, or use a different hostname for the CNAME.
+**✅ Fix:** Delete conflicting records before adding the CNAME, or use a different hostname for the CNAME.
 
 ### Issue: Duplicate Record Error
 
@@ -113,8 +113,8 @@ ve dns ListRecords --Region "cn-beijing" --DomainName "example.com" | jq '.Recor
 
 ## Escalation
 
-If issues persist after troubleshooting:
+If issues persist:
 
-1. Capture the `RequestId` from the error response
+1. Capture `RequestId` from error response
 2. Contact [Volcengine Support](https://console.volcengine.com/support)
 3. Provide: RequestId, operation, parameters, and error code

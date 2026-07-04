@@ -102,18 +102,19 @@
 | DescribeBackups | `$.Result.Backups[]` | BackupId, BackupName, BackupStatus, BackupSize |
 | CreateBackup | `$.Result.BackupId` | BackupId |
 | RestoreDBCluster | `$.Result.ClusterId` | New cluster ID |
+| Pagination | `$.Result.TotalCount` | Total items |
 
 ## Pagination
 
 DescribeDBClusters supports:
 - `PageNumber`: Starting from 1
 - `PageSize`: Default 10, max 100
-- Response: `$.Result.TotalCount` for total items
+- Response: TotalCount for total items
 
 DescribeBackups supports:
 - `PageNumber`: Starting from 1
 - `PageSize`: Default 10
-- Response: `$.Result.TotalCount`
+- Response: TotalCount
 
 ## Go SDK Package
 

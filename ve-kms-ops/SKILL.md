@@ -770,23 +770,23 @@ ve kms ListGrants --KeyId "{{user.key_id}}" --Region {{env.VOLCENGINE_REGION}}
 
 ## Error Taxonomy (≥ 10 Product-Specific Codes)
 
-| Error Code | HTTP Status | Meaning | Max Retries | Backoff | Agent Action | UX Feedback |
-|------------|-------------|---------|-------------|---------|--------------|-------------|
-| `InvalidParameter` | 400 | Request parameter invalid | 0 | — | Fix parameter per OpenAPI docs | `[ERROR] InvalidParameter: Request parameter is invalid. Check the parameter against API docs and retry.` |
-| `InvalidArn` | 400 | ARN format incorrect | 0 | — | Fix ARN format | `[ERROR] InvalidArn: The ARN format is incorrect. Ensure the ARN follows the correct pattern.` |
-| `NotFound` | 404 | Key or resource not found | 0 | — | Verify key ID exists | `[ERROR] NotFound: The specified key was not found. Verify the KeyId and retry.` |
-| `Disabled` | 409 | Key is disabled | 0 | — | Enable key first | `[ERROR] Disabled: The key is currently disabled. Enable the key before this operation.` |
-| `KMSInvalidState` | 409 | Key in wrong state for operation | 0 | — | Check key state and retry | `[ERROR] KMSInvalidState: The key is in an invalid state for this operation. Check the key state.` |
-| `InvalidKeyUsage` | 400 | Key usage doesn't support operation | 0 | — | Use compatible key type | `[ERROR] InvalidKeyUsage: This key usage type does not support the requested operation.` |
-| `DependencyViolation` | 409 | Key in use by other resources | 0 | — | Remove dependencies first | `[ERROR] DependencyViolation: The key is in use by other resources. Remove dependencies before deletion.` |
-| `UnsupportedOperation` | 400 | Operation not supported for key type | 0 | — | Use different key or operation | `[ERROR] UnsupportedOperation: This operation is not supported for the specified key type.` |
-| `IncorrectEncryptionContext` | 400 | Encryption context mismatch | 0 | — | Provide matching context | `[ERROR] IncorrectEncryptionContext: The encryption context does not match. Use the same context as encryption.` |
-| `InvalidCiphertext` | 400 | Ciphertext malformed | 0 | — | Verify ciphertext integrity | `[ERROR] InvalidCiphertext: The ciphertext is malformed. Verify the ciphertext is complete and correct.` |
-| `KeyUnavailable` | 503 | Key temporarily unavailable | 3 | 2s, 4s, 8s | Retry with backoff | `⚠️ Key temporarily unavailable. Retrying in {backoff}s... (Attempt {current}/{max})` |
-| `AccessDenied` | 403 | Insufficient IAM permissions | 0 | — | Add IAM policy | `[ERROR] AccessDenied: Insufficient permissions. Add the required IAM policy for this operation.` |
-| `QuotaExceeded` | 429 | Resource quota limit reached | 0 | — | Request quota increase | `[ERROR] QuotaExceeded: Resource quota limit reached. Delete unused keys or request a quota increase.` |
-| `Throttling` | 429 | Rate limit exceeded | 3 | exponential | Back off and retry | `⚠️ Rate limit reached. Retrying in {backoff}s...` |
-| `InternalError` | 500 | Server-side error | 3 | 2s, 4s, 8s | Retry; then HALT | `[ERROR] InternalError: Server error occurred. Retry or escalate with RequestId.` |
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidParameter` | Request parameter invalid | 0 retries; Fix per OpenAPI docs |
+| `InvalidArn` | ARN format incorrect | 0 retries; Fix ARN format |
+| `NotFound` | Key or resource not found | 0 retries; Verify key ID exists |
+| `Disabled` | Key is disabled | 0 retries; Enable key first |
+| `KMSInvalidState` | Key in wrong state for operation | 0 retries; Check key state and retry |
+| `InvalidKeyUsage` | Key usage doesn't support operation | 0 retries; Use compatible key type |
+| `DependencyViolation` | Key in use by other resources | 0 retries; Remove dependencies first |
+| `UnsupportedOperation` | Operation not supported for key type | 0 retries; Use different key or operation |
+| `IncorrectEncryptionContext` | Encryption context mismatch | 0 retries; Provide matching context |
+| `InvalidCiphertext` | Ciphertext malformed | 0 retries; Verify ciphertext integrity |
+| `KeyUnavailable` | Key temporarily unavailable | 3 retries/2s/4s/8s; Retry with backoff |
+| `AccessDenied` | Insufficient IAM permissions | 0 retries; Add IAM policy |
+| `QuotaExceeded` | Resource quota limit reached | 0 retries; Request quota increase |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; Back off and retry |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry then HALT |
 
 ## Reference Directory
 

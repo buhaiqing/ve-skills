@@ -24,12 +24,7 @@ metadata:
 
 ## 0. Operation Tier (read first)
 
-| Tier | Operations in `ve-alb-ops` | `max_iter` | Safety floor |
-|---|---|---|---|
-| **Destructive** | `DeleteLoadBalancer, DeleteListener, DeleteRule, DeleteServerGroup` | 3 | 1.0 (mandatory) |
-| **State-changing** | `AddBackendServers, RemoveBackendServers, ModifyListenerAttributes, ModifyRuleAttributes` | 3 | 1.0 (mandatory) |
-| **Mutating** | `CreateLoadBalancer, CreateListener, CreateRule, CreateServerGroup` | 3 | >= 0.5 |
-| **Read-only** | `DescribeLoadBalancers, DescribeListeners, DescribeRules, DescribeServerGroups` | 3 | >= 0 |
+> See [`SKILL.md §Quality Gate (GCL)`](../SKILL.md#quality-gate-gcl) for the full operation tier table with operations and safety floors.
 
 **Safety = 0 → ABORT** regardless of total score (see `AGENTS.md` §3).
 

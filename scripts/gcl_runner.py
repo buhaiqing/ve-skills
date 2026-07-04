@@ -73,8 +73,8 @@ RUBRIC_THRESHOLDS: dict[str, float] = {
 
 SECRET_PATTERNS = [
     re.compile(r"SecretKey\s*=\s*[^<\s][^\s\"']+", re.I),
-    re.compile(r"VOLCENGINE_SECRET_KEY\s*=\s*[^\s\"']+", re.I),
-    re.compile(r"AKLT[A-Za-z0-9]{20,}"),
+    re.compile(r"VOLCENGINE_SECRET_KEY\s*=\s*[^<\s][^\s\"']+", re.I),
+    re.compile(r"AKLT(?![<\s])[A-Za-z0-9]{20,}"),
 ]
 
 
@@ -82,6 +82,7 @@ def mask_secrets(text: str) -> str:
     out = text
     out = re.sub(r"(SecretKey\s*=\s*)([^\s\"']+)", r"\1<masked>", out, flags=re.I)
     out = re.sub(r"(VOLCENGINE_SECRET_KEY\s*=\s*)([^\s\"']+)", r"\1<masked>", out, flags=re.I)
+    out = re.sub(r"(AKLT)([A-Za-z0-9]{20,})", r"\1<masked>", out)
     return out
 
 
@@ -253,12 +254,23 @@ def detect_credential_fields(text: str) -> list[str]:
     return fields
 
 
-def derive_operation_intent(skill: str, command: str) -> dict[str, Any]:
-    """Heuristic-based operation intent derivation from skill name and command.
+DESTRUCTIVE_VERBS = re.compile(
+    r"\b(Delete|Remove|Terminate|Destroy|Stop|Shutdown|PowerOff|Release|Revoke|Disable|Deactivate|"
+    r"Flush|Purge|Drop|Truncate|Detach|Disassociate|Revoke\w*Access|Revoke\w*Permission)\b",
+    re.I,
+)
+MUTATING_VERBS = re.compile(
+    r"\b(Create|Add|Allocate|Attach|Assign|Authorize|Enable|Activate|"
+    r"Modify|Update|Set|Change|Resize|Rebuild|Reboot|Restart)\b",
+    re.I,
+)
+NEGATION_PATTERN = re.compile(
+    r"\b(Enable|Activate|Allow|Grant|Create)\w*(Protection|Policy|Rule|Firewall)\b",
+    re.I,
+)
 
-    Returns dict with keys per AGENTS.md GCL spec §6: operation, resource_scope,
-    expected_state, safety_class. Parses command for action keywords.
-    """
+
+def derive_operation_intent(skill: str, command: str) -> dict[str, Any]:
     if not command:
         return {
             "operation": "unknown",
@@ -268,44 +280,25 @@ def derive_operation_intent(skill: str, command: str) -> dict[str, Any]:
         }
 
     resource = skill.replace("ve-", "").replace("-ops", "")
+    cmd_stripped = re.sub(r"#.*$", "", command, flags=re.M)
 
-    if re.search(r"\b(Delete|Remove|Terminate|Destroy)\w*\b", command, re.I):
+    if NEGATION_PATTERN.search(cmd_stripped):
         return {
-            "operation": f"delete_{resource}",
-            "resource_scope": [],
-            "expected_state": "DELETED",
-            "safety_class": "destructive",
-        }
-    if re.search(r"\b(Stop|Shutdown|PowerOff)\w*\b", command, re.I):
-        return {
-            "operation": f"stop_{resource}",
-            "resource_scope": [],
-            "expected_state": "STOPPED",
-            "safety_class": "destructive",
-        }
-    if re.search(r"\b(Release)\w*\b", command, re.I):
-        return {
-            "operation": f"release_{resource}",
-            "resource_scope": [],
-            "expected_state": "DELETED",
-            "safety_class": "destructive",
-        }
-    if re.search(r"\b(Revoke|Disable|Deactivate)\w*\b", command, re.I):
-        return {
-            "operation": f"revoke_{resource}",
-            "resource_scope": [],
-            "expected_state": "DISABLED",
-            "safety_class": "destructive",
-        }
-
-    if re.search(r"\b(Create|Add|Allocate|Attach|Assign|Authorize|Enable|Activate)\w*\b", command, re.I):
-        return {
-            "operation": f"create_{resource}",
+            "operation": f"enable_{resource}",
             "resource_scope": [],
             "expected_state": "ACTIVE",
             "safety_class": "mutating",
         }
-    if re.search(r"\b(Modify|Update|Set|Change|Resize|Rebuild|Reboot|Restart)\w*\b", command, re.I):
+
+    if DESTRUCTIVE_VERBS.search(cmd_stripped):
+        return {
+            "operation": f"destructive_{resource}",
+            "resource_scope": [],
+            "expected_state": "DELETED",
+            "safety_class": "destructive",
+        }
+
+    if MUTATING_VERBS.search(cmd_stripped):
         return {
             "operation": f"modify_{resource}",
             "resource_scope": [],
@@ -358,6 +351,36 @@ def cmd_run(args: argparse.Namespace) -> int:
         if args.structural_critic_only:
             critic = structural_critic(generator)
         else:
+            if has_credential_leak(generator.get("result_excerpt", "")):
+                trace["iterations"].append(
+                    {
+                        "iter": iteration,
+                        "generator": generator,
+                        "critic": {
+                            "scores": {
+                                "correctness": 0,
+                                "safety": 0,
+                                "idempotency": 0.5,
+                                "traceability": 0.5,
+                                "spec_compliance": 0.5,
+                            },
+                            "suggestions": ["Credential leak in generator output — mask secrets and re-run"],
+                            "blocking": True,
+                        },
+                        "decision": "SAFETY_FAIL",
+                    }
+                )
+                trace["final"] = {
+                    "status": "SAFETY_FAIL",
+                    "iter": iteration,
+                    "output": None,
+                    "failure_pattern": extract_failure_pattern(
+                        args.skill, command, generator, trace["iterations"][-1]["critic"]
+                    ),
+                }
+                path = persist_trace(root, trace)
+                print(f"SAFETY_FAIL — credential leak detected — trace: {path}", file=sys.stderr)
+                return 3
             critic = load_critic(args.critic_json, args.critic_stdin)
             if critic is None:
                 print(

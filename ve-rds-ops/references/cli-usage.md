@@ -64,14 +64,7 @@ ve rds_mysql RestartDBInstance --Region "{{env.VOLCENGINE_REGION}}" --InstanceId
 
 ### Delete Instance
 
-```bash
-# 🔴 IRREVERSIBLE
-ve rds_mysql DeleteDBInstance \
-  --Region "{{env.VOLCENGINE_REGION}}" \
-  --InstanceId "{{user.instance_id}}" \
-  --DataKeepPolicy "Last" \
-  --DataKeepDays 7
-```
+> 🔴 **IRREVERSIBLE.** See `SKILL.md §DeleteDBInstance` for safety gate and full flow (Region via `{{user.region}}` or `{{env.VOLCENGINE_REGION}}`).
 
 ---
 
@@ -85,14 +78,7 @@ ve rds_mysql DescribeDatabases --Region "{{env.VOLCENGINE_REGION}}" --InstanceId
 
 ### Create Database
 
-```bash
-ve rds_mysql CreateDB \
-  --Region "{{user.region}}" \
-  --InstanceId "{{user.instance_id}}" \
-  --DBName "{{user.database_name}}" \
-  --CharacterSet "utf8mb4" \
-  --Description "Application database"
-```
+> See `SKILL.md §CreateDB` for full flow (CharacterSet defaults to `utf8mb4`).
 
 ### Delete Database
 
@@ -115,24 +101,11 @@ ve rds_mysql ListDBAccounts --Region "{{env.VOLCENGINE_REGION}}" --InstanceId "{
 
 ### Create Account
 
-```bash
-ve rds_mysql CreateAccount \
-  --Region "{{user.region}}" \
-  --InstanceId "{{user.instance_id}}" \
-  --AccountName "{{user.account_name}}" \
-  --AccountPassword "{{user.account_password}}" \
-  --AccountType "Normal"
-```
+> See `SKILL.md §CreateAccount` for full flow (defaults to AccountType `Normal`).
 
 ### Grant Privileges
 
-```bash
-ve rds_mysql GrantAccountPrivileges \
-  --Region "{{user.region}}" \
-  --InstanceId "{{user.instance_id}}" \
-  --AccountName "{{user.account_name}}" \
-  --Privileges '[{"DBName":"mydb","AccountPrivilege":"ReadWrite"}]'
-```
+> See `SKILL.md §CreateAccount → Grant Privileges` for full flow.
 
 ### Reset Password
 

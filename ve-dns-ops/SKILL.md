@@ -871,32 +871,32 @@ echo "Exported $TOTAL records for domain {{user.domain}}"
 
 #### Failure Recovery
 
-| Error pattern | Max retries | Backoff | Agent Action | UX Feedback |
-|--------------|-------------|---------|--------------|-------------|
-| `DomainNotFound` | 0 | — | HALT; verify domain | `[ERROR] Domain not found.` |
-| `InvalidParameter` | 1 | — | Fix parameter | `[ERROR] Invalid parameter.` |
+| Error pattern | Max retries | Recovery |
+|--------------|-------------|---------|
+| `DomainNotFound` | 0 | HALT; verify domain — `[ERROR] Domain not found.` |
+| `InvalidParameter` | 1 | Fix parameter — `[ERROR] Invalid parameter.` |
 
 ---
 
 ## Error Taxonomy (≥ 10 Codes)
 
-| Error Code | HTTP | Meaning | Max Retries | Backoff | Agent Action | UX Template |
-|------------|------|---------|-------------|---------|--------------|-------------|
-| `InvalidDomainName` | 400 | Domain name format invalid | 0 | — | HALT; provide FQDN format | `[ERROR] Invalid domain name. Use FQDN format (e.g., example.com).` |
-| `DomainAlreadyExists` | 400 | Domain already in account | 0 | — | HALT; check ListDomains | `[ERROR] Domain already exists. Check your domain list.` |
-| `DomainNotFound` | 404 | Domain does not exist | 0 | — | HALT; verify domain name | `[ERROR] Domain not found. Verify the domain name.` |
-| `InvalidRecordType` | 400 | Record type not supported | 0 | — | HALT; use valid type | `[ERROR] Invalid record type. Use A, AAAA, CNAME, MX, TXT, NS, SRV, or CAA.` |
-| `InvalidRecordValue` | 400 | Record value format invalid | 0 | — | HALT; fix per type | `[ERROR] Invalid record value for type {{user.record_type}}.` |
-| `DuplicateRecord` | 400 | Duplicate DNS record | 0 | — | HALT; use UpdateRecord instead | `[ERROR] Duplicate record. Use UpdateRecord to modify existing record.` |
-| `RecordNotFound` | 404 | Record does not exist | 0 | — | HALT; verify RecordId | `[ERROR] Record not found. Verify the RecordId.` |
-| `RecordLimitExceeded` | 400 | Record count limit reached | 0 | — | HALT; delete unused records | `[ERROR] Record limit exceeded. Delete unused records first.` |
-| `QuotaExceeded` | 400 | Domain quota exceeded | 0 | — | HALT; request quota increase | `[ERROR] Domain quota exceeded. Request increase from support.` |
-| `InsufficientBalance` | 400 | Account balance low | 0 | — | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
-| `Unauthorized` | 403 | IAM permission denied | 0 | — | HALT; check IAM policies | `[ERROR] Unauthorized. Check IAM permissions for DNS operations.` |
-| `RecordTypeMismatch` | 400 | Cannot change record type | 0 | — | HALT; delete and re-add | `[ERROR] Cannot change record type. Delete and re-add with new type.` |
-| `DependencyViolation` | 400 | Domain has dependencies | 0 | — | HALT; remove dependencies | `[ERROR] Domain has dependencies preventing deletion.` |
-| `Throttling` | 429 | Rate limit exceeded | 3 | 1s, 2s, 4s | Back off and retry | `[WARNING] Rate limit hit. Retrying in {backoff}s (attempt {n}/3).` |
-| `InternalError` | 500 | Server-side error | 3 | 2s, 4s, 8s | Retry with backoff; then HALT | `[ERROR] Internal error. Retrying (attempt {n}/3). If persists, escalate with RequestId.` |
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidDomainName` | Domain name format invalid | 0 retries; HALT — provide FQDN format |
+| `DomainAlreadyExists` | Domain already in account | 0 retries; HALT — check ListDomains |
+| `DomainNotFound` | Domain does not exist | 0 retries; HALT — verify domain name |
+| `InvalidRecordType` | Record type not supported | 0 retries; HALT — use valid type |
+| `InvalidRecordValue` | Record value format invalid | 0 retries; HALT — fix per type |
+| `DuplicateRecord` | Duplicate DNS record | 0 retries; HALT — use UpdateRecord instead |
+| `RecordNotFound` | Record does not exist | 0 retries; HALT — verify RecordId |
+| `RecordLimitExceeded` | Record count limit reached | 0 retries; HALT — delete unused records |
+| `QuotaExceeded` | Domain quota exceeded | 0 retries; HALT — request quota increase |
+| `InsufficientBalance` | Account balance low | 0 retries; HALT — recharge account |
+| `Unauthorized` | IAM permission denied | 0 retries; HALT — check IAM policies |
+| `RecordTypeMismatch` | Cannot change record type | 0 retries; HALT — delete and re-add |
+| `DependencyViolation` | Domain has dependencies | 0 retries; HALT — remove dependencies |
+| `Throttling` | Rate limit exceeded | 3 retries/1s/2s/4s; Back off and retry |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry then HALT |
 
 ## Safety Gate: DeleteDomain (Irreversible)
 

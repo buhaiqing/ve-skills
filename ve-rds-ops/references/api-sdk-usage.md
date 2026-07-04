@@ -2,7 +2,26 @@
 
 > **Purpose:** Detailed API reference for RDS MySQL operations. API V2 (2022-01-01).
 > **Version:** 1.0.0
-> **Last Updated:** 2026-05-25
+> **Last Updated:** 2026-07-05
+
+---
+
+## Common JSON Paths
+
+| Operation | Success Path | Key Fields |
+|-----------|-------------|------------|
+| CreateDBInstance | `$.Result.InstanceId` | InstanceId, OrderId |
+| DescribeDBInstances | `$.Result.Instances[]` | InstanceId, InstanceName, InstanceStatus, NodeSpec, PrimaryIp, Port |
+| DeleteDBInstance | `$.Metadata.RequestId` | RequestId |
+| CreateDB | `$.Result.DBName` | DBName |
+| DescribeDatabases | `$.Result.Databases[]` | DBName, CharacterSet, Description |
+| DeleteDB | `$.Metadata.RequestId` | RequestId |
+| ListDBAccounts | `$.Result.Accounts[]` | AccountName, AccountStatus, AccountType, AccountPrivileges |
+| DescribeDBInstanceParameters | `$.Result.Parameters[]` | ParameterName, ParameterValue, ForceRestart, CheckingCode |
+| CreateBackup | `$.Result.BackupId` | BackupId |
+| DescribeBackups | `$.Result.Backups[]` | BackupId, BackupName, BackupStatus, BackupSize, BackupType |
+| DescribeAllowLists | `$.Result.AllowLists[]` | AllowListId, AllowListName, AllowList, AllowListType |
+| Pagination | `$.Result.TotalCount` | Total matching items |
 
 ---
 
@@ -141,16 +160,12 @@
 | `CharacterSet` | String | No | Character set | `utf8mb4` |
 | `Description` | String | No | Description | — |
 
-**Response:** `$.Result.DBName`
-
 ### 3.2 DescribeDatabases
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `InstanceId` | String | Yes | Instance ID |
 | `DBName` | String | No | Filter by name (fuzzy) |
-
-**Response:** `$.Result.Databases[]`
 
 ### 3.3 DeleteDB
 
@@ -174,8 +189,6 @@
 | `AccountType` | String | No | `Super`/`Normal` |
 
 ### 4.2 ListDBAccounts (DescribeAccounts)
-
-**Response:** `$.Result.Accounts[]` with fields: `AccountName`, `AccountStatus`, `AccountType`, `AccountPrivileges`
 
 ### 4.3 ResetAccountPassword
 
@@ -210,8 +223,6 @@ Same parameters as GrantAccountPrivileges.
 
 ### 5.1 DescribeDBInstanceParameters
 
-**Response:** `$.Result.Parameters[]` with fields: `ParameterName`, `ParameterValue`, `ParameterDefaultValue`, `ForceRestart`, `CheckingCode`, `ParameterDescription`
-
 ### 5.2 ModifyDBInstanceParameters
 
 | Parameter | Type | Required | Description |
@@ -236,11 +247,7 @@ Parameters format:
 | `BackupName` | String | No | Backup name |
 | `BackupStrategy` | String | No | `Snapshot` or `Physical` |
 
-**Response:** `$.Result.BackupId`
-
 ### 6.2 DescribeBackups
-
-**Response:** `$.Result.Backups[]` with fields: `BackupId`, `BackupName`, `BackupStatus`, `BackupStartTime`, `BackupEndTime`, `BackupSize`, `BackupType`
 
 ### 6.3 DeleteBackup
 
@@ -263,8 +270,6 @@ Parameters format:
 ## 7. Allow List Management
 
 ### 7.1 DescribeAllowLists
-
-**Response:** `$.Result.AllowLists[]` with fields: `AllowListId`, `AllowListName`, `AllowList`, `AllowListType`, `AssociatedInstances`
 
 ### 7.2 CreateAllowList
 

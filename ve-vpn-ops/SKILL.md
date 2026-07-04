@@ -594,7 +594,7 @@ ve vpn CreateSslVpnServer \
   --LocalSubnets '["{{user.local_subnet}}"]' \
   --ClientIpPool "{{user.client_ip_pool}}" \
   --SslVpnServerProtocol "UDP" \
-  --SslVpnServerPort "1194" \
+  --SslVpnServerPort "{{env.VPN_PORT}}" \
   --Cipher "AES-256-CBC" \
   --Auth "SHA256" \
   --Compress "false"
@@ -607,7 +607,7 @@ ve vpn CreateSslVpnServer \
 | `LocalSubnets` | Subnets accessible via VPN | `["10.0.0.0/16"]` |
 | `ClientIpPool` | IP pool for VPN clients | `10.0.100.0/24` |
 | `SslVpnServerProtocol` | Protocol (UDP/TCP) | `UDP` |
-| `SslVpnServerPort` | Port number | `1194` |
+| `SslVpnServerPort` | Port number | `{{env.VPN_PORT}}` |
 | `Cipher` | Encryption cipher | `AES-256-CBC` |
 | `Auth` | Auth digest | `SHA256` |
 

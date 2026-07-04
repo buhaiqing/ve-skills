@@ -39,14 +39,7 @@ ve clb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}" --Type "public
 
 ### Create CLB (Internal)
 
-```bash
-ve clb CreateLoadBalancer \
-  --Region "{{user.region}}" \
-  --VpcId "{{user.vpc_id}}" \
-  --SubnetId "{{user.subnet_id}}" \
-  --LoadBalancerName "{{user.clb_name}}" \
-  --Type "private"
-```
+> See SKILL.md §Operation: CreateLoadBalancer — Create CLB Instance for full flow.
 
 ### Create CLB (Public — requires EIP)
 
@@ -78,40 +71,15 @@ ve clb DescribeListeners --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerId "
 
 ### Create TCP Listener
 
-```bash
-ve clb CreateListener \
-  --Region "{{user.region}}" \
-  --LoadBalancerId "{{user.clb_id}}" \
-  --Protocol "TCP" \
-  --Port "{{user.listener_port}}" \
-  --ListenerName "{{user.listener_name}}"
-```
+> See SKILL.md §Operation: CreateListener — Create Listener for full flow.
 
 ### Create HTTP Listener
 
-```bash
-ve clb CreateListener \
-  --Region "{{user.region}}" \
-  --LoadBalancerId "{{user.clb_id}}" \
-  --Protocol "HTTP" \
-  --Port 80 \
-  --ListenerName "http-listener"
-```
+> See SKILL.md §Operation: CreateListener — Create Listener for full flow.
 
 ### Create HTTPS Listener
 
-```bash
-ve clb CreateListener \
-  --Region "{{user.region}}" \
-  --LoadBalancerId "{{user.clb_id}}" \
-  --Protocol "HTTPS" \
-  --Port 443 \
-  --ListenerName "https-listener" \
-  --CertificateId "{{user.certificate_id}}" \
-  --TLSPolicy "tls-1-2"
-```
-
-> **Note:** HTTPS listeners require a valid TLS certificate from Volcengine Certificate Manager.
+> See SKILL.md §Operation: CreateListener — Create Listener for full flow.
 
 ### Delete Listener
 

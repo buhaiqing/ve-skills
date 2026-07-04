@@ -7,43 +7,71 @@
 ```
 [SLS (Log Service) Alarm Triggered]
     │
-    ├── Is it availability-related?
-    │   ├── Service unreachable → Check endpoint health
-    │   │   └── Verify network connectivity
-    │   └── Degraded performance → Check resource usage
-    │       └── Scale or optimize as needed
+    ├── Is it ingestion-related?
+    │   ├── Log ingestion rate dropping → Check source connectivity
+    │   │   ├── Agent/collector down → Restart log agent
+    │   │   │   └── Delegate to ve-ecs-ops for instance health
+    │   │   └── Network issue → Check VPC connectivity
+    │   │       └── Delegate to ve-vpc-ops
+    │   ├── Throttling detected → Request quota increase
+    │   └── Data format errors → Check log parsing config
     │
-    ├── Is it configuration-related?
-    │   ├── Recent change → Review change impact
-    │   │   └── Rollback if needed
-    │   └── Permission issue → Check IAM/ACL
-    │       └── Delegate to ve-iam-ops if needed
+    ├── Is it storage-related?
+    │   ├── Log storage > 80% → Adjust retention or expand
+    │   ├── Index size growing fast → Review index config
+    │   └── Cold storage > hot storage → Adjust tiering policy
     │
-    └── Unknown → Delegate to ve-cms-ops for correlation
+    ├── Is it query-related?
+    │   ├── Query latency > 10s → Optimize query patterns
+    │   │   ├── Full scan query → Add time range filter
+    │   │   └── Missing index → Create appropriate index
+    │   └── Concurrent query limit reached → Queue or throttle
+    │
+    └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```
 
 ## Alarm Storm Handling
 
 **Detection Criteria:**
-- > 10 alarms within 5 minutes
-- Multiple correlated alarms from same root cause
+- > 5 log shippers reporting errors simultaneously
+- Ingestion rate drop > 50% across multiple logstores
 
 **Suppression Workflow:**
-1. Correlate alarms by resource and time
-2. Address root cause
-3. Verify all related alarms clear
+1. Correlate by project/logstore and time window
+2. Identify root cause (agent vs network vs SLS service)
+3. Group related shipper alarms
+4. Address root cause → verify ingestion resumes
 
 ## Proactive Inspection Checklist
 
 ```markdown
 ## SLS (Log Service) Proactive Inspection — [Date]
 
-### Health
-- [ ] All instances healthy
-- [ ] No errors in recent operations
-- [ ] Performance within SLA
+### Ingestion Health
+- [ ] All logstores receiving data within expected rate ± 20%
+- [ ] No ingestion errors in past 24 hours
+- [ ] Log agent/collector running on all source instances
+
+### Storage & Retention
+- [ ] Total storage usage < 75% of quota
+- [ ] Retention policy configured per logstore (hot → cold → delete)
+- [ ] Index size < 50% of total storage
+
+### Query Performance
+- [ ] Average query latency < 5s
+- [ ] No queries hitting concurrent limit
+- [ ] Dashboard refresh within expected interval
 
 ### Security
-- [ ] Access controls appropriate
-- [ ] Audit logging enabled
+- [ ] No public access to log data
+- [ ] Log data encrypted at rest
+- [ ] Audit trail for log access enabled
 ```
+
+## Multi-Round Diagnosis Review
+
+Before finalizing any SLS diagnosis:
+
+1. **Fact Check:** Are the ingestion metrics for the correct project/logstore? Is the time range correct?
+2. **Causal Analysis:** Is the ingestion drop due to source failure or SLS service degradation?
+3. **Solution Validation:** Will the config change fix the ingestion without losing log data?

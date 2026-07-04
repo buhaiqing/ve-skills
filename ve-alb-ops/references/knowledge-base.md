@@ -209,14 +209,7 @@ done
 
 ### Idle ALB Detection
 
-Regularly scan for ALBs without listeners to reduce costs:
-
-```bash
-for ALB_ID in $(ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}" | jq -r '.Result.LoadBalancers[].LoadBalancerId'); do
-  CNT=$(ve alb DescribeListeners --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerId "$ALB_ID" | jq '.Result.Listeners | length')
-  [ "$CNT" -eq 0 ] && echo "IDLE ALB: $ALB_ID"
-done
-```
+> See [`SKILL.md §FinOps Operation: DescribeIdleLoadBalancers`](../SKILL.md#finops-operation-describeidleloadbalancers-find-idle-albs) for the complete idle ALB detection flow.
 
 ### Migrating from CLB to ALB
 

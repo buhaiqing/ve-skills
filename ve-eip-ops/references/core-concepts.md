@@ -25,10 +25,10 @@ An **EIP (Elastic IP Address / 弹性公网IP)** is a static public IP address t
 
 ### Key Characteristics
 
-- **Dynamic Binding:** Can be bound to any supported resource type, enabling flexible network topologies
-- **Independent Lifecycle:** Exists independently of the resource it's bound to
-- **Static IP:** The IP address does not change unless explicitly released and reallocated
-- **Bandwidth Adjustable:** Bandwidth can be modified at any time without releasing the EIP
+- 🔗 **Dynamic Binding** — bind to any supported resource type; flexible network topologies
+- 🧩 **Independent Lifecycle** — exists independently of bound resource
+- 🎯 **Static IP** — IP does not change unless explicitly released & reallocated
+- 📈 **Bandwidth Adjustable** — modify at any time without releasing the EIP
 
 ### EIP Attributes
 
@@ -63,7 +63,7 @@ An **EIP (Elastic IP Address / 弹性公网IP)** is a static public IP address t
 | Traffic Fee | CNY/GB | Charged when billing by traffic |
 | Bandwidth Fee | CNY/Mbps/hour | Charged when billing by bandwidth |
 
-> **Tip:** EIPs bound to running resources (`InUse`) typically have no IP holding fee — only the bound resource's billing applies.
+> 💡 EIPs bound to running resources (`InUse`) → no IP holding fee; only bound resource's billing applies.
 
 ---
 
@@ -89,7 +89,7 @@ An **EIP (Elastic IP Address / 弹性公网IP)** is a static public IP address t
 |-----------|------|-------------|---------|
 | **BGP** | `BGP` | Border Gateway Protocol, multi-ISP routing | All commercial regions |
 
-BGP is the default and only line type in most Volcengine regions. It provides optimal routing across China Unicom, China Telecom, China Mobile, and other ISPs.
+✅ BGP = default line type in most regions, routing across China Unicom/Telecom/Mobile + other ISPs.
 
 ---
 
@@ -168,7 +168,7 @@ ve eip DescribeRegions
 | Bindings per EIP | 1 | One resource at a time |
 | Bandwidth modifications per day | Unlimited | — |
 
-> **Note:** Quotas may vary by region and account type. Contact Volcengine support for quota increases.
+> ⚠️ Quotas may vary by region & account type. Contact support for increases.
 
 ---
 

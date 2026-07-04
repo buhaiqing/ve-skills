@@ -480,7 +480,7 @@ func main() {
     go collectMetrics()
 
     http.Handle("/metrics", promhttp.Handler())
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe(":{{env.PORT}}", nil)
 }
 ```
 
@@ -538,7 +538,7 @@ func purgeHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
     http.HandleFunc("/purge", purgeHandler)
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe(":{{env.PORT}}", nil)
 }
 ```
 

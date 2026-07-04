@@ -1,5 +1,7 @@
 # CLI — MongoDB (`ve mongodb`)
 
+> **jq Paths (`.Result.*`):** `.Instances[].InstanceId` (instance ID)
+
 ## Install and Config
 
 - **Install:** See [Volcengine CLI](https://github.com/volcengine/volcengine-cli)

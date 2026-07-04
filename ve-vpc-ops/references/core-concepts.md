@@ -21,14 +21,14 @@
 
 ## 1. What is VPC
 
-A **VPC (Virtual Private Cloud / 私有网络)** is a logically isolated, private network environment on Volcengine (火山引擎). It provides the foundation for deploying cloud resources such as ECS, RDS, Redis, and CLB.
+A **VPC (Virtual Private Cloud / 私有网络)** is a logically isolated, private network on Volcengine (火山引擎). It provides the foundation for deploying cloud resources (ECS, RDS, Redis, CLB).
 
 ### Key Characteristics
 
-- **Isolation:** Each VPC is completely isolated from other VPCs
-- **Customizable:** You define the IP address range, subnets, and routing
-- **Secure:** Built-in network ACL and security group support
-- **Flexible:** Support for IPv4 and IPv6 dual-stack
+- 🔒 **Isolation** — each VPC is completely isolated from others
+- ✏️ **Customizable** — define IP range, subnets, and routing
+- 🛡️ **Secure** — built-in network ACL and security group support
+- 🔄 **Flexible** — support for IPv4 and IPv6 dual-stack
 
 ### VPC Attributes
 
@@ -53,8 +53,8 @@ A **VPC (Virtual Private Cloud / 私有网络)** is a logically isolated, privat
 [Creating/Pending] ──────▶ [Available] ──────▶ [Deleting] ──────▶ [Deleted]
 ```
 
-- **Available:** VPC is ready for use
-- **Deleting:** VPC is being removed (must be empty — no subnets, instances, or other resources)
+- ✅ **Available** — ready for use
+- 🔄 **Deleting** — being removed (must be empty: no subnets, instances, or other resources)
 
 ---
 
@@ -70,10 +70,10 @@ A **VPC (Virtual Private Cloud / 私有网络)** is a logically isolated, privat
 
 ### Planning Best Practices
 
-1. **No Overlapping CIDRs:** VPC CIDRs cannot overlap with each other, or with on-premises networks if using Direct Connect
-2. **Plan for Growth:** Reserve sufficient address space for future subnets and resources
-3. **Segment by Tier:** Use different subnets for web, application, and database tiers
-4. **Consider Interconnection:** If you plan VPC Peering or Transit Gateway, plan non-overlapping ranges across all VPCs
+- ❌ **No Overlapping CIDRs** — VPC CIDRs must not overlap with each other or on-premises networks (Direct Connect)
+- 📈 **Plan for Growth** — reserve sufficient address space for future subnets & resources
+- 🏗️ **Segment by Tier** — separate subnets for web, app, and database tiers
+- 🔗 **Consider Interconnection** — if using VPC Peering or Transit Gateway, plan non-overlapping ranges across all VPCs
 
 ### Example CIDR Plan
 
@@ -87,10 +87,10 @@ VPC: 10.0.0.0/16
 
 ### Subnet CIDR Rules
 
-- Subnet mask length: `/16` to `/29`
-- Must be a subset of the VPC CIDR
-- Cannot overlap with route entry destination CIDRs
-- First IP and last 3 IPs in each subnet are reserved by the system:
+- 📏 Mask length: `/16` to `/29`
+- 🎯 Must be a subset of the VPC CIDR
+- 🚫 Cannot overlap with route entry destination CIDRs
+- 🔒 First IP and last 3 IPs in each subnet are reserved by the system:
   - `192.168.0.0` — Network address
   - `192.168.0.253`, `192.168.0.254`, `192.168.0.255` — Reserved by system
 
@@ -197,8 +197,8 @@ Each VPC and subnet automatically have system route entries for:
 └─────────────────────────────┘
 ```
 
-- **Use case:** Development, testing, single-AZ deployment
-- **Complexity:** Low
+- **🎯 Use case:** Development, testing, single-AZ deployment
+- **📊 Complexity:** Low
 
 ### Pattern 2: Multi-AZ High Availability
 
@@ -214,8 +214,8 @@ Each VPC and subnet automatically have system route entries for:
 └─────────────────────────────────────────┘
 ```
 
-- **Use case:** Production, high availability required
-- **Complexity:** Medium
+- **🎯 Use case:** Production, high availability required
+- **📊 Complexity:** Medium
 
 ### Pattern 3: Multi-tier with NAT Gateway
 
@@ -234,9 +234,9 @@ Each VPC and subnet automatically have system route entries for:
 └─────────────────────────────────────────────────────┘
 ```
 
-- **Use case:** Production with internet access for private subnets
-- **Complexity:** High
-- **Requires:** `ve-nat-ops` for NAT Gateway, `ve-clb-ops` for CLB
+- **🎯 Use case:** Production with internet access for private subnets
+- **📊 Complexity:** High
+- **🔗 Requires:** `ve-nat-ops` for NAT Gateway, `ve-clb-ops` for CLB
 
 ### Pattern 4: Multiple VPCs with Peering
 
@@ -250,8 +250,8 @@ Each VPC and subnet automatically have system route entries for:
 └──────────────────┘         └──────────────────┘
 ```
 
-- **Use case:** Environment isolation (dev + prod), multi-project
-- **Complexity:** High
+- **🎯 Use case:** Environment isolation (dev + prod), multi-project
+- **📊 Complexity:** High
 
 ---
 
@@ -341,7 +341,7 @@ CreateRouteTable ──────▶ Available ──────▶ Associate
 | Secondary CIDR blocks per VPC | 5 | — |
 | IPv4 CIDR blocks options | `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` | And their subnets |
 
-> **Note:** Quotas may vary by region and account type. Use `DescribeVpcs` to check current usage, or contact Volcengine support for quota increases.
+> ⚠️ Quotas may vary by region and account type. Use `DescribeVpcs` to check current usage, or contact support for increases.
 
 ---
 

@@ -1,5 +1,7 @@
 # CLI Usage — Volcengine DNS (`ve dns`)
 
+> **jq Paths (`.Result.*`):** `.Domains[]` (domain list), `.Records` (record count), `.Records[]` (record details)
+
 ## Install and Config
 
 - Install `ve` CLI: see [Volcengine CLI](https://github.com/volcengine/volcengine-cli)
