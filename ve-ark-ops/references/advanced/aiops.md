@@ -11,9 +11,13 @@
     │   ├── Endpoint unreachable → Check endpoint state
     │   │   ├── Stopped → Restart endpoint
     │   │   └── Quota exceeded → Request quota increase
-    │   └── High latency (> 2s) → Check model type
-    │       ├── Large model → Review context length
-    │       └── Small model → Check concurrent requests
+    │   ├── High latency (> 2s) → Check model type
+    │   │   ├── Large model → Review context length
+    │   │   └── Small model → Check concurrent requests
+    │   ├── ConcurrentRequests > 80% max limit → Review concurrency settings
+    │   │   └── Scale endpoint or implement request queuing
+    │   └── Endpoint throughput < 50% baseline → Check model behavior
+    │       └── Evaluate model version or input quality regressions
     │
     ├── Is it model-related?
     │   ├── Model deployment failed → Check model status
@@ -21,11 +25,17 @@
     │   │   └── Version mismatch → Update model version
     │   ├── Inference errors increasing → Check input format
     │   │   └── Validate request schema
-    │   └── Throughput dropping → Check scaling policy
+    │   ├── Throughput dropping → Check scaling policy
+    │   ├── Model invocation latency > 5s (large) / > 1s (small) → Review context window
+    │   │   └── Optimize prompt length or use streaming
+    │   └── Token usage per request > 4096 → Analyze prompt efficiency
+    │       └── Implement shorter prompts or chunk processing
     │
     ├── Is it billing-related?
     │   ├── Usage cost > budget → Review request volume
     │   │   └── Optimize prompt length or batch requests
+    │   ├── Daily API cost spike > 200% over 7d avg → Investigate anomalous traffic
+    │   │   └── Check for abusive requests or pricing model change
     │   └── PrePaid endpoint expiring → Renew or convert
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis

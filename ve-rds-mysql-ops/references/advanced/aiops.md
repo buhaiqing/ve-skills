@@ -8,18 +8,29 @@
 [Alarm: RDS MySQL issue]
     │
     ├── Is it query-performance related?
-    │   ├── SlowQueries spike → Check execution plan → Application query issue
+    │   ├── SlowQueries > 100/min → Check execution plan → Application query issue
+    │   │   └── Rows_examined >> rows_sent → Missing index
     │   ├── Full table scan detected → Index missing or stats stale
-    │   └── Lock waits → ve-rds-mysql-ops (SHOW ENGINE INNODB STATUS equivalent)
+    │   │   └── Run ANALYZE TABLE or add appropriate index
+    │   ├── Lock waits (Innodb_row_lock_current_waits > 100) → Check transaction list
+    │   │   ├── Long-running transactions > 60s → Kill or rollback
+    │   │   └── ve-rds-mysql-ops (SHOW ENGINE INNODB STATUS equivalent)
+    │   └── Temp tables created on disk > 50/min → Increase tmp_table_size or optimize queries
     │
     ├── Is it resource-exhaustion?
-    │   ├── CPU > 90% + Connections high → ve-ecs-ops (app server connection leak)
+    │   ├── CPU > 90% + Connections high (Threads_running > max_connections*0.8) → ve-ecs-ops (app server connection leak)
     │   ├── Disk > 85% → Binlog growth? → ve-cms-ops cleanup policy
-    │   ├── Memory > 85% → Buffer pool too large? → Rebalance
-    │   └── IOPS > 90% → Check for heavy read/write pattern
+    │   │   └── Binlog retention > 7 days → Reduce binlog_expire_logs_seconds
+    │   ├── Memory > 85% → Buffer pool hit rate < 95%? → Rebalance innodb_buffer_pool_size
+    │   ├── IOPS > 90% → Check for heavy read/write pattern
+    │   │   └── Checkpoint age > 75% of total log → Increase innodb_io_capacity
+    │   └── Aborted_connects > 10/min → Connection auth failures or network issues
     │
     ├── Is it replication-related?
     │   ├── RO lag > 30s → Check heavy writes on primary → Throttle writes
+    │   │   └── Seconds_Behind_Master > 300s → Parallel replication bottleneck
+    │   ├── Slave_IO_Running = No → Network or binlog corruption
+    │   │   └── Check relay log corruption → Reset slave
     │   └── RO node unresponsive → ve-cms-ops (network or node failover)
     │
     └── Unknown/cluster-wide → ve-cms-ops for correlation + ve-vpc-ops for network
@@ -34,6 +45,15 @@
 | Disk usage > 90% | ve-rds-mysql-ops | ve-cms-ops (binlog management) | Manual |
 | Replication lag > 30s | ve-rds-mysql-ops | ve-ecs-ops (primary CPU) | ve-cms-ops |
 | Network bandwidth cap | ve-vpc-ops | ve-rds-mysql-ops | Manual |
+
+## Cross-Skill Routing
+
+| Symptom | Delegate To |
+|---------|------------|
+| Host-level resource exhaustion (CPU/memory) | ve-ecs-ops |
+| IAM permission denied for backup/restore | ve-iam-ops |
+| Network connectivity to application layer | ve-vpc-ops |
+| Alarm rule suppression or threshold tuning | ve-cms-ops |
 
 ## Proactive Inspection Checklist
 

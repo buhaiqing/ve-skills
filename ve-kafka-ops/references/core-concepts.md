@@ -52,8 +52,8 @@ Volcengine Kafka is a fully managed Apache Kafka service providing distributed s
 
 ### min.insync.replicas
 
-- **Set to 2** when RF=3 for strong durability
-- **Set to 1** for higher availability, lower durability
+- **Set to 2** when RF=3 → ✅ Strong durability
+- **Set to 1** → ⚠️ Higher availability, lower durability
 
 ## SASL Authentication
 
@@ -118,11 +118,11 @@ Volcengine Kafka is a fully managed Apache Kafka service providing distributed s
 
 ### Consumer Lag
 
-| Lag Level | Action |
-|-----------|--------|
-| < 1000 | Healthy |
-| 1000 - 10000 | Warning: scale consumers |
-| > 10000 | Critical: investigate |
+| Lag Level | Status | Action |
+|-----------|--------|--------|
+| < 1000 | ✅ Healthy | — |
+| 1000 - 10000 | ⚠️ Warning | Scale consumers |
+| > 10000 | 🚨 Critical | Investigate
 
 ## Network Architecture
 

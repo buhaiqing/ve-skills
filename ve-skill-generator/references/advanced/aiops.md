@@ -8,11 +8,13 @@
 [Skill Generation Quality Issue]
     │
     ├── Is it structural?
-    │   ├── Missing frontmatter → Add required fields
+    │   ├── Missing frontmatter (missing name/description/compatibility in > 3 skills) → Add required fields
     │   │   └── See ve-skill-template.md §1
-    │   ├── Missing references/ → Create standard 6 files
+    │   ├── Missing references/ (< 6 standard files per skill) → Create standard 6 files
+    │   │   ├── aiops.md missing for ≥ 3 skills → Run check_aiops_coverage.py
     │   │   └── See ve-skill-generator/references/ve-skill-template.md
-    │   └── Broken links → Run link integrity scan
+    │   └── Broken links (link integrity check fails > 5 errors) → Run link integrity scan
+    │       ├── Cross-skill references pointing to nonexistent files
     │       └── Fix relative paths
     │
     ├── Is it GCL-related?
@@ -24,12 +26,21 @@
     │       └── See docs/gcl-spec.md §3
     │
     ├── Is it Token Efficiency-related?
-    │   ├── TE-1 violation → Replace hardcoded tables with ve queries
+    │   ├── TE-1 violation (hardcoded versions in > 5 references files) → Replace hardcoded tables with ve queries
     │   │   └── See docs/token-efficiency.md §TE-1
-    │   ├── TE-6 violation → Dedup SKILL.md vs references/
-    │   │   └── SKILL.md is authoritative
-    │   └── Over-length content → Compress per TE-9
-    │       └── Move detailed content to references/
+    │   ├── TE-6 violation (duplicate blocks across SKILL.md and references/ in ≥ 3 skills) → Dedup
+    │   │   └── SKILL.md is authoritative — remove from references/
+    │   ├── Over-length content (single SKILL.md > 2000 lines) → Compress per TE-9
+    │   │   └── Move detailed content to references/te-7/ or references/advanced/
+    │   └── eval_queries.json missing for > 2 skills → Generate with ≥ 5 trigger + ≥ 2 non-trigger cases
+    │
+    ├── Is it evaluation quality related?
+    │   ├── Skill coverage < 80% (21 of 29 skills not fully compliant) → Prioritize required tier first
+    │   │   └── Run validate_local.py on affected skills
+    │   ├── > 3 P1 violations across skills → Batch-fix systematic issues
+    │   │   └── Track in progress.md per skill batch
+    │   └── GCL conformance score < 70% → Review rubric and prompt templates
+    │       └── Run check_gcl_conformance.py
     │
     └── Unknown → Run P0/P1 checklist
 ```

@@ -8,24 +8,34 @@
 [EIP Alarm Triggered]
     │
     ├── Is it connectivity-related?
-    │   ├── Instance unreachable → Check security group rules
-    │   │   └── Delegate to ve-security-group-ops if SG change needed
-    │   ├── Route issue → Check VPC route tables
-    │   │   └── Delegate to ve-vpc-ops for route diagnosis
-    │   └── NAT not working → Check SNAT/DNAT rules
-    │       └── Review NAT gateway configuration
+    │   ├── Instance unreachable → Check EIP binding
+    │   │   └── Verify EIP associated to correct instance/NAT
+    │   ├── EIP bandwidth saturation > 95% → Check traffic spikes
+    │   │   └── Upgrade bandwidth or enable traffic shaping
+    │   ├── EIP health check failure > 3 consecutive → Investigate target health
+    │   │   └── Delegate to ve-security-group-ops or ve-ecs-ops
+    │   └── SNAT port exhaustion on EIP → Check concurrent connections
+    │       └── Add more EIPs or switch to NAT gateway
     │
     ├── Is it bandwidth-related?
     │   ├── Bandwidth at limit → Optimize or upgrade
     │   │   └── Review traffic patterns → identify optimization
-    │   └── High packet loss → Check network quality
-    │       └── Ping/traceroute diagnostics
+    │   ├── High packet loss → Check network quality
+    │   │   └── Ping/traceroute diagnostics
+    │   ├── Inbound traffic > outbound traffic by 5x → Asymmetric routing
+    │   │   └── Verify route table symmetry
+    │   └── Burst credit exhausted → Continuous high traffic
+    │       └── Upgrade to higher bandwidth tier
     │
     ├── Is it configuration-related?
     │   ├── Recent change → Review change log
     │   │   └── Rollback if needed → verify recovery
-    │   └── ACL/firewall rule issue → Review rules
-    │       └── Delegate to ve-security-group-ops
+    │   ├── ACL/firewall rule issue → Review rules
+    │   │   └── Delegate to ve-security-group-ops
+    │   ├── EIP unbilled / idle > 7 days → Release or associate
+    │   │   └── Audit EIP inventory monthly
+    │   └── EIP not associated to running instance → Check dangling IPs
+    │       └── Delegate to ve-ecs-ops for instance audit
     │
     └── Unknown pattern → Delegate to ve-cms-ops
 ```

@@ -12,22 +12,34 @@
     │   │   └── Review recent broker operations
     │   ├── Disk full → Check log retention
     │   │   └── Adjust retention policy or expand disk
-    │   └── Leader election → Check partition health
-    │       └── Review ISR (In-Sync Replicas) status
+    │   ├── Leader election → Check partition health
+    │   │   └── Review ISR (In-Sync Replicas) status
+    │   ├── RequestHandlerAvgIdlePercent < 20% → Broker overloaded
+    │   │   └── Add brokers or rebalance partitions
+    │   └── NetworkProcessorAvgIdlePercent < 30% → Network saturation
+    │       └── Increase network throughput or add brokers
     │
     ├── Is it consumer-related?
     │   ├── Consumer lag → Check consumer health
     │   │   └── Scale consumers or optimize processing
     │   ├── Consumer group rebalance → Check consumer stability
     │   │   └── Review consumer session timeout
-    │   └── Message processing failure → Check DLQ
-    │       └── Analyze failed messages
+    │   ├── Message processing failure → Check DLQ
+    │   │   └── Analyze failed messages
+    │   ├── ConsumerGroup rebalance frequency > 5/hour → Fix unstable consumers
+    │   │   └── Increase session.timeout.ms or fix polling pattern
+    │   └── Lag growth rate > 1000 msg/min → Consumer cannot keep up
+    │       └── Scale out consumer group or optimize processing logic
     │
     ├── Is it producer-related?
     │   ├── Produce failures → Check broker connectivity
     │   │   └── Verify broker addresses and SSL
-    │   └── Ack timeout → Check broker performance
-    │       └── Optimize batch settings
+    │   ├── Ack timeout → Check broker performance
+    │   │   └── Optimize batch settings
+    │   ├── Produce request throttled > 5% → Check quota limits
+    │   │   └── Increase producer quota or back off retries
+    │   └── Compression ratio < 1.5 → Inefficient message format
+    │       └── Switch to snappy/zstd compression or batch messages
     │
     └── Unknown → Check controller logs
 ```

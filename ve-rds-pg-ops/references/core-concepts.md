@@ -22,13 +22,13 @@ RDS PostgreSQL Instance
 
 | Version | Key Features | Status |
 |---------|-------------|--------|
-| PostgreSQL 11 | Partitioning improvements, JIT | Supported |
-| PostgreSQL 12 | CTE inlining, parallel queries | Supported |
-| PostgreSQL 13 | Incremental sort, duplicate indexes | Supported |
-| PostgreSQL 14 | Subscriptions, security improvements | Recommended |
-| PostgreSQL 15 | Schema ACL improvements, sorting | Supported |
-| PostgreSQL 16 | Logical replication enhancements | Latest |
-| PostgreSQL 17 | Latest release | Preview/New |
+| PostgreSQL 11 | Partitioning improvements, JIT | ℹ️ Supported |
+| PostgreSQL 12 | CTE inlining, parallel queries | ℹ️ Supported |
+| PostgreSQL 13 | Incremental sort, duplicate indexes | ℹ️ Supported |
+| PostgreSQL 14 | Subscriptions, security improvements | ✅ Recommended |
+| PostgreSQL 15 | Schema ACL improvements, sorting | ℹ️ Supported |
+| PostgreSQL 16 | Logical replication enhancements | ℹ️ Latest |
+| PostgreSQL 17 | Latest release | ⚠️ Preview/New |
 
 ## Node Specifications
 
@@ -51,9 +51,9 @@ Common specs (format: `rds.postgres.{cpu}c{mem}g`):
 
 | Type | Role | Description |
 |------|------|-------------|
-| Primary | Read-Write | Master handles all writes and replication source |
-| Secondary | Standby | Automatic failover target; not directly queryable |
-| ReadOnly | Read-Only | Separate instance for read scaling; has own endpoint |
+| Primary | Read-Write | ✅ Master handles all writes + replication source |
+| Secondary | Standby | ✅ Automatic failover target; ⚠️ not directly queryable |
+| ReadOnly | Read-Only | ℹ️ Separate instance for read scaling; has own endpoint |
 
 ## Connection & Endpoints
 

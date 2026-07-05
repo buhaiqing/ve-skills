@@ -8,32 +8,47 @@
 [ECS Alarm Triggered]
     │
     ├── Is it CPU-related?
-    │   ├── Yes → Is memory also high?
-    │   │   ├── Yes → Application-level issue (check logs via Cloud Assistant, GC, threads)
+    │   ├── CPU > 90% sustained for 5min → Is memory also high?
+    │   │   ├── CPU > 90% + Memory > 85% → Application-level issue (check logs via Cloud Assistant, GC, threads)
     │   │   │       └── Delegate to application skill if Java/JVM
-    │   │   └── No → Check for runaway processes (Cloud Assistant: top, ps aux)
-    │   │            └── If single process: kill or restart
-    │   │            └── If system-wide: reboot
-    │   └── No → Continue...
+    │   │   ├── CPU > 90% + Memory normal → Check for runaway processes (Cloud Assistant: top, ps aux)
+    │   │   │       └── If single process: kill or restart
+    │   │   │       └── If system-wide: reboot
+    │   │   └── CPU credit balance < 20% (burstable instances) → Change to compute-optimized instance type
+    │   └── CPU < 5% for 7 days → Idle instance — consider stop or downsizing
     │
     ├── Is it disk-related?
     │   ├── Disk usage > 90% → Check log files, temporary files (Cloud Assistant)
-    │   │   └── If log-related: set up rotation → delegate to app team
+    │   │   ├── Disk read latency > 20ms → Check disk type (ESSD vs basic)
+    │   │   ├── If log-related: set up rotation → delegate to app team
     │   │   └── If data-related: expand disk or add data disk
-    │   └── Disk IOPS > 90% → Check database queries, backup jobs
+    │   └── Disk IOPS > 90% of max throughput → Check database queries, backup jobs
+    │       ├── Inode usage > 95% → Too many small files — cleanup or reformat
     │       └── If database: delegate to ve-rds-ops
     │       └── If backup: reschedule to off-peak
     │
     ├── Is it network-related?
-    │   ├── High latency → Check upstream dependencies
-    │   │   └── Delegate to ve-vpc-ops for network path analysis
-    │   ├── Packet loss → Check security groups, ACLs
+    │   ├── Network outbound throughput > 90% of bandwidth limit → Check instance type bandwidth cap
+    │   │   └── Upgrade instance type or throttle traffic
+    │   ├── Packet loss > 1% → Check security groups, ACLs
     │   │   └── Recent SG change? Rollback → delegate to security team
-    │   └── Connection limit → Check application connection pool
-    │       └── Delegate to application skill
+    │   ├── Connection tracking table > 80% → Too many concurrent connections
+    │   │   └── Check application connection pool → Delegate to application skill
+    │   └── Latency spike > 200ms → Check upstream dependencies
+    │       └── Delegate to ve-vpc-ops for network path analysis
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```
+
+## Cross-Skill Routing
+
+| Symptom | Delegate To |
+|---------|------------|
+| IAM permission denied for instance operation | ve-iam-ops |
+| KMS key unavailable for encrypted disk attach | ve-kms-ops |
+| EIP bandwidth limit exceeded | ve-eip-ops |
+| VPC subnet exhausted / route table misconfigured | ve-vpc-ops |
+| Alarm correlation across instance group | ve-cms-ops |
 
 ## Alarm Storm Handling
 

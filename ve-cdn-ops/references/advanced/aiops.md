@@ -8,26 +8,30 @@
 [CDN Alarm Triggered]
     │
     ├── Is it origin-related?
-    │   ├── Origin error spike → Check origin health
+    │   ├── Origin 5xx rate > 5% → Check origin health
     │   │   └── Delegate to origin service ops as needed
-    │   ├── High origin latency → Check origin response time
+    │   ├── OriginResponseTime > 5s → Check origin response time
     │   │   └── Optimize origin or enable origin shield
-    │   └── Origin unreachable → Check network path
-    │       └── Verify origin configuration
+    │   ├── OriginUnreachable > 2% → Check network path
+    │   │   └── Verify origin configuration
+    │   └── Origin bandwidth > 80% of limit → Scale origin capacity
+    │       └── Consider enabling CDN origin shield
     │
     ├── Is it cache-related?
-    │   ├── Low hit ratio → Check cache headers
+    │   ├── CacheHitRatio < 60% → Check cache headers
     │   │   └── Review cache TTL settings
-    │   ├── Cache miss storm → Check cache warming
+    │   ├── CacheMiss rate > 50% → Check cache warming
     │   │   └── Pre-populate popular content
-    │   └── Stale content → Check refresh mechanism
+    │   └── Stale content (> 10% age-out requests) → Check refresh mechanism
     │       └── Purge cache or adjust TTL
     │
     ├── Is it configuration-related?
-    │   ├── SSL error → Check certificate
+    │   ├── SSL certificate expires < 30 days → Renew immediately
     │   │   └── Renew certificate
-    │   └── DNS propagation issue → Check DNS
-    │       └── Wait for propagation or force refresh
+    │   ├── DNSResolution time > 5s → Check DNS configuration
+    │   │   └── Optimize DNS TTL or wait for propagation
+    │   └── ConfigChangeError > 1% → Review recent config changes
+    │       └── Rollback CDN config changes
     │
     └── Unknown → Check CDN provider status
 ```

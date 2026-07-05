@@ -19,4 +19,4 @@
 | Unused topics | Delete stale topics | ~100% |
 | Cross-zone traffic | Co-locate clients and brokers | Up to 100% |
 
-> Always query the Kafka pricing API — never hardcode rates.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve kafka DescribePrice` for current quotes.

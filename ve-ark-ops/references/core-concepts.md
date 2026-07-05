@@ -9,12 +9,12 @@ Volcengine Ark (方舟大模型平台) is a full-lifecycle LLM platform providin
 ### 1. Inference Endpoints (推理端点)
 Inference endpoints are deployed model instances that serve inference requests. Each endpoint runs a specific model version with configurable compute resources, scaling, and networking.
 
-**States:** `Creating` → `Running` → `Stopping`/`Stopped` → `Failed`
+**States:** `Creating` → `Running` → `Stopping`/`Stopped` ❌ `Failed` | ✅ `Running`/`Stopped` = normal terminal
 
 **Types:**
-- **Standard Inference:** General-purpose endpoint for Chat/Completion APIs
-- **Low-latency Inference:** Optimized for real-time use cases
-- **TPM-Guaranteed:** Reserved throughput (Tokens Per Minute) for production workloads
+- **Standard Inference:** ℹ️ General-purpose endpoint for Chat/Completion APIs
+- **Low-latency Inference:** ℹ️ Optimized for real-time use cases
+- **TPM-Guaranteed:** ℹ️ Reserved throughput (Tokens Per Minute) for production workloads
 
 ### 2. Models (模型)
 Marketplace models available for deployment and fine-tuning.
@@ -33,7 +33,7 @@ Marketplace models available for deployment and fine-tuning.
 ### 3. Training Jobs (模型精调)
 Fine-tuning jobs that adapt base models to custom datasets using SFT (Supervised Fine-Tuning), DPO (Direct Preference Optimization), or RL (Reinforcement Learning).
 
-**States:** `Pending` → `Running` → `Succeeded`/`Failed`/`Stopped`
+**States:** `Pending` → `Running` → ✅ `Succeeded` / ❌ `Failed` / `Stopped`
 
 ### 4. Datasets (数据集)
 Structured data used for model training and evaluation.
@@ -54,9 +54,9 @@ Automated evaluation of model performance on benchmark datasets and custom test 
 ## Region & Endpoint
 
 - Ark resources are region-scoped
-- Available regions: `cn-beijing`, `cn-shanghai`, `cn-guangzhou`
-- API endpoint: `open.volcengineapi.com` (service: `ark`)
-- Console: `https://console.volcengine.com/ark`
+- Available regions: ℹ️ `cn-beijing`, `cn-shanghai`, `cn-guangzhou`
+- API endpoint: ℹ️ `open.volcengineapi.com` (service: `ark`)
+- Console: ℹ️ `https://console.volcengine.com/ark`
 
 ## Architecture
 

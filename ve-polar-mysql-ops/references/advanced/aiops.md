@@ -8,23 +8,39 @@
 [PolarDB MySQL Alarm Triggered]
     │
     ├── Is it CPU/Memory-related?
-    │   ├── Yes → Check connection pool exhaustion
+    │   ├── CPU > 85% sustained 5min → Check connection pool exhaustion
+    │   │   ├── Parallel query threads > 80% → Heavy OLAP workload on OLTP node
+    │   │   ├── CPU > 85% + Memory > 80% → Buffer pool thrashing
     │   │   └── Delegate to application team for connection pool tuning
+    │   ├── Memory > 85% → Check PolarDB buffer pool usage
+    │   │   └── Increase loose_polar_buffer_pool_size or migrate to larger spec
     │   └── No → Continue...
     │
     ├── Is it storage/disk-related?
-    │   ├── Disk usage > 80% → Check data growth rate, cleanup old data
+    │   ├── Disk usage > 85% → Check PolarStore capacity, log retention
+    │   │   ├── Redo log lag > 10GB on PolarStore → Write-heavy workload
+    │   │   ├── Binlog retention > 7 days → Reduce binlog_expire_logs_seconds
     │   │   └── Run cleanup queries → verify freespace
-    │   └── Slow queries → Check query execution plan
-    │       └── Use EXPLAIN to identify full table scans
+    │   ├── Slow queries (> 100/min) → Check query execution plan
+    │   │   ├── Full table scans detected (rows_examined >> rows_sent) → Missing index
+    │   │   ├── Using filesort on large result sets → Optimize ORDER BY with indexes
+    │   │   └── Use EXPLAIN to identify full table scans
+    │   ├── IOPS > 90% of max throughput → Check PolarDB IO throttle
+    │   │   └── Increase polar_io_capacity or scale up instance class
+    │   └── Temp table on disk > 50MB/query → Increase tmp_table_size or max_heap_table_size
     │
     ├── Is it availability-related?
     │   ├── Instance unreachable → Check network path
+    │   │   ├── PolarProxy connection refused → Proxy node restart
     │   │   └── Delegate to ve-vpc-ops for VPC/ENI diagnosis
-    │   ├── Replication lag > threshold → Check replica status
-    │   │   └── Verify network bandwidth between primary and replicas
-    │   └── Failover triggered → Check instance health
-    │       └── Review recent operations that may have caused failover
+    │   ├── Replication lag > 30s → Check PolarDB read-only node status
+    │   │   ├── PolarStore IO bottleneck → Parallel queries slowing redo apply
+    │   │   └── Verify network bandwidth between compute nodes
+    │   ├── Failover triggered → Check instance health
+    │   │   ├── Failovers > 2 in 24h → PolarStore or compute node instability
+    │   │   └── Review recent operations that may have caused failover
+    │   └── Connection count > max_connections * 0.85 → Connection pool exhausted
+    │       └── Kill idle connections or increase max_connections via PolarProxy
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```

@@ -925,7 +925,7 @@ Type "DELETE" to confirm, or anything else to cancel.
 ```bash
 # Download from GitHub releases
 # macOS (ARM64)
-curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-darwin-arm64 -o /usr/local/bin/ve
+curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-darwin-arm64 -o /usr/local/bin/ve
 chmod +x /usr/local/bin/ve
 
 # Verify

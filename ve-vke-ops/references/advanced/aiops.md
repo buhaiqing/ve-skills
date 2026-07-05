@@ -8,28 +8,50 @@
 [VKE Alarm Triggered]
     │
     ├── Is it node-related?
-    │   ├── Node NotReady → Check kubelet status
+    │   ├── Node NotReady (kubelet heartbeat miss > 40s) → Check kubelet status
+    │   │   ├── Node allocatable CPU < 10% remaining → Resource overcommit
+    │   │   ├── Node allocatable memory < 10% remaining → Pod memory pressure
     │   │   └── Drain node → cordon → repair or replace
-    │   ├── Node OOM → Check pod resource limits
-    │   │   └── Adjust limits or add nodes
-    │   └── Disk pressure → Check disk usage
-    │       └── Clean up /var/lib/docker or /var/lib/kubelet
+    │   ├── Node OOM (Memory pressure > 85%) → Check pod resource limits
+    │   │   └── Top-3 memory consumer pods → Adjust limits or add nodes
+    │   ├── Disk pressure (kubelet eviction threshold > 85%) → Check disk usage
+    │   │   ├── ImagePull failures > 3/min due to disk → Clean up unused images
+    │   │   └── Clean up /var/lib/docker or /var/lib/kubelet
+    │   ├── Node CPU usage > 85% sustained 5min → Check resource-heavy pods
+    │   │   └── Add nodes or redistribute workloads
+    │   └── Node memory usage > 90% → Check for memory leaks
+    │       └── Restart containers or set memory limits
     │
     ├── Is it workload-related?
-    │   ├── Pod CrashLoopBackOff → Check logs
+    │   ├── Pod CrashLoopBackOff (restart count > 5/min) → Check logs
+    │   │   ├── OOMKilled → Increase memory limit or fix memory leak
     │   │   └── Fix image, config, or resource issues
-    │   ├── Pod Evicted → Check resource pressure
+    │   ├── Pod Evicted (pending > 10 pods) → Resource pressure
+    │   │   ├── NodePool capacity exhausted → Scale out node pool
     │   │   └── Add nodes or adjust resource requests
-    │   └── Deployment stalled → Check readiness
-    │       └── Verify health checks and dependencies
+    │   ├── Deployment stalled (progress deadline > 5min) → Check readiness probe
+    │   │   ├── Readiness probe failure rate > 50% → Application not ready
+    │   │   └── Verify health checks and dependencies
+    │   ├── Pod restart count > 5/min → Check liveness probe or OOM
+    │   │   └── Increase resources or fix probe logic
+    │   └── Container OOMKilled > 3/hour → Review memory limits
+    │       └── Increase memory request/limit or profile memory usage
     │
     ├── Is it network-related?
-    │   ├── DNS resolution fails → Check CoreDNS
+    │   ├── DNS resolution fails (CoreDNS 5xx > 1%) → Check CoreDNS
+    │   │   ├── CoreDNS OOM / CPU throttled → Increase CoreDNS resources
     │   │   └── Restart CoreDNS or check network policy
-    │   ├── Ingress not working → Check ingress controller
+    │   ├── VPC-CNI IP pool < 20% available → Pod IP exhaustion
+    │   │   └── Increase subnet CIDR or enable secondary CIDR
+    │   ├── Ingress not working (5xx response > 5%) → Check ingress controller
+    │   │   ├── Ingress controller OOM → Increase resources
     │   │   └── Verify controller logs
-    │   └── Service unreachable → Check endpoints
-    │       └── Delegate to ve-vpc-ops for network
+    │   ├── Service unreachable → Check endpoints
+    │   │   └── EndpointSlice inconsistency → Restart kube-proxy
+    │   ├── CoreDNS lookup failure rate > 1% → Scale CoreDNS pods
+    │   │   └── Increase coreDNS replicas or adjust autoscaler
+    │   └── Service endpoint not ready > 2min → Check pod readiness
+    │       └── Investigate readiness probe failures
     │
     └── Unknown → Delegate to ve-cms-ops
 ```

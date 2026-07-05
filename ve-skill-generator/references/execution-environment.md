@@ -46,7 +46,7 @@ ARCH=$(uname -m)
 [ "$ARCH" = "arm64" ] && [ "$OS" = "darwin" ] && ARCH="arm64"  # macOS Apple Silicon
 
 # Latest version (update as needed)
-VE_VERSION="v1.0.42"
+VE_VERSION="{{env.ve_version}}"
 
 curl -fsSL "https://github.com/volcengine/volcengine-cli/releases/download/${VE_VERSION}/ve-${OS}-${ARCH}" -o /usr/local/bin/ve
 chmod +x /usr/local/bin/ve

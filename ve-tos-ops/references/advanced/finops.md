@@ -2,31 +2,19 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Cost Optimization Tips
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Fault-tolerant batch |
-
-## Cost Optimization Quick Reference
-
-| Situation | Action | Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| Idle resource | Stop or delete | Up to 100% |
-| Over-provisioned | Right-size down | 25-75% |
-| Batch workload | Use Spot | 60-90% |
-| Unused attached resource | Detach and delete | 100% |
-| Long-term storage | Use lifecycle policy | 50-80% |
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Use IA storage tier | Objects accessed <1x/month → IA tier instead of Standard | ~60% on storage cost |
+| Archive cold data | Data not accessed for 90d+ → transition to Archive via lifecycle rule | ~80% on storage cost |
+| Clean up incomplete uploads | Abort multipart uploads older than 7 days via lifecycle policy | Recovers orphaned storage |
 
 ## Query Current Prices
 
 ```bash
-# Always query the pricing API for current rates
-ve tos DescribePrice --<Param> value
+# Query current TOS pricing per storage tier
+ve tos DescribePrice
 ```
 
-> Prices change over time — never rely on hardcoded tables.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve tos DescribePrice` for current quotes.

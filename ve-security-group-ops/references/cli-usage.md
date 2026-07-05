@@ -3,6 +3,11 @@
 > Security Group operations are part of the VPC service in the `ve` CLI.
 > Verified at: `ve vpc --help`
 
+# Common JSON Paths:
+# CreateSecurityGroup:            $.Result.SecurityGroupId
+# DescribeSecurityGroups:         $.Result.SecurityGroups[].{SecurityGroupId,SecurityGroupName,VpcId}
+# DescribeSecurityGroupAttributes: $.Result.IngressRules, $.Result.EgressRules
+
 ## Install and Config
 
 See [Execution Environment Setup](../../ve-skill-generator/references/execution-environment.md) for CLI installation.

@@ -12,24 +12,36 @@
     │   │   └── Optimize application connection reuse
     │   ├── Connection timeout → Check network path
     │   │   └── Delegate to ve-vpc-ops if network issue
-    │   └── Auth failure → Check credentials
-    │       └── Verify IAM policy or key rotation
+    │   ├── Auth failure → Check credentials
+    │   │   └── Verify IAM policy or key rotation
+    │   ├── CurrentActive connections > 70% of max → Scale connection pool
+    │   │   └── Increase maxConns or optimize app pooling
+    │   └── Connection storms > 200 connections/min → Check app reconnect behavior
+    │       └── Implement exponential backoff in app
     │
     ├── Is it storage-related?
     │   ├── Disk usage > 85% → Check data size
     │   │   └── Run cleanup or expand storage
-    │   ├── Slow queries → Check explain plan
+    │   ├── Slow queries (execTime > 100ms) → Check explain plan
     │   │   └── Add missing indexes
-    │   └── Lock contention → Check currentOp
-    │       └── Kill long-running ops or optimize
+    │   ├── Lock contention → Check currentOp
+    │   │   └── Kill long-running ops or optimize
+    │   ├── WiredTiger cache dirty ratio > 20% → Check write pressure
+    │   │   └── Increase cache size or optimize write pattern
+    │   └── Oplog size > 10% of disk → Review oplog retention
+    │       └── Adjust oplog size or speed up secondaries
     │
     ├── Is it replication-related?
-    │   ├── Replication lag → Check secondary status
+    │   ├── Replication lag > 10s → Check secondary status
     │   │   └── Increase oplog size or optimize writes
     │   ├── Primary election → Check network stability
     │   │   └── Verify connectivity between replicas
-    │   └── Rollback detected → Check oplog
-    │       └── Manually resolve rollback
+    │   ├── Rollback detected → Check oplog
+    │   │   └── Manually resolve rollback
+    │   ├── Heartbeat latency > 2s → Network congestion between replicas
+    │   │   └── Delegate to ve-vpc-ops for network diagnosis
+    │   └── Oplog window < 2 hours → Secondary falling too far behind
+    │       └── Increase oplog size or improve secondary performance
     │
     └── Unknown → Delegate to ve-cms-ops
 ```

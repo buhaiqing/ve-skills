@@ -98,7 +98,9 @@ ve-skills/
 
 ```bash
 # 从 GitHub Releases 下载（以 Linux x86_64 为例）
-curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-linux-amd64 -o /usr/local/bin/ve
+# get latest version from GitHub releases
+VERSION=$(curl -sI https://github.com/volcengine/volcengine-cli/releases/latest | grep -i 'location:' | sed 's/.*v//' | tr -d '\r')
+curl -fsSL "https://github.com/volcengine/volcengine-cli/releases/download/v${VERSION}/ve-linux-amd64" -o /usr/local/bin/ve
 chmod +x /usr/local/bin/ve
 
 # 验证安装

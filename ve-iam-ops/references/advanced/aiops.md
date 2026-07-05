@@ -8,21 +8,22 @@
 [IAM Alarm Triggered]
     │
     ├── Is it access-related?
-    │   ├── Access denied errors increasing → Review recent policy changes
+    │   ├── AccessDenied rate > 100/hr → Review recent policy changes
     │   │   ├── Policy modified in last 24h → Rollback or adjust
-    │   │   └── Role assumption failed → Check trust policy
-    │   └── Failed login attempts > threshold → Review source IPs
+    │   │   └── Role assumption failed > 20/hr → Check trust policy
+    │   └── FailedLogin attempts > 10/min from single IP → Review source IPs
     │       └── Brute force pattern → Rotate credentials, enable MFA
     │
     ├── Is it quota-related?
-    │   ├── Role count approaching limit → Review unused roles
-    │   ├── Policy size limit exceeded → Split or simplify policies
-    │   └── API key limit reached → Audit and revoke unused keys
+    │   ├── RoleCount > 90% of limit → Review unused roles
+    │   ├── PolicyDocumentSize > 6KB (near 6.5KB max) → Split or simplify
+    │   └── API key count > 80% of limit → Audit and revoke unused keys
     │
     ├── Is it security-related?
-    │   ├── Access key > 90 days not rotated → Force rotation
-    │   ├── Inactive user > 90 days → Disable or delete
-    │   └── Root account activity detected → Investigate immediately
+    │   ├── AccessKeyAge > 90 days → Force rotation
+    │   ├── InactiveUser > 90 days → Disable or delete
+    │   ├── RootAccountActivity detected → Investigate immediately
+    │   └── AccessKey last used > 180 days → Revoke unused keys
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```

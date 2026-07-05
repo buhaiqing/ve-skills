@@ -9,23 +9,32 @@
     │
     ├── Is it connectivity-related?
     │   ├── Instance unreachable → Check security group rules
-    │   │   └── Delegate to ve-security-group-ops if SG change needed
-    │   ├── Route issue → Check VPC route tables
-    │   │   └── Delegate to ve-vpc-ops for route diagnosis
-    │   └── NAT not working → Check SNAT/DNAT rules
-    │       └── Review NAT gateway configuration
+    │   │   ├── Inbound rule missing → Add allow rule for required port
+    │   │   └── Outbound rule blocking traffic → Verify egress rules
+    │   ├── Traffic denied by implicit deny rule → Check denied logs
+    │   │   └── Add explicit allow rule if intended traffic
+    │   ├── Rule hit count = 0 for 30+ days (stale rule) → Audit and remove
+    │   │   └── Document rule purpose before removal
+    │   └── Cross-security group communication failing → Check SG-to-SG rules
+    │       └── Add source SG reference in inbound rules
     │
     ├── Is it bandwidth-related?
     │   ├── Bandwidth at limit → Optimize or upgrade
     │   │   └── Review traffic patterns → identify optimization
-    │   └── High packet loss → Check network quality
-    │       └── Ping/traceroute diagnostics
+    │   ├── High packet loss → Check network quality
+    │   │   └── Ping/traceroute diagnostics
+    │   └── SG-bound traffic spike > 200% baseline → Investigate cause
+    │       └── Check for DDoS or misconfigured health checks
     │
     ├── Is it configuration-related?
     │   ├── Recent change → Review change log
     │   │   └── Rollback if needed → verify recovery
-    │   └── ACL/firewall rule issue → Review rules
-    │       └── Delegate to ve-security-group-ops
+    │   ├── ACL/firewall rule issue → Review rules
+    │   │   └── Delegate to ve-security-group-ops
+    │   ├── Rules count > 100 (quota approaching) → Consolidate rules
+    │   │   └── Merge overlapping rules or use prefix lists
+    │   └── Overly permissive 0.0.0.0/0 on non-HTTP(S) ports → Restrict
+    │       └── Limit to specific CIDR blocks or security groups
     │
     └── Unknown pattern → Delegate to ve-cms-ops
 ```

@@ -10,19 +10,31 @@
     ├── Is it capacity-related?
     │   ├── Usage > 80% → Plan capacity expansion
     │   │   └── Review lifecycle policies → clean up old data
-    │   └── Quota approaching → Alert team → schedule cleanup
+    │   ├── Quota approaching → Alert team → schedule cleanup
+    │   ├── StorageUsed growth > 10% per month → Investigate data accumulation
+    │   │   └── Implement lifecycle rules for auto-deletion
+    │   └── InodeUsage > 80% → Check for small-file explosion
+    │       └── Consolidate small files or increase inode quota
     │
     ├── Is it performance-related?
     │   ├── High latency → Check throughput limits
     │   │   └── Review access patterns → optimize requests
-    │   └── Low throughput → Check network bandwidth
-    │       └── Delegate to ve-vpc-ops if network issue
+    │   ├── Low throughput → Check network bandwidth
+    │   │   └── Delegate to ve-vpc-ops if network issue
+    │   ├── Read latency > 10ms sustained → Check IOPS budget
+    │   │   └── Upgrade to higher IOPS tier or cache hot data
+    │   └── Write latency > 20ms sustained → Check write amplification
+    │       └── Batch small writes or switch to async writes
     │
     ├── Is it availability-related?
     │   ├── Request errors > 1% → Check service health
     │   │   └── Review recent API call errors
-    │   └── Throttling detected → Review rate limits
-    │       └── Optimize request patterns or request quota increase
+    │   ├── Throttling detected → Review rate limits
+    │   │   └── Optimize request patterns or request quota increase
+    │   ├── Filesystem mounting failures > 3/day → Check NFS client configuration
+    │   │   └── Verify mount options and network path
+    │   └── Throughput < 50% provisioned → Check for bottleneck
+    │       └── Review access patterns (sequential vs random I/O)
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation
 ```

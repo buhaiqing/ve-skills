@@ -46,3 +46,6 @@ progress.md
 
 # GCL (Generator-Critic-Loop) audit traces — never commit
 audit-results/
+
+# Subagent session artifacts
+.pi-subagents/

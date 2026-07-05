@@ -8,24 +8,34 @@
 [NAT Gateway Alarm Triggered]
     │
     ├── Is it connectivity-related?
-    │   ├── Instance unreachable → Check security group rules
-    │   │   └── Delegate to ve-security-group-ops if SG change needed
-    │   ├── Route issue → Check VPC route tables
-    │   │   └── Delegate to ve-vpc-ops for route diagnosis
-    │   └── NAT not working → Check SNAT/DNAT rules
-    │       └── Review NAT gateway configuration
+    │   ├── Instance unreachable → Check NAT gateway route
+    │   │   └── Verify VPC route table points to NAT gateway
+    │   ├── SNAT port exhaustion > 80% → Check concurrent connection count
+    │   │   └── Add more EIPs or enable SNAT IP pool
+    │   ├── DNAT rule conflict detected → Review port forwarding rules
+    │   │   └── Remove duplicate/conflicting DNAT entries
+    │   └── DNAT target unhealthy → Check target instance state
+    │       └── Delegate to ve-ecs-ops or ve-security-group-ops
     │
     ├── Is it bandwidth-related?
     │   ├── Bandwidth at limit → Optimize or upgrade
     │   │   └── Review traffic patterns → identify optimization
-    │   └── High packet loss → Check network quality
-    │       └── Ping/traceroute diagnostics
+    │   ├── High packet loss → Check network quality
+    │   │   └── Ping/traceroute diagnostics
+    │   ├── NAT gateway throughput > 80% max → Upgrade NAT spec
+    │   │   └── Choose higher spec NAT gateway or split subnets
+    │   └── Concurrent connections > 50000 → Connection tracking pressure
+    │       └── Increase NAT gateway spec or optimize connection reuse
     │
     ├── Is it configuration-related?
     │   ├── Recent change → Review change log
     │   │   └── Rollback if needed → verify recovery
-    │   └── ACL/firewall rule issue → Review rules
-    │       └── Delegate to ve-security-group-ops
+    │   ├── ACL/firewall rule issue → Review rules
+    │   │   └── Delegate to ve-security-group-ops
+    │   ├── SNAT entry timeout misconfigured → Verify timeout settings
+    │   │   └── Adjust TCP/UDP session timeout for workload pattern
+    │   └── DNAT port range exhausted → Check port allocation
+    │       └── Expand DNAT port range or add more DNAT entries
     │
     └── Unknown pattern → Delegate to ve-cms-ops
 ```

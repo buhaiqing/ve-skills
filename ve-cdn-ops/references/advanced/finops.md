@@ -19,4 +19,4 @@
 | Unused domains | Clean up stale configs | 10-30% |
 | HTTPS over-provisioning | Right-size bandwidth | 5-15% |
 
-> Always query the CDN pricing API — never hardcode rates.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve cdn DescribePrice` for current quotes.

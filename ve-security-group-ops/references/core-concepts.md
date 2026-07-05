@@ -27,7 +27,7 @@ Security Groups act as virtual firewalls for ECS instances, controlling inbound 
 
 ## Security Best Practices
 
-- Never use `0.0.0.0/0` for sensitive ports (22, 3389, 3306, 6379)
-- Use SG-to-SG references instead of CIDR when possible
-- Prefer enterprise SGs for granular control
-- Default SG should have minimal rules
+- 🚨 Never use `0.0.0.0/0` for sensitive ports (22, 3389, 3306, 6379)
+- ✅ Use SG-to-SG references instead of CIDR when possible
+- ✅ Prefer enterprise SGs for granular control
+- ⚠️ Default SG should have minimal rules

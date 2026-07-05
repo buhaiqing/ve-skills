@@ -2,33 +2,23 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Pricing Overview
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production workloads |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Batch processing, fault-tolerant |
+ECS supports PostPaid (pay-as-you-go), PrePaid (1-year ~35% off, 3-year ~50% off), and Spot instances (60-90% off, interruptible). Right-sizing and converting steady workloads to PrePaid are the highest-leverage savings actions.
 
-## Cost Per Instance Type
+## Cost Optimization Tips
 
-Pricing varies by region, billing model, and instance family. Query current prices:
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Right-size underutilized instances | CPU avg < 15% for 7d → downsize (e.g., ecs.g3i.2xlarge → ecs.g3i.xlarge) | ~50% |
+| Convert steady PostPaid to PrePaid | Running > 30d → 1yr PrePaid | ~35% |
+| Use Spot for batch/fault-tolerant | Non-critical or stateless workloads | 60-90% |
+
+## Query Current Prices
 
 ```bash
 # Describe price for a specific instance type (cn-beijing, PostPaid)
 ve ecs DescribeInstanceTypes --InstanceTypeIds '["ecs.g3i.large"]' | jq '.Result.InstanceTypes[] | {InstanceType, Price}'
 ```
 
-> Prices change over time — always query the Price API for current rates rather than relying on hardcoded tables.
-
-## Cost Optimization Quick Reference
-
-| Situation | Action | 💰 Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| CPU avg < 15% for 7 days | Right-size down | 25-75% |
-| Non-critical batch workload | Use Spot | 60-90% |
-| Stopped instance > 7 days | Delete or snapshot + delete | 100% |
-| Unattached disk | Snapshot + delete | 100% |
-| Snapshot > 90 days old | Delete | 100% |
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve ecs DescribePrice` for current quotes.

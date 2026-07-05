@@ -2,31 +2,23 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Cost Overview
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Fault-tolerant batch |
+VPC itself is free of charge. Costs come from associated resources: NAT Gateway, VPN Gateway, EIPs, and data transfer.
 
-## Cost Optimization Quick Reference
+## Cost Optimization Tips
 
-| Situation | Action | Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| Idle resource | Stop or delete | Up to 100% |
-| Over-provisioned | Right-size down | 25-75% |
-| Batch workload | Use Spot | 60-90% |
-| Unused attached resource | Detach and delete | 100% |
-| Long-term storage | Use lifecycle policy | 50-80% |
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Reduce cross-AZ traffic | Co-locate communicating resources in same AZ | Variable (data transfer fee) |
+| Release unused resources | Delete idle NAT Gateways, VPN tunnels, and unassociated EIPs | 100% of idle resource cost |
+| Use internal CLB instead of public | For intra-VPC traffic, avoid public-facing load balancers | EIP + data transfer cost |
 
 ## Query Current Prices
 
 ```bash
-# Always query the pricing API for current rates
-ve vpc DescribePrice --<Param> value
+# Query current VPC-related pricing (NAT, VPN, EIP)
+ve vpc DescribePrice
 ```
 
-> Prices change over time — never rely on hardcoded tables.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve vpc DescribePrice` for current quotes.

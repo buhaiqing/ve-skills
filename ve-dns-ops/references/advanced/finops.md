@@ -30,3 +30,5 @@
 - **Delete before delete**: When deleting zones, verify no dependent services reference them
 
 > Private DNS is low-cost by nature — focus optimization on zone hygiene rather than query volume.
+>
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve dns DescribePrice` for current quotes.

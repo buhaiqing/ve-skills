@@ -37,10 +37,10 @@ PolarDB's key architectural advantage:
 
 ### Benefits
 
-1. **Elastic Scalability**: Scale compute and storage independently
-2. **Cost Efficiency**: Pay for compute when needed; storage is shared
-3. **High Performance**: Shared storage eliminates replication lag
-4. **High Availability**: Automatic failover with shared storage
+1. ✅ **Elastic Scalability** — Scale compute and storage independently
+2. ✅ **Cost Efficiency** — Pay for compute when needed; storage is shared
+3. ✅ **High Performance** — Shared storage eliminates replication lag
+4. ✅ **High Availability** — Automatic failover with shared storage
 
 ## Node Types
 
@@ -129,16 +129,16 @@ PolarDB supports automatic and manual failover:
 ### Automatic Failover
 
 - Triggers when primary node fails
-- Secondary node promoted to primary
-- Typically completes in < 30 seconds
-- No data loss (shared storage)
+- → Secondary node promoted to primary
+- ✅ Typically completes in < 30 seconds
+- ✅ No data loss (shared storage)
 
 ### Manual Failover
 
 - User-initiated via `FailoverDBCluster` API
-- Useful for maintenance windows
-- Secondary node promoted to primary
-- Old primary becomes secondary
+- ℹ️ Useful for maintenance windows
+- → Secondary node promoted to primary
+- → Old primary becomes secondary
 
 ## High Availability
 

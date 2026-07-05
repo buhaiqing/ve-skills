@@ -2,31 +2,18 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Cost Overview
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Fault-tolerant batch |
+Security Groups are free of charge. There are no direct billing costs for security group rules or usage.
 
-## Cost Optimization Quick Reference
+## Cost Optimization Tips
 
-| Situation | Action | Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| Idle resource | Stop or delete | Up to 100% |
-| Over-provisioned | Right-size down | 25-75% |
-| Batch workload | Use Spot | 60-90% |
-| Unused attached resource | Detach and delete | 100% |
-| Long-term storage | Use lifecycle policy | 50-80% |
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Remove unused SGs | Orphaned security groups (not associated with any ENI) — delete | Simplifies management, eliminates audit noise |
+| Consolidate rules | Merge duplicate rules across SGs — fewer SGs to manage | Operational efficiency |
+| Audit regularly | Periodically review rules against least-privilege principle | Security + governance |
 
-## Query Current Prices
-
-```bash
-# Always query the pricing API for current rates
-ve security-group DescribePrice --<Param> value
-```
-
-> Prices change over time — never rely on hardcoded tables.
+> Security Group usage is free — focus optimization on governance and operational hygiene.
+>
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve security-group DescribePrice` for current quotes.

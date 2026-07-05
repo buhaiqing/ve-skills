@@ -2,31 +2,19 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Cost Optimization Tips
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Fault-tolerant batch |
-
-## Cost Optimization Quick Reference
-
-| Situation | Action | Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| Idle resource | Stop or delete | Up to 100% |
-| Over-provisioned | Right-size down | 25-75% |
-| Batch workload | Use Spot | 60-90% |
-| Unused attached resource | Detach and delete | 100% |
-| Long-term storage | Use lifecycle policy | 50-80% |
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Clean up idle listeners | Delete unused listener rules with no backend traffic | 100% of idle listener cost |
+| Consolidate ALBs | Merge multiple ALBs serving same VPC via path-based routing | ~50% on ALB hourly fee |
+| Reduce data transfer | Enable cross-zone load balancing only when needed | Variable (cross-zone transfer fee) |
 
 ## Query Current Prices
 
 ```bash
-# Always query the pricing API for current rates
-ve alb DescribePrice --<Param> value
+# Query current ALB pricing
+ve alb DescribePrice
 ```
 
-> Prices change over time — never rely on hardcoded tables.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve alb DescribePrice` for current quotes.

@@ -2,31 +2,18 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Cost Overview
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Fault-tolerant batch |
+IAM is free of charge. There are no direct billing costs for users, roles, policies, or API calls.
 
-## Cost Optimization Quick Reference
+## Cost Optimization Tips
 
-| Situation | Action | Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| Idle resource | Stop or delete | Up to 100% |
-| Over-provisioned | Right-size down | 25-75% |
-| Batch workload | Use Spot | 60-90% |
-| Unused attached resource | Detach and delete | 100% |
-| Long-term storage | Use lifecycle policy | 50-80% |
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Remove unused roles/policies | Delete stale IAM roles and orphaned policies | Simplifies governance |
+| Consolidate permissions | Merge duplicate inline policies into reusable managed policies | Reduces audit overhead |
+| Rotate access keys regularly | Old unused keys → deactivate and delete | Security best practice |
 
-## Query Current Prices
-
-```bash
-# Always query the pricing API for current rates
-ve iam DescribePrice --<Param> value
-```
-
-> Prices change over time — never rely on hardcoded tables.
+> IAM is free — focus optimization on governance and security hygiene.
+>
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve iam DescribePrice` for current quotes.

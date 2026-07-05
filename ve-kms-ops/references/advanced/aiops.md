@@ -9,21 +9,32 @@
     │
     ├── Is it key availability-related?
     │   ├── Key disabled or pending deletion → Check key state
-    │   │   ├── Accidental disable → Re-enable key
-    │   │   └── Scheduled deletion → Cancel deletion if still needed
-    │   └── Key rotation failed → Check permissions
+    │   │   ├── Key state = 'Disabled' with last rotation > 30 days → Accidental disable → Re-enable key
+    │   │   ├── Key pending deletion in < 7 days → Urgent — Cancel deletion if still needed
+    │   │   └── Key is 'PendingImport' > 7 days → Awaiting key material import
+    │   └── Key rotation failed > 3 consecutive attempts → Check permissions
+    │       ├── Rotate key before expiry > 7 days overdue → Manual rotation required
     │       └── Delegate to ve-iam-ops for role/policy audit
     │
     ├── Is it access-related?
-    │   ├── Decrypt failures increasing → Verify key access
-    │   │   ├── Key not found → Restore from backup
-    │   │   └── Permission denied → Check IAM policy
-    │   └── GenerateDataKey failures → Check key usage quota
+    │   ├── Decrypt failures > 10/min → Verify key access
+    │   │   ├── KMSInvalidStateException → Key disabled or pending deletion
+    │   │   ├── AccessDeniedException → IAM policy changed → Delegate to ve-iam-ops
+    │   │   └── Key not found → Restore from backup
+    │   ├── GenerateDataKey failures > 5/min → Check key usage quota
+    │   │   ├── ThrottlingException → Request rate exceeded → Backoff or quota increase
+    │   │   └── InvalidKeyUsageException → Key not enabled for GenerateDataKey
+    │   └── Unauthorized key access attempts > 3/day → Review CloudTrail logs
+    │       └── Investigate possible credential compromise
     │
     ├── Is it performance-related?
-    │   ├── API latency > 500ms → Check network
+    │   ├── API latency > 500ms (P99) → Check network
+    │   │   ├── Encrypt/Decrypt latency > 1s → HSM backing exhausted or region issue
     │   │   └── Delegate to ve-vpc-ops
-    │   └── Request throttling → Request quota increase
+    │   ├── Request throttling (ThrottlingException > 5/min) → Request quota increase
+    │   │   └── Check current TPS vs account limit (default 1000 TPS per key)
+    │   └── ReEncryptFrom latency > 2s → Cross-region key operation
+    │       └── Move workload to same region as source key
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```

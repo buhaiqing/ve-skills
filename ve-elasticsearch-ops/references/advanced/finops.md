@@ -2,31 +2,19 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Cost Optimization Tips
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Fault-tolerant batch |
-
-## Cost Optimization Quick Reference
-
-| Situation | Action | Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| Idle resource | Stop or delete | Up to 100% |
-| Over-provisioned | Right-size down | 25-75% |
-| Batch workload | Use Spot | 60-90% |
-| Unused attached resource | Detach and delete | 100% |
-| Long-term storage | Use lifecycle policy | 50-80% |
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Right-size node specs | Over-provisioned data nodes → downsize instance type | ~50% |
+| Reduce replica count | Index with 2+ replicas during hot phase → reduce to 1 after indexing completes | ~33% on storage cost |
+| Convert steady PostPaid to PrePaid | Running > 30d → 1yr PrePaid | ~35% |
 
 ## Query Current Prices
 
 ```bash
-# Always query the pricing API for current rates
-ve elasticsearch DescribePrice --<Param> value
+# Query current Elasticsearch instance pricing
+ve elasticsearch DescribePrice
 ```
 
-> Prices change over time — never rely on hardcoded tables.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve elasticsearch DescribePrice` for current quotes.

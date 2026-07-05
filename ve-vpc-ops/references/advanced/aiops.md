@@ -8,27 +8,43 @@
 [VPC Alarm Triggered]
     │
     ├── Is it connectivity-related?
-    │   ├── Instance unreachable → Check security group rules
+    │   ├── InstanceUnreachable > 2% → Check security group rules
     │   │   └── Delegate to ve-security-group-ops if SG change needed
-    │   ├── Route issue → Check VPC route tables
+    │   ├── PacketLoss > 0.5% → Check VPC route tables
     │   │   └── Delegate to ve-vpc-ops for route diagnosis
-    │   └── NAT not working → Check SNAT/DNAT rules
-    │       └── Review NAT gateway configuration
+    │   ├── NAT gateway drop rate > 1% → Check SNAT/DNAT rules
+    │   │   └── Review NAT gateway configuration or add more NAT
+    │   └── PING round-trip > 10ms → Check AZ placement or latency
+    │       └── Consider same-AZ placement for latency-sensitive traffic
     │
     ├── Is it bandwidth-related?
-    │   ├── Bandwidth at limit → Optimize or upgrade
+    │   ├── InboundBandwidth > 80% of limit → Optimize or upgrade
     │   │   └── Review traffic patterns → identify optimization
-    │   └── High packet loss → Check network quality
-    │       └── Ping/traceroute diagnostics
+    │   ├── OutboundBandwidth > 80% of limit → Optimize or upgrade
+    │   │   └── Review traffic patterns → identify optimization
+    │   └── High packet loss (> 0.1%) → Check network quality
+    │       └── Ping/traceroute diagnostics → check max MTU
     │
     ├── Is it configuration-related?
-    │   ├── Recent change → Review change log
+    │   ├── Recent change in last 1h → Review change log
     │   │   └── Rollback if needed → verify recovery
+    │   ├── SecurityGroupRuleChange > 5 in 24h → Review changes
+    │   │   └── Validate all new rules against security policy
     │   └── ACL/firewall rule issue → Review rules
     │       └── Delegate to ve-security-group-ops
     │
     └── Unknown pattern → Delegate to ve-cms-ops
 ```
+
+## Cross-Skill Routing
+
+| Symptom | Delegate To |
+|---------|------------|
+| EIP allocation exhausted / bandwidth exceeded | ve-eip-ops |
+| NAT gateway SNAT port exhaustion | ve-nat-ops |
+| VPN tunnel flapping or BGP session down | ve-vpn-ops |
+| CLB health check source IP blocked | ve-clb-ops |
+| Alarm correlation across network resources | ve-cms-ops |
 
 ## Alarm Storm Handling
 
