@@ -17,11 +17,11 @@ FunctionGraph (函数计算) is a serverless compute service that runs code in r
 
 ## How it Works
 
-1. A trigger detects an event (timer, HTTP request, message queue)
-2. FunctionGraph invokes the specified function with the event payload
-3. The function executes in an isolated runtime environment
-4. Results are returned synchronously or asynchronously
-5. Logs and metrics are collected for monitoring
+1. Trigger detects event (timer, HTTP request, message queue)
+2. → FunctionGraph invokes specified function with event payload
+3. → Function executes in isolated runtime
+4. → Results returned ✅ sync / ✅ async
+5. → ℹ️ Logs + metrics collected for monitoring
 
 ## Supported Runtimes
 

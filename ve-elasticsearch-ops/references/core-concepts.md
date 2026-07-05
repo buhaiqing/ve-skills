@@ -51,19 +51,19 @@ Volcengine Elasticsearch Service provides fully managed Elasticsearch clusters w
 
 | Factor | Recommendation |
 |--------|----------------|
-| **Shard size** | 10-50 GB per shard (target ~30 GB) |
+| **Shard size** | 10-50 GB per shard | ℹ️ Target ~30 GB
 | **Max shards per node** | < 1000 per GB of heap |
-| **Primary shards** | Set at index creation; cannot be changed |
+| **Primary shards** | Set at index creation; cannot be changed | ℹ️ Plan ahead
 | **Replica count** | 1 for production (2 for critical) |
 
 ### Index Lifecycle
 
 | Phase | Description |
 |-------|-------------|
-| **Hot** | Active indexing and querying — SSD storage |
-| **Warm** | Less frequent queries — lower-cost storage |
-| **Cold** | Rarely accessed — read-only, compressed |
-| **Delete** | Data retention expired — permanent removal |
+| **Hot** | ℹ️ Active indexing and querying — SSD storage |
+| **Warm** | ℹ️ Less frequent queries — lower-cost storage |
+| **Cold** | ℹ️ Rarely accessed — read-only, compressed |
+| **Delete** | ❌ Data retention expired — permanent removal |
 
 ## Elasticsearch Versions
 
@@ -145,7 +145,7 @@ Snapshots are stored in TOS-compatible object storage buckets. Each instance has
 
 | From | To | Supported | Notes |
 |------|----|-----------|-------|
-| 7.10 | 7.16 | Yes | Simple upgrade |
-| 7.10 | 8.5 | No | Must go through 7.16 first |
-| 7.16 | 8.5 | Yes | May require reindexing |
-| 8.5 | 8.10 | Yes | Minor upgrade |
+| 7.10 | 7.16 | ✅ Yes | Simple upgrade |
+| 7.10 | 8.5 | ❌ No | Must go through 7.16 first |
+| 7.16 | 8.5 | ✅ Yes | ⚠️ May require reindexing |
+| 8.5 | 8.10 | ✅ Yes | Minor upgrade |

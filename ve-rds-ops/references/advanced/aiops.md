@@ -8,23 +8,39 @@
 [RDS MySQL variant Alarm Triggered]
     │
     ├── Is it CPU/Memory-related?
-    │   ├── Yes → Check connection pool exhaustion
+    │   ├── CPU > 85% sustained 5min → Check connection pool exhaustion
+    │   │   ├── Threads_running > max_connections * 0.8 → Connection storm
+    │   │   ├── CPU > 85% + Memory > 80% → Buffer pool thrashing or full table scans
     │   │   └── Delegate to application team for connection pool tuning
+    │   ├── Memory > 85% → Check InnoDB buffer pool hit rate < 95%
+    │   │   └── Increase innodb_buffer_pool_size or optimize queries
     │   └── No → Continue...
     │
     ├── Is it storage/disk-related?
-    │   ├── Disk usage > 80% → Check data growth rate, cleanup old data
+    │   ├── Disk usage > 85% → Check data growth rate, binlog retention
+    │   │   ├── Binlog retention > 7 days → Reduce binlog expiry
+    │   │   ├── Undo tablespace growth > 10GB/week → Check long-running transactions
     │   │   └── Run cleanup queries → verify freespace
-    │   └── Slow queries → Check query execution plan
-    │       └── Use EXPLAIN to identify full table scans
+    │   ├── Slow queries (> 100/min) → Check query execution plan
+    │   │   ├── Full table scans detected (rows_examined >> rows_sent) → Missing index
+    │   │   └── Use EXPLAIN to identify full table scans
+    │   ├── IOPS > 90% of max throughput → Check checkpoint frequency
+    │   │   └── Increase innodb_io_capacity or optimize write-heavy queries
+    │   └── Temp table spill to disk > 10/min → Increase tmp_table_size
     │
     ├── Is it availability-related?
     │   ├── Instance unreachable → Check network path
+    │   │   ├── Connection refused → Instance in restart or failover
     │   │   └── Delegate to ve-vpc-ops for VPC/ENI diagnosis
-    │   ├── Replication lag > threshold → Check replica status
+    │   ├── Replication lag > 30s → Check replica status
+    │   │   ├── Seconds_Behind_Master > 300s → Heavy write load on primary
+    │   │   ├── Slave_IO_Running = No → Network or binlog corruption
     │   │   └── Verify network bandwidth between primary and replicas
-    │   └── Failover triggered → Check instance health
-    │       └── Review recent operations that may have caused failover
+    │   ├── Failover triggered → Check instance health
+    │   │   ├── Failovers > 2 in 24h → Instance instability or AZ issue
+    │   │   └── Review recent operations that may have caused failover
+    │   └── Connection count > max_connections * 0.85 → Connection pool exhausted
+    │       └── Kill idle connections or increase max_connections
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```

@@ -8,27 +8,40 @@
 [CLB Alarm Triggered]
     │
     ├── Is it backend-related?
-    │   ├── Backend unhealthy → Check backend health
+    │   ├── HealthyHostCount < 80% of target → Check backend health
     │   │   └── Delegate to ve-ecs-ops / ve-vke-ops as needed
-    │   ├── Backend overload → Check backend metrics
+    │   ├── BackendResponseTime p99 > 3s → Check backend metrics
     │   │   └── Scale backend or adjust load distribution
-    │   └── Connection limit → Check connection pool
-    │       └── Optimize backend connection settings
+    │   ├── ActiveConnections > 80% of max → Check connection pool
+    │   │   └── Optimize backend connection settings
+    │   └── NewConnections > 50000/min → Scale out or review traffic
+    │       └── Consider adding more backends
     │
     ├── Is it listener-related?
-    │   ├── Listener error → Check listener configuration
+    │   ├── Listener error > 1% → Check listener configuration
     │   │   └── Verify protocol, port, certificate
-    │   └── SSL handshake failure → Check certificates
-    │       └── Renew or update certificate
+    │   ├── SSL handshake failure > 10/min → Check certificates
+    │   │   └── Renew or update certificate
+    │   └── ListenerDropPackets > 0.1% → Check connection limit
+    │       └── Increase listener connection limit
     │
     ├── Is it routing-related?
     │   ├── Requests not reaching backends → Check rules
     │   │   └── Verify routing rules and target groups
-    │   └── 5xx errors from LB → Check LB health
+    │   └── LB 5xx error rate > 2% → Check LB health
     │       └── Review LB logs for error patterns
     │
     └── Unknown → Delegate to ve-cms-ops
 ```
+
+## Cross-Skill Routing
+
+| Symptom | Delegate To |
+|---------|------------|
+| Backend ECS instance unhealthy | ve-ecs-ops |
+| VPC subnet configuration / route table issue | ve-vpc-ops |
+| IAM permission for cross-account CLB backend | ve-iam-ops |
+| SSL certificate expired or invalid | ve-kms-ops |
 
 ## Alarm Storm Handling
 

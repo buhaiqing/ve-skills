@@ -8,24 +8,39 @@
 [TOS (Object Storage) Alarm Triggered]
     │
     ├── Is it capacity-related?
-    │   ├── Usage > 80% → Plan capacity expansion
+    │   ├── StorageUsed > 80% of bucket quota → Plan capacity expansion
     │   │   └── Review lifecycle policies → clean up old data
+    │   ├── BucketObjectCount > 2.5B (near 5B max) → Archive old objects
+    │   │   └── Enable transition to cold storage tier
     │   └── Quota approaching → Alert team → schedule cleanup
     │
     ├── Is it performance-related?
-    │   ├── High latency → Check throughput limits
+    │   ├── PutObject latency > 500ms → Check throughput limits
     │   │   └── Review access patterns → optimize requests
-    │   └── Low throughput → Check network bandwidth
+    │   ├── GetObject latency > 300ms → Review object size/network
+    │   │   └── Enable CDN for hot objects via ve-cdn-ops
+    │   └── Throughput < 50% of expected → Check network bandwidth
     │       └── Delegate to ve-vpc-ops if network issue
     │
     ├── Is it availability-related?
-    │   ├── Request errors > 1% → Check service health
+    │   ├── 5xx error rate > 2% → Check service health
     │   │   └── Review recent API call errors
-    │   └── Throttling detected → Review rate limits
-    │       └── Optimize request patterns or request quota increase
+    │   ├── Throttling (503 SlowDown) > 10/min → Review rate limits
+    │   │   └── Optimize request patterns or request quota increase
+    │   └── ListBucket errors > 1% → Check bucket policy or ACLs
+    │       └── Delegate to ve-iam-ops if permission issue
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation
 ```
+
+## Cross-Skill Routing
+
+| Symptom | Delegate To |
+|---------|------------|
+| CDN cache miss or stale cache for hot objects | ve-cdn-ops |
+| IAM bucket policy denied | ve-iam-ops |
+| Unexpected cost surge from storage usage | ve-billing-ops |
+| Network bandwidth / connectivity issue | ve-vpc-ops |
 
 ## Alarm Storm Handling
 

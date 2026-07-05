@@ -435,19 +435,19 @@ Poll describe (or head/get) until **404**, **NotFound**, or status indicates del
    # Latest releases: https://github.com/volcengine/volcengine-cli/releases
    
    # Example for macOS (ARM64 / Apple Silicon)
-   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-darwin-arm64 -o /usr/local/bin/ve
+   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-darwin-arm64 -o /usr/local/bin/ve
    chmod +x /usr/local/bin/ve
 
    # Example for macOS (x86_64 / Intel)
-   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-darwin-amd64 -o /usr/local/bin/ve
+   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-darwin-amd64 -o /usr/local/bin/ve
    chmod +x /usr/local/bin/ve
 
    # Example for Linux (x86_64)
-   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-linux-amd64 -o /usr/local/bin/ve
+   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-linux-amd64 -o /usr/local/bin/ve
    chmod +x /usr/local/bin/ve
 
    # Example for Linux (ARM64)
-   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-linux-arm64 -o /usr/local/bin/ve
+   curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-linux-arm64 -o /usr/local/bin/ve
    chmod +x /usr/local/bin/ve
    ```
 

@@ -4,19 +4,19 @@
 
 ### Domain Management Errors
 
-| Error Code | Description | Common Causes | Recovery Actions |
-|------------|-------------|---------------|------------------|
-| `DomainAlreadyExists` | Domain already registered in CDN | Attempting to add duplicate domain | Use existing domain or choose different name |
-| `DomainNotFound` | Specified domain not found | Wrong domain name, domain deleted, wrong region | Verify domain name and region |
-| `InvalidDomain.Format` | Invalid domain name format | Missing TLD, invalid characters, IP used | Use valid FQDN (e.g., cdn.example.com) |
-| `DomainStatusError` | Domain in invalid state for operation | Trying to delete online domain, modify processing domain | Stop domain first, wait for processing to complete |
-| `DomainQuotaExceeded` | Domain quota limit reached | Account has max domains (default 100) | Contact support to increase quota or delete unused domains |
+| Error Code | Issue & Cause | Agent Action |
+|------------|--------------|--------------|
+| `DomainAlreadyExists` | Domain already in CDN — duplicate add | Use existing domain or different name |
+| `DomainNotFound` | Domain not found — wrong name/deleted/region | Verify domain name and region |
+| `InvalidDomain.Format` | Invalid format — missing TLD/IP used | Use valid FQDN (e.g., cdn.example.com) |
+| `DomainStatusError` | Wrong state — online/deleting domain | Stop domain first, wait for processing |
+| `DomainQuotaExceeded` | Quota limit — max 100 domains | Delete unused or request increase |
 
 ### Origin Configuration Errors
 
-| Error Code | Description | Common Causes | Recovery Actions |
-|------------|-------------|---------------|------------------|
-| `InvalidOrigin.NotReachable` | Origin server not responding | Origin down, network issue, wrong IP/domain | Verify origin is accessible via curl/ping |
+| Error Code | Issue & Cause | Agent Action |
+|------------|--------------|--------------|
+| `InvalidOrigin.NotReachable` | Origin unreachable — down/network | Verify origin via curl/ping |
 | `InvalidOriginType` | Invalid origin type specified | Typo in origin type value | Use: domain, ip, or tos |
 | `OriginConnectionTimeout` | Cannot connect to origin within timeout | Origin slow, network latency, firewall blocking | Check origin health, increase timeout |
 | `OriginConnectionRefused` | Connection actively refused | Origin service not running, wrong port | Verify origin service and port |
@@ -25,61 +25,61 @@
 
 ### HTTPS/Certificate Errors
 
-| Error Code | Description | Common Causes | Recovery Actions |
-|------------|-------------|---------------|------------------|
-| `InvalidCertificate.Format` | Certificate not in valid PEM format | Wrong encoding, missing headers, binary file | Convert to PEM format with proper headers |
-| `InvalidCertificate.Expired` | Certificate has expired | Certificate past validity date | Renew certificate |
-| `CertificateMismatch.Domain` | Certificate CN/SAN doesn't match domain | Wrong certificate for domain, wildcard mismatch | Use correct certificate |
-| `CertificateMismatch.Key` | Private key doesn't match certificate | Key from different pair | Use matching key |
-| `InvalidPrivateKey.Format` | Private key not in valid format | Wrong encoding, encrypted key | Provide unencrypted PEM key |
-| `TlsVersionNotSupported` | Specified TLS version not available | Using deprecated TLS 1.0/1.1 | Use tlsv1.2+ or tlsv1.3 |
-| `TlsHandshakeError` | TLS handshake failed | Cipher mismatch, protocol error | Check TLS configuration |
+| Error Code | Issue & Cause | Agent Action |
+|------------|--------------|--------------|
+| `InvalidCertificate.Format` | Not valid PEM — wrong encoding/headers | Convert to PEM format |
+| `InvalidCertificate.Expired` | Certificate past validity date | Renew certificate |
+| `CertificateMismatch.Domain` | CN/SAN doesn't match domain | Use correct certificate |
+| `CertificateMismatch.Key` | Private key doesn't match cert | Use matching key pair |
+| `InvalidPrivateKey.Format` | Wrong encoding or encrypted | Provide unencrypted PEM key |
+| `TlsVersionNotSupported` | Deprecated TLS 1.0/1.1 | Use tlsv1.2+ or tlsv1.3 |
+| `TlsHandshakeError` | Cipher/protocol mismatch | Check TLS configuration |
 
 ### Cache Configuration Errors
 
-| Error Code | Description | Common Causes | Recovery Actions |
-|------------|-------------|---------------|------------------|
-| `InvalidCacheRule.Syntax` | Cache rule syntax error | Invalid JSON, missing required fields | Check rule JSON format |
-| `InvalidCacheRule.Type` | Invalid rule type | Typo in RuleType | Use: path, filetype, directory, fullpath, home |
-| `InvalidCacheRule.TTL` | TTL value out of range | Negative number, exceeds max | Use 0-31536000 seconds |
-| `CacheRuleConflict` | Overlapping or conflicting rules | Same priority, overlapping patterns | Adjust priorities or patterns |
-| `CacheRuleLimitExceeded` | Too many cache rules | More than 50 rules | Remove unused rules, consolidate |
-| `InvalidCacheRule.Priority` | Invalid priority value | Negative, duplicate, out of order | Use positive integers, unique values |
+| Error Code | Issue & Cause | Agent Action |
+|------------|--------------|--------------|
+| `InvalidCacheRule.Syntax` | Invalid JSON / missing fields | Check rule JSON format |
+| `InvalidCacheRule.Type` | Typo in RuleType | Use: path, filetype, directory, fullpath, home |
+| `InvalidCacheRule.TTL` | TTL out of range (neg/too high) | Use 0-31536000 seconds |
+| `CacheRuleConflict` | Overlapping patterns/priorities | Adjust priorities or patterns |
+| `CacheRuleLimitExceeded` | >50 rules — limit | Remove/consolidate rules |
+| `InvalidCacheRule.Priority` | Negative/duplicate/out-of-order | Use positive integers, unique |
 
 ### Access Control Errors
 
-| Error Code | Description | Common Causes | Recovery Actions |
-|------------|-------------|---------------|------------------|
-| `InvalidIpFilter.Format` | IP address format invalid | Wrong CIDR notation, invalid IP | Use valid IP or CIDR (e.g., 192.168.1.0/24) |
-| `IpFilterLimitExceeded` | Too many IP addresses | Exceeds limit per filter | Consolidate using CIDR ranges |
-| `InvalidReferer.Format` | Referer format invalid | Wildcard misuse, invalid characters | Use valid domain patterns |
-| `InvalidUaFilter.Format` | User-Agent format invalid | Invalid characters, too long | Use valid string |
-| `AccessControlConflict` | Conflicting access rules | Whitelist and blacklist both active | Choose one filter type |
+| Error Code | Issue & Cause | Agent Action |
+|------------|--------------|--------------|
+| `InvalidIpFilter.Format` | Invalid IP/CIDR format | Use valid IP or CIDR |
+| `IpFilterLimitExceeded` | Too many IPs — exceeds filter limit | Consolidate with CIDR ranges |
+| `InvalidReferer.Format` | Wildcard misuse / invalid chars | Use valid domain patterns |
+| `InvalidUaFilter.Format` | Invalid chars / too long | Use valid string |
+| `AccessControlConflict` | Whitelist & blacklist both active | Choose one filter type |
 
 ### Cache Purge Errors
 
-| Error Code | Description | Common Causes | Recovery Actions |
-|------------|-------------|---------------|------------------|
-| `QuotaExceeded.Refresh` | Daily URL purge quota exhausted | Exceeded 10,000 URL limit | Wait for next day or contact support |
-| `QuotaExceeded.DirRefresh` | Daily directory purge quota exhausted | Exceeded 100 directory limit | Wait for next day |
-| `InvalidUrl.Format` | URL format invalid | Missing protocol, malformed URL | Use full HTTPS URL |
-| `InvalidUrl.Domain` | URL domain not in CDN | Wrong domain, domain deleted | Verify domain is in CDN |
-| `InvalidUrl.Path` | URL path invalid | Special characters not encoded | URL-encode special characters |
-| `TaskSubmitFailed` | Failed to submit purge task | Temporary error, rate limit | Retry after delay |
-| `TaskNotFound` | Specified task ID not found | Wrong task ID, task expired | Verify task ID |
+| Error Code | Issue & Cause | Agent Action |
+|------------|--------------|--------------|
+| `QuotaExceeded.Refresh` | Exceeded 10K URL/day limit | Retry next day or contact support |
+| `QuotaExceeded.DirRefresh` | Exceeded 100 dir/day limit | Retry next day |
+| `InvalidUrl.Format` | Missing protocol / malformed | Use full HTTPS URL |
+| `InvalidUrl.Domain` | Domain not in CDN | Verify domain in CDN |
+| `InvalidUrl.Path` | Special chars not encoded | URL-encode special characters |
+| `TaskSubmitFailed` | Temporary error / rate limit | Retry after delay |
+| `TaskNotFound` | Wrong ID / task expired | Verify task ID |
 
 ### API/Authentication Errors
 
-| Error Code | HTTP Status | Description | Recovery Actions |
-|------------|-------------|-------------|------------------|
-| `Unauthorized` | 403 | Insufficient permissions | Attach CDNFullAccess IAM policy |
-| `InvalidAccessKey` | 403 | Access key invalid or expired | Check VOLCENGINE_ACCESS_KEY |
-| `SignatureDoesNotMatch` | 403 | Request signature invalid | Check VOLCENGINE_SECRET_KEY |
-| `MissingAuthenticationToken` | 401 | Missing authentication | Provide access credentials |
-| `InvalidRegion` | 400 | Region code invalid | Use valid region code |
-| `Throttling` | 429 | Rate limit exceeded | Implement backoff, reduce request rate |
-| `InternalError` | 500 | Internal server error | Retry with exponential backoff |
-| `ServiceUnavailable` | 503 | Service temporarily unavailable | Retry after delay |
+| Error Code | Issue & Cause | Agent Action |
+|------------|--------------|--------------|
+| `Unauthorized` | 403 — insufficient permissions | Attach CDNFullAccess IAM policy |
+| `InvalidAccessKey` | 403 — access key invalid/expired | Check VOLCENGINE_ACCESS_KEY |
+| `SignatureDoesNotMatch` | 403 — signature mismatch | Check VOLCENGINE_SECRET_KEY |
+| `MissingAuthenticationToken` | 401 — missing auth | Provide access credentials |
+| `InvalidRegion` | 400 — invalid region code | Use valid region code |
+| `Throttling` | 429 — rate limit | Backoff + reduce request rate |
+| `InternalError` | 500 — server error | Retry with exponential backoff |
+| `ServiceUnavailable` | 503 — service down | Retry after delay |
 
 ## Common Issues and Solutions
 

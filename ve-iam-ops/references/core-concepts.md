@@ -117,10 +117,10 @@ User/Role Request
 
 ## Policy Evaluation Logic
 
-1. **Default deny**: All requests are denied by default
-2. **Explicit allow**: Matching `Allow` statement grants access
-3. **Explicit deny**: Matching `Deny` statement overrides all allows
-4. **Permission boundary**: Maximum permissions a user/role can have
+1. ❌ **Default deny** — All requests denied by default
+2. ✅ **Explicit allow** — Matching `Allow` grants access
+3. ❌ **Explicit deny** — Matching `Deny` overrides all allows
+4. ⚠️ **Permission boundary** — Maximum permissions a user/role can have
 
 ## ARN Format
 

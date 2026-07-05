@@ -6,6 +6,12 @@
 
 ---
 
+# Common JSON Paths:
+# CreateVpc: $.Result.VpcId
+# DescribeSubnets: $.Result.Subnets[]
+# DescribeVpcs: $.Result.Vpcs[]
+# Pagination: $.Result.TotalCount
+
 ## Table of Contents
 
 1. [API Overview](#1-api-overview)

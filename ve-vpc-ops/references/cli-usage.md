@@ -48,7 +48,7 @@ ARCH=$(uname -m)
 [ "$ARCH" = "x86_64" ] && ARCH="amd64"
 [ "$ARCH" = "aarch64" ] && ARCH="arm64"
 
-VE_VERSION="v1.0.42"
+VE_VERSION="{{env.ve_version}}"
 curl -fsSL "https://github.com/volcengine/volcengine-cli/releases/download/${VE_VERSION}/ve-${OS}-${ARCH}" -o /usr/local/bin/ve
 chmod +x /usr/local/bin/ve
 

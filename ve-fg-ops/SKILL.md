@@ -422,10 +422,10 @@ Expected: `{{user.trigger_name}}` appears in the list.
 
 ```bash
 # macOS ARM64
-curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-darwin-arm64 -o /usr/local/bin/ve && chmod +x /usr/local/bin/ve
+curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-darwin-arm64 -o /usr/local/bin/ve && chmod +x /usr/local/bin/ve
 
 # Linux x86_64
-curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-linux-amd64 -o /usr/local/bin/ve && chmod +x /usr/local/bin/ve
+curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-linux-amd64 -o /usr/local/bin/ve && chmod +x /usr/local/bin/ve
 ```
 
 ### Configure Credentials

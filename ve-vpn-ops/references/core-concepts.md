@@ -51,11 +51,11 @@ Site-to-site VPN tunnel between VPN Gateway and Customer Gateway.
 | **Authentication** | Pre-shared key (PSK) or certificates |
 
 **Tunnel States:**
-- `Available`: Tunnel established and operational
-- `Pending`: Tunnel is being created
-- `Modifying`: Tunnel configuration is being updated
-- `Deleting`: Tunnel is being deleted
-- `Deleted`: Tunnel has been deleted
+- `Available` ✅ — Tunnel established and operational
+- `Pending` ⏳ — Tunnel is being created
+- `Modifying` ⏳ — Tunnel configuration is being updated
+- `Deleting` ⏳ — Tunnel is being deleted
+- `Deleted` ❌ — Tunnel has been deleted
 
 ### SSL VPN Server (SSL VPN服务端)
 
@@ -122,13 +122,13 @@ IPsec provides the encrypted tunnel for data transmission.
 
 | Aspect | Recommendation |
 |--------|----------------|
-| IKE Version | Use IKEv2 (more secure, faster reconnection) |
-| Encryption | Use AES-256-GCM or AES-256-CBC |
-| Authentication | Use SHA-256 or higher |
-| DH Group | Use group14 (2048-bit) or higher |
-| PFS | Enable PFS with group14 or higher |
-| PSK | Use strong pre-shared key (20+ random characters) |
-| Certificate | Use certificates instead of PSK when possible |
+| IKE Version | ✅ Use IKEv2 (more secure, faster reconnection) |
+| Encryption | ✅ Use AES-256-GCM or AES-256-CBC |
+| Authentication | ✅ Use SHA-256 or higher |
+| DH Group | ✅ Use group14 (2048-bit) or higher |
+| PFS | ✅ Enable PFS with group14 or higher |
+| PSK | ⚠️ Use strong pre-shared key (20+ random characters) |
+| Certificate | ✅ Use certificates instead of PSK when possible |
 
 ## Network Requirements
 

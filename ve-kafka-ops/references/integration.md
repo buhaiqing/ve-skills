@@ -15,7 +15,7 @@ ARCH=$(uname -m)
 [ "$ARCH" = "x86_64" ] && ARCH="amd64"
 [ "$ARCH" = "aarch64" ] && ARCH="arm64"
 
-curl -fsSL "https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-${OS}-${ARCH}" -o /usr/local/bin/ve
+curl -fsSL "https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-${OS}-${ARCH}" -o /usr/local/bin/ve
 chmod +x /usr/local/bin/ve
 
 # Verify
@@ -365,7 +365,7 @@ jobs:
       
       - name: Install ve CLI
         run: |
-          curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-linux-amd64 -o /usr/local/bin/ve
+          curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-linux-amd64 -o /usr/local/bin/ve
           chmod +x /usr/local/bin/ve
       
       - name: Configure credentials

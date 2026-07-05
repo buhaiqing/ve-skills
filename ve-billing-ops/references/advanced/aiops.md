@@ -12,19 +12,27 @@
     │   │   ├── Compute spike → Delegate to ve-ecs-ops for instance audit
     │   │   ├── Storage growth → Delegate to ve-tos-ops for lifecycle review
     │   │   └── Network cost → Delegate to ve-eip-ops / ve-nat-ops for traffic audit
-    │   └── Forecast > budget → Adjust budget or implement cost controls
+    │   ├── Forecast > budget → Adjust budget or implement cost controls
+    │   └── Cost anomaly score > 2.0 stddev from 30d avg → Investigate root cause
+    │       └── Check for new deployments, traffic shifts, or pricing changes
     │
     ├── Is it resource-related?
     │   ├── New resource created without cost tag → Add cost tags
     │   │   └── Enforce tagging policy → delegate to ve-iam-ops
     │   ├── Idle resource detected → Stop or right-size
     │   │   └── Delegate to ve-ecs-ops / ve-rds-ops / ve-redis-ops
-    │   └── Reserved instance underutilized → Modify or exchange RI
+    │   ├── Reserved instance underutilized → Modify or exchange RI
+    │   ├── Unused reserved instance coverage < 40% → Review reservation strategy
+    │   │   └── Sell unused RIs on marketplace or convert to on-demand
+    │   └── Storage cost growing > 20% MoM → Audit data lifecycle
+    │       └── Delegate to ve-tos-ops / ve-nas-ops for cleanup
     │
     ├── Is it subscription-related?
     │   ├── PrePaid instance expiring in < 30 days → Renew
     │   ├── Auto-renewal disabled → Enable auto-renewal
-    │   └── Payment overdue → Immediate payment required
+    │   ├── Payment overdue → Immediate payment required
+    │   └── Multi-resource renewal within same week → Plan batch renewal
+    │       └── Group renewals to avoid staggered expiration
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```

@@ -209,7 +209,7 @@ echo "✅ System compatible: $OS $ARCH_SUFFIX"
 download_ve_cli() {
     local attempt=1
     local max_attempts=5
-    local version="v1.0.42"
+    local version="{{env.ve_version}}"
     local mirrors=(
         "https://github.com/volcengine/volcengine-cli/releases/download/${version}/ve-${OS}-${ARCH_SUFFIX}"
         "https://mirror.volcengine.com/volcengine-cli/${version}/ve-${OS}-${ARCH_SUFFIX}"
@@ -427,7 +427,7 @@ bootstrap_go_runtime_enhanced() {
 
 #### Option 1: Manual Installation
 ```bash
-curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-linux-amd64 -o /usr/local/bin/ve
+curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-linux-amd64 -o /usr/local/bin/ve
 chmod +x /usr/local/bin/ve
 ve version
 ```

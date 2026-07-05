@@ -6,6 +6,12 @@
 
 ---
 
+# Common JSON Paths:
+# CreateLoadBalancer: $.Result.LoadBalancerId
+# DescribeLoadBalancers: $.Result.LoadBalancers[]
+# DescribeListeners: $.Result.Listeners[]
+# DescribeRules: $.Result.Rules[]
+
 ## Table of Contents
 
 1. [API Overview](#1-api-overview)

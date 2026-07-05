@@ -20,4 +20,4 @@
 | Unused projects | Delete stale projects | ~100% |
 | Verbose logging | Filter low-value logs | 20-60% |
 
-> Always query the SLS pricing API — never hardcode rates.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve sls DescribePrice` for current quotes.

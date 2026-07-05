@@ -8,24 +8,30 @@
 [SLS (Log Service) Alarm Triggered]
     │
     ├── Is it ingestion-related?
-    │   ├── Log ingestion rate dropping → Check source connectivity
+    │   ├── LogIngestionRate dropping > 30% → Check source connectivity
     │   │   ├── Agent/collector down → Restart log agent
     │   │   │   └── Delegate to ve-ecs-ops for instance health
-    │   │   └── Network issue → Check VPC connectivity
+    │   │   └── Network loss > 0.1% → Check VPC connectivity
     │   │       └── Delegate to ve-vpc-ops
-    │   ├── Throttling detected → Request quota increase
-    │   └── Data format errors → Check log parsing config
+    │   ├── IngestionThrottling > 100 req/s → Request quota increase
+    │   ├── DataFormatError > 10/min → Check log parsing config
+    │   └── LogShipperErrorRate > 1% → Reinstall or update shipper
+    │       └── Check shipper version compatibility
     │
     ├── Is it storage-related?
-    │   ├── Log storage > 80% → Adjust retention or expand
-    │   ├── Index size growing fast → Review index config
-    │   └── Cold storage > hot storage → Adjust tiering policy
+    │   ├── LogStorage usage > 80% → Adjust retention or expand
+    │   ├── IndexSize growing > 10% per day → Review index config
+    │   │   └── Consider full-text vs word split indexing
+    │   └── ColdStorage > HotStorage ratio > 3:1 → Adjust tiering policy
+    │       └── Review hot retention window
     │
     ├── Is it query-related?
-    │   ├── Query latency > 10s → Optimize query patterns
-    │   │   ├── Full scan query → Add time range filter
+    │   ├── QueryLatency p99 > 10s → Optimize query patterns
+    │   │   ├── FullScanQuery → Add time range filter
     │   │   └── Missing index → Create appropriate index
-    │   └── Concurrent query limit reached → Queue or throttle
+    │   ├── ConcurrentQueryLimit reached > 5/min → Queue or throttle
+    │   └── DashboardLoad time > 30s → Optimize dashboard queries
+    │       └── Reduce query time range or add pre-aggregation
     │
     └── Unknown pattern → Delegate to ve-cms-ops for correlation analysis
 ```

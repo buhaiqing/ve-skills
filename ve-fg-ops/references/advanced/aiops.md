@@ -8,26 +8,28 @@
 [Function Compute Alarm Triggered]
     │
     ├── Is it invocation-related?
-    │   ├── High error rate → Check function logs
+    │   ├── FunctionError rate > 1% → Check function logs
     │   │   └── Review recent deployments
-    │   ├── Timeout → Check downstream dependencies
+    │   ├── Timeout rate > 0.1% → Check downstream dependencies
     │   │   └── Optimize function or increase timeout
-    │   └── Throttling → Check concurrent executions
+    │   └── Throttles > 50/min → Check concurrent executions
     │       └── Request quota increase or optimize
     │
     ├── Is it resource-related?
-    │   ├── OOM → Increase memory or optimize code
-    │   │   └── Review memory usage patterns
-    │   ├── High CPU → Optimize function code
+    │   ├── MaxMemoryUsed > 80% of configured memory → OOM risk
+    │   │   └── Review memory usage patterns → increase memory
+    │   ├── CPU throttling > 10% → Optimize function code
     │   │   └── Check for infinite loops or heavy computation
-    │   └── Disk full → Clean up /tmp directory
+    │   └── EphemeralDiskUsed > 512 MB → Clean up /tmp directory
     │       └── Review temp file cleanup logic
     │
     ├── Is it cold start-related?
-    │   ├── Latency spike → Check function size
+    │   ├── ColdStart p50 latency > 1000ms → Check function size
     │   │   └── Enable provisioned concurrency if needed
-    │   └── Frequent cold starts → Review deployment package
-    │       └── Minimize package size
+    │   ├── Cold start rate > 20% → Review deployment package
+    │   │   └── Minimize package size or enable reserved concurrency
+    │   └── Initialization timeout > 5s → Optimize init logic
+    │       └── Move heavy init out of handler
     │
     └── Unknown → Check function execution logs
 ```

@@ -2,31 +2,19 @@
 
 > Deep FinOps analysis per TE-7. `core-concepts.md` links here.
 
-## Billing Model Comparison
+## Cost Optimization Tips
 
-| Model | Discount | Commitment | Best For |
-|-------|----------|------------|----------|
-| PostPaid | 0% | None | Variable workloads, testing |
-| PrePaid (1 year) | ~35% | 12 months | Steady production |
-| PrePaid (3 years) | ~50% | 36 months | Long-term infrastructure |
-| Spot | ~60-90% | Interruptible | Fault-tolerant batch |
-
-## Cost Optimization Quick Reference
-
-| Situation | Action | Savings |
-|-----------|--------|---------|
-| Instance running > 30 days | Convert PostPaid → PrePaid | ~35% |
-| Idle resource | Stop or delete | Up to 100% |
-| Over-provisioned | Right-size down | 25-75% |
-| Batch workload | Use Spot | 60-90% |
-| Unused attached resource | Detach and delete | 100% |
-| Long-term storage | Use lifecycle policy | 50-80% |
+| Tip | Action | 💰 Savings |
+|-----|--------|---------|
+| Use Infrequent Access tier | Move files not accessed in 30+ days to IA storage tier | ~60% on storage cost |
+| Implement lifecycle policy | Automatically transition data between Performance, Capacity, and IA tiers | 40-80% |
+| Delete orphaned snapshots | Old snapshots of deleted file systems — delete | 100% of snapshot cost |
 
 ## Query Current Prices
 
 ```bash
-# Always query the pricing API for current rates
-ve nas DescribePrice --<Param> value
+# Query current NAS pricing
+ve nas DescribePrice
 ```
 
-> Prices change over time — never rely on hardcoded tables.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve nas DescribePrice` for current quotes.

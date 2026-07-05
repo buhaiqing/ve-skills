@@ -18,4 +18,4 @@
 | Unused cluster | Stop or delete | Up to 100% |
 | Idle worker nodes | Scale to zero | Up to 100% |
 
-> Always query the pricing API for current rates — never hardcode prices.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve ark DescribePrice` for current quotes.

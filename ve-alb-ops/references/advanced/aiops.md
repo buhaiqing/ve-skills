@@ -8,24 +8,30 @@
 [ALB Alarm Triggered]
     │
     ├── Is it backend-related?
-    │   ├── Backend unhealthy → Check backend health
+    │   ├── HealthyHostCount < 80% of target → Check backend health
     │   │   └── Delegate to ve-ecs-ops / ve-vke-ops as needed
-    │   ├── Backend overload → Check backend metrics
+    │   ├── BackendResponseTime p99 > 2s → Check backend metrics
     │   │   └── Scale backend or adjust load distribution
-    │   └── Connection limit → Check connection pool
-    │       └── Optimize backend connection settings
+    │   ├── ActiveConnections > 80% of limit → Check connection pool
+    │   │   └── Optimize backend connection settings
+    │   └── RequestCount > 100000/min → Scale backend group
+    │       └── Consider adding more server group members
     │
     ├── Is it listener-related?
-    │   ├── Listener error → Check listener configuration
+    │   ├── Listener error > 1% → Check listener configuration
     │   │   └── Verify protocol, port, certificate
-    │   └── SSL handshake failure → Check certificates
-    │       └── Renew or update certificate
+    │   ├── SSL handshake failure > 10/min → Check certificates
+    │   │   └── Renew or update certificate
+    │   └── Listener drop count > 100/min → Check connection limit
+    │       └── Increase listener connection limit
     │
     ├── Is it routing-related?
-    │   ├── Requests not reaching backends → Check rules
+    │   ├── Requests not reaching backends > 1% → Check rules
     │   │   └── Verify routing rules and target groups
-    │   └── 5xx errors from LB → Check LB health
-    │       └── Review LB logs for error patterns
+    │   ├── ALB 5xx error rate > 2% → Check LB health
+    │   │   └── Review LB logs for error patterns
+    │   └── RuleEvaluationError > 1% → Review custom rules
+    │       └── Simplify complex routing rules
     │
     └── Unknown → Delegate to ve-cms-ops
 ```

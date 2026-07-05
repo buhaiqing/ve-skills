@@ -8,20 +8,24 @@
 [Cloud Monitor Alarm Triggered]
     │
     ├── Is it metric-related?
-    │   ├── Missing data → Check agent/metric source
+    │   ├── Missing data > 30% in evaluation window → Check agent/metric source
     │   │   └── Verify monitoring agent on target
-    │   ├── Stale data → Check metric ingestion pipeline
+    │   ├── MetricIngestionLag > 120s → Check metric ingestion pipeline
     │   │   └── Verify API endpoint reachability
-    │   └── Incorrect values → Check metric definition
+    │   ├── DataPoints < 50% of expected → Check metric collection interval
+    │   │   └── Review metric push frequency from target
+    │   └── Incorrect values (NaN, spikes > 3σ) → Check metric definition
     │       └── Review metric calculation logic
     │
     ├── Is it alarm-related?
-    │   ├── Alarm not firing → Check alarm rule configuration
+    │   ├── Alarm evaluation failure > 5% → Check alarm rule syntax
     │   │   └── Verify threshold and notification channel
-    │   ├── Alarm storm → Correlate and suppress
+    │   ├── Alarm storm > 100 alarms/5min → Correlate and suppress
     │   │   └── Use alarm grouping rules
-    │   └── Notification delivery failure → Check channel
-    │       └── Verify webhook/email/SMS configuration
+    │   ├── Notification delivery latency > 60s → Check channel
+    │   │   └── Verify webhook/email/SMS configuration
+    │   └── Same alarm firing > 10 times without resolution → Escalate
+    │       └── Review alarm threshold — may be too sensitive
     │
     └── Unknown → Escalate to monitoring platform team
 ```

@@ -1,24 +1,7 @@
 # KMS Troubleshooting Guide
 
-## Common API Error Codes
-
-| Error Code | Agent Action | Recovery |
-|-----------|-------------|----------|
-| `InvalidParameter` / 400 | **HALT** — parameter validation failed | Check parameter values against API docs |
-| `InvalidArn` / 400 | **HALT** — ARN format invalid | Verify ARN follows correct pattern |
-| `NotFound` / 404 | **HALT** — key/resource not found | Verify KeyId exists and is correct |
-| `Disabled` / 409 | **HALT** — key is disabled | Enable key using EnableKey operation |
-| `KMSInvalidState` / 409 | **HALT** — key in wrong state | Check key state and ensure compatible |
-| `InvalidKeyUsage` / 400 | **HALT** — key usage doesn't support operation | Use compatible key (e.g., ENCRYPT_DECRYPT for encryption) |
-| `DependencyViolation` / 409 | **HALT** — key in use by other resources | Remove dependencies (grants) before deletion |
-| `UnsupportedOperation` / 400 | **HALT** — operation not supported for key type | Use different key or operation |
-| `IncorrectEncryptionContext` / 400 | **HALT** — encryption context mismatch | Use same encryption context as encryption |
-| `InvalidCiphertext` / 400 | **HALT** — ciphertext malformed | Verify ciphertext is complete and correct |
-| `KeyUnavailable` / 503 | Retry with exponential backoff | Key temporarily unavailable |
-| `AccessDenied` / 403 | **HALT** — insufficient IAM permissions | Add required IAM policy |
-| `QuotaExceeded` / 429 | **HALT** — resource quota limit reached | Delete unused keys or request quota increase |
-| `Throttling` / 429 | Back off and retry | Exponential backoff, max 3 retries |
-| `InternalError` / 500 | Retry; then escalate with RequestId | Retry with backoff; **HALT** after 3 |
+> **Error taxonomy (codes, meanings, and recovery) lives in [`../SKILL.md`](../SKILL.md#error-taxonomy--10-product-specific-codes) under `## Error Taxonomy (≥ 10 Product-Specific Codes)`.**
+> This guide covers diagnostic order, common issues, and recovery procedures beyond the error-code-level resolution.
 
 ## Diagnostic Order
 

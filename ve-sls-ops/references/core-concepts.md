@@ -19,6 +19,6 @@ SLS (Simple Log Service / TLS) provides log collection, storage, indexing, analy
 ## How it Works
 
 1. Logtail agent on ECS collects log files
-2. Logs are sent to SLS topic for storage and indexing
-3. Indexed logs are searchable via SearchLogs API
-4. LogShipper delivers logs to TOS for long-term retention
+2. → Logs sent to SLS topic for storage and indexing
+3. → Indexed logs searchable via SearchLogs API ✅
+4. → LogShipper delivers logs to TOS for long-term retention

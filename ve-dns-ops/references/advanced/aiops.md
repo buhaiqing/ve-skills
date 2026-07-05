@@ -8,17 +8,22 @@
 [Private DNS Alarm Triggered]
     │
     ├── Is it resolution-related?
-    │   ├── High DNS query failure rate (> 1%) → Check zone health
-    │   │   ├── Zone misconfigured → Verify record sets
-    │   │   └── Upstream resolver unreachable → Check VPC DNS settings
-    │   └── Slow resolution (> 100ms) → Check recursive resolver
-    │       └── Delegate to ve-vpc-ops for VPC DNS endpoint check
+    │   ├── High DNS query failure rate (> 2%) → Check zone health
+    │   │   ├── NXDOMAIN ratio > 5% → Missing records or expired entries
+    │   │   ├── SERVFAIL ratio > 1% → Upstream resolver unreachable → Check VPC DNS settings
+    │   │   └── Zone misconfigured → Verify record sets
+    │   └── Slow resolution (> 200ms) → Check recursive resolver latency
+    │       ├── Authoritative response time > 100ms → Delegate to ve-vpc-ops for VPC DNS endpoint check
+    │       └── TTL too short causing upstream bursts → Increase TTL on stable records
     │
     ├── Is it configuration-related?
     │   ├── Recent zone change → Review change log
-    │   │   └── Rollback if misconfigured
+    │   │   ├── More than 5 changes in 10min → Possible misconfiguration — rollback
+    │   │   └── CNAME conflict with apex record → Remove conflicting record
     │   ├── Record conflict detected → Review overlapping records
-    │   └── Zone transfer failed → Check authorization
+    │   │   └── Same name mapped to multiple IPs → Validate intended resolution
+    │   └── Zone transfer failed (> 3 retries) → Check authorization
+    │       └── TSIG key mismatch or expired → Reconfigure AXFR/IXFR
     │
     ├── Is it quota-related?
     │   ├── Zone count approaching limit → Consolidate zones

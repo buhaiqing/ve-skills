@@ -14,21 +14,21 @@
 
 ## Common API Error Codes
 
-| Error Code | HTTP | Meaning | Agent Action |
-|------------|------|---------|--------------|
-| `InvalidDomainName` | 400 | Domain name format invalid | Use FQDN format (e.g., `example.com`) |
-| `DomainAlreadyExists` | 400 | Domain already in account | Use a different domain or check existing |
-| `DomainNotFound` | 404 | Domain does not exist | Verify the domain name or create it first |
-| `InvalidRecordType` | 400 | Record type not supported | Use A, AAAA, CNAME, MX, TXT, NS, SRV, or CAA |
-| `InvalidRecordValue` | 400 | Record value format invalid | Check value format per record type |
-| `DuplicateRecord` | 400 | Duplicate DNS record | Use UpdateRecord to modify existing |
-| `RecordNotFound` | 404 | Record does not exist | Verify RecordId |
-| `RecordLimitExceeded` | 400 | Record count limit reached | Delete unused records first |
-| `QuotaExceeded` | 400 | Domain quota exceeded | Request quota increase from support |
-| `InsufficientBalance` | 400 | Account balance insufficient | Recharge the account |
-| `Unauthorized` | 403 | IAM permission denied | Check IAM policies for DNS actions |
-| `Throttling` | 429 | Rate limit exceeded | Implement exponential backoff |
-| `InternalError` | 500 | Server-side error | Retry with backoff; escalate if persists |
+| Error Code | Meaning & Cause | Agent Action |
+|------------|-----------------|--------------|
+| `InvalidDomainName` | Domain name format invalid | Use FQDN format (e.g., `example.com`) |
+| `DomainAlreadyExists` | Domain already in account | Use different name or check existing |
+| `DomainNotFound` | 404 — Domain does not exist | Verify domain name or create first |
+| `InvalidRecordType` | 400 — Record type not supported | Use A, CNAME, MX, TXT, etc. |
+| `InvalidRecordValue` | 400 — Value format invalid | Check format per record type |
+| `DuplicateRecord` | 400 — Duplicate DNS record | Use UpdateRecord to modify |
+| `RecordNotFound` | 404 — Record does not exist | Verify RecordId |
+| `RecordLimitExceeded` | 400 — Record limit reached | Delete unused records first |
+| `QuotaExceeded` | 400 — Domain quota exceeded | Request increase from support |
+| `InsufficientBalance` | 400 — Insufficient balance | Recharge account |
+| `Unauthorized` | 403 — IAM permission denied | Check IAM policies for DNS |
+| `Throttling` | 429 — Rate limit | Exponential backoff |
+| `InternalError` | 500 — Server error | Retry with backoff; escalate if persists |
 
 ## Common DNS Issues
 

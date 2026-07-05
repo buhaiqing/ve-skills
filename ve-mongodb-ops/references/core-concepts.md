@@ -28,7 +28,7 @@ MongoDB Instance
 | Primary | 1 | Handles all writes |
 | Secondary | 2 | Replicate from primary, readable |
 
-- Auto failover (10-30s), majority write concern, minimum 3 nodes
+- ✅ Auto failover (10-30s), majority write concern, minimum 3 nodes
 
 ### Sharded Cluster (large-scale workloads)
 
@@ -38,7 +38,7 @@ MongoDB Instance
 | Config Server | 3 | Metadata |
 | Shard | 2-32 | Data storage (each = replica set) |
 
-- Horizontal scaling, auto data distribution via sharding, supports >TB datasets
+- ✅ Horizontal scaling, auto data distribution via sharding, supports >TB datasets
 
 ## MongoDB Versions
 
@@ -119,9 +119,9 @@ Query current limits via API. Typical defaults:
 
 ## Best Practices
 
-- Replica set for most workloads; sharded for >TB data
-- 30% storage headroom for growth
-- Deploy across multiple AZs
-- Create indexes for queried fields
-- Enable auto backups with adequate retention
-- Use VPC + IP whitelists + SSL/TLS
+- ✅ Replica set for most workloads; sharded for >TB data
+- ⚠️ 30% storage headroom for growth
+- ✅ Deploy across multiple AZs
+- ✅ Create indexes for queried fields
+- ✅ Enable auto backups with adequate retention
+- ✅ Use VPC + IP whitelists + SSL/TLS

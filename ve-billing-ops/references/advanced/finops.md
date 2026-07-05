@@ -35,7 +35,7 @@ ve billing DescribeBillSummaryByMonth --body '{"BillingPeriod":"{{env.BILLING_MO
 ve ecs DescribeInstanceTypes --body '{"InstanceTypeIds":["ecs.g3i.large"]}'
 ```
 
-> Prices change over time — always query the Price API for current rates rather than relying on hardcoded tables.
+> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve billing DescribePrice` for current quotes.
 
 ## Budget Alert Tiers
 

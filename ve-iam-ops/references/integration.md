@@ -229,7 +229,7 @@ jobs:
       
       - name: Install Volcengine CLI
         run: |
-          curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/v1.0.42/ve-linux-amd64 -o /usr/local/bin/ve
+          curl -fsSL https://github.com/volcengine/volcengine-cli/releases/download/{{env.ve_version}}/ve-linux-amd64 -o /usr/local/bin/ve
           chmod +x /usr/local/bin/ve
       
       - name: Configure credentials
