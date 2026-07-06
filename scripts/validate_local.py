@@ -90,7 +90,7 @@ def _check_error_taxonomy(root: Path) -> int:
             warnings.append(f"{skill}: missing ## Error Taxonomy")
             continue
 
-        severity_classifications = re.findall(r"^\|\s*`[^`]+`\s*\|\s*(HALT|RETRY)\s*\|", text, re.MULTILINE)
+        severity_classifications = re.findall(r"^\|\s*`[^`]+`\s*\|\s*[^|]+?\|\s*[^|]*?\*\*(HALT|RETRY)\*\*", text, re.MULTILINE)
 
         if len(severity_classifications) < 10:
             warnings.append(f"{skill}: ## Error Taxonomy has only {len(severity_classifications)} codes, need ≥10")

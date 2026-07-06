@@ -160,6 +160,10 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"
 ```bash
 ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 10
 ```
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand RDS for MySQL architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage RDS MySQL databases
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
 
 ## Capabilities at a Glance
 
@@ -424,6 +428,24 @@ ve rds_mysql ListDBInstanceIPLists --InstanceId "{{user.instance_id}}"
 ve rds_mysql ModifyDBInstanceIPList --InstanceId "{{user.instance_id}}" --body '{"IPList": ["10.0.0.0/8"], "ModifyMode": "Cover"}'
 ```
 
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidDBInstanceId.NotFound` | 实例 ID 不存在 | 0 retries; **HALT** — 检查 InstanceId 是否正确 |
+| `IncorrectDBInstanceState` | 实例状态不允许操作 | 0 retries; **HALT** — 等待实例进入 RUNNING 态后重试 |
+| `QuotaExceeded.DBInstance` | 实例数量已达配额上限 | 0 retries; **HALT** — 删除无用实例或申请提升配额 |
+| `OperationDenied.DeletionProtection` | 实例启用了删除保护 | 0 retries; **HALT** — 先关闭删除保护再操作 |
+| `InvalidParameter.StorageSpace` | 存储空间超出范围 [20-3000]GB | 0 retries; **HALT** — 提供合法的存储容量值 |
+| `InvalidParameter.NodeSpec` | 节点规格无效 | 0 retries; **HALT** — 通过 DescribeDBInstanceSpecs 查询可用规格 |
+| `InvalidAccountName` | 账号名称不符合命名规范 | 0 retries; **HALT** — 使用字母开头、2-32 位的账号名 |
+| `InvalidDatabaseName` | 数据库名称不符合命名规范 | 0 retries; **HALT** — 使用合法数据库名称格式 |
+| `InvalidSecurityGroupId` | 安全组 ID 无效 | 0 retries; **HALT** — 通过 ve-ecs-ops 验证安全组 |
+| `InsufficientBalance` | 账户余额不足 | 0 retries; **HALT** — 充值后重试 |
+| `BackupInProgress` | 实例正在备份中 | 0 retries; **HALT** — 等待备份完成后再操作 |
+| `Throttling` | 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 持续失败则记录 RequestId 并反馈 |
+
 ## Operational Best Practices
 
 - **Least privilege:** Grant IAM policies scoped to specific RDS MySQL operations and instance IDs; avoid blanket `rds_mysql:*` permissions.
@@ -443,6 +465,7 @@ ve rds_mysql ModifyDBInstanceIPList --InstanceId "{{user.instance_id}}" --body '
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — RDS monitoring metrics
 - [AIOps (Advanced)](references/advanced/aiops.md) — Diagnosis decision tree, alarm storm, inspection
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Database security baseline, SQL injection detection, access control, incident response
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
 - [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
 - [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + RDS-specific safety prompts

@@ -146,6 +146,11 @@ ve clb DescribeLoadBalancers --Region {{env.VOLCENGINE_REGION}}
 ve clb DescribeLoadBalancers --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand CLB architecture
+- [Common Operations](#execution-flows) — Create, manage, and configure load balancing
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk |
@@ -361,6 +366,23 @@ ve clb SetHealthCheckConfig \
 ```
 
 ---
+
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidLoadBalancerId` | CLB ID 不存在或格式错误 | 0 retries; **HALT** — 确认 LoadBalancerId 格式 `(clb-xxx)` |
+| `IncorrectLoadBalancerStatus` | CLB 状态不允许当前操作 | 0 retries; **HALT** — 等待状态变为 `active` |
+| `InvalidListenerId` | 监听器 ID 不存在或格式错误 | 0 retries; **HALT** — 确认 ListenerId |
+| `InvalidBackendServerId` | 后端服务器 ID 不存在或格式错误 | 0 retries; **HALT** — 确认 ECS 实例 ID 格式 `(i-xxx)` |
+| `QuotaExceeded.LoadBalancer` | CLB 实例数量已达配额上限 | 0 retries; **HALT** — 删除未使用的 CLB 或提额 |
+| `QuotaExceeded.Listener` | 监听器数量已达配额上限 | 0 retries; **HALT** — 删除未使用的监听器或提额 |
+| `PortConflict` | 监听器端口冲突（同一 CLB 上已存在） | 0 retries; **HALT** — 使用不同的端口 |
+| `InvalidAclId` | ACL ID 不存在或格式错误 | 0 retries; **HALT** — 确认访问控制列表 ID |
+| `InvalidCertificateId` | TLS 证书 ID 不存在或格式错误 | 0 retries; **HALT** — 确认证书 ID（仅 HTTPS 监听器需要） |
+| `BackendServer.Unhealthy` | 后端服务器健康检查不通过 | 0 retries; **HALT** — 检查 ECS 状态和应用健康情况 |
+| `Throttling` | 请求限流 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 记录 RequestId |
 
 ## Reference Directory
 

@@ -628,6 +628,7 @@ Generated skills MUST NOT introduce any of these:
 | [optimization-analysis.md](references/optimization-analysis.md) | Three-dimensional optimization framework |
 | [user-experience-spec.md](references/user-experience-spec.md) | Mandatory UX requirements for all generated skills |
 | [aiops-best-practices.md](references/advanced/aiops-best-practices.md) | Mandatory AIOps patterns for monitoring/diagnosis skills |
+| [finops.md](references/advanced/finops.md) | Mandatory FinOps patterns — cost optimization, pricing queries, per-skill finops.md enforcement |
 | [generation-guidance.md](references/generation-guidance.md) | Description optimization, eval queries, generation telemetry, version pinning |
 | [rubric.md](references/rubric.md) | GCL rubric — scoring dimensions for generated skills |
 | [prompt-templates.md](references/prompt-templates.md) | GCL prompt skeletons — Generator/Critic/Orchestrator templates |

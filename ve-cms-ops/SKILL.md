@@ -161,6 +161,11 @@ ve version
 ve metrics GetMetricData --Namespace Volcengine_ECS --MetricName CpuUtilization --Dimensions '[{"InstanceId":"i-xxxxx"}]' --StartTime $(($(date +%s)-3600))000 --EndTime $(date +%s)000 --Period 60
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand CMS architecture
+- [Common Operations](#execution-flows) — Create, manage, and set up monitoring
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -511,6 +516,23 @@ ve metrics DescribeContactGroups
 | `$.ContactGroups.ContactGroup[].Type` | string | Group type |
 
 ---
+
+## Error Taxonomy
+
+| `code` | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidAlarmRuleId` | 告警规则 ID 不存在或格式错误 | 0 retries; **HALT** — 检查 RuleId 格式 (rule-xxxxxxxxx) |
+| `InvalidContactGroup` | 通知组名称不存在或格式错误 | 0 retries; **HALT** — 通过 DescribeContactGroups 验证组名 |
+| `InvalidContactId` | 联系人 ID 不存在或格式错误 | 0 retries; **HALT** — 检查联系人 ID 是否有效 |
+| `QuotaExceeded.AlarmRule` | 告警规则数量超出配额限制 | 0 retries; **HALT** — 删除未使用规则或提额 |
+| `InvalidNamespace` | 监控命名空间不存在或无效 | 0 retries; **HALT** — 通过 ListMetrics 验证命名空间 (如 Volcengine_ECS) |
+| `InvalidMetricName` | 指标名称不存在或无效 | 0 retries; **HALT** — 验证 MetricName 是否在命名空间下可用 |
+| `InvalidPeriod` | 统计数据粒度无效或不被支持 | 0 retries; **HALT** — 使用支持的 Period 值 (60/300/3600) |
+| `InvalidThreshold` | 告警阈值超出有效范围 | 0 retries; **HALT** — 根据指标类型调整阈值 |
+| `DuplicateRuleName` | 告警规则名称已存在 | 0 retries; **HALT** — 使用唯一的规则名称 |
+| `Throttling` | 请求频率过高触发限流 | 3 retries/exponential/2s/4s/8s; **RETRY** — 背退等待后重试 |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 超过重试次数后 HALT 并记录 RequestId |
+| `Unauthorized` | 鉴权失败，权限不足 | 0 retries; **HALT** — 检查 IAM 策略是否包含 CMS 权限 |
 
 ## Reference Directory
 

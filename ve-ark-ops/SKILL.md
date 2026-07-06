@@ -1116,32 +1116,32 @@ ve ark ListEvaluationJobs --Region "{{env.VOLCENGINE_REGION}}" --Status "Succeed
 
 | Error Code | Meaning | Resolution |
 |-----------|---------|-----------|
-| `EndpointNotFound` | Endpoint does not exist | 0 retries; Check endpoint ID, suggest creation |
-| `EndpointAlreadyExists` | Endpoint name conflict | 0 retries; Suggest different name |
-| `ModelNotFound` | Model/version not found | 0 retries; List marketplace models for valid IDs |
-| `ModelNotTrainable` | Model does not support fine-tuning | 0 retries; Suggest trainable models |
-| `InvalidParameter` | Request validation failed | 1 retry; Align with OpenAPI schema |
-| `InvalidHyperParameters` | Training hyperparameters invalid | 0 retries; Check supported ranges |
-| `InvalidDatasetType` | Dataset type unsupported | 0 retries; Suggest supported types |
-| `DatasetAlreadyExists` | Dataset name conflict | 0 retries; Use different name |
-| `DatasetTooLarge` | Dataset exceeds size limit | 0 retries; Reduce dataset size |
-| `TosPathNotFound` | TOS data source unreachable | 0 retries; Verify TOS bucket/path |
-| `TrainingJobAlreadyExists` | Training job name conflict | 0 retries; Use different name |
-| `QuotaExceeded` | Resource quota reached | 0 retries; HALT — request quota increase |
-| `InsufficientBalance` | Account not funded | 0 retries; HALT — recharge required |
-| `InvalidVpcConfig` | VPC configuration invalid | 0 retries; Verify VPC/subnet in region |
-| `AccessDenied` | IAM permission denied | 0 retries; HALT — check IAM policies |
-| `EndpointInUse` | Endpoint has active traffic | 0 retries; Stop inference before delete |
-| `ResourceLimitExceeded` | GPU/resource limit hit | 0 retries; HALT — request quota increase |
-| Throttling | Rate limit exceeded | 3 retries/exponential; Backoff with delay |
-| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry, escalate with RequestId |
-| `InvalidJobStatus` | Job status invalid for action | 0 retries; HALT — check current status |
-| `InvalidModelVersion` | Model version doesn't support training/evaluation | 0 retries; HALT — select compatible version |
-| `TrainingJobNotFound` | Training job does not exist | 0 retries; HALT — verify job ID |
-| `DatasetNotFound` | Dataset does not exist | 0 retries; HALT — verify dataset ID |
-| `DependencyViolation` | Resource has dependencies | 0 retries; HALT — remove dependencies first |
-| `EvaluationJobNotFound` | Evaluation job does not exist | 0 retries; HALT — verify job ID |
-| `DatasetInUse` | Dataset referenced by active jobs | 0 retries; HALT — stop dependent jobs first |
+| `EndpointNotFound` | Endpoint does not exist | 0 retries; **HALT** — Check endpoint ID, suggest creation |
+| `EndpointAlreadyExists` | Endpoint name conflict | 0 retries; **RETRY** — Suggest different name |
+| `ModelNotFound` | Model/version not found | 0 retries; **HALT** — List marketplace models for valid IDs |
+| `ModelNotTrainable` | Model does not support fine-tuning | 0 retries; **HALT** — Suggest trainable models |
+| `InvalidParameter` | Request validation failed | 1 retry; **RETRY** — Align with OpenAPI schema |
+| `InvalidHyperParameters` | Training hyperparameters invalid | 0 retries; **HALT** — Check supported ranges |
+| `InvalidDatasetType` | Dataset type unsupported | 0 retries; **HALT** — Suggest supported types |
+| `DatasetAlreadyExists` | Dataset name conflict | 0 retries; **RETRY** — Use different name |
+| `DatasetTooLarge` | Dataset exceeds size limit | 0 retries; **HALT** — Reduce dataset size |
+| `TosPathNotFound` | TOS data source unreachable | 0 retries; **HALT** — Verify TOS bucket/path |
+| `TrainingJobAlreadyExists` | Training job name conflict | 0 retries; **RETRY** — Use different name |
+| `QuotaExceeded` | Resource quota reached | 0 retries; **HALT** — request quota increase |
+| `InsufficientBalance` | Account not funded | 0 retries; **HALT** — recharge required |
+| `InvalidVpcConfig` | VPC configuration invalid | 0 retries; **HALT** — Verify VPC/subnet in region |
+| `AccessDenied` | IAM permission denied | 0 retries; **HALT** — check IAM policies |
+| `EndpointInUse` | Endpoint has active traffic | 0 retries; **HALT** — Stop inference before delete |
+| `ResourceLimitExceeded` | GPU/resource limit hit | 0 retries; **HALT** — request quota increase |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Backoff with delay |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; **RETRY** — Retry, escalate with RequestId |
+| `InvalidJobStatus` | Job status invalid for action | 0 retries; **HALT** — check current status |
+| `InvalidModelVersion` | Model version doesn't support training/evaluation | 0 retries; **HALT** — select compatible version |
+| `TrainingJobNotFound` | Training job does not exist | 0 retries; **HALT** — verify job ID |
+| `DatasetNotFound` | Dataset does not exist | 0 retries; **HALT** — verify dataset ID |
+| `DependencyViolation` | Resource has dependencies | 0 retries; **HALT** — remove dependencies first |
+| `EvaluationJobNotFound` | Evaluation job does not exist | 0 retries; **HALT** — verify job ID |
+| `DatasetInUse` | Dataset referenced by active jobs | 0 retries; **HALT** — stop dependent jobs first |
 
 ## Prerequisites
 

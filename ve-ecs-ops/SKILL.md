@@ -172,6 +172,11 @@ ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}} --MaxResults 1
 ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand ECS architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage cloud servers
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | ⚡ Complexity | 🛡️ Risk Level |
@@ -925,6 +930,26 @@ ve ecs DescribeInstances --Region "{{user.region}}" | jq '[.Result.Instances[]] 
 
 ---
 
+## Error Taxonomy
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| `InvalidInstanceId.NotFound` | 指定的实例 ID 不存在 | 0 retries; **HALT** |
+| `IncorrectInstanceStatus` | 实例当前状态不允许执行该操作 | 3 retries/exponential/2s/4s/8s; **RETRY** |
+| `InvalidImageId.NotFound` | 指定的镜像 ID 不存在 | 0 retries; **HALT** |
+| `InvalidInstanceType.ValueNotSupported` | 指定的实例规格不支持 | 0 retries; **HALT** |
+| `QuotaExceeded.Instance` | 实例数量超出配额限制 | 0 retries; **HALT** |
+| `QuotaExceeded.EipAddress` | EIP 数量超出配额限制 | 0 retries; **HALT** |
+| `InsufficientAvailableStock` | 指定可用区资源不足 | 3 retries/exponential/5s/10s/20s; **RETRY** |
+| `InvalidPasswordFormat` | 密码不符合复杂度要求 | 0 retries; **HALT** |
+| `InvalidSecurityGroupId.NotFound` | 安全组 ID 不存在 | 0 retries; **HALT** |
+| `VolumeInUse` | 云盘已挂载到实例 | 0 retries; **HALT** |
+| `SnapshotInProgress` | 快照任务进行中，请稍后重试 | 3 retries/exponential/3s/6s/12s; **RETRY** |
+| `DeleteInstance.Protected` | 实例启用了删除保护 | 0 retries; **HALT** |
+| `InvalidSubnetId.NotFound` | 子网 ID 不存在 | 0 retries; **HALT** |
+| `InvalidVpcId.NotFound` | VPC ID 不存在 | 0 retries; **HALT** |
+| `InvalidAutoReleaseTime.Malformed` | 自动释放时间格式错误 | 0 retries; **HALT** |
+
 ## Quality Gate (GCL)
 
 > This chapter is **mandatory** for every execution of `ve-ecs-ops`. It implements
@@ -1013,6 +1038,7 @@ The Critic itself MUST NOT call any of the above — it only emits suggestions.
 - [Monitoring](references/monitoring.md)
 - [AIOps (Advanced)](references/advanced/aiops.md)
 - [FinOps (Advanced)](references/advanced/finops.md)
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Security baseline, incident response, vulnerability scanning, compliance mapping
 - [Integration](references/integration.md)
 - [User Experience Specification](../ve-skill-generator/references/user-experience-spec.md)
 - [Execution Environment Setup](../ve-skill-generator/references/execution-environment.md)

@@ -153,6 +153,11 @@ ve tls DescribeProjects --Region {{env.VOLCENGINE_REGION}}
 ve tls DescribeProjects --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand SLS architecture
+- [Common Operations](#execution-flows) — Create, manage, and collect and analyze logs
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -580,6 +585,23 @@ ve tls SearchLogs --Region "{{user.region}}" --ProjectId "{{user.project_id}}" -
 | Parse failures | Log format doesn't match extractor | Update extractor configuration |
 
 ---
+
+## Error Taxonomy
+
+| `code` | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidProjectName` | 日志项目名称格式无效或已存在 | 0 retries; **HALT** — 使用合法名称，避免重名 |
+| `InvalidTopicName` | 日志主题名称格式无效或已存在 | 0 retries; **HALT** — 使用合法名称，避免重名 |
+| `QuotaExceeded.Project` | 日志项目数量超出配额限制 | 0 retries; **HALT** — 删除未使用项目或提额 |
+| `QuotaExceeded.Shard` | 分片数量超出配额限制 | 0 retries; **HALT** — 合并分片或提额 |
+| `InvalidShardId` | 分片 ID 不存在或已合并 | 0 retries; **HALT** — 检查 ShardId 是否有效 |
+| `InvalidLogEntry` | 日志内容格式无效或超过大小限制 | 2 retries/exponential/5s/10s/20s; **RETRY** — 检查日志格式和大小 (< 1MB/条) |
+| `InvalidIndexConfig` | 索引配置格式无效或字段类型不支持 | 0 retries; **HALT** — 验证索引字段类型 (text/long/double/json) |
+| `ProjectNotActive` | 日志项目状态异常，不可写入 | 0 retries; **HALT** — 检查项目状态，联系技术支持 |
+| `InvalidAlarmId` | 告警规则 ID 不存在或格式错误 | 0 retries; **HALT** — 检查告警 ID 是否有效 |
+| `Throttling` | 请求频率过高触发限流 | 3 retries/exponential/2s/4s/8s; **RETRY** — 背退等待后重试 |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 超过重试次数后 HALT 并记录 RequestId |
+| `Unauthorized` | 鉴权失败，权限不足 | 0 retries; **HALT** — 检查 IAM 策略是否包含 TLS/SLS 权限 |
 
 ## Reference Directory
 

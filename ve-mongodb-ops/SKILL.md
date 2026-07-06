@@ -170,6 +170,11 @@ ve mongodb DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"
 ve mongodb DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 10
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand MongoDB architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage MongoDB databases
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk |
@@ -493,6 +498,23 @@ ve mongodb ModifyDBInstanceParameters \
   --Parameters '[{"ParameterName":"maxConnections","ParameterValue":"2000"}]'
 ```
 
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidInstanceId.NotFound` | 实例 ID 不存在 | 0 retries; **HALT** — 检查 InstanceId 是否正确 |
+| `IncorrectInstanceState` | 实例状态不允许操作 | 0 retries; **HALT** — 等待实例进入 RUNNING 态后重试 |
+| `QuotaExceeded.Instance` | 实例数量已达配额上限 | 0 retries; **HALT** — 删除无用实例或申请提升配额 |
+| `NodeCountLimitExceeded` | 节点数量超出限制 | 0 retries; **HALT** — 减少节点数量或申请提升配额 |
+| `StorageFull` | 存储空间已满 | 0 retries; **HALT** — 扩容存储或清理数据后重试 |
+| `InvalidParameter.MongoVersion` | MongoDB 版本无效 | 0 retries; **HALT** — 使用支持的版本：4.0/4.2/4.4/5.0/6.0 |
+| `InvalidParameter.NodeSpec` | 节点规格无效 | 0 retries; **HALT** — 检查可用规格配置 |
+| `OperationDenied.InstanceStatus` | 当前实例状态不允许操作 | 0 retries; **HALT** — 等待当前操作完成后再试 |
+| `BackupInProgress` | 实例正在备份中 | 0 retries; **HALT** — 等待备份完成后再操作 |
+| `ResourceNotFound.Vpc` | VPC 不存在 | 0 retries; **HALT** — 通过 ve-vpc-ops 验证 VPC ID |
+| `Throttling` | 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 持续失败则记录 RequestId 并反馈 |
+
 ## Prerequisites
 
 1. **`ve` CLI** installed per execution environment
@@ -519,6 +541,7 @@ ve mongodb ModifyDBInstanceParameters \
 - [Monitoring & Alerts](references/monitoring.md) — MongoDB monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow
 - [Knowledge Base](references/advanced/knowledge-base.md) — fault pattern library
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Database security baseline, access control, injection prevention, incident response
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
 

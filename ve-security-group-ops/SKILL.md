@@ -147,6 +147,11 @@ ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}} --MaxResults 1
 ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand Security Group architecture
+- [Common Operations](#execution-flows) — Create, manage, and configure security groups and firewall rules
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -577,6 +582,25 @@ ve vpc DescribeSecurityGroupAttributes --Region "{{user.region}}" --SecurityGrou
 
 ---
 
+## Error Taxonomy
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| `InvalidSecurityGroupId.NotFound` | 指定的安全组 ID 不存在 | 0 retries; **HALT** |
+| `InvalidVpcId.NotFound` | 指定的 VPC ID 不存在 | 0 retries; **HALT** |
+| `QuotaExceeded.SecurityGroup` | 安全组数量超出配额限制 | 0 retries; **HALT** |
+| `QuotaExceeded.SecurityGroupRule` | 安全组规则数量超出配额限制 | 0 retries; **HALT** |
+| `InvalidCidrBlock.Malformed` | CIDR 地址段格式错误 | 0 retries; **HALT** |
+| `InvalidPortRange.Malformed` | 端口范围格式错误 | 0 retries; **HALT** |
+| `InvalidProtocol.NotSupported` | 协议类型不支持 | 0 retries; **HALT** |
+| `DuplicateRule.Exists` | 同一条规则已存在 | 0 retries; **HALT** |
+| `InvalidPriority.OutOfRange` | 优先级超出 1-100 范围 | 0 retries; **HALT** |
+| `DefaultSecurityGroup.NotModifiable` | 默认安全组不可修改规则 | 0 retries; **HALT** |
+| `SecurityGroup.InUse` | 安全组已被实例关联，无法删除 | 0 retries; **HALT** |
+| `InvalidDirection.NotSupported` | 规则方向不支持，仅支持 ingress/egress | 0 retries; **HALT** |
+| `Throttling` | 安全组 API 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 安全组服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** |
+ 
 ## Reference Directory
 
 - [Core Concepts](references/core-concepts.md)
@@ -591,6 +615,7 @@ ve vpc DescribeSecurityGroupAttributes --Region "{{user.region}}" --SecurityGrou
 - [FinOps Best Practices](../ve-skill-generator/references/finops-best-practices.md)
 - [GCL Rubric](references/rubric.md)
 - [GCL Prompt Templates](references/prompt-templates.md)
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Network security baseline, rule audit, incident response, compliance checks
 
 ## Operational Best Practices
 

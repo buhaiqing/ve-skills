@@ -150,6 +150,11 @@ ve tos ListBuckets
 tosutil ls -s
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand TOS architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage object storage
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Level |
@@ -863,6 +868,24 @@ ve billing DescribeBillDetail --BillingCycle "{{user.billing_cycle}}" --ProductT
 ```
 
 ---
+
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidBucketName` | Bucket 名称不符合命名规范 | 0 retries; **HALT** — 3-63 字符，小写字母/数字/连字符 |
+| `BucketAlreadyExists` | Bucket 名称已被占用 | 0 retries; **HALT** — 使用全局唯一的 bucket 名称 |
+| `BucketNotFound` | 指定的 Bucket 不存在 | 0 retries; **HALT** — 确认 bucket 名称和区域 |
+| `InvalidObjectName` | 对象键（Key）格式无效 | 0 retries; **HALT** — 使用 URL 安全字符，编码特殊字符 |
+| `ObjectNotFound` | 指定的对象不存在 | 0 retries; **HALT** — 确认对象键和 bucket 名称 |
+| `QuotaExceeded.Bucket` | Bucket 数量已达账户配额 | 0 retries; **HALT** — 删除未使用的 bucket 或提额 |
+| `QuotaExceeded.Storage` | 存储容量已达配额上限 | 0 retries; **HALT** — 清理过期对象或提额 |
+| `AccessDenied` | 访问被拒绝（IAM/ACL 权限不足） | 0 retries; **HALT** — 检查 IAM 策略和 bucket ACL |
+| `InvalidCorsRule` | CORS 规则配置无效 | 0 retries; **HALT** — 修正 AllowedOrigin/AllowedMethod/AllowedHeader |
+| `InvalidLifecycleRule` | 生命周期规则格式无效 | 0 retries; **HALT** — 检查 Days/Date/Prefix/Status 字段 |
+| `InvalidPolicyDocument` | Bucket 策略文档格式错误 | 0 retries; **HALT** — 检查 JSON 语法和 IAM 策略规范 |
+| `Throttling` | 请求限流 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 记录 RequestId |
 
 ## Reference Directory
 

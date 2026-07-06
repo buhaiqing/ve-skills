@@ -145,6 +145,10 @@ ve nat Gateway DescribeNatGateways --Region {{env.VOLCENGINE_REGION}}
 # List all NAT Gateways in the configured region
 ve nat Gateway DescribeNatGateways --Region {{env.VOLCENGINE_REGION}}
 ```
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand NAT Gateway architecture
+- [Common Operations](#execution-flows) — Create, manage, and configure NAT gateways
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
 
 ## Capabilities at a Glance
 
@@ -348,6 +352,23 @@ ve nat Gateway DeleteNatGateway --Region "{{user.region}}" --NatGatewayId "{{use
 ```
 
 ---
+
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidNatGatewayId` | NAT Gateway ID 不存在或格式错误 | 0 retries; **HALT** — 确认 NatGatewayId 格式 `(ngw-xxx)` |
+| `IncorrectNatGatewayStatus` | NAT 网关状态不允许当前操作 | 0 retries; **HALT** — 等待状态变为 `Available` |
+| `QuotaExceeded.SnatEntry` | SNAT 规则数量已达配额上限 | 0 retries; **HALT** — 删除未使用的 SNAT 规则或提额 |
+| `QuotaExceeded.DnatEntry` | DNAT 规则数量已达配额上限 | 0 retries; **HALT** — 删除未使用的 DNAT 规则或提额 |
+| `EipAddress.NotBound` | EIP 未绑定到当前 NAT 网关 | 0 retries; **HALT** — 通过 `ve-eip-ops` 先绑定 EIP |
+| `InvalidVpcId` | VPC ID 不存在或不在当前区域 | 0 retries; **HALT** — 通过 `ve-vpc-ops` 确认 VPC |
+| `InvalidSubnetId` | Subnet ID 不存在或不匹配 VPC | 0 retries; **HALT** — 确认子网存在且在相同 VPC |
+| `OperationDenied.NatGatewayStatus` | NAT 网关当前状态不允许该操作 | 0 retries; **HALT** — 等待上一个操作完成 |
+| `InvalidSnatEntry` | SNAT 规则参数无效（源 CIDR 或 EIP） | 0 retries; **HALT** — 检查 SourceCidr 格式和 EIP 地址 |
+| `InvalidDnatEntry` | DNAT 规则参数无效（端口/IP/协议） | 0 retries; **HALT** — 检查端口范围 (1-65535) 和协议类型 |
+| `Throttling` | 请求限流 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 记录 RequestId |
 
 ## Reference Directory
 

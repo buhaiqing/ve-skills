@@ -142,6 +142,11 @@ ve vpc DescribeVpcs --Region {{env.VOLCENGINE_REGION}}
 ve vpc DescribeVpcs --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand VPC architecture
+- [Common Operations](#execution-flows) — Create, manage, and configure virtual networks
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -340,6 +345,25 @@ ve vpc CreateRouteEntry \
 
 ---
 
+## Error Taxonomy
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| `InvalidVpcId.NotFound` | 指定的 VPC ID 不存在 | 0 retries; **HALT** |
+| `InvalidSubnetId.NotFound` | 指定的子网 ID 不存在 | 0 retries; **HALT** |
+| `InvalidCidrBlock.Malformed` | CIDR 地址段格式错误 | 0 retries; **HALT** |
+| `CidrBlock.Conflict` | CIDR 与现有 VPC/子网冲突 | 0 retries; **HALT** |
+| `QuotaExceeded.Vpc` | VPC 数量超出配额限制 | 0 retries; **HALT** |
+| `QuotaExceeded.Subnet` | 子网数量超出配额限制 | 0 retries; **HALT** |
+| `QuotaExceeded.RouteTable` | 路由表数量超出配额限制 | 0 retries; **HALT** |
+| `Vpc.InUse` | VPC 中存在子网或实例，无法删除 | 0 retries; **HALT** |
+| `Subnet.InUse` | 子网中存在实例，无法删除 | 0 retries; **HALT** |
+| `InvalidZoneId.NotFound` | 指定的可用区 ID 不存在 | 0 retries; **HALT** |
+| `InvalidRouteTableId.NotFound` | 指定的路由表 ID 不存在 | 0 retries; **HALT** |
+| `InvalidNextHopType.NotSupported` | 下一跳类型不支持 | 0 retries; **HALT** |
+| `Throttling` | VPC API 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | VPC 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** |
+ 
 ## Reference Directory
 
 - [Core Concepts](references/core-concepts.md)

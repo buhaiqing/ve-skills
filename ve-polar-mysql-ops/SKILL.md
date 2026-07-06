@@ -173,6 +173,10 @@ ve polardb_mysql DescribeDBClusters --Region "{{env.VOLCENGINE_REGION}}"
 ```bash
 ve polardb_mysql DescribeDBClusters --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 10
 ```
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand PolarDB for MySQL architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage PolarDB databases
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
 
 ## Capabilities at a Glance
 
@@ -486,6 +490,23 @@ ve polardb_mysql CreateParameterGroup \
   --ParameterGroupName "{{user.group_name}}" \
   --DBEngineVersion "{{user.db_version}}"
 ```
+
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidClusterId.NotFound` | 集群 ID 不存在 | 0 retries; **HALT** — 检查 ClusterId 是否正确 |
+| `IncorrectClusterState` | 集群状态不允许操作 | 0 retries; **HALT** — 等待集群进入 RUNNING 态后重试 |
+| `QuotaExceeded.Cluster` | 集群数量已达配额上限 | 0 retries; **HALT** — 删除无用集群或申请提升配额 |
+| `InvalidParameter.NodeClass` | 计算节点规格无效 | 0 retries; **HALT** — 通过 DescribeDBNodeClasses 查询可用规格 |
+| `InvalidParameter.StorageSpace` | 存储空间超出范围 [100-100000]GB | 0 retries; **HALT** — 提供合法的存储容量值 |
+| `InvalidZoneId` | 可用区 ID 无效 | 0 retries; **HALT** — 通过 DescribeAvailabilityZones 查询可用区 |
+| `InvalidSecurityGroupId` | 安全组 ID 无效 | 0 retries; **HALT** — 通过 ve-ecs-ops 验证安全组 |
+| `InvalidVpcId` | VPC ID 无效 | 0 retries; **HALT** — 通过 ve-vpc-ops 验证 VPC 是否存在 |
+| `OperationDenied.ClusterStatus` | 当前集群状态不允许操作 | 0 retries; **HALT** — 等待当前操作完成后再试 |
+| `InsufficientBalance` | 账户余额不足 | 0 retries; **HALT** — 充值后重试 |
+| `Throttling` | 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 持续失败则记录 RequestId 并反馈 |
 
 ## Prerequisites
 
