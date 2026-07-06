@@ -165,6 +165,11 @@ ve kms DescribeKeys --Region {{env.VOLCENGINE_REGION}}
 ve kms CreateKey --KeySpec AES_256 --KeyUsage ENCRYPT_DECRYPT --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand KMS architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage encryption keys
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -772,21 +777,21 @@ ve kms ListGrants --KeyId "{{user.key_id}}" --Region {{env.VOLCENGINE_REGION}}
 
 | Error Code | Meaning | Resolution |
 |------------|---------|-----------|
-| `InvalidParameter` | Request parameter invalid | 0 retries; Fix per OpenAPI docs |
-| `InvalidArn` | ARN format incorrect | 0 retries; Fix ARN format |
-| `NotFound` | Key or resource not found | 0 retries; Verify key ID exists |
-| `Disabled` | Key is disabled | 0 retries; Enable key first |
-| `KMSInvalidState` | Key in wrong state for operation | 0 retries; Check key state and retry |
-| `InvalidKeyUsage` | Key usage doesn't support operation | 0 retries; Use compatible key type |
-| `DependencyViolation` | Key in use by other resources | 0 retries; Remove dependencies first |
-| `UnsupportedOperation` | Operation not supported for key type | 0 retries; Use different key or operation |
-| `IncorrectEncryptionContext` | Encryption context mismatch | 0 retries; Provide matching context |
-| `InvalidCiphertext` | Ciphertext malformed | 0 retries; Verify ciphertext integrity |
-| `KeyUnavailable` | Key temporarily unavailable | 3 retries/2s/4s/8s; Retry with backoff |
-| `AccessDenied` | Insufficient IAM permissions | 0 retries; Add IAM policy |
-| `QuotaExceeded` | Resource quota limit reached | 0 retries; Request quota increase |
-| `Throttling` | Rate limit exceeded | 3 retries/exponential; Back off and retry |
-| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry then HALT |
+| `InvalidParameter` | Request parameter invalid | 0 retries; **RETRY** — Fix per OpenAPI docs |
+| `InvalidArn` | ARN format incorrect | 0 retries; **HALT** — Fix ARN format |
+| `NotFound` | Key or resource not found | 0 retries; **HALT** — Verify key ID exists |
+| `Disabled` | Key is disabled | 0 retries; **RETRY** — Enable key first |
+| `KMSInvalidState` | Key in wrong state for operation | 0 retries; **HALT** — Check key state and retry |
+| `InvalidKeyUsage` | Key usage doesn't support operation | 0 retries; **HALT** — Use compatible key type |
+| `DependencyViolation` | Key in use by other resources | 0 retries; **HALT** — Remove dependencies first |
+| `UnsupportedOperation` | Operation not supported for key type | 0 retries; **HALT** — Use different key or operation |
+| `IncorrectEncryptionContext` | Encryption context mismatch | 0 retries; **HALT** — Provide matching context |
+| `InvalidCiphertext` | Ciphertext malformed | 0 retries; **HALT** — Verify ciphertext integrity |
+| `KeyUnavailable` | Key temporarily unavailable | 3 retries/2s/4s/8s; **RETRY** — Retry with backoff |
+| `AccessDenied` | Insufficient IAM permissions | 0 retries; **HALT** — Add IAM policy |
+| `QuotaExceeded` | Resource quota limit reached | 0 retries; **HALT** — Request quota increase |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Back off and retry |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; **RETRY** — Retry, escalate with RequestId |
 
 ## Reference Directory
 
@@ -801,6 +806,7 @@ ve kms ListGrants --KeyId "{{user.key_id}}" --Region {{env.VOLCENGINE_REGION}}
 - [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
 - [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
 - [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + KMS-specific safety prompts
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Key security baseline, encryption governance, key lifecycle incident response
 
 ## Operational Best Practices
 

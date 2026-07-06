@@ -177,6 +177,11 @@ ve dns AddRecord \
   --Value "192.168.1.1"
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand DNS architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage domain resolution
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -959,6 +964,23 @@ ve dns ListDomains --Region {{env.VOLCENGINE_REGION}}
 | **NS** | Name server delegation | `ns1.example.com` | 86400 | Subdomain delegation |
 | **SRV** | Service location | `10 60 5060 sip.example.com` | 600 | Priority Weight Port Target |
 | **CAA** | Certificate authority auth | `0 issue "letsencrypt.org"` | 600 | CA authorization |
+
+## Error Taxonomy
+
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidDomainName` | Domain name format invalid | 0 retries; **HALT** — check domain format |
+| `InvalidRecordId` | Record ID does not exist | 0 retries; **HALT** — verify record ID |
+| `InvalidRecordSet` | Record set configuration invalid | 0 retries; **RETRY** — fix record parameters |
+| `RecordConflict` | Record conflicts with existing entry | 0 retries; **RETRY** — use different record name |
+| `QuotaExceeded.Domain` | Domain quota reached | 0 retries; **HALT** — request domain quota increase |
+| `QuotaExceeded.Record` | Record quota per domain reached | 0 retries; **HALT** — delete unused records |
+| `DomainNotRegistered` | Domain not registered | 0 retries; **HALT** — register domain first |
+| `DomainLocked` | Domain is locked / transfer prohibited | 0 retries; **HALT** — unlock domain first |
+| `InvalidLineType` | DNS line type unsupported | 0 retries; **HALT** — check supported line types |
+| `InvalidTtl` | TTL value out of allowed range | 0 retries; **RETRY** — set TTL within 60-86400s |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Back off and retry |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; **RETRY** — Retry, escalate with RequestId |
 
 ## Reference Directory
 

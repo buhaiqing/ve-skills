@@ -159,6 +159,11 @@ ve nas DescribeFileSystems --Region {{env.VOLCENGINE_REGION}}
 ve nas DescribeFileSystems --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand NAS architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage file storage
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -714,6 +719,23 @@ ve nas RestoreSnapshot --Region "{{user.region}}" --SnapshotId "{{user.snapshot_
 ```
 
 ---
+
+## Error Taxonomy
+
+| `code` | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidFileSystemId` | 文件系统 ID 不存在或格式错误 | 0 retries; **HALT** — 检查 FileSystemId 格式 (enas-xxxxxxxxx) |
+| `IncorrectFileSystemState` | 文件系统状态不允许当前操作 | 0 retries; **HALT** — 等待文件系统状态变为 running 后重试 |
+| `QuotaExceeded.FileSystem` | 文件系统数量超出配额限制 | 0 retries; **HALT** — 删除未使用文件系统或提额 |
+| `InvalidMountTargetId` | 挂载目标 ID 不存在或格式错误 | 0 retries; **HALT** — 检查 MountTargetId |
+| `InvalidPermissionGroup` | 权限组配置无效或不存在 | 0 retries; **HALT** — 检查权限组名称和 CIDR 规则 |
+| `StorageInsufficient` | 存储空间不足 | 2 retries/exponential/30s/60s/120s; **RETRY** — 清理文件或扩展容量 |
+| `InvalidVpcId` | VPC ID 不存在或不属于当前账号 | 0 retries; **HALT** — 通过 ve-vpc-ops 验证 VPC |
+| `InvalidSubnetId` | 子网 ID 不存在或不在指定 VPC 中 | 0 retries; **HALT** — 验证子网 ID 是否属于目标 VPC |
+| `Throttling` | 请求频率过高触发限流 | 3 retries/exponential/2s/4s/8s; **RETRY** — 背退等待后重试 |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 超过重试次数后 HALT 并记录 RequestId |
+| `FileSystemInUse` | 文件系统存在活跃挂载目标，无法删除 | 0 retries; **HALT** — 先删除所有挂载目标 |
+| `QuotaExceeded.Snapshot` | 快照数量超出配额限制 | 0 retries; **HALT** — 删除未使用快照或提额 |
 
 ## Reference Directory
 

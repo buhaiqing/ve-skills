@@ -48,6 +48,7 @@ Verify against `ve-skill-generator/SKILL.md` and `ve-skill-generator/references/
 | C12 | **Content dedup** | No duplicate operation flows across SKILL.md ↔ references/; TE-6 verified (see §Link & Dedup) |
 | C13 | **AIOps coverage** | `references/advanced/aiops.md` and `references/advanced/finops.md` exist for all required+recommended skills (23 total) |
 | C14 | Advanced AIOps coverage | `references/advanced/aiops.md` exists for all required+recommended skills |
+| **C17** | **SecurityOps coverage** | `references/advanced/securityops.md` exists for security-critical skills (security-group-ops, iam-ops, kms-ops, ecs-ops, rds-mysql-ops, redis-ops, mongodb-ops, elasticsearch-ops); recommended for all others |
 | **C15** | **`### What This Skill Does` (IMPORTANT)** | **MUST** exist with a clear 2-3 sentence description of the skill's purpose and boundary |
 | **C16** | **`## Operational Best Practices` (IMPORTANT)** | **MUST** exist with actionable operational guidance (monitoring, backup, security patterns) |
 
@@ -69,6 +70,7 @@ Verify against reality, not memory:
 | **F10** | **Dedup integrity** | No repeated content across multiple files; after every change run dedup check (see §Link & Dedup) |
 | **F11** | **Eval data coverage** | `assets/eval_queries.json` exists for all 29 skills with ≥ 5 trigger + ≥ 2 non-trigger cases |
 | **F11** | **FinOps coverage** | `references/advanced/finops.md` exists for required+recommended skills |
+| **F12** | **SecurityOps coverage** | `references/advanced/securityops.md` exists for security-critical skills (8); recommended for all others |
 
 **Fix every issue found in both rounds before responding "done".** If a finding requires information you don't have, mark it `[blocked: needs OpenAPI verification]`.
 

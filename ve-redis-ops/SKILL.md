@@ -137,6 +137,10 @@ ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"
 ```bash
 ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 10
 ```
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand Redis architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage Redis databases
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
 
 ## Capabilities at a Glance
 
@@ -377,6 +381,23 @@ ve redis DescribeDBInstanceParameters --InstanceId "{{user.instance_id}}"
 ve redis ModifyDBInstanceParameters --InstanceId "{{user.instance_id}}" --body '{"Parameters": [{"Name": "maxmemory-policy", "Value": "allkeys-lru"}]}'
 ```
 
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidInstanceId.NotFound` | 实例 ID 不存在 | 0 retries; **HALT** — 检查 InstanceId 是否正确 |
+| `IncorrectStatus.Instance` | 实例状态不允许操作 | 0 retries; **HALT** — 等待实例进入 Running 态后重试 |
+| `QuotaExceeded.Instance` | 实例数量已达配额上限 | 0 retries; **HALT** — 删除无用实例或申请提升配额 |
+| `OperationDenied.DeletionProtection` | 实例启用了删除保护 | 0 retries; **HALT** — 先关闭删除保护再操作 |
+| `InvalidParameter.Password` | 密码不符合 Redis 复杂度要求 | 0 retries; **HALT** — 使用 8-32 位含字母/数字/特殊字符的密码 |
+| `ResourceAlreadyExists` | 实例名称已存在 | 0 retries; **HALT** — 使用唯一的实例名称 |
+| `InsufficientBalance` | 账户余额不足 | 0 retries; **HALT** — 充值后重试 |
+| `InvalidVpcId` | VPC ID 无效 | 0 retries; **HALT** — 通过 ve-vpc-ops 验证 VPC 是否存在 |
+| `InvalidSecurityGroupId` | 安全组 ID 无效 | 0 retries; **HALT** — 通过 ve-ecs-ops 验证安全组 |
+| `BackupInProgress` | 实例正在备份中 | 0 retries; **HALT** — 等待备份完成后再操作 |
+| `Throttling` | 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 持续失败则记录 RequestId 并反馈 |
+
 ## Prerequisites
 
 1. **`ve` CLI** installed per execution environment docs
@@ -399,6 +420,7 @@ ve redis ModifyDBInstanceParameters --InstanceId "{{user.instance_id}}" --body '
 - [API & SDK Usage](references/api-sdk-usage.md) — Full operation map, JSON paths
 - [CLI Usage](references/cli-usage.md) — `ve redis` command reference
 - [Knowledge Base](references/advanced/knowledge-base.md) — fault pattern library (AIOps diagnosis)
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Cache security baseline, access control, data protection, incident response
 - [Troubleshooting Guide](references/troubleshooting.md) — Error codes, diagnostics
 - [Monitoring & Alerts](references/monitoring.md) — Redis monitoring metrics
 - [Integration](references/integration.md) — Go SDK setup, JIT workflow

@@ -168,6 +168,11 @@ ve elasticsearch DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 ve elasticsearch DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand Elasticsearch architecture
+- [Common Operations](#execution-flows) — Create, manage, and search and analyze data
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -1079,24 +1084,24 @@ done
 
 | Error Code | Meaning | Resolution |
 |------------|---------|-----------|
-| `InvalidParameter` | Request parameter invalid | 0 retries; Fix parameter and retry |
-| `InvalidInstance.NotFound` | Instance does not exist | 0 retries; HALT — verify instance ID |
-| `InvalidVpc.NotFound` | VPC does not exist | 0 retries; HALT — create VPC first |
-| `InvalidSubnet.NotFound` | Subnet does not exist | 0 retries; HALT — create subnet first |
-| `IndexAlreadyExists` | Index already exists | 0 retries; Use different name or delete first |
-| `IndexNotFound` | Index does not exist | 0 retries; Verify index name or create index |
-| `PluginAlreadyExists` | Plugin already installed | 0 retries; Plugin already installed — skip |
-| `PluginNotFound` | Plugin not available | 0 retries; Verify plugin name and ES version |
-| `PluginIncompatible` | Plugin incompatible with ES version | 0 retries; HALT — select compatible plugin |
-| `QuotaExceeded` | Resource quota exceeded | 0 retries; HALT — request quota increase |
-| `InsufficientBalance` | Account balance insufficient | 0 retries; HALT — recharge account |
-| `Unauthorized` | IAM permission denied | 0 retries; HALT — check IAM policies |
-| `InvalidInstanceStatus` | Instance status not valid for operation | 3 retries/10s; Wait and retry |
-| `IncompatibleVersion` | Upgrade version not supported | 0 retries; HALT — check version compatibility |
-| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry with backoff |
-| `Throttling` | Rate limit exceeded | 3 retries/1s/2s/4s; Back off and retry |
-| `ClusterHealthNotGreen` | Cluster health not Green/Yellow | 0 retries; HALT — fix cluster health first |
-| `SnapshotInProgress` | Snapshot already in progress | 3 retries/10s; Wait and retry |
+| `InvalidParameter` | Request parameter invalid | 0 retries; **RETRY** — Fix parameter and retry |
+| `InvalidInstance.NotFound` | Instance does not exist | 0 retries; **HALT** — verify instance ID |
+| `InvalidVpc.NotFound` | VPC does not exist | 0 retries; **HALT** — create VPC first |
+| `InvalidSubnet.NotFound` | Subnet does not exist | 0 retries; **HALT** — create subnet first |
+| `IndexAlreadyExists` | Index already exists | 0 retries; **RETRY** — Use different name or delete first |
+| `IndexNotFound` | Index does not exist | 0 retries; **RETRY** — Verify index name or create index |
+| `PluginAlreadyExists` | Plugin already installed | 0 retries; **RETRY** — Plugin already installed — skip |
+| `PluginNotFound` | Plugin not available | 0 retries; **RETRY** — Verify plugin name and ES version |
+| `PluginIncompatible` | Plugin incompatible with ES version | 0 retries; **HALT** — select compatible plugin |
+| `QuotaExceeded` | Resource quota exceeded | 0 retries; **HALT** — request quota increase |
+| `InsufficientBalance` | Account balance insufficient | 0 retries; **HALT** — recharge account |
+| `Unauthorized` | IAM permission denied | 0 retries; **HALT** — check IAM policies |
+| `InvalidInstanceStatus` | Instance status not valid for operation | 3 retries/10s; **RETRY** — Wait and retry |
+| `IncompatibleVersion` | Upgrade version not supported | 0 retries; **HALT** — check version compatibility |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; **RETRY** — Retry with backoff |
+| `Throttling` | Rate limit exceeded | 3 retries/1s/2s/4s; **RETRY** — Back off and retry |
+| `ClusterHealthNotGreen` | Cluster health not Green/Yellow | 0 retries; **HALT** — fix cluster health first |
+| `SnapshotInProgress` | Snapshot already in progress | 3 retries/10s; **RETRY** — Wait and retry |
 
 ## Prerequisites
 
@@ -1131,6 +1136,7 @@ done
 - [Monitoring & Alerts](references/monitoring.md)
 - [Integration](references/integration.md)
 - [Knowledge Base](references/knowledge-base.md)
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Cluster security baseline, access control, data protection, incident response
 
 ## Operational Best Practices
 

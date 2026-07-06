@@ -166,6 +166,11 @@ ve cdn ListCdnDomains --Region {{env.VOLCENGINE_REGION}} --PageSize 10
 ve cdn ListCdnDomains --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand CDN architecture
+- [Common Operations](#execution-flows) — Create, manage, and accelerate content delivery
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -888,6 +893,23 @@ ve cdn DescribeCdnDomainHitRate \
 ```
 
 ---
+
+## Error Taxonomy
+
+| `code` | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidDomainName` | 加速域名格式无效或不符合规范 | 0 retries; **HALT** — 使用有效 FQDN (如 cdn.example.com) |
+| `DomainNotInStatus` | 域名当前状态不允许执行该操作 | 0 retries; **HALT** — 等待域名状态变为 online/offline 后重试 |
+| `QuotaExceeded.Domain` | 加速域名数量超出配额限制 | 0 retries; **HALT** — 删除未使用域名或联系技术支持提额 |
+| `InvalidOriginConfig` | 源站配置无效 (地址/类型/端口) | 0 retries; **HALT** — 检查源站地址、类型和端口是否正确 |
+| `InvalidCacheRule` | 缓存规则配置无效 | 0 retries; **HALT** — 验证规则类型 (path/filetype/directory) 和 TTL 值 |
+| `InvalidHttpsConfig` | HTTPS 配置无效 (证书/密钥/TLS) | 0 retries; **HALT** — 验证证书与域名匹配、密钥格式正确 |
+| `InvalidCertId` | 证书 ID 不存在或已过期 | 0 retries; **HALT** — 检查证书是否已上传且未过期 |
+| `DomainLocked` | 域名被锁定，无法执行操作 | 0 retries; **HALT** — 联系技术支持解锁域名 |
+| `QuotaExceeded.Refresh` | 每日刷新/预热配额不足 | 0 retries; **HALT** — 等待配额重置或联系提额 |
+| `Throttling` | 请求频率过高触发限流 | 3 retries/exponential/2s/4s/8s; **RETRY** — 背退等待后重试 |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 超过重试次数后 HALT 并记录 RequestId |
+| `Unauthorized` | 鉴权失败，权限不足 | 0 retries; **HALT** — 检查 IAM 策略是否包含 CDNFullAccess |
 
 ## Reference Directory
 

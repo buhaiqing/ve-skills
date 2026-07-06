@@ -402,22 +402,18 @@ ve billing DescribeReservedInstances --Region "{{env.VOLCENGINE_REGION}}"
 
 | Error Code | Meaning | Resolution |
 |------------|---------|-----------|
-| `InvalidParameter` | Bad request / invalid period format | 1 retry; Fix parameters and retry |
-| `Forbidden.RAM` | Insufficient IAM permissions | 0 retries; HALT — add IAM billing permissions |
-| `InsufficientBalance` | Account balance too low | 0 retries; HALT — alert user to recharge |
-| `InternalError` | Server error | 3 retries/2s/4s/8s; Retry then HALT with RequestId |
-| `Throttling` | Rate limit exceeded | 3 retries/exponential; Back off, respect Retry-After |
-| `BudgetNotFound` | Budget ID does not exist | 0 retries; HALT — verify budget ID |
-| `BudgetNameExists` | Budget name already in use | 0 retries; Ask for different name |
-| `BudgetLimitExceeded` | Maximum budgets reached | 0 retries; HALT — delete unused budgets |
-| `InvoiceNotFound` | Invoice ID does not exist | 0 retries; HALT — verify invoice ID |
-| `InvoiceStatusError` | Invoice cannot be modified in current status | 0 retries; HALT — check invoice status |
-| `RIExpired` | Reserved instance has expired | 0 retries; Alert — suggest renewal |
-| `RIUtilizationLow` | RI utilization below threshold | 0 retries; Alert — suggest optimization |
-| `TagQuotaExceeded` | Maximum tags per resource reached | 0 retries; HALT — suggest tag cleanup |
-| `PaymentMethodInvalid` | Payment method cannot be used | 0 retries; HALT — update payment method |
-| `RefundNotAllowed` | Refund not permitted for transaction | 0 retries; HALT — explain policy |
-| `QuotaExceeded` | Overall quota exceeded | 0 retries; HALT — contact support |
+| `InvalidBillId` | Bill ID does not exist | 0 retries; **HALT** — verify bill ID |
+| `InvalidStatementId` | Statement ID does not exist | 0 retries; **HALT** — verify statement ID |
+| `InvalidResourceGroupId` | Resource group ID does not exist | 0 retries; **HALT** — verify resource group ID |
+| `InvalidOrderId` | Order ID does not exist | 0 retries; **HALT** — verify order ID |
+| `InvalidCouponId` | Coupon ID does not exist | 0 retries; **HALT** — verify coupon ID |
+| `InvalidInvoiceId` | Invoice ID does not exist | 0 retries; **HALT** — verify invoice ID |
+| `QuotaExceeded.Query` | Query quota exceeded | 0 retries; **HALT** — reduce query scope |
+| `AccountFrozen` | Account is frozen | 0 retries; **HALT** — contact billing support |
+| `InsufficientBalance` | Account balance too low | 0 retries; **HALT** — alert user to recharge |
+| `ArrearsInProgress` | Account in arrears | 0 retries; **HALT** — settle outstanding balance |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Back off, respect Retry-After |
+| `InternalError` | Server error | 3 retries/2s/4s/8s; **RETRY** — Retry, escalate with RequestId |
 
 ## Reference Directory
 

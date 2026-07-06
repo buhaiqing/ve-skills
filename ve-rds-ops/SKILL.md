@@ -162,6 +162,10 @@ ve rds_mysql DescribeDBInstances --Region {{env.VOLCENGINE_REGION}}
 # List all RDS MySQL instances in the configured region
 ve rds_mysql DescribeDBInstances --Region {{env.VOLCENGINE_REGION}}
 ```
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand RDS architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage RDS databases
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
 
 ## Capabilities at a Glance
 
@@ -414,6 +418,23 @@ ve rds_mysql RestoreDBInstance \
   --RestoreType "Backup" \
   --NewInstanceName "{{user.new_instance_name}}"
 ```
+
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidDBInstanceId.NotFound` | 实例 ID 不存在 | 0 retries; **HALT** — 检查 InstanceId 是否正确 |
+| `IncorrectDBInstanceState` | 实例状态不允许操作 | 0 retries; **HALT** — 等待实例进入 Running 态后重试 |
+| `QuotaExceeded` | 资源配额不足 | 0 retries; **HALT** — 删除无用实例或申请提升配额 |
+| `InvalidParameter.InstanceName` | 实例名称不符合规范 | 0 retries; **HALT** — 使用合法名称格式 |
+| `InvalidParameter.NodeSpec` | 实例规格无效 | 0 retries; **HALT** — 通过 DescribeDBInstanceSpecs 查可用规格 |
+| `InvalidParameter.StorageType` | 存储类型无效 | 0 retries; **HALT** — 使用 LocalSSD 或 ESSD |
+| `InvalidAccountName` | 账号名称不合法 | 0 retries; **HALT** — 使用字母开头、2-32 位的账号名 |
+| `InvalidDatabaseName` | 数据库名称不合法 | 0 retries; **HALT** — 使用合法数据库名称格式 |
+| `InsufficientBalance` | 账户余额不足 | 0 retries; **HALT** — 充值后重试 |
+| `OperationDenied.InstanceStatus` | 当前实例状态不允许操作 | 0 retries; **HALT** — 等待当前操作完成后重试 |
+| `Throttling` | 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 持续失败则记录 RequestId 并反馈 |
 
 ---
 

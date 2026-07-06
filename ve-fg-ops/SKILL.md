@@ -398,23 +398,23 @@ Expected: `{{user.trigger_name}}` appears in the list.
 
 | Error Code | Meaning | Resolution |
 |-----------|---------|-----------|
-| `FunctionNotFound` | Function does not exist | 0 retries; Check name, suggest creation |
-| `FunctionAlreadyExists` | Function name in use | 0 retries; Suggest different name or UpdateFunction |
-| `InvalidParameter` | Request validation failed | 1 retry; Align with OpenAPI schema |
-| `InvalidRuntime` | Unsupported runtime | 0 retries; Suggest supported runtime list |
-| `InvalidCronExpression` | Cron expression invalid | 0 retries; Provide correct cron format |
-| `ResourceLimitExceeded` | Quota limit reached | 0 retries; HALT — request quota increase |
-| `InsufficientBalance` | Account not funded | 0 retries; HALT — recharge required |
-| `CodeStorageExceeded` | Code package too large | 0 retries; Optimize code or use OSS URL |
-| `InvocationError` | Function runtime error | 2 retries; Check function logs for details |
-| `TimeoutError` | Execution timed out | 2 retries; Increase timeout or optimize code |
-| `MemoryExceeded` | Memory limit reached | 2 retries; Increase MemorySize configuration |
-| `ConcurrentInvocationExceeded` | Concurrency limit hit | 3 retries; Wait or request quota increase |
-| `TriggerNotFound` | Trigger does not exist | 0 retries; Check trigger ID/name |
-| `TriggerAlreadyExists` | Trigger name conflict | 0 retries; Use different trigger name |
-| `VersionNotFound` | Version does not exist | 0 retries; Check version number |
-| `Throttling` | Rate limit exceeded | 3 retries/exponential; Backoff with delay |
-| `InternalError` | Server-side error | 3 retries; Retry, escalate with RequestId |
+| `FunctionNotFound` | Function does not exist | 0 retries; **HALT** — Check name, suggest creation |
+| `FunctionAlreadyExists` | Function name in use | 0 retries; **RETRY** — Suggest different name or UpdateFunction |
+| `InvalidParameter` | Request validation failed | 1 retry; **RETRY** — Align with OpenAPI schema |
+| `InvalidRuntime` | Unsupported runtime | 0 retries; **HALT** — Suggest supported runtime list |
+| `InvalidCronExpression` | Cron expression invalid | 0 retries; **RETRY** — Provide correct cron format |
+| `ResourceLimitExceeded` | Quota limit reached | 0 retries; **HALT** — request quota increase |
+| `InsufficientBalance` | Account not funded | 0 retries; **HALT** — recharge required |
+| `CodeStorageExceeded` | Code package too large | 0 retries; **RETRY** — Optimize code or use OSS URL |
+| `InvocationError` | Function runtime error | 2 retries; **RETRY** — Check function logs for details |
+| `TimeoutError` | Execution timed out | 2 retries; **RETRY** — Increase timeout or optimize code |
+| `MemoryExceeded` | Memory limit reached | 2 retries; **RETRY** — Increase MemorySize configuration |
+| `ConcurrentInvocationExceeded` | Concurrency limit hit | 3 retries; **RETRY** — Wait or request quota increase |
+| `TriggerNotFound` | Trigger does not exist | 0 retries; **HALT** — Check trigger ID/name |
+| `TriggerAlreadyExists` | Trigger name conflict | 0 retries; **RETRY** — Use different trigger name |
+| `VersionNotFound` | Version does not exist | 0 retries; **HALT** — Check version number |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Backoff with delay |
+| `InternalError` | Server-side error | 3 retries; **RETRY** — Retry, escalate with RequestId |
 
 ## Prerequisites
 

@@ -144,6 +144,11 @@ ve vke ListSupportedVersions --Region {{env.VOLCENGINE_REGION}}
 ve vke ListClusters --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand VKE architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage container clusters
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Level |
@@ -466,6 +471,23 @@ ve vke DeleteNodes \
 ```bash
 ve vke ListSupportedVersions --Region "{{env.VOLCENGINE_REGION}}"
 ```
+
+## Error Taxonomy
+
+| `code` | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidClusterId` | 集群 ID 不存在或格式错误 | 0 retries; **HALT** — 检查 ClusterId 格式 (cls-xxxxxxxxx) |
+| `IncorrectClusterState` | 集群状态不允许当前操作 | 0 retries; **HALT** — 等待集群状态变为 Running 后重试 |
+| `QuotaExceeded.Cluster` | 集群数量超出配额限制 | 0 retries; **HALT** — 删除未使用集群或提额 |
+| `InvalidNodePoolId` | 节点池 ID 不存在或格式错误 | 0 retries; **HALT** — 检查 NodePoolId 格式 |
+| `InvalidVpcId` | VPC ID 不存在或不属于当前账号 | 0 retries; **HALT** — 通过 ve-vpc-ops 验证 VPC |
+| `InvalidSecurityGroupId` | 安全组 ID 不存在或不属于当前 VPC | 0 retries; **HALT** — 通过 ve-vpc-ops 验证安全组 |
+| `NodeInsufficientResource` | 节点资源不足 (CPU/内存) | 2 retries/exponential/30s/60s/120s; **RETRY** — 更换实例规格或扩容节点池 |
+| `InvalidFlavorId` | 实例规格 ID 不存在或不可用 | 0 retries; **HALT** — 检查实例规格 ID 是否在当前可用区可用 |
+| `Throttling` | 请求频率过高触发限流 | 3 retries/exponential/2s/4s/8s; **RETRY** — 背退等待后重试 |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 超过重试次数后 HALT 并记录 RequestId |
+| `OperationDenied.DeleteProtection` | 删除保护已开启，禁止删除集群 | 0 retries; **HALT** — 先关闭删除保护后再操作 |
+| `ResourceNotFound.Cluster` | 集群未找到 | 0 retries; **HALT** — 检查集群 ID 是否已删除 |
 
 ## Prerequisites
 

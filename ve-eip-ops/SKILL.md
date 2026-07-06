@@ -145,6 +145,11 @@ ve eip DescribeEipAddresses --Region {{env.VOLCENGINE_REGION}}
 ve eip DescribeEipAddresses --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand EIP architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage elastic IPs
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -432,6 +437,22 @@ ve eip DescribeEipAddressAttributes --Region "{{user.region}}" --AllocationId "{
 ```
 
 ---
+
+## Error Taxonomy
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| `InvalidEipAddressId.NotFound` | 指定的 EIP ID 不存在 | 0 retries; **HALT** |
+| `QuotaExceeded.EipAddress` | EIP 数量超出配额限制 | 0 retries; **HALT** |
+| `InvalidLineType.NotSupported` | 线路类型不支持 | 0 retries; **HALT** |
+| `EipAddress.InUse` | EIP 已绑定到其他实例 | 0 retries; **HALT** |
+| `EipAddress.StatusNotAvailable` | EIP 当前状态不允许该操作 | 3 retries/exponential/3s/6s/12s; **RETRY** |
+| `InvalidInstanceId.NotFound` | 指定的实例 ID 不存在 | 0 retries; **HALT** |
+| `InvalidInstanceType.NotSupported` | 实例类型不支持绑定 EIP | 0 retries; **HALT** |
+| `Bandwidth.ExceedsLimit` | 带宽值超出允许范围 | 0 retries; **HALT** |
+| `EipAddress.AlreadyAssociated` | EIP 已关联到其他资源 | 0 retries; **HALT** |
+| `InvalidBillingType.NotSupported` | 计费类型不支持 | 0 retries; **HALT** |
+| `InsufficientBalance` | 账户余额不足，无法创建 EIP | 0 retries; **HALT** |
 
 ## Reference Directory
 

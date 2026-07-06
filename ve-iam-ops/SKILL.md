@@ -143,6 +143,11 @@ ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
 ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand IAM architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage access control and permissions
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -754,6 +759,26 @@ ve iam GetCredentialReport \
 
 ---
 
+## Error Taxonomy
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| `NoSuchEntity` | 指定的 IAM 实体不存在 | 0 retries; **HALT** |
+| `EntityAlreadyExists` | 同名的 IAM 实体已存在 | 0 retries; **HALT** |
+| `MalformedPolicyDocument` | 策略文档 JSON 格式不合法 | 0 retries; **HALT** |
+| `DeleteConflict` | 实体存在依赖资源，无法删除 | 0 retries; **HALT** |
+| `LimitExceeded.User` | 用户数量超出配额限制 | 0 retries; **HALT** |
+| `LimitExceeded.Policy` | 策略数量超出配额限制 | 0 retries; **HALT** |
+| `LimitExceeded.Role` | 角色数量超出配额限制 | 0 retries; **HALT** |
+| `AccessKeyLimitExceeded` | AccessKey 数量超出上限 | 0 retries; **HALT** |
+| `PasswordNotComplex` | 密码不满足复杂度策略要求 | 0 retries; **HALT** |
+| `InvalidUserName.Malformed` | 用户名格式不符合规范 | 0 retries; **HALT** |
+| `InvalidPolicyName.Malformed` | 策略名格式不符合规范 | 0 retries; **HALT** |
+| `AttachedEntityLimitExceeded` | 策略附加的实体数量超出限制 | 0 retries; **HALT** |
+| `PolicyVersionLimitExceeded` | 策略版本数量超出上限 | 0 retries; **HALT** |
+| `Throttling` | IAM API 请求频率超限 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | IAM 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** |
+ 
 ## Reference Directory
 
 - [Core Concepts](references/core-concepts.md)
@@ -767,6 +792,7 @@ ve iam GetCredentialReport \
 - [CLI Behavioral Reference](../ve-skill-generator/references/cli-behavior.md)
 - [GCL Rubric](references/rubric.md) — Scoring dimensions for the Generator-Critic-Loop
 - [GCL Prompt Templates](references/prompt-templates.md) — G/C/O prompt skeletons + IAM-specific safety prompts
+- [SecurityOps (Advanced)](references/advanced/securityops.md) — Identity security baseline, credential management, policy audit, incident response
 
 ## Operational Best Practices
 

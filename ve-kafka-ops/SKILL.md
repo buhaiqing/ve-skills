@@ -157,6 +157,11 @@ ve kafka ListInstances --Region {{env.VOLCENGINE_REGION}}
 ve kafka ListInstances --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand Kafka architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage message queues
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk Level |
@@ -758,23 +763,23 @@ ve kafka DescribeConsumerLag \
 
 ## Error Taxonomy (≥ 10 Codes)
 
-| Error Code | HTTP | Meaning | Max Retries | Backoff | Agent Action | UX Template |
-|------------|------|---------|-------------|---------|--------------|-------------|
-| `InvalidParameter` | 400 | Request parameter invalid | 0 | — | Fix parameter and retry | `[ERROR] InvalidParameter: Request parameter is invalid. Check the parameter against API docs.` |
-| `InvalidInstance.NotFound` | 404 | Instance does not exist | 0 | — | HALT; verify instance ID | `[ERROR] Instance not found. Verify the instance ID.` |
-| `InvalidVpc.NotFound` | 400 | VPC does not exist | 0 | — | HALT; create VPC first | `[ERROR] VPC not found. Create VPC via ve-vpc-ops first.` |
-| `InvalidSubnet.NotFound` | 400 | Subnet does not exist | 0 | — | HALT; create subnet first | `[ERROR] Subnet not found. Create subnet first.` |
-| `TopicAlreadyExists` | 400 | Topic already exists | 0 | — | Use different name or delete first | `[ERROR] Topic already exists. Use a different name.` |
-| `TopicNotFound` | 404 | Topic does not exist | 0 | — | Verify topic name or create topic | `[ERROR] Topic not found. Verify the topic name.` |
-| `UserAlreadyExists` | 400 | SASL user already exists | 0 | — | Use different username | `[ERROR] User already exists. Use a different username.` |
-| `UserNotFound` | 404 | SASL user does not exist | 0 | — | Verify username | `[ERROR] User not found. Verify the username.` |
-| `QuotaExceeded` | 400 | Resource quota exceeded | 0 | — | HALT; request quota increase | `[ERROR] Quota exceeded. Request quota increase from support.` |
-| `InsufficientBalance` | 400 | Account balance insufficient | 0 | — | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
-| `Unauthorized` | 403 | IAM permission denied | 0 | — | HALT; check IAM policies | `[ERROR] Unauthorized. Check IAM permissions.` |
-| `InvalidInstanceStatus` | 400 | Instance status not valid for operation | 3 | 10s | Wait and retry | `[WARNING] Instance busy. Retrying...` |
-| `InternalError` | 500 | Server-side error | 3 | 2s, 4s, 8s | Retry with backoff | `[ERROR] Internal error. Retrying...` |
-| `Throttling` | 429 | Rate limit exceeded | 3 | 1s, 2s, 4s | Back off and retry | `[WARNING] Rate limit. Retrying in {backoff}s...` |
-| `ACLAlreadyExists` | 400 | ACL rule already exists | 0 | — | Skip or delete first | `[ERROR] ACL already exists.` |
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidParameter` | Request parameter invalid | 1 retry; Fix per OpenAPI docs |
+| `InvalidInstance.NotFound` | Instance does not exist | 0 retries; HALT — verify instance ID |
+| `InvalidVpc.NotFound` | VPC does not exist | 0 retries; HALT — create VPC via ve-vpc-ops |
+| `InvalidSubnet.NotFound` | Subnet does not exist | 0 retries; HALT — create subnet first |
+| `TopicAlreadyExists` | Topic already exists | 0 retries; Use different name or delete first |
+| `TopicNotFound` | Topic does not exist | 0 retries; HALT — verify topic name |
+| `UserAlreadyExists` | SASL user already exists | 0 retries; Use different username |
+| `UserNotFound` | SASL user does not exist | 0 retries; HALT — verify username |
+| `QuotaExceeded` | Resource quota exceeded | 0 retries; HALT — request quota increase |
+| `InsufficientBalance` | Account balance insufficient | 0 retries; HALT — recharge account |
+| `Unauthorized` | IAM permission denied | 0 retries; HALT — check IAM policies |
+| `InvalidInstanceStatus` | Instance status not valid for operation | 3 retries/10s; Wait and retry |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; Retry with backoff, then HALT |
+| `Throttling` | Rate limit exceeded | 3 retries/1s/2s/4s; Back off and retry |
+| `ACLAlreadyExists` | ACL rule already exists | 0 retries; Skip or delete first |
 
 ## Prerequisites
 
@@ -800,6 +805,23 @@ ve kafka DescribeConsumerLag \
    ```bash
    ve kafka ListInstances --Region {{env.VOLCENGINE_REGION}}
    ```
+
+## Error Taxonomy
+
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidInstanceId` | Instance ID does not exist | 0 retries; **HALT** — verify instance ID |
+| `IncorrectInstanceState` | Instance status not valid for operation | 0 retries; **HALT** — check instance status |
+| `InvalidTopicName` | Topic name format invalid | 0 retries; **HALT** — check topic naming rules |
+| `InvalidPartitionCount` | Partition count out of range | 0 retries; **HALT** — use valid partition range |
+| `QuotaExceeded.Topic` | Topic quota reached | 0 retries; **HALT** — request topic quota increase |
+| `QuotaExceeded.Partition` | Partition quota reached | 0 retries; **HALT** — request partition quota increase |
+| `InvalidConsumerGroup` | Consumer group ID does not exist | 0 retries; **HALT** — verify group ID |
+| `InvalidGroupId` | Group ID format invalid | 0 retries; **RETRY** — fix group ID format |
+| `RebalanceInProgress` | Consumer rebalance in progress | 3 retries/10s; **RETRY** — wait for rebalance |
+| `MessageTooLarge` | Message exceeds size limit | 0 retries; **RETRY** — reduce message size |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Back off and retry |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; **RETRY** — Retry, escalate with RequestId |
 
 ## Reference Directory
 

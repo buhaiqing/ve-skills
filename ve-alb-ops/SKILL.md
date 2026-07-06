@@ -1020,6 +1020,23 @@ ve alb DeleteListener --Region "{{user.region}}" --ListenerId "{{user.listener_i
    ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}"
    ```
 
+## Error Taxonomy
+
+| Error Code | Meaning | Resolution |
+|------------|---------|-----------|
+| `InvalidLoadBalancerId` | Load balancer ID does not exist | 0 retries; **HALT** — verify LB ID |
+| `IncorrectLBState` | LB status not valid for operation | 0 retries; **HALT** — check LB current status |
+| `QuotaExceeded.Listener` | Listener quota reached | 0 retries; **HALT** — request quota increase |
+| `InvalidListenerId` | Listener ID does not exist | 0 retries; **HALT** — verify listener ID |
+| `InvalidServerGroupId` | Server group ID does not exist | 0 retries; **HALT** — verify server group ID |
+| `InvalidCertificateId` | Certificate ID does not exist | 0 retries; **HALT** — verify certificate ID |
+| `QuotaExceeded.Rule` | Forwarding rule quota reached | 0 retries; **HALT** — request quota increase |
+| `InvalidRuleId` | Rule ID does not exist | 0 retries; **HALT** — verify rule ID |
+| `HealthCheckFailed` | Backend health check failure | 3 retries/10s; **RETRY** — check backend status |
+| `BackendUnavailable` | Backend server not ready | 3 retries/5s; **RETRY** — verify backend state |
+| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Back off and retry |
+| `InternalError` | Server-side error | 3 retries/2s/4s/8s; **RETRY** — Retry, escalate with RequestId |
+
 ## Reference Directory
 
 - [Core Concepts](references/core-concepts.md) — ALB architecture, types, routing

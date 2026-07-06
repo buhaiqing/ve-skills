@@ -185,6 +185,11 @@ ve vpn DescribeVpnGateways --Region {{env.VOLCENGINE_REGION}}
 ve vpn DescribeVpnGateways --Region {{env.VOLCENGINE_REGION}}
 ```
 
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand VPN architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage VPN connections
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
+
 ## Capabilities at a Glance
 
 | Operation | Description | Complexity | Risk |
@@ -689,6 +694,23 @@ ve vpn DeleteSslVpnClientCert \
 ```
 
 ---
+
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidVpnGatewayId` | VPN Gateway ID 不存在或格式错误 | 0 retries; **HALT** — 确认 VpnGatewayId 格式 `(vgw-xxx)` |
+| `IncorrectVpnGatewayStatus` | VPN 网关状态不允许当前操作 | 0 retries; **HALT** — 等待状态变为 `Available` |
+| `InvalidCustomerGatewayId` | Customer Gateway ID 不存在或格式错误 | 0 retries; **HALT** — 确认 CustomerGatewayId 格式 `(cgw-xxx)` |
+| `InvalidVpnConnectionId` | VPN 连接 ID 不存在或格式错误 | 0 retries; **HALT** — 确认 VpnConnectionId 格式 `(vpn-xxx)` |
+| `QuotaExceeded.VpnConnection` | IPSec 连接数量已达配额上限 | 0 retries; **HALT** — 删除未使用的连接或提额 |
+| `IpsecConfig.Invalid` | IPsec 配置参数无效（加密/认证/生命周期） | 0 retries; **HALT** — 检查 EncAlg/AuthAlg/Pfs/Lifetime 取值 |
+| `IkeConfig.Invalid` | IKE 配置参数无效（版本/模式/DH 分组） | 0 retries; **HALT** — 检查 Version/Mode/DhGroup/EncAlg |
+| `TunnelStatus.Error` | VPN 隧道状态异常（对端不可达/协商失败） | 0 retries; **HALT** — 检查对端网关连通性和 PSK 配置 |
+| `InvalidVpcId` | VPC ID 不存在或不在当前区域 | 0 retries; **HALT** — 通过 `ve-vpc-ops` 确认 VPC |
+| `InvalidSubnetId` | Subnet ID 不存在或不匹配 VPC | 0 retries; **HALT** — 确认子网存在 |
+| `Throttling` | 请求限流 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 记录 RequestId |
 
 ## Reference Directory
 

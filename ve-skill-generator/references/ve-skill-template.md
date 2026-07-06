@@ -542,6 +542,7 @@ Poll describe (or head/get) until **404**, **NotFound**, or status indicates del
 - [Execution Environment Setup](references/execution-environment.md) — CLI install, Go JIT download, credential config, verification
 - [CLI Behavioral Reference](references/cli-behavior.md) — verified `ve` CLI conventions (JSON output, env vars, invocation patterns)
 - [Enhanced Self-Healing Framework](references/enhanced-self-healing-framework.md) — **MANDATORY** self-healing patterns for all installation flows
+- [SecurityOps Framework](references/advanced/securityops.md) — Security baseline, incident response, vulnerability scanning, compliance mapping (**MANDATORY** for security-critical skills: security-group-ops, iam-ops, kms-ops, ecs-ops, rds-mysql-ops, redis-ops, mongodb-ops, elasticsearch-ops; recommended for all others)
 
 ## Operational Best Practices
 

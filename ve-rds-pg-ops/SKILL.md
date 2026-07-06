@@ -160,6 +160,10 @@ ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}"
 ```bash
 ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1 --PageSize 10
 ```
+### Next Steps
+- [Core Concepts](references/core-concepts.md) — Understand RDS for PostgreSQL architecture
+- [Common Operations](#execution-flows) — Create, manage, and manage RDS PostgreSQL databases
+- [Troubleshooting](references/troubleshooting.md) — Fix common issues
 
 ## Capabilities at a Glance
 
@@ -387,6 +391,24 @@ ve rds_postgresql RestoreToNewInstance --body '{"BackupId":"{{user.backup_id}}",
 ```bash
 ve rds_postgresql RebuildDBInstance --InstanceId "{{user.instance_id}}"
 ```
+
+## Error Taxonomy
+
+| 错误码 | 含义 | 分辨率 |
+|--------|------|--------|
+| `InvalidDBInstanceId` | 实例 ID 不存在或格式错误 | 0 retries; **HALT** — 检查 InstanceId 格式 `(postgres-xxx)` |
+| `IncorrectDBInstanceState` | 实例状态不匹配当前操作 | 0 retries; **HALT** — 等待实例回到 `RUNNING` 后重试 |
+| `QuotaExceeded.InstanceCount` | 实例数量已达配额上限 | 0 retries; **HALT** — 删除闲置实例或提额 |
+| `QuotaExceeded.StorageSize` | 存储空间已达配额上限 | 0 retries; **HALT** — 清理数据或提额 |
+| `InvalidParameter.ConnectionMode` | 连接模式参数无效 | 0 retries; **HALT** — 修正为 `Standard`/`Session`/`Transaction` |
+| `InvalidAccountName` | 账号名称不符合命名规范 | 0 retries; **HALT** — 小写字母开头，2-32 字符 |
+| `InvalidDatabaseName` | 数据库名称不符合命名规范 | 0 retries; **HALT** — 字母开头，1-64 字符，不含特殊字符 |
+| `InvalidVpcId` | VPC ID 不存在或不在当前区域 | 0 retries; **HALT** — 通过 `ve-vpc-ops` 确认 VPC |
+| `InvalidSecurityGroupId` | 安全组 ID 不存在或格式错误 | 0 retries; **HALT** — 通过 `ve-security-group-ops` 确认安全组 |
+| `BackupInProgress` | 备份操作正在进行中 | 0 retries; **HALT** — 等待当前备份完成 |
+| `OperationDenied.InstanceStatus` | 实例当前状态不允许该操作 | 0 retries; **HALT** — 等待异步操作完成 |
+| `Throttling` | 请求限流 | 3 retries/exponential/1s/2s/4s; **RETRY** |
+| `InternalError` | 服务端内部错误 | 3 retries/exponential/2s/4s/8s; **RETRY** — 记录 RequestId |
 
 ## Prerequisites
 
