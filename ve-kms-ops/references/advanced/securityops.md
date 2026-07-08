@@ -95,22 +95,22 @@
 echo "=== KMS Security Audit $(date +%Y-%m-%d) ==="
 
 # 1. List all keys and check rotation status
-ve kms DescribeKeys --query 'Keys[?RotationInterval!=`yearly`]' --output table
+ve kms DescribeKeys | jq '.Keys[] | select(.RotationInterval != "yearly")'
 echo "→ Ensure all keys have rotation enabled"
 
 # 2. Check keys pending deletion
-ve kms DescribeKeys --query 'Keys[?KeyState==`PendingDeletion`]' --output table
+ve kms DescribeKeys | jq '.Keys[] | select(.KeyState == "PendingDeletion")'
 echo "→ Verify all pending deletions are authorized"
 
 # 3. Check key policies for wildcard principals
 echo "→ Delegate to ve-iam-ops for key policy audit"
 
 # 4. List all grants and verify scope
-ve kms ListGrants --output table
+ve kms ListGrants | jq '.'
 echo "→ Review grants for overly permissive operations"
 
 # 5. Check imported key material expiry
-ve kms DescribeKeys --query 'Keys[?Origin==`EXTERNAL`]' --output table
+ve kms DescribeKeys | jq '.Keys[] | select(.Origin == "EXTERNAL")'
 echo "→ Renew imported key material before expiry"
 ```
 

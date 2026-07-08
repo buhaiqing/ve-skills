@@ -1,20 +1,36 @@
 # FinOps — NAT Gateway Cost Optimization (Advanced)
 
-> Deep FinOps analysis per TE-7. `core-concepts.md` links here.
+> Deep FinOps analysis per TE-7.
 
-## Cost Optimization Tips
+## Cost Model Overview
+
+NAT Gateway billing: (1) hourly fee by specification (Small/Medium/Large), (2) data transfer fee for outbound traffic. SNAT entries consume EIPs, adding separate hourly + bandwidth costs.
+
+## Product-Specific Cost Optimization
 
 | Tip | Action | 💰 Savings |
 |-----|--------|---------|
-| Release idle NAT gateways | No active SNAT/DNAT rules or no traffic — delete | 100% of hourly fee |
-| Right-size NAT spec | Monitor throughput — downgrade small specification if peak < 50% capacity | Up to 50% |
-| Optimize SNAT entries | Consolidate SNAT entries to reduce number of required EIPs | Variable |
+| Delete idle NAT gateways | No active SNAT/DNAT → delete | 100% of hourly fee |
+| Right-size NAT spec | Peak throughput < 50% capacity → downgrade spec | Up to 50% |
+| Consolidate SNAT EIPs | Fewer SNAT entries → fewer EIPs needed | Variable (EIP fee) |
+| Tune SNAT idle timeout | Shorter timeout → faster port reuse, fewer EIPs | Reduces EIP count |
 
-## Query Current Prices
+## Cost Anomaly Detection
+
+| Warning Sign | Check Command | Action |
+|-------------|---------------|--------|
+| 💰 Data transfer cost spike | `ve billing DescribeBillDetail` — filter `NAT` | Check for abnormal outbound traffic |
+| ⚠️ SNAT port exhaustion errors | `ve nat DescribeSnatEntries` — check concurrency | Add EIPs or increase timeouts |
+| 📊 Unexpected gateway count change | `ve nat DescribeNatGateways` | Verify authorization, delete if unauth'd |
+
+## Query Current Pricing
+
+NAT pricing by spec/region. Use billing API for current rates:
 
 ```bash
-# Query current NAT gateway pricing
-ve nat DescribePrice
+ve billing DescribeBillDetail --body '{"BillingPeriod":"{{env.BILLING_MONTH}}","Product":"NAT"}'
 ```
 
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve nat DescribePrice` for current quotes.
+## Related Resources
+
+- [FinOps — Billing Cost Optimization](../../ve-billing-ops/references/advanced/finops.md)

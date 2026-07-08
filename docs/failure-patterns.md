@@ -1,5 +1,7 @@
 # Failure Patterns — Reflexion Memory
 
+> 被 [AGENTS.md](../AGENTS.md) §Execution Strategy 引用为 Reflexion memory store。
+
 > **Purpose**: Structured failure memory extracted from GCL traces and Self-Review records.
 > Agents can optionally load this file during Pre-flight to prevent (prevent) known errors.
 >

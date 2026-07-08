@@ -24,11 +24,23 @@
 
 ## Operational Tips
 
-- **TTL tuning**: Increase TTL for stable records (e.g., `3600s` → `86400s`) to reduce query volume
-- **Zone consolidation**: Use one private zone per VPC with subdomain delegation instead of multiple zones
-- **Resolution path**: Preferred resolution path reduces query hops by using VPC DNS directly
+- **TTL tuning**: Stable records: `3600s` → `86400s` to reduce query volume
+- **Zone consolidation**: One private zone per VPC + subdomain delegation vs multiple zones
+- **Resolution path**: Preferred resolution path reduces query hops (use VPC DNS directly)
 - **Delete before delete**: When deleting zones, verify no dependent services reference them
 
-> Private DNS is low-cost by nature — focus optimization on zone hygiene rather than query volume.
->
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve dns DescribePrice` for current quotes.
+## Cost Anomaly Detection
+
+⚠️ **DNS cost anomalies** — investigate when:
+
+| Anomaly | Investigation | Action |
+|---------|---------------|--------|
+| Query volume spike > 500% | `ve dns ListZones` → check TTL config for specific records | Lower TTL back if intentional, or audit DDoS |
+| Cross-region transfer increase | Check newly added cross-region resolutions | Consolidate resolution path |
+| New zone creation burst | Audit recent `CreateZone` events | Confirm authorized |
+
+> **Cost note**: Private DNS is near-free. Focus on zone hygiene, not unit price.
+
+## Related Resources
+
+- [ve-billing-ops FinOps](../../ve-billing-ops/references/advanced/finops.md) — billing models, budget alerts, tag allocation

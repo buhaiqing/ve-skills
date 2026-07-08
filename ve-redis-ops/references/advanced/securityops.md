@@ -98,15 +98,15 @@
 echo "=== Redis Security Audit $(date +%Y-%m-%d) ==="
 
 # 1. Check all instances for public accessibility
-ve redis DescribeDBInstances --query 'Instances[?PublicAccessibility==`true`]' --output table
+ve redis DescribeDBInstances | jq '.Instances[] | select(.PublicAccessibility == true)'
 echo "→ Disable public access on ALL production instances"
 
 # 2. Check auth enabled
-ve redis DescribeDBInstances --query 'Instances[?AuthEnabled==`false`]' --output table
+ve redis DescribeDBInstances | jq '.Instances[] | select(.AuthEnabled == false)'
 echo "→ Enable authentication on unprotected instances"
 
 # 3. Check persistence config
-ve redis DescribeDBInstanceParameters --output table
+ve redis DescribeDBInstanceParameters | jq '.'
 echo "→ Verify AOF and/or RDB persistence enabled"
 
 # 4. Check maxmemory-policy

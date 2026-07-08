@@ -1,20 +1,44 @@
 # FinOps — VKE Cost Optimization (Advanced)
 
-> Deep FinOps analysis per TE-7. `core-concepts.md` links here.
+> Deep FinOps analysis per TE-7.
+
+## Billing Model
+
+VKE control plane is free → **cost = ECS worker nodes**.
+
+| Component | Pricing Model | % of Total |
+|-----------|---------------|-----------|
+| Worker node (PostPaid) | Per second / hour | 100% (dominant) |
+| Worker node (PrePaid) | Monthly / yearly | 100% (discounted) |
+| Load balancer (CLB/ALB) | Per hour + data | Variable |
+| Persistent volume | Per GB / month | Minor |
 
 ## Cost Optimization Tips
 
 | Tip | Action | 💰 Savings |
 |-----|--------|---------|
-| Right-size node pools | CPU avg < 20% → use smaller instance type or fewer nodes | ~50% |
-| Use Spot for worker nodes | Fault-tolerant workloads → Spot node pool for non-critical pods | 60-90% |
-| Auto-scale node pools | Configure Cluster Autoscaler to scale down idle nodes | Up to 100% of idle node cost |
+| Right-size node pools | CPU avg < 20% → smaller instance type or fewer nodes | ~50% |
+| Use Spot for batch workloads | Spot node pool for non-critical / fault-tolerant pods | 60-90% |
+| Auto-scale node pools | Cluster Autoscaler scales down idle nodes | Up to 100% idle cost |
+| Over-provisioning | `Unschedulable` pods → check node utilization; reduce if < 30% | 20-40% |
 
-## Query Current Prices
+## Cost Anomaly Detection
+
+⚠️ **VKE cost anomalies** — investigate when:
+| Anomaly | Investigation | Action |
+|---------|---------------|--------|
+| Node pool count spike | `ve vke ListNodePools` → check unscheduled scale-up events | Audit HPA / CA config |
+| Spot instance price spike | `ve ecs DescribeSpotAdvice` → check market price trends | Fall back to PostPaid |
+| PersistentVolume count surge | `ve vke ListStorageClasses` → review PVC usage | Consolidate storage |
+| Cluster node count > 100% expected | Compare to HPA max replicas config | Tune CA limits |
+
+## Query Current Resources
 
 ```bash
-# Query current VKE node pool pricing
-ve vke DescribePrice
+ve vke ListNodePools --body '{}'; ve ecs DescribeSpotAdvice --body '{"InstanceTypeIds":["ecs.g3i.large"]}'
 ```
+> 💡 VKE cost = ECS node cost. Isolate via `ve billing DescribeInstanceBill --body '{"Product":"VKE"}'`.
 
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve vke DescribePrice` for current quotes.
+## Related Resources
+
+- [ve-billing-ops FinOps](../../ve-billing-ops/references/advanced/finops.md) — billing models, budget alerts, tag allocation

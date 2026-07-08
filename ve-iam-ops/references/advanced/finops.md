@@ -1,19 +1,38 @@
-# FinOps — IAM Cost Optimization (Advanced)
+# FinOps — IAM Governance Efficiency
 
-> Deep FinOps analysis per TE-7. `core-concepts.md` links here.
+> IAM is **free** — FinOps focus = governance efficiency + cost avoidance.
 
 ## Cost Overview
 
-IAM is free of charge. There are no direct billing costs for users, roles, policies, or API calls.
+IAM (users, roles, policies, API calls) has **zero direct cost**. Costs arise indirectly:
+- **Management overhead** → too many roles/policies = audit drag, human error risk
+- **Over-permissioned roles** → potential resource abuse (e.g., someone with `ecs:*` starts expensive instances)
+- **Cross-account sprawl** → untracked trusted relationships increase blast radius
 
-## Cost Optimization Tips
+## Cost Optimization
 
-| Tip | Action | 💰 Savings |
-|-----|--------|---------|
-| Remove unused roles/policies | Delete stale IAM roles and orphaned policies | Simplifies governance |
-| Consolidate permissions | Merge duplicate inline policies into reusable managed policies | Reduces audit overhead |
-| Rotate access keys regularly | Old unused keys → deactivate and delete | Security best practice |
+| Pattern | Action | Savings |
+|---------|--------|---------|
+| 🧹 Orphaned policies | Delete un-attached IAM policies | Reduced audit scope |
+| 🔗 Inline → managed | Convert inline policies to reusable managed policies | + Maintainability |
+| 🔑 Stale access keys | Deactivate keys unused > 90d | + Security posture |
+| 🏷️ Cross-account trust | Review & prune external accounts in trust policies | Reduced blast radius |
+| 📋 Role consolidation | Merge roles with identical permission sets | Lower cognitive overhead |
 
-> IAM is free — focus optimization on governance and security hygiene.
->
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve iam DescribePrice` for current quotes.
+## Cost Anomaly Detection
+
+| Signal | What to Check | Response |
+|--------|---------------|----------|
+| ⚠️ Role count spike > 20% MoM | New roles created without review | Audit & consolidate |
+| ⚠️ Policy attachment surge | Bulk permission grants | Verify least-privilege |
+| ⚠️ Access key age > 180d | Keys not rotated | Force rotation |
+| 🚨 Root user activity | Direct root usage | Enforce role-based access |
+
+## Pricing
+
+IAM is **free** → no API pricing query needed. Cost is in **governance debt** and **incident risk**.
+
+## Related Resources
+
+- [Billing FinOps → cost allocation & budgets](../../../ve-billing-ops/references/advanced/finops.md)
+- [IAM SecurityOps → risk-based least privilege](../advanced/securityops.md)

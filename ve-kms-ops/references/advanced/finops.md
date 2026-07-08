@@ -1,20 +1,41 @@
-# FinOps — KMS Cost Optimization (Advanced)
+# FinOps — KMS Cost Optimization
 
-> Deep FinOps analysis per TE-7. `core-concepts.md` links here.
+> KMS has measurable costs: key storage + API usage. FinOps = lifecycle management + tier selection.
 
-## Cost Optimization Tips
+## Cost Model
+| Component | Pricing | Mitigation |
+|-----------|---------|------------|
+| Key storage | Per key/month | Delete unused keys |
+| API calls | Per 10k calls | Cache decrypted material |
+| HSM-backed keys | ~10x software key cost | Software unless compliance mandates |
+| Auto rotation | Free | Enable for long-lived keys |
 
-| Tip | Action | 💰 Savings |
-|-----|--------|---------|
-| Delete unused keys | Orphaned KMS keys (not referenced by any resource) — schedule deletion | 100% of key storage + API cost |
-| Consolidate keys | Use one key with multiple aliases instead of multiple keys where possible | Reduces key count fees |
-| Reduce API call volume | Cache decrypted data and reuse instead of re-decrypting on every access | Variable (key usage fee) |
+## Cost Optimization
+| Pattern | Action | 💰 Savings |
+|---------|--------|---------|
+| 🗑️ Orphaned keys | Schedule deletion, zero resource refs | 100% key storage |
+| 🔄 Key consolidation | One key + aliases vs. multiple keys | Reduces key count |
+| 📦 Cache & reuse | Cache decrypted (TTL ≤ security policy) | 60-90% API reduction |
+| 🏗️ Software > HSM | Default to software; HSM only for regulatory req | ~90% key cost |
+| 🔁 Auto-rotation | Auto-rotate vs. manual re-create (auto cheaper) | Lower ops cost |
 
-## Query Current Prices
+## Cost Anomaly Detection
+| Signal | What to Check | Response |
+|--------|---------------|----------|
+| ⚠️ Key creation spike | New keys without retirement plan | Review & consolidate |
+| ⚠️ API call surge > 2x | Unexpected re-decryption | Check caching config |
+| ⚠️ HSM key ratio ↑ | Team defaulting to HSM | Re-evaluate compliance need |
+| 🚨 PendingDeletion > 30d | Keys stuck, not cleaned up | Force delete or cancel |
+
+## Pricing
 
 ```bash
-# Query current KMS pricing
-ve kms DescribePrice
+ve billing DescribeBillSummaryByMonth --body '{"BillingPeriod":"{{env.BILLING_MONTH}}"}'
 ```
 
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve kms DescribePrice` for current quotes.
+> 💡 No `ve kms DescribePrice` exists. Query via billing or console pricing page.
+
+## Related Resources
+
+- [Billing FinOps → budget alerts & cost allocation](../../../ve-billing-ops/references/advanced/finops.md)
+- [KMS SecurityOps → key lifecycle & rotation](../advanced/securityops.md)

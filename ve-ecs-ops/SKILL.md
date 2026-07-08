@@ -183,6 +183,7 @@ ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 |-----------|-------------|------------|------------|
 | RunInstances | Create one or more ECS instances | High | Medium |
 | DescribeInstances | Query instance list and details | Low | None |
+| DescribeSpotPriceHistory | Query spot instance price history | Low | None |
 | StartInstance | Start a stopped instance | Low | Low |
 | StopInstance | Stop a running instance | Low | Medium |
 | RebootInstance | Reboot an instance | Low | Medium |

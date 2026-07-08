@@ -100,24 +100,26 @@ echo "=== IAM Security Audit $(date +%Y-%m-%d) ==="
 
 # 1. List all IAM users and check MFA status
 echo "→ Checking MFA status for all users..."
-ve iam ListUsers --output table
+ve iam ListUsers --Region {{env.VOLCENGINE_REGION}} | jq '.Result.Users[] | {UserName, CreateDate, LoginProfile}'
 echo "→ Verify each user has MFA enabled"
 
-# 2. List all access keys older than 90 days
+# 2. List all access keys older than 90 days (iterate per user)
 echo "→ Checking key rotation..."
-ve iam ListAccessKeys --output table
-echo "→ Rotate keys older than 90 days"
+for user in $(ve iam ListUsers --Region {{env.VOLCENGINE_REGION}} | jq -r '.Result.Users[].UserName'); do
+  echo "→ User: $user"
+  ve iam ListAccessKeys --UserName "$user" --Region {{env.VOLCENGINE_REGION}} | jq '.Result.AccessKeyMetadata[] | {AccessKeyId, Status, CreateDate, UserName}'
+done
 
 # 3. Audit policies for wildcards
 echo "→ Checking for overly permissive policies..."
-ve iam ListPolicies --query 'Policies[?PolicyDocument.contains(@,`\"*\"`)]' --output table
+ve iam ListPolicies --Region {{env.VOLCENGINE_REGION}} | jq '.Result.Policies[] | select(.PolicyDocument | contains("*")) | {PolicyName, PolicyType}'
 echo "→ Review and rewrite policies with wildcards"
 
 # 4. Check for inactive users
 echo "→ Delegate to ve-cms-ops for user activity report"
 
 # 5. Verify cross-account trust relationships
-ve iam ListRoles --query 'Roles[?AssumeRolePolicyDocument.contains(@,`\"AWS\"`)]' --output table
+ve iam ListRoles --Region {{env.VOLCENGINE_REGION}} | jq '.Result.Roles[] | select(.AssumeRolePolicyDocument | contains("AWS")) | {RoleName, Trn}'
 echo "→ Review cross-account trust relationships"
 ```
 

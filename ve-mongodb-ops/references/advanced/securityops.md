@@ -99,19 +99,19 @@
 echo "=== MongoDB Security Audit $(date +%Y-%m-%d) ==="
 
 # 1. Check all instances for public accessibility
-ve mongodb DescribeDBInstances --query 'Instances[?PublicAccessibility==`true`]' --output table
+ve mongodb DescribeDBInstances | jq '.Instances[] | select(.PublicAccessibility == true)'
 echo "→ Disable public access on ALL production instances"
 
 # 2. Check auth enabled
-ve mongodb DescribeDBInstances --query 'Instances[?AuthEnabled==`false`]' --output table
+ve mongodb DescribeDBInstances | jq '.Instances[] | select(.AuthEnabled == false)'
 echo "→ Enable authentication on unprotected instances"
 
 # 3. Check TLS/SSL status
-ve mongodb DescribeDBInstanceSSL --output table
+ve mongodb DescribeDBInstanceSSL | jq '.'
 echo "→ Enable TLS for all client connections"
 
 # 4. Check backup retention
-ve mongodb DescribeBackupPolicy --output table
+ve mongodb DescribeBackupPolicy | jq '.'
 echo "→ Ensure backup retention ≥ 7 days"
 
 # 5. Delegate SG audit
