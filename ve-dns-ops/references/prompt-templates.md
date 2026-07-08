@@ -109,6 +109,10 @@ consider the original user request — judge only what was actually done.
 - Verify resolution cascade risk: deleting the last NS or A/AAAA record for a subdomain will break DNS resolution — require explicit user acknowledgment.
 - Verify DNSSEC status: if DNSSEC is enabled for the domain, record changes may fail or require DS record sync — check before proceeding.
 - Verify domain registration status: operations on a domain with expired or soon-expiring (≤30 days) registration should warn the user.
+- Verify TTL propagation awareness: record deletion/modification with TTL ≥ 600s may have delayed propagation — flag required user confirmation.
+- Verify resolution cascade risk: deleting the last NS or A/AAAA record for a subdomain will break DNS resolution — require explicit user acknowledgment.
+- Verify DNSSEC status: if DNSSEC is enabled for the domain, record changes may fail or require DS record sync — check before proceeding.
+- Verify domain registration status: operations on a domain with expired or soon-expiring (≤30 days) registration should warn the user.
 
 # Output (strict JSON, no extra text)
 {
