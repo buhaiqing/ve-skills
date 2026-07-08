@@ -1,20 +1,44 @@
 # FinOps — NAS Cost Optimization (Advanced)
 
-> Deep FinOps analysis per TE-7. `core-concepts.md` links here.
+> Deep FinOps analysis per TE-7.
 
-## Cost Optimization Tips
+## Billing Model Comparison
 
-| Tip | Action | 💰 Savings |
-|-----|--------|---------|
-| Use Infrequent Access tier | Move files not accessed in 30+ days to IA storage tier | ~60% on storage cost |
-| Implement lifecycle policy | Automatically transition data between Performance, Capacity, and IA tiers | 40-80% |
-| Delete orphaned snapshots | Old snapshots of deleted file systems — delete | 100% of snapshot cost |
+| Tier | Performance (SSD) | Capacity (HDD) | Infrequent Access (IA) |
+|------|-------------------|----------------|------------------------|
+| Storage | Per GB/month (high) | Per GB/month (medium) | Per GB/month (low) |
+| Throughput | ~2× capacity tier | Baseline | Lower throughput |
+| Min bill | — | — | 30d min storage |
+| Best For | Database, high IOPS | Large files, backup | Cold data, archive |
 
-## Query Current Prices
+## Cost Optimization
+
+| Situation | Action | 💰 Savings |
+|-----------|--------|---------|
+| Low I/O files on Performance tier | Migrate to Capacity tier (lifecycle rule) | 40-60% storage cost |
+| Files not accessed >30d | Lifecycle rule → IA tier | ~60% storage cost |
+| Daily snapshot of stable data | Reduce snapshot frequency from hourly → daily | 80-90% snapshot cost |
+| Orphaned file systems | Delete unused file systems | 100% reclaim |
+| Over-provisioned throughput | Use auto-scaling or reserve lower throughput | Variable |
+
+## Cost Anomaly Detection
+
+| Sign | Cause | Investigation |
+|------|-------|-------------|
+| ⚠️ Storage usage spike | Unplanned large file write, data migration | `ve nas DescribeFileSystems --body '{}'` check capacity |
+| ⚠️ Snapshot cost growing | Snapshot policy too aggressive | Review snapshot schedule |
+| ⚠️ IA promotion cost | Files rapidly accessed after lifecycle to IA | Check access patterns before lifecycle rules |
+| ⚠️ Throughput cost on idle FS | Reserved throughput not matching workload | Monitor actual throughput vs reserved |
+
+## Query Pricing
 
 ```bash
-# Query current NAS pricing
-ve nas DescribePrice
+# NAS pricing is per-GB tiered by capacity tier — check file system info
+ve nas DescribeFileSystems --body '{"FileSystemId":"{{output.FileSystemId}}"}'
+# Use Billing API for cost analysis
+ve billing DescribeBillSummaryByMonth --body '{"BillingPeriod":"{{env.BILLING_MONTH}}"}'
 ```
 
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve nas DescribePrice` for current quotes.
+## Related Resources
+
+- [ve-billing-ops FinOps](../../ve-billing-ops/references/advanced/finops.md)

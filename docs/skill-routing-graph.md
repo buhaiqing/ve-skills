@@ -13,6 +13,8 @@
 
 ## Alarm Pattern → Skill Routing Table
 
+> 被 [AGENTS.md](../AGENTS.md) §Cross-Skill Delegation 和 §Runtime Quality Gates 引用。
+
 | Alarm Pattern | Primary Skill | Secondary Skills | Trigger Condition |
 |--------------|--------------|-----------------|-------------------|
 | ECS CPU>90% + app slow query | `ve-ecs-ops` | `ve-rds-mysql-ops` | CPU spike with concurrent DB latency |

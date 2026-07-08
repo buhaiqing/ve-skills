@@ -103,19 +103,19 @@
 echo "=== Elasticsearch Security Audit $(date +%Y-%m-%d) ==="
 
 # 1. Check all instances for public accessibility
-ve elasticsearch DescribeInstances --query 'Instances[?PublicAccessibility==`true`]' --output table
+ve elasticsearch DescribeInstances | jq '.Instances[] | select(.PublicAccessibility == true)'
 echo "→ Disable public access on ALL production clusters"
 
 # 2. Check security/authentication enabled
-ve elasticsearch DescribeInstance --output table
+ve elasticsearch DescribeInstance | jq '.'
 echo "→ Verify security plugin / authentication enabled"
 
 # 3. Check snapshot configuration
-ve elasticsearch DescribeSnapshotConfiguration --output table
+ve elasticsearch DescribeSnapshotConfiguration | jq '.'
 echo "→ Ensure SLM enabled with adequate retention"
 
 # 4. Check cluster health
-ve elasticsearch DescribeInstanceHealth --output table
+ve elasticsearch DescribeInstanceHealth | jq '.'
 echo "→ All clusters should be green status"
 
 # 5. Delegate SG audit

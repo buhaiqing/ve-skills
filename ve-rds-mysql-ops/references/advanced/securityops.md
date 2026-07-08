@@ -107,19 +107,19 @@
 echo "=== RDS MySQL Security Audit $(date +%Y-%m-%d) ==="
 
 # 1. Check all instances for public accessibility
-ve rds_mysql DescribeDBInstances --query 'Instances[?PublicAccessibility==`true`]' --output table
+ve rds_mysql DescribeDBInstances | jq '.Instances[] | select(.PublicAccessibility == true)'
 echo "→ Disable public access on ALL production instances"
 
 # 2. Check SSL/TLS enforcement
-ve rds_mysql DescribeDBInstances --query 'Instances[?SSLEnabled==`false`]' --output table
+ve rds_mysql DescribeDBInstances | jq '.Instances[] | select(.SSLEnabled == false)'
 echo "→ Enable SSL/TLS enforcement"
 
 # 3. Check encryption at rest
-ve rds_mysql DescribeDBInstances --query 'Instances[?StorageEncrypted==`false`]' --output table
+ve rds_mysql DescribeDBInstances | jq '.Instances[] | select(.StorageEncrypted == false)'
 echo "→ Enable encryption at rest"
 
 # 4. Check outdated MySQL engine versions
-ve rds_mysql DescribeDBEngineVersions --Engine MySQL --output table
+ve rds_mysql DescribeDBEngineVersions --Engine MySQL | jq '.'
 echo "→ Plan upgrade for deprecated versions"
 
 # 5. Check SG rules for MySQL port

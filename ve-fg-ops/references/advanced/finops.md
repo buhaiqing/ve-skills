@@ -13,7 +13,7 @@
 
 ## Cost Optimization Quick Reference
 
-| Situation | Action | Savings |
+| Situation | Action | 💰 Savings |
 |-----------|--------|---------|
 | High invocation volume > 10M/month | Pre-purchase resource plans | 50-80% |
 | High GB-s compute > 400K/month | Pre-purchase compute plan | 50-80% |
@@ -22,4 +22,25 @@
 | Idle functions > 7d no invocation | Delete or reduce concurrency to 0 | Up to 100% |
 | Large deployment packages > 50MB | Minimize dependencies + use layers | Deploy cost ↓ |
 
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve fg DescribePrice` for current quotes.
+## Cost Anomaly Detection
+
+⚠️ **FG cost anomalies** — investigate when:
+
+| Anomaly | Investigation | Action |
+|---------|---------------|--------|
+| Invocation count spike > 300% | `ve fg ListFunctions` → check trigger events (timer / MQ / API) | Rate-limit or adjust concurrency |
+| Provisioned concurrency waste | Idle provisioned instances for > 48h → release excess | Reduce to minimum required |
+| GB-s surge without invocation | Heavy initialization on cold starts | Add provisioned concurrency to stabilize |
+| Outbound traffic cost outlier | Check data transfer patterns in function logs | Move to same-region services |
+
+## Query Current Resources
+
+```bash
+ve fg ListFunctions --body '{}'
+```
+
+> FG costs: **compute GB-s** + **invocation volume**. Pre-purchase resource plans for 50-80% savings.
+
+## Related Resources
+
+- [ve-billing-ops FinOps](../../ve-billing-ops/references/advanced/finops.md) — billing models, budget alerts, tag allocation

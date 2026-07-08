@@ -47,10 +47,9 @@ Verify against `ve-skill-generator/SKILL.md` and `ve-skill-generator/references/
 | C11 | Version bump | `last_updated` and `version` bumped if behavior changed |
 | C12 | **Content dedup** | No duplicate operation flows across SKILL.md ↔ references/; TE-6 verified (see §Link & Dedup) |
 | C13 | **AIOps coverage** | `references/advanced/aiops.md` and `references/advanced/finops.md` exist for all required+recommended skills (23 total) |
-| C14 | Advanced AIOps coverage | `references/advanced/aiops.md` exists for all required+recommended skills |
-| **C17** | **SecurityOps coverage** | `references/advanced/securityops.md` exists for security-critical skills (security-group-ops, iam-ops, kms-ops, ecs-ops, rds-mysql-ops, redis-ops, mongodb-ops, elasticsearch-ops); recommended for all others |
 | **C15** | **`### What This Skill Does` (IMPORTANT)** | **MUST** exist with a clear 2-3 sentence description of the skill's purpose and boundary |
 | **C16** | **`## Operational Best Practices` (IMPORTANT)** | **MUST** exist with actionable operational guidance (monitoring, backup, security patterns) |
+| **C17** | **SecurityOps coverage** | `references/advanced/securityops.md` exists for security-critical skills (security-group-ops, iam-ops, kms-ops, ecs-ops, rds-mysql-ops, redis-ops, mongodb-ops, elasticsearch-ops); recommended for all others |
 
 ### Round 2 — Accuracy & Anti-Pattern Sweep
 
@@ -69,8 +68,8 @@ Verify against reality, not memory:
 | **F9** | **Link integrity** | Cross-references between docs/ and AGENTS.md verified; all internal `[...](...)` resolve to existing files (see §Link & Dedup) |
 | **F10** | **Dedup integrity** | No repeated content across multiple files; after every change run dedup check (see §Link & Dedup) |
 | **F11** | **Eval data coverage** | `assets/eval_queries.json` exists for all 29 skills with ≥ 5 trigger + ≥ 2 non-trigger cases |
-| **F11** | **FinOps coverage** | `references/advanced/finops.md` exists for required+recommended skills |
-| **F12** | **SecurityOps coverage** | `references/advanced/securityops.md` exists for security-critical skills (8); recommended for all others |
+| **F12** | **FinOps coverage** | `references/advanced/finops.md` exists for required+recommended skills |
+| **F13** | **SecurityOps coverage** | `references/advanced/securityops.md` exists for security-critical skills (8); recommended for all others |
 
 **Fix every issue found in both rounds before responding "done".** If a finding requires information you don't have, mark it `[blocked: needs OpenAPI verification]`.
 
@@ -141,7 +140,7 @@ Verify against reality, not memory:
 |---------|---------|------|
 | 修复经验（跨 skill 通用） | `docs/failure-patterns.md` | "TE-4 扫描误标 — 需人工核查路径覆盖率" |
 | 执行流程改进 | `AGENTS.md` 本文件 | "扫描类任务先用 explore 并行，再基于结果分批修复" |
-| 规则解读 / 边界判定 | 对应 `docs/*.md` | "TE-4 集中声明需覆盖所有 jq path 使用点，不只看文件头" |
+| 规则解读 / 边界判定 | 对应 `docs/*.md` | "TE 规则边界判定 → 见 docs/token-efficiency.md" |
 | 临时工作记录 | `planning-with-files` 产生的 .md 文件 | `findings.md`、`task_plan.md`、`progress.md` |
 
 **规则**：沉淀内容必须去重（查重后再追加），单条 ≤ 200 字，用 `→` `⇒` `✅` `❌` 符号。
@@ -313,6 +312,12 @@ ve-[product]-ops/                    one per Volcengine product
 docs/
   gcl-spec.md                        full GCL specification
   token-efficiency.md                detailed TE rules with code examples
+  document-integrity.md              link validation & dedup scripts
+  failure-patterns.md                Reflexion memory store
+  inline-script-pattern.md           _inline_script() constraints
+  reflexion-memory.md                cross-session failure-pattern memory
+  skill-harness-review-checklist.md  P0-P3 review checklist
+  skill-routing-graph.md             cross-skill alarm routing
 ```
 
 `.omc/` and `.omo/` are tool-local state and are gitignored — do not commit anything inside them.
@@ -375,67 +380,18 @@ Skill-owned artifacts MUST NOT be placed at repo root. Use this split:
 
 ### Per-Skill Defaults
 
-| Skill | GCL | max_iter | Notes |
-|-------|------|----------|-------|
-| `ve-ecs-ops` | **required** | 2 | instance Delete/Stop |
-| `ve-redis-ops` | **required** | 2 | FlushAll / instance delete |
-| `ve-rds-mysql-ops` | **required** | 2 | DDL / DELETE / TRUNCATE |
-| `ve-rds-ops` | **required** | 2 | DDL / DELETE / TRUNCATE |
-| `ve-rds-pg-ops` | **required** | 2 | DDL / DELETE / TRUNCATE |
-| `ve-polar-mysql-ops` | **required** | 2 | DDL / DELETE / TRUNCATE |
-| `ve-mongodb-ops` | **required** | 2 | dropDatabase / delete |
-| `ve-elasticsearch-ops` | **required** | 2 | delete index / cluster |
-| `ve-tos-ops` | **required** | 2 | bucket delete + object lifecycle |
-| `ve-iam-ops` | **required** | 2 | detach policy / delete role / rotate keys |
-| `ve-kms-ops` | **required** | 2 | schedule key deletion (irreversible) |
-| `ve-eip-ops` | **required** | 2 | release EIP |
-| `ve-security-group-ops` | **required** | 2 | revoke-rule can lock out production |
-| `ve-vpc-ops` | recommended | 3 | VPC / subnet delete |
-| `ve-nat-ops` | recommended | 3 | SNAT / DNAT rule delete |
-| `ve-vpn-ops` | recommended | 3 | tunnel / customer-gateway delete |
-| `ve-clb-ops` | recommended | 3 | listener / backend delete |
-| `ve-alb-ops` | recommended | 3 | listener / server group delete |
-| `ve-vke-ops` | recommended | 3 | node / cluster delete |
-| `ve-nas-ops` | recommended | 3 | filesystem / mount delete |
-| `ve-cms-ops` | recommended | 3 | alarm rule delete |
-| `ve-fg-ops` | recommended | 3 | function delete |
-| `ve-ark-ops` | recommended | 3 | instance / template delete |
-| `ve-cdn-ops` | optional | 5 | domain config / refresh |
-| `ve-dns-ops` | optional | 5 | record delete |
-| `ve-kafka-ops` | optional | 5 | topic delete |
-| `ve-sls-ops` | optional | 5 | read-mostly |
-| `ve-billing-ops` | optional | 5 | read-only |
-| `ve-skill-generator` | optional | 3 | meta operation |
-
+Full tier/default mapping: [docs/gcl-spec.md §8](docs/gcl-spec.md#8-per-skill-defaults).
 Each skill may override `max_iter` in its own `SKILL.md` (`## Quality Gate (GCL)`).
 
 ### Anti-Patterns (banned)
 
-| Anti-pattern | Reason |
-|---|---|
-| Shared context G+C | Defeats independence |
-| Subjective scoring | Critic must use rubric, not "vibes" |
-| Unbounded loop | Always hard-cap iterations |
-| Critic sees user request | Encourages rubber-stamping |
-| Silently downgrade on Safety fail | Must ABORT visibly |
-| Trace not persisted | No post-mortem |
-| Critic mutates resources | Read-only by definition |
-| Real `VOLCENGINE_SECRET_KEY` in trace | Credential leakage → use `<masked>` |
-| GCL bypass for "obviously safe" ops | Even reads go through GCL |
+> Full list: [docs/gcl-spec.md](docs/gcl-spec.md) §9.
+> **Key**: Shared G+C context banned · Safety=0 must ABORT · Trace must persist · Credential leakage in trace · No unbounded loops.
 
 ### Cross-Skill Delegation
 
 When GCL identifies cross-product gaps, the Orchestrator MUST delegate, not absorb.
-Full alarm-pattern → skill routing rules are in [docs/skill-routing-graph.md](docs/skill-routing-graph.md).
-
-| Critic finding | Delegate to |
-|---|---|
-| IAM policy gap | `ve-iam-ops` |
-| KMS key / secret needed | `ve-kms-ops` |
-| EIP / VPC concern in non-network skill | `ve-eip-ops` / `ve-vpc-ops` |
-| Alarm rule change after destructive op | `ve-cms-ops` |
-| Billing quota exceeded | `ve-billing-ops` |
-
+Full alarm-pattern → skill routing rules in [docs/skill-routing-graph.md](docs/skill-routing-graph.md).
 The Critic itself MUST NOT call any skill — it only emits suggestions.
 
 ### GCL Rollout Complete — All 29 Skills Equipped
@@ -463,91 +419,16 @@ GCL runs MUST use externally supplied isolated Critic scores in production. Manu
 
 ## Document Integrity & Link Validation (C12 / F9 / F10 — 强制)
 
-> 每次文档变更后，自动对**所有受影响的文件**执行以下 3 层完整性检查。
+> 每次文档变更后，自动对所有受影响的文件执行 3 层完整性检查。
+> 完整检查脚本及模板见 [docs/document-integrity.md](docs/document-integrity.md)。
 
-### Layer 1 — 链接完整性（验证 F9）
+| Layer | 检查项 | 方法 |
+|-------|--------|------|
+| 1 | 链接完整性（F9） | 扫描所有 `[...](...)` → `test -f` 验证路径存在 |
+| 2 | 交叉引用对称性（F9/TE-7） | AGENTS.md → docs/ 的反向引用存在性 |
+| 3 | 内容去重（C12/TE-6） | 跨文件代码块/表格完全重复检测 |
 
-对本次变更涉及的所有 Markdown 文件，扫描全部 `[...](...)` 引用链接并按目标类型处理：
-
-| 链接类型 | 验证方法 | 失败时不通过则 |
-|----------|---------|--------------|
-| 相对路径 `.md` | `test -f <target>` | 修复路径或创建缺失文件 |
-| 相对路径 `.yaml` / `.json` | `test -f <target>` | 修复路径或创建缺失文件 |
-| `#section-anchor` | 在目标文件中 `grep -i 'section-name'` | 检查 anchor 名称拼写 |
-| `http(s)://` | 确认 URL 可访问或指向官方文档 | 标记为 BLOCKED 待验证 |
-| `{{env.*}}` / `{{user.*}}` / `{{output.*}}` | 仅检查语法，不检查值 | — |
-
-**检查范围**: 本次变更的文件 + 所有引用了这些文件的其他文件。
-
-```bash
-# macOS 兼容的链接完整性扫描模板
-echo "=== Link Integrity Check ==="
-grep -oE '\[[^]]+\]\([^)]+\)' "$CHANGED_FILE" 2>/dev/null | \
-  sed 's/\[[^]]*\]//' | tr -d '()' | while IFS= read -r target; do
-  case "$target" in
-    http*) echo "⏭️ EXTERNAL: $target" ;;
-    #*) echo "⏭️ ANCHOR: $target" ;;
-    *)  dir="$(dirname "$CHANGED_FILE")"
-        if [ -f "$dir/$target" ] || [ -f "$target" ]; then
-          echo "✅ $target"
-        else
-          echo "❌ MISSING: $target (referenced from $CHANGED_FILE)"
-        fi ;;
-  esac
-done
-```
-
-### Layer 2 — 交叉引用一致性（验证 F9 / TE-7）
-
-当 `AGENTS.md` 和 `docs/*.md` 同时变更时，检查：
-
-| 检查项 | 方法 |
-|--------|------|
-| §引用编号一致 | `docs/gcl-spec.md §11` → 确认 `## 11.` 标题存在 |
-| 文件引用路径一致 | AGENTS.md 中 `docs/token-efficiency.md` → 确认文件存在 |
-| 双向引用对称 | A → B 时，B 中也应有 ← A 的反向引用或文档层级说明 |
-
-```bash
-# 交叉引用对称性检查（仅从 Markdown 链接 `[...](...)` 中提取）
-echo "=== Cross-Reference Symmetry ==="
-grep -oE '\[[^]]+\]\(docs/[^)]+\)' AGENTS.md 2>/dev/null | \
-  sed 's/.*(docs/ds/' | tr -d ')' | while IFS= read -r href; do
-  if grep -q 'AGENTS.md' "$href" 2>/dev/null; then
-    echo "✅ $href has backlink to AGENTS.md"
-  else
-    echo "⚠️  $href missing backlink to AGENTS.md"
-  fi
-done
-```
-
-### Layer 3 — 内容去重（验证 C12 / TE-6）
-
-在变更的文件中检测与同 skill 其他文件的重复段落：
-
-1. 提取变更文件中的所有 **Markdown 表格**（至少 3 行）
-2. 检查同 skill 目录下其他文件是否包含相同表格
-3. 提取变更文件中的所有 **代码块**（至少 5 行）
-4. 检查是否有完全相同的代码块出现在另一文件中
-
-```bash
-# 内容去重扫描模板
-echo "=== Deduplication Check ==="
-CHANGED="$(basename "$CHANGED_FILE")"
-SKILL_DIR="$(dirname "$CHANGED_FILE")"
-for peer_file in "$SKILL_DIR"/*.md "$SKILL_DIR"/references/*.md 2>/dev/null; do
-  [ "$peer_file" = "$CHANGED_FILE" ] && continue
-  [ ! -f "$peer_file" ] && continue
-  # 检查是否有完全相同的代码块（≥5行）
-  awk '/^```/{p=!p;if(p){b=$0;c=1}else{b=b"\n"$0;if(c>=5)print b;b=""}}p&&c++' "$CHANGED_FILE" | \
-  while IFS= read -r block; do
-    if grep -Fq "$block" "$peer_file" 2>/dev/null; then
-      echo "❌ DUPLICATE block in $peer_file"
-    fi
-  done
-done
-```
-
-### 发现任何问题 → 修复并重新验证 → 确认全部通过后方可继续。
+**发现任何问题 → 修复并重新验证 → 确认全部通过后方可继续。**
 
 ---
 
@@ -564,35 +445,18 @@ done
 
 ## Runtime Quality Gates: GCL & Reflexion
 
-Detailed runtime-quality specifications are intentionally externalized to reduce always-loaded context size:
+Detailed specs in [docs/gcl-spec.md](docs/gcl-spec.md) and [docs/reflexion-memory.md](docs/reflexion-memory.md).
 
 | Spec | Read before modifying |
 |---|---|
 | `docs/gcl-spec.md` | any `## Quality Gate (GCL)` section, `references/rubric.md`, `references/prompt-templates.md`, or GCL-related runner code |
 | `docs/reflexion-memory.md` | `docs/failure-patterns.md`, trace `failure_pattern` extraction, Reflexion retrieval/persistence logic, or failure-memory governance |
-| `docs/failure-patterns.md` | only when retrieving or updating reusable failure patterns; keep it bounded and deduplicated |
-| `docs/skill-routing-graph.md` | cross-skill alarm routing, delegation rules, and multi-product fault diagnosis chains |
 
-### GCL hard constraints
+### Hard Constraints Summary
 
-- Production GCL requires isolated Generator and Critic contexts; shared-context G+C is banned.
-- Critic is read-only: it MUST NOT call `ve`, use SDK clients, mutate resources, or self-score Generator output.
-- Critic MUST NOT see the raw user request; it may use sanitized `{{output.operation_intent}}`, Generator output, trace, and rubric.
-- Orchestrator owns `operation_intent` generation before Critic scoring; it MUST omit raw user wording, credentials, and unmasked sensitive identifiers.
-- `Safety = 0` / `SAFETY_FAIL` MUST abort immediately; never return partial or best-effort output.
-- Every GCL loop MUST be bounded by `max_iterations`; unbounded retry loops are banned.
-- Every GCL run MUST persist a masked trace (tool-local; `.omc/` is gitignored — see **Files that DO NOT exist** below).
-- Production GCL MUST use externally supplied isolated Critic scores; `--structural-critic-only` is allowed only for CI/local structural smoke tests and MUST NOT be used for production execution, human acceptance, or quality pass decisions.
-- GCL prompt templates MUST use `{{env.*}}` / `{{user.*}}` / `{{output.*}}`; bare `{...}` placeholders are banned.
-- GCL `required` / `recommended` skills MUST keep `## Quality Gate (GCL)` in `SKILL.md`, plus `references/rubric.md` and `references/prompt-templates.md`.
+**GCL:** Isolated G+C contexts · Critic read-only · Safety=0 must ABORT · max_iterations bounded · `{{env.*}}`/`{{user.*}}`/`{{output.*}}` placeholders · Trace persisted with masked credentials.
 
-### Reflexion hard constraints
-
-- Reflexion retrieval is an optional hint, not a mandatory gate.
-- `docs/failure-patterns.md` MUST stay ≤ 200 lines; prune low-frequency entries when needed.
-- Deduplicate patterns by `skill` + `command` + `error`; increment `count` on matches.
-- Patterns MUST come from GCL trace `failure_pattern` fields or self-review findings, not ad-hoc subjective notes.
-- Promote high-frequency patterns to anti-pattern docs and remove duplicates from memory.
+**Reflexion:** Optional hint · `docs/failure-patterns.md` ≤ 200 lines · Dedup by skill+command+error · Patterns from GCL trace only.
 
 ### Relationship to build-time self-review
 

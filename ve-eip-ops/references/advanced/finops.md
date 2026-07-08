@@ -1,20 +1,36 @@
 # FinOps — EIP Cost Optimization (Advanced)
 
-> Deep FinOps analysis per TE-7. `core-concepts.md` links here.
+> Deep FinOps analysis per TE-7.
 
-## Cost Optimization Tips
+## Cost Model Overview
+
+EIP billing includes: (1) hourly lease fee (varies by spec), (2) outbound data transfer (per GB), (3) optional bandwidth package. **Unassociated EIPs still incur hourly fee** → release if idle.
+
+## Product-Specific Cost Optimization
 
 | Tip | Action | 💰 Savings |
 |-----|--------|---------|
-| Release unused EIPs | Unassociated EIPs incur hourly fee — release if idle > 7 days | 100% of idle EIP cost |
-| Right-size bandwidth | Monitor peak bandwidth and downgrade excess bandwidth tier | 20-50% |
-| Use PrePaid bandwidth | Steady bandwidth needs → 1yr PrePaid for bandwidth package | ~35% |
+| Release idle EIPs | Unassociated > 7d → release | 100% of idle fee |
+| Right-size bandwidth tier | Monitor peak → downgrade excess tier | 20-50% |
+| Use Shared Bandwidth Pool | Consolidate EIPs into shared plan | ~30% on data TX |
+| Use PrePaid bandwidth | Steady needs → 1yr bandwidth package | ~35% |
 
-## Query Current Prices
+## Cost Anomaly Detection
+
+| Warning Sign | Check Command | Action |
+|-------------|---------------|--------|
+| 💰 Surge in unassociated EIPs | `ve eip DescribeEipAddresses` — filter `InstanceId:null` | Release orphaned EIPs |
+| ⚠️ Bandwidth spike > 2x baseline | `ve billing DescribeBillDetail` — filter `EIP` | Investigate traffic source |
+| 📊 Data transfer cost jump | Compare MoM `EIP` cost in billing | Trace by associated instance |
+
+## Query Current Pricing
+
+EIP pricing is zone/spec-dependent. Use billing API for current rates:
 
 ```bash
-# Query current EIP pricing
-ve eip DescribePrice
+ve billing DescribeBillDetail --body '{"BillingPeriod":"{{env.BILLING_MONTH}}","Product":"EIP"}'
 ```
 
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve eip DescribePrice` for current quotes.
+## Related Resources
+
+- [FinOps — Billing Cost Optimization](../../ve-billing-ops/references/advanced/finops.md)

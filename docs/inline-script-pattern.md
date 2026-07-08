@@ -8,6 +8,8 @@
 
 ## 问题背景
 
+> 被 [AGENTS.md](../AGENTS.md) §Document Integrity 引用。
+
 `validate_local.py` 需要运行多个检查步骤。其中一些步骤逻辑简单（如遍历目录检查文件），但需要作为独立子进程执行（与主进程隔离副作用）。方案选择：
 
 | 方案 | 问题 |

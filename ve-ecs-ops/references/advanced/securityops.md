@@ -87,7 +87,7 @@
 
 | Class | ECS Specific Risk | Detection Method |
 |-------|-------------------|-----------------|
-| Misconfiguration | Public SG (0.0.0.0/0 on SSH/22, RDP/3389) | `ve ecs DescribeSecurityGroups` + rule audit |
+| Misconfiguration | Public SG (0.0.0.0/0 on SSH/22, RDP/3389) | Delegate to ve-security-group-ops for SG rule audit |
 | Credential Exposure | SSH key pair in instance metadata / user-data | Grep for `ssh-rsa`, `password` in user-data scripts |
 | Unpatched OS | Outdated OS image running known CVE | Compare image ID to latest marketplace image |
 | CryptoMining | Sustained high CPU with outbound connections | Cloud Assistant `top`, `netstat`, `htop` |
@@ -100,11 +100,11 @@
 echo "=== ECS Security Audit $(date +%Y-%m-%d) ==="
 
 # 1. Check all instances with public IPs
-ve ecs DescribeInstances --query 'Instances[?PublicIpAddress!=``]' --output table
+ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}} | jq '.Result.Instances[] | select(.PublicIpAddress != null)'
 echo "→ Verify each public IP has business justification"
 
 # 2. Check all instances with password login (no key pair)
-ve ecs DescribeInstances --query 'Instances[?KeyPairName==null]' --output table
+ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}} | jq '.Result.Instances[] | select(.KeyPairName == null)'
 echo "→ Ensure key pair is configured, disable password login"
 
 # 3. Check security groups with 0.0.0.0/0 on management ports
@@ -114,7 +114,7 @@ echo "→ Delegate to ve-security-group-ops for SG audit"
 echo "→ Delegate to ve-iam-ops for permission audit"
 
 # 5. Check instance age for patch compliance
-ve ecs DescribeInstances --query 'Instances[?CreationTime<`2025-01-01`]' --output table
+ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}} | jq '.Result.Instances[] | select(.CreationTime < "{{user.date_threshold}}")'
 echo "→ Consider rebuilding these instances with latest OS images"
 ```
 

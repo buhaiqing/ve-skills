@@ -1,19 +1,38 @@
-# FinOps — Security Group Cost Optimization (Advanced)
+# FinOps — Security Group Governance
 
-> Deep FinOps analysis per TE-7. `core-concepts.md` links here.
+> Security Groups are **free** — FinOps focus = incident cost avoidance + audit efficiency.
 
 ## Cost Overview
 
-Security Groups are free of charge. There are no direct billing costs for security group rules or usage.
+SGs have **zero direct billing**. Costs are indirect:
+- **Audit overhead** → 100+ orphaned SGs waste compliance review time
+- **Incident cost** → over-permissive rules (0.0.0.0/0 on critical ports) → breach potential
+- **Operational drag** → too many SGs per ENI → troubleshooting latency
 
-## Cost Optimization Tips
+## Cost Optimization
 
-| Tip | Action | 💰 Savings |
-|-----|--------|---------|
-| Remove unused SGs | Orphaned security groups (not associated with any ENI) — delete | Simplifies management, eliminates audit noise |
-| Consolidate rules | Merge duplicate rules across SGs — fewer SGs to manage | Operational efficiency |
-| Audit regularly | Periodically review rules against least-privilege principle | Security + governance |
+| Pattern | Action | Savings |
+|---------|--------|---------|
+| 🧹 Orphaned SGs | Delete SGs not associated with any ENI | Cleaner inventory |
+| 🔗 Rule consolidation | Merge identical CIDR rules, use prefix lists | 10-30% rule count ↓ |
+| 🔒 Least-privilege audit | Quarterly review of 0.0.0.0/0 → narrow to specific CIDRs | ↓ breach surface area |
+| 🏷️ Tag for cost center | Tag every SG → `CostCenter`, `Owner` | + Cost attribution |
+| 🗑️ Stale rules | Remove rules for decommissioned instance CIDRs | Cleaner, more secure |
 
-> Security Group usage is free — focus optimization on governance and operational hygiene.
->
-> ⚠️ Pricing data sourced from ve DescribePrice command — use `ve security-group DescribePrice` for current quotes.
+## Cost Anomaly Detection
+
+| Signal | What to Check | Response |
+|--------|---------------|----------|
+| ⚠️ SG count spike | New SGs created without cleanup plan | Audit & consolidate |
+| ⚠️ 0.0.0.0/0 on ports 22/3389 | Public SSH/RDP exposed | Restrict immediately |
+| ⚠️ Unused rule ratio > 30% | Rules matching no active ENI | Prune stale rules |
+| 🚨 Default SG with all traffic | VPC default SG still wide open | Harden default rules |
+
+## Pricing
+
+SGs are **free** → no pricing query needed. Cost comes from **security incidents prevented** and **audit hours saved**.
+
+## Related Resources
+
+- [Billing FinOps → tagging & cost allocation](../../../ve-billing-ops/references/advanced/finops.md)
+- [Security Group SecurityOps → least-privilege patterns](../advanced/securityops.md)

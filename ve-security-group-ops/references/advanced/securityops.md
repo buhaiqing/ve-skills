@@ -83,10 +83,10 @@
 
 | Class | SG Specific Risk | Detection Method |
 |-------|------------------|-----------------|
-| Overly Permissive Ingress | 0.0.0.0/0 on SSH/RDP/MySQL/Redis | `ve ecs DescribeSecurityGroups` — rule audit |
+| Overly Permissive Ingress | 0.0.0.0/0 on SSH/RDP/MySQL/Redis | `ve vpc DescribeSecurityGroupAttributes` — rule audit |
 | Unrestricted Egress | 0.0.0.0/0 on all outbound traffic | Review outbound rules per SG |
 | Port Scanning Target | Wide port range (1-65535) open to internet | Check port range in ingress rules |
-| Unused Security Group | SG exists with no instance attachment | `ve ecs DescribeSecurityGroups` — instance count |
+| Unused Security Group | SG exists with no instance attachment | `ve vpc DescribeSecurityGroups` — check via {{user.sg_id}} cross-ref with ve-ecs-ops |
 | Cross-Tier Violation | App SG allows direct DB port access | Compare SG-to-SG reference rules |
 
 ### Automated Scanning
@@ -96,22 +96,37 @@
 echo "=== Security Group Audit $(date +%Y-%m-%d) ==="
 
 # 1. Find all SGs with 0.0.0.0/0 on management ports
+# Uses DescribeSecurityGroupAttributes to inspect per-SG ingress rules
 echo "→ Checking for overly permissive SGs..."
-ve ecs DescribeSecurityGroups --query 'SecurityGroups[?Permissions[?contains(@,`0.0.0.0/0`) && contains(@,`22`)]]' --output table
+for sg_id in $(ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}} | jq -r '.Result.SecurityGroups[].SecurityGroupId'); do
+  echo "→ SG: $sg_id"
+  ve vpc DescribeSecurityGroupAttributes --Region {{env.VOLCENGINE_REGION}} --SecurityGroupId "$sg_id" |
+    jq '.Result.IngressRules[] | select(.CidrIp == "0.0.0.0/0") | {PortRange, Policy, Priority}'
+done
 echo "→ Review and restrict these rules"
 
 # 2. Check for SGs with no instances attached (orphaned)
+# DescribeSecurityGroups does not return instance count; cross-ref via ve-ecs-ops
 echo "→ Finding orphaned SGs..."
-ve ecs DescribeSecurityGroups --query 'SecurityGroups[?InstanceCount==`0`]' --output table
-echo "→ Delete orphaned SGs (requires confirmation)"
+ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}} |
+  jq '.Result.SecurityGroups[] | {SecurityGroupId, SecurityGroupName, VpcId}'
+echo "→ Cross-reference with ve-ecs-ops to verify each SG has attached instances"
 
-# 3. Audit all SGs for wide port ranges
+# 3. Audit all SGs for wide / unrestricted port ranges
 echo "→ Checking for wide port ranges..."
-# Manual review: Look for port ranges > 100 on ingress rules
+for sg_id in $(ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}} | jq -r '.Result.SecurityGroups[].SecurityGroupId'); do
+  echo "→ SG: $sg_id"
+  ve vpc DescribeSecurityGroupAttributes --Region {{env.VOLCENGINE_REGION}} --SecurityGroupId "$sg_id" |
+    jq '.Result.IngressRules[] | {CidrIp, PortRange, Action, Priority}'
+done
+echo "→ Review: flag any rule with PortRange covering unusual ranges (e.g. 1-65535)"
 
 # 4. Verify outbound rules
 echo "→ Checking outbound restrictions..."
-ve ecs DescribeSecurityGroups --query 'SecurityGroups[?Permissions[?Direction==`egress` && @.contains(`0.0.0.0/0`)]]' --output table
+for sg_id in $(ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}} | jq -r '.Result.SecurityGroups[].SecurityGroupId'); do
+  ve vpc DescribeSecurityGroupAttributes --Region {{env.VOLCENGINE_REGION}} --SecurityGroupId "$sg_id" |
+    jq '.Result.EgressRules[] | select(.CidrIp == "0.0.0.0/0") | {PortRange, Action, Priority}'
+done
 echo "→ Restrict outbound where possible"
 
 # 5. Cross-check SG references for tier isolation
