@@ -169,3 +169,9 @@
   }
 }
 ```
+
+---
+
+## Extracted from GCL Traces (auto-generated)
+
+> This block is **auto-generated** by `scripts/gcl_runner.py`'s Reflexion write-back (`_writeback_failure_pattern` → `gcl_trace_aggregate.update_failure_patterns_file`) at MAX_ITER / SAFETY_FAIL. It is **deduped by `(skill, pattern)`** and is **not** hand-edited — do not modify its contents manually.
