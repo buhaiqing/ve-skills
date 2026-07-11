@@ -1,12 +1,12 @@
-# SecurityOps — FunctionGraph Security Operations
+# SecurityOps — FunctionGraph (函数服务) Security Operations
 
 > SecurityOps content for non-security-critical skills per TE-7.
-> **Purpose**: Function code access control, trigger authentication, secret environment variable management, and execution role hardening for FunctionGraph resources.
+> **Purpose**: Function code access control, trigger authentication, secret env management
 
 ## Security Baseline Checklist
 
 ```markdown
-## FunctionGraph Security Baseline — Current
+## FunctionGraph Security Baseline — [Date]
 
 ### Access Control
 - [ ] IAM policies scoped to fg required APIs only
@@ -29,3 +29,10 @@
 - [ ] Security-related events have separate alarm rules
 - [ ] Unauthorized access attempts trigger alerts via ve-cms-ops
 ```
+
+## Product-Specific Security Recommendations
+
+- Store function secrets in encrypted environment variables
+- Use IAM authentication for function triggers
+- Scope function execution role to minimum required permissions
+
