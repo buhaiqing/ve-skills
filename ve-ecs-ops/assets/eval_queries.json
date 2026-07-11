@@ -1,16 +1,134 @@
 [
-  {"query": "创建 ECS 云服务器实例", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "启动停止云服务器", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "ECS 实例 CPU 占用过高", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "云服务器无法连接", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "查看 ECS 实例列表", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "ECS 磁盘挂载和扩容", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "ECS 安全组配置", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "ECS 快照管理", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "ECS 实例类型变更", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "high"},
-  {"query": "云助手命令执行", "should_trigger": true, "skill": "ve-ecs-ops", "confidence": "medium"},
-  {"query": "创建 RDS 数据库", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"},
-  {"query": "配置负载均衡", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"},
-  {"query": "部署 Kubernetes", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"},
-  {"query": "查询账单明细", "should_trigger": false, "skill": "ve-ecs-ops", "confidence": "low"}
+  {
+    "query": "创建 ECS 云服务器实例",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "启动停止云服务器",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "ECS 实例 CPU 占用过高",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "云服务器无法连接",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "查看 ECS 实例列表",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "ECS 磁盘挂载和扩容",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "ECS 安全组配置",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "ECS 快照管理",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "ECS 实例类型变更",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "云助手命令执行",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "创建 RDS 数据库",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low"
+  },
+  {
+    "query": "配置负载均衡",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low"
+  },
+  {
+    "query": "部署 Kubernetes",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low"
+  },
+  {
+    "query": "查询账单明细",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low"
+  },
+  {
+    "query": "帮我找出长期闲置、CPU 利用率一直很低的 ECS 实例",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "有没有可以降配优化的 ECS 实例，帮我推荐个更合适的规格",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "把那些停了很久没用的 ECS 实例清理掉",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "查看一下 ECS 资源的成本汇总和账单情况",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "我的 ECS 实例出现异常，根据知识库帮我排查一下故障原因",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "ECS 一下子收到一大波告警，帮我处理下这个告警风暴",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "我们公司这个月的财务总账单在哪里查",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low"
+  },
+  {
+    "query": "帮我把 RDS 数据库实例做一下成本优化和降配",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low"
+  }
 ]
