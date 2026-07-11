@@ -92,5 +92,67 @@
     "skill": "ve-tos-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "分析一下 TOS 各个存储类别的分布和成本情况",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps storage analysis scope",
+    "operations": [
+      "DescribeStorageAnalysis"
+    ]
+  },
+  {
+    "query": "清理一下 TOS 里那些没上传完的分片上传任务",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps multipart cleanup scope",
+    "operations": [
+      "CleanupMultipartUploads"
+    ]
+  },
+  {
+    "query": "TOS 存储成本太高了，帮我把热数据降级到更便宜的存储类别",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps storage class optimization scope",
+    "operations": [
+      "DescribeStorageAnalysis"
+    ]
+  },
+  {
+    "query": "检测一下 TOS 里哪些对象是长期没被访问的冷数据",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps stale object detection scope",
+    "operations": [
+      "DetectStaleObjects"
+    ]
+  },
+  {
+    "query": "TOS 访问一直出问题，根据知识库帮我诊断下故障原因",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS AIOps knowledge-base diagnosis scope",
+    "operations": []
+  },
+  {
+    "query": "我们公司想买个域名，顺便配置一下 CDN 加速",
+    "should_trigger": false,
+    "skill": "ve-tos-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill (domain/CDN belongs to other products)"
+  },
+  {
+    "query": "帮我把 Redis 实例做一下成本优化，存储费用太高了",
+    "should_trigger": false,
+    "skill": "ve-tos-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill (Redis cost optimization belongs to redis-ops)"
   }
 ]
