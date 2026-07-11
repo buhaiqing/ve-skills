@@ -120,7 +120,7 @@
 | Safety gate | `silent_destructive_default` | Fix proposal defaults to `--force` or `--skip-confirm` | Force flag MUST be explicit; reject any proposal where destructive flag is on by default | 0 |
 | Execute | `retry_storm` | Failed op auto-retried without backoff, hits rate limit | Exponential backoff mandatory; max 2 retries; surface original error after 2nd fail | 0 |
 | Execute | `partial_rollback` | Multi-step fix aborted midway; some steps already applied | Snapshot resource state via `ve <svc> Describe*` before each destructive step; emit rollback script on partial completion | 0 |
-| Reflexion | `pattern_undercount` | Pattern added to §6 with count=1 then forgotten; threshold for promotion never reached | Self-Review Round 3 MUST scan §6 every run; promote when count ≥ 3 | 0 |
+| Reflexion | `pattern_undercount` | Pattern added to §6 with count=1 then forgotten; threshold for promotion never reached | Self-Review Round 3 MUST scan §6 every run; promote when count ≥ 10 | 0 |
 | Reflexion | `category_mismatch` | Incident pattern placed in §3 `cross_skill` losing orchestration-specific context | §6 owns orchestration layer (§3 = leaf skill internal failures) | 0 |
 
 **Anti-pattern candidates to seed (preventive)**:
