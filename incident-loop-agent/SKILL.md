@@ -221,4 +221,4 @@ This skill never reimplements routing. It loads the routing table, matches, and 
 
 | Version | Date | Change |
 |---------|------|--------|
-| 0.1.0   | 2026-07-10 | Initial skeleton: 7-step loop, 7-dim rubric, 5 prompt templates, Skill-Routing-Graph integration, Reflexion into `docs/failure-patterns.md §6`. |
+| 0.1.0   | 2026-07-10 | Initial skeleton: 7-step loop, 7-dim rubric, 5 prompt templates, Skill-Routing-Graph integration, Reflexion write-back into `docs/failure-patterns.md` (`## Extracted from GCL Traces` block). |

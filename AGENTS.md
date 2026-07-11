@@ -400,6 +400,8 @@ The Critic itself MUST NOT call any skill — it only emits suggestions.
 All 13 `required`-tier, 10 `recommended`-tier, and 6 `optional`-tier skills have GCL rubric + prompt templates.
 See [docs/gcl-spec.md](docs/gcl-spec.md) §11 for the full rollout changelog.
 
+> Additionally, 1 **orchestration skill** `incident-loop-agent` (`metadata.type=orchestration-skill`) is equipped with GCL rubric + prompt templates. It is exempt from the `ve-` prefix and `cli_applicability` mandate per the Skill Authoring Guardrails exception clause.
+
 ## Evaluation
 
 `assets/eval_queries.json` per skill holds intent-classification test cases (`should_trigger: true/false`). These are consumed by external evaluation harnesses, not by an in-repo test runner. When adding capability, add eval cases in the same change.
