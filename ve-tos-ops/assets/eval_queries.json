@@ -108,7 +108,7 @@
     "should_trigger": true,
     "skill": "ve-tos-ops",
     "confidence": "high",
-    "rationale": "matches TOS FinOps multipart cleanup scope",
+    "rationale": "matches TOS FinOps multipart cleanup scope; CleanupMultipartUploads issues AbortMultipartUpload (mutating) — require explicit confirmation before execution",
     "operations": [
       "CleanupMultipartUploads"
     ]

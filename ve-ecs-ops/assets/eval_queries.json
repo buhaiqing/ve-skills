@@ -123,12 +123,14 @@
     "query": "我们公司这个月的财务总账单在哪里查",
     "should_trigger": false,
     "skill": "ve-ecs-ops",
-    "confidence": "low"
+    "confidence": "low",
+    "rationale": "out of scope for this skill (company financial bill belongs to billing product, not ECS resource cost)"
   },
   {
     "query": "帮我把 RDS 数据库实例做一下成本优化和降配",
     "should_trigger": false,
     "skill": "ve-ecs-ops",
-    "confidence": "low"
+    "confidence": "low",
+    "rationale": "out of scope for this skill (RDS cost optimization belongs to rds-ops)"
   }
 ]
