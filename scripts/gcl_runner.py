@@ -2,8 +2,17 @@
 """GCL Orchestrator (Phase 2) — Generator execution loop with external Critic injection.
 
 Implements the **Orchestrator (O)** role from AGENTS.md GCL spec. Generator runs
-``ve``/shell commands; Critic scores MUST come from an **isolated** context via
-``--critic-json`` or stdin — this script never self-scores as Critic in production mode.
+``ve``/shell commands; Critic scores MUST come from an **isolated** context — via
+``--critic-json``, stdin, or a separate ``--critic-command`` process (this script
+never self-scores as Critic in production mode).
+
+Loop closure (fixes the earlier open-loop defect):
+  * Prior Critic suggestions are injected into the Generator via the
+    ``GCL_CRITIC_FEEDBACK`` env var on every iteration (AGENTS.md §4 [3]).
+  * Known failure patterns are injected via ``GCL_KNOWN_FAILURE_PATTERNS``
+    (Reflexion pre-flight, AGENTS.md §12).
+  * Non-null failure patterns are written back to ``docs/failure-patterns.md``
+    at the end of a MAX_ITER / SAFETY_FAIL run (Reflexion write-back).
 
 Usage:
   python3 scripts/gcl_runner.py run \\
@@ -11,7 +20,8 @@ Usage:
     --request "List ECS instances read-only" \\
     --command 've ecs DescribeInstances --Region cn-beijing' \\
     [--max-iter 2] \\
-    [--critic-json path/to/critic.json]
+    [--critic-json path/to/critic.json] \\
+    [--critic-command 'python3 scripts/gcl_critic_stub.py']
 
   # Rule-based structural audit only (CI / dry-run; NOT a substitute for isolated Critic):
   python3 scripts/gcl_runner.py run ... --structural-critic-only
@@ -23,12 +33,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+# Allow importing sibling scripts (gcl_trace_aggregate) for Reflexion write-back.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 # Per AGENTS.md §8 defaults (override via --max-iter)
 SKILL_MAX_ITER: dict[str, int] = {
@@ -90,15 +104,30 @@ def has_credential_leak(text: str) -> bool:
     return any(p.search(text) for p in SECRET_PATTERNS)
 
 
-def run_command(command: str, timeout: int = 120) -> dict[str, Any]:
-    """Execute generator command; capture exit code and masked output."""
+def run_command(
+    command: str,
+    timeout: int = 120,
+    extra_env: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Execute generator command; capture exit code and masked output.
+
+    ``extra_env`` carries loop-state into the Generator without rewriting the
+    command string: ``GCL_CRITIC_FEEDBACK`` (prior Critic suggestions) and
+    ``GCL_KNOWN_FAILURE_PATTERNS`` (Reflexion hints). This is how the
+    Orchestrator "injects suggestions into G" (AGENTS.md §4 [3]) — the Generator
+    reads these from its environment and adapts, closing the G↔C loop.
+    """
     try:
+        env = dict(os.environ)
+        if extra_env:
+            env.update({k: v for k, v in extra_env.items() if v})
         proc = subprocess.run(
             command,
             shell=True,
             capture_output=True,
             text=True,
             timeout=timeout,
+            env=env,
         )
         combined = (proc.stdout or "") + (proc.stderr or "")
         masked = mask_secrets(combined)
@@ -162,6 +191,70 @@ def load_critic(path: Path | None, stdin: bool) -> dict[str, Any] | None:
     if stdin and not sys.stdin.isatty():
         return json.loads(sys.stdin.read())
     return None
+
+
+def run_isolated_critic(
+    skill: str,
+    operation_intent: dict[str, Any],
+    generator: dict[str, Any],
+    iterations: list[dict[str, Any]],
+    critic_cmd: str,
+    root: Path,
+    timeout: int = 120,
+) -> dict[str, Any] | None:
+    """Run an ISOLATED Critic in a separate process (AGENTS.md §9).
+
+    The Critic receives ONLY sanitized inputs — ``operation_intent``,
+    ``generator_output``, and the prior ``trace`` — never the raw user
+    ``request``. This satisfies the hard constraint that the Critic MUST NOT
+    see the raw request (prevents answer-aligned rubber-stamping) and that G
+    and C live in isolated contexts. The external command must print a valid
+    critic JSON to stdout.
+    """
+    rubric_path = root / skill / "references" / "rubric.md"
+    critic_input = {
+        "skill": skill,
+        "operation_intent": operation_intent,
+        "generator_output": {
+            "command": generator.get("command", ""),
+            "exit_code": generator.get("exit_code"),
+            "result_excerpt": generator.get("result_excerpt", ""),
+        },
+        "trace": {"iterations": iterations},
+        "rubric_path": (
+            str(rubric_path.relative_to(root)) if rubric_path.exists() else "AGENTS.md"
+        ),
+        # Raw `request` is intentionally excluded from the Critic input.
+    }
+    try:
+        proc = subprocess.run(
+            critic_cmd,
+            shell=True,
+            input=json.dumps(critic_input, ensure_ascii=False),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=dict(os.environ),
+        )
+    except subprocess.TimeoutExpired:
+        print("ERROR: Critic command timed out", file=sys.stderr)
+        return None
+    if proc.returncode != 0:
+        print(
+            f"ERROR: Critic command failed ({proc.returncode}): {proc.stderr[:500]}",
+            file=sys.stderr,
+        )
+        return None
+    try:
+        critic = json.loads(proc.stdout)
+    except json.JSONDecodeError as e:
+        print(f"ERROR: Critic output is not valid JSON: {e}", file=sys.stderr)
+        return None
+    errs = validate_critic_payload(critic)
+    if errs:
+        print("ERROR: Invalid critic JSON from subprocess:", "; ".join(errs), file=sys.stderr)
+        return None
+    return critic
 
 
 def validate_critic_payload(critic: dict[str, Any]) -> list[str]:
@@ -237,6 +330,54 @@ def extract_failure_pattern(
             "reusable": category in {"cli_parameter", "runtime"},
         }
     return None
+
+
+def load_known_failure_patterns(root: Path, skill: str, limit: int = 10) -> str:
+    """Reflexion pre-flight (AGENTS.md §12 / reflexion-memory.md §5).
+
+    Load known failure patterns for this skill from ``docs/failure-patterns.md``
+    and return them as a hint string the Orchestrator injects into the Generator
+    environment (``GCL_KNOWN_FAILURE_PATTERNS``). This closes the Reflexion read
+    side; matches are filtered by skill name. Returns "" when absent.
+    """
+    fp = root / "docs" / "failure-patterns.md"
+    if not fp.exists():
+        return ""
+    out: list[str] = []
+    for line in fp.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if not s.startswith("|") or skill not in s:
+            continue
+        if "---" in s or ("skill" in s.lower() and "command" in s.lower()):
+            continue  # separator or header row
+        out.append(s)
+        if len(out) >= limit:
+            break
+    return "\n".join(out)
+
+
+def _writeback_failure_pattern(root: Path, skill: str, failure_pattern: Any) -> None:
+    """Reflexion write-back: persist a non-null failure_pattern to docs/failure-patterns.md.
+
+    Uses scripts/gcl_trace_aggregate.update_failure_patterns_file so the schema
+    stays consistent. Never raises — Reflexion must not break the main loop.
+    """
+    if not failure_pattern:
+        return
+    try:
+        import gcl_trace_aggregate as gcl_agg
+
+        pattern = failure_pattern["error"] if isinstance(failure_pattern, dict) else str(failure_pattern)
+        category = (failure_pattern.get("category") if isinstance(failure_pattern, dict) else None) or "runtime"
+        source = (failure_pattern.get("command") if isinstance(failure_pattern, dict) else None) or "gcl-runner"
+        summary = {
+            "failure_patterns": [
+                {"skill": skill, "pattern": pattern, "category": category, "source": source}
+            ]
+        }
+        gcl_agg.update_failure_patterns_file(root, summary)
+    except Exception as e:  # Reflexion must never break the main loop
+        print(f"WARN: Reflexion write-back skipped: {e}", file=sys.stderr)
 
 
 def detect_credential_fields(text: str) -> list[str]:
@@ -330,6 +471,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     operation_intent = derive_operation_intent(args.skill, command)
     masked_fields = detect_credential_fields(command)
+    known_patterns = load_known_failure_patterns(root, args.skill)
 
     trace: dict[str, Any] = {
         "trace_schema_version": "v1",
@@ -345,7 +487,14 @@ def cmd_run(args: argparse.Namespace) -> int:
     critic_feedback = ""
 
     for iteration in range(1, max_iter + 1):
-        generator = run_command(command, timeout=args.timeout)
+        generator = run_command(
+            command,
+            timeout=args.timeout,
+            extra_env={
+                "GCL_CRITIC_FEEDBACK": critic_feedback,
+                "GCL_KNOWN_FAILURE_PATTERNS": known_patterns,
+            },
+        )
         generator["args"] = {"iter": iteration, "critic_feedback": critic_feedback or None}
 
         if args.structural_critic_only:
@@ -379,13 +528,19 @@ def cmd_run(args: argparse.Namespace) -> int:
                     ),
                 }
                 path = persist_trace(root, trace)
+                _writeback_failure_pattern(root, args.skill, trace["final"].get("failure_pattern"))
                 print(f"SAFETY_FAIL — credential leak detected — trace: {path}", file=sys.stderr)
                 return 3
             critic = load_critic(args.critic_json, args.critic_stdin)
+            if critic is None and args.critic_command:
+                critic = run_isolated_critic(
+                    args.skill, operation_intent, generator,
+                    trace["iterations"], args.critic_command, root,
+                )
             if critic is None:
                 print(
                     "ERROR: No Critic payload. Pass --critic-json, pipe JSON to stdin, "
-                    "or use --structural-critic-only for rule-based audit.",
+                    "--critic-command <cmd>, or use --structural-critic-only for rule-based audit.",
                     file=sys.stderr,
                 )
                 return 2
@@ -418,6 +573,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                 ),
             }
             path = persist_trace(root, trace)
+            _writeback_failure_pattern(root, args.skill, trace["final"].get("failure_pattern"))
             print(f"SAFETY_FAIL — trace: {path}", file=sys.stderr)
             return 3
 
@@ -446,6 +602,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         ),
     }
     path = persist_trace(root, trace)
+    _writeback_failure_pattern(root, args.skill, trace["final"].get("failure_pattern"))
     print(f"MAX_ITER — trace: {path}", file=sys.stderr)
     return 1
 
@@ -472,6 +629,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--structural-critic-only",
         action="store_true",
         help="Use rule-based structural critic (CI/dry-run; not for production mutations)",
+    )
+    run.add_argument(
+        "--critic-command",
+        type=str,
+        default=None,
+        help="Isolated Critic command (separate process). Receives a sanitized critic-input "
+        "JSON on stdin (operation_intent + generator_output + trace, NEVER the raw request) "
+        "and must print critic JSON to stdout. Implements AGENTS.md §9 G/C isolation when "
+        "--critic-json / --critic-stdin are absent.",
     )
     run.set_defaults(func=cmd_run)
     return p
