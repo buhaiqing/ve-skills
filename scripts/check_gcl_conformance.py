@@ -60,6 +60,8 @@ GCL_SKILLS: frozenset[str] = frozenset({
     "ve-sls-ops",
     "ve-billing-ops",
     "ve-skill-generator",
+    # Orchestration / loop agents (not product-bound; require type: orchestration-skill)
+    "incident-loop-agent",
 })
 
 
