@@ -102,6 +102,6 @@
     "should_trigger": false,
     "skill": "ve-iam-ops",
     "confidence": "low",
-    "rationale": "feature not supported by IAM product"
+    "rationale": "how-to configuration query, not an operational task"
   }
 ]
