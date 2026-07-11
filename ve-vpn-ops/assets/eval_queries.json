@@ -72,5 +72,26 @@
     "skill": "ve-vpn-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 VPN 的隧道状态显示断开",
+    "should_trigger": false,
+    "skill": "ve-vpn-ops",
+    "confidence": "low",
+    "rationale": "not a VPN API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 CMS 告警规则",
+    "should_trigger": false,
+    "skill": "ve-vpn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 VPN 的智能选路功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-vpn-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by VPN product"
   }
 ]

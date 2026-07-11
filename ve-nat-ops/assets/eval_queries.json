@@ -82,5 +82,26 @@
     "skill": "ve-nat-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 NAT 的流量监控不显示",
+    "should_trigger": false,
+    "skill": "ve-nat-ops",
+    "confidence": "low",
+    "rationale": "not a NAT API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 RDS PostgreSQL 实例",
+    "should_trigger": false,
+    "skill": "ve-nat-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 NAT 的双栈网关怎么配置",
+    "should_trigger": false,
+    "skill": "ve-nat-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by NAT product"
   }
 ]

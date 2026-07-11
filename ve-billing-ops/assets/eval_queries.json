@@ -72,5 +72,26 @@
     "skill": "ve-billing-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上账单导出的文件打不开",
+    "should_trigger": false,
+    "skill": "ve-billing-ops",
+    "confidence": "low",
+    "rationale": "not a Billing API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 Kafka 集群",
+    "should_trigger": false,
+    "skill": "ve-billing-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下预算预警的短信通知怎么配置",
+    "should_trigger": false,
+    "skill": "ve-billing-ops",
+    "confidence": "low",
+    "rationale": "feature not available via CLI"
   }
 ]

@@ -82,5 +82,26 @@
     "skill": "ve-security-group-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上安全组规则排序怎么调整",
+    "should_trigger": false,
+    "skill": "ve-security-group-ops",
+    "confidence": "low",
+    "rationale": "not a Security Group API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 ARK 实例",
+    "should_trigger": false,
+    "skill": "ve-security-group-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下安全组的流量镜像功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-security-group-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by Security Group product"
   }
 ]
