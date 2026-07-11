@@ -102,5 +102,26 @@
     "skill": "ve-rds-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 RDS 的备份下载链接无效",
+    "should_trigger": false,
+    "skill": "ve-rds-ops",
+    "confidence": "low",
+    "rationale": "not an RDS API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 EIP 弹性公网 IP",
+    "should_trigger": false,
+    "skill": "ve-rds-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 RDS 的自动弹性伸缩功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-rds-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by RDS product"
   }
 ]

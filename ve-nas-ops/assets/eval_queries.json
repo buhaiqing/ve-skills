@@ -82,5 +82,26 @@
     "skill": "ve-nas-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 NAS 的挂载命令怎么获取",
+    "should_trigger": false,
+    "skill": "ve-nas-ops",
+    "confidence": "low",
+    "rationale": "not a NAS API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建安全组",
+    "should_trigger": false,
+    "skill": "ve-nas-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 NAS 的跨区域复制功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-nas-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by NAS product"
   }
 ]

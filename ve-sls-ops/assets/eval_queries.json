@@ -82,5 +82,26 @@
     "skill": "ve-sls-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 SLS 的查询结果导出报错",
+    "should_trigger": false,
+    "skill": "ve-sls-ops",
+    "confidence": "low",
+    "rationale": "not an SLS API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 VPN 网关",
+    "should_trigger": false,
+    "skill": "ve-sls-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 SLS 的跨域查询功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-sls-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by SLS product"
   }
 ]

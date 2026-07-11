@@ -82,5 +82,26 @@
     "skill": "ve-cms-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上告警规则配置后不生效",
+    "should_trigger": false,
+    "skill": "ve-cms-ops",
+    "confidence": "low",
+    "rationale": "not a CMS API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 SLS 日志项目",
+    "should_trigger": false,
+    "skill": "ve-cms-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下自定义监控的聚合方式怎么配置",
+    "should_trigger": false,
+    "skill": "ve-cms-ops",
+    "confidence": "low",
+    "rationale": "feature not available via CLI"
   }
 ]

@@ -82,5 +82,26 @@
     "skill": "ve-iam-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 IAM 用户的登录链接在哪里",
+    "should_trigger": false,
+    "skill": "ve-iam-ops",
+    "confidence": "low",
+    "rationale": "not an IAM API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 CLB 负载均衡",
+    "should_trigger": false,
+    "skill": "ve-iam-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 IAM 的临时访问令牌怎么配置",
+    "should_trigger": false,
+    "skill": "ve-iam-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by IAM product"
   }
 ]

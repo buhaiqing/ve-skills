@@ -82,5 +82,26 @@
     "skill": "ve-clb-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 CLB 的连接数看不到",
+    "should_trigger": false,
+    "skill": "ve-clb-ops",
+    "confidence": "low",
+    "rationale": "not a CLB API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 NFS 文件系统",
+    "should_trigger": false,
+    "skill": "ve-clb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 CLB 的全链路超时配置",
+    "should_trigger": false,
+    "skill": "ve-clb-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by CLB product"
   }
 ]

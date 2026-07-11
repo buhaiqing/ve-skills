@@ -72,5 +72,26 @@
     "skill": "ve-polar-mysql-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 PolarDB 的慢查询日志打不开",
+    "should_trigger": false,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "low",
+    "rationale": "not a PolarDB API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 ECS 云服务器",
+    "should_trigger": false,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 PolarDB 的列存索引功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by PolarDB product"
   }
 ]
