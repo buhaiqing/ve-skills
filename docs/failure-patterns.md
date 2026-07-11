@@ -96,6 +96,42 @@
 
 ---
 
+## 6. Incident Response Failures
+
+> Failure patterns specific to the `incident-loop-agent` scenario — automating customer
+> alert → triage → diagnose → fix loops. Distinct from §3 cross-skill because the
+> failure mode is **the orchestration layer**, not the leaf skill invocation.
+
+> **Status**: this table is **pre-seeded**, not empty. The 14 rows below are **`seed` / `hypothesis`** patterns — they are design placeholders authored up-front, **not** Reflexion memory harvested from real GCL traces.
+>
+> Governance (per `docs/reflexion-memory.md` §4 and `incident-loop-agent/SKILL.md` Operational Best Practices): Reflexion only promotes a pattern once its `count ≥ 10` from *real* incidents. These seed rows start at `Count = 0` and are **excluded** from that threshold until a real incident hits them. Their `Count` column is **manually maintained** and is **not** back-filled by the GCL write-back — real incident hits are aggregated separately by `gcl_runner`'s Reflexion write-back (`gcl_trace_aggregate.update_failure_patterns_file`) into the `## Extracted from GCL Traces (auto-generated)` block (dedup by `(skill, pattern)`). Do not delete the seed rows — they are intentional design placeholders, but they must not be mistaken for learned Reflexion entries.
+
+| Scenario | Failure Pattern | Root Cause | Fix | Count |
+|----------|-----------------|------------|-----|-------|
+| Alarm triage | `routing_mismatch` | `incident-loop-agent` matches alarm to wrong primary skill (e.g. Redis CPU → `ve-ecs-ops`) | Verify against `docs/skill-routing-graph.md` rule before delegation; default to `ve-cms-ops` on unknown | 0 |
+| Alarm triage | `correlated_alarm_missed` | Multiple alarms fire within 5min but only the loudest is investigated | Always run correlation pass via `ve-cms-ops` first (Rule 2) before dispatching primary | 0 |
+| Diagnosis | `data_collection_timeout` | Cross-domain data collection (>60s) blocks the loop past Critic's patience | Set per-call `timeout=30s`; emit `{{output.partial_data}}` and let Critic judge on what's available | 0 |
+| Diagnosis | `evidence_overfetch` | AI runs >20 read-only `Describe*` calls when 5 would suffice | Cap data calls at `min(15, alarm_count × 3)`; log skipped calls | 0 |
+| Hypothesis | `causal_hallucination` | AI infers root cause from a single data point (e.g. CPU spike → "OOM killer") | Critic MUST flag any conclusion based on < 3 independent data points; require ≥ 1 verifying query | 0 |
+| Hypothesis | `recent_change_blame` | AI attributes anomaly to last-deploy without proof | Pull change-events from last 24h via `ve-cms-ops`; require timestamp-overlap with anomaly onset | 0 |
+| Fix proposal | `unverified_fix` | AI proposes fix without testing impact scope (e.g. "restart Redis" without checking active connections) | Pre-flight MUST enumerate blast radius (active clients, downstream callers) before any destructive proposal | 0 |
+| Fix proposal | `unbounded_scope` | Fix proposal mutates resources beyond the symptom scope (e.g. "restart all 6 Redis nodes" for 1 slow node) | Require `resource_scope` list with each proposal; Critic rejects if mutated scope > symptom scope | 0 |
+| Safety gate | `safety_gate_bypass` | Destructive op (Redis FlushAll / instance delete) skipped user confirmation | `{{user.confirm}}` gate MUST be honored verbatim; Safety=0 → ABORT per `docs/gcl-spec.md` §5 | 0 |
+| Safety gate | `silent_destructive_default` | Fix proposal defaults to `--force` or `--skip-confirm` | Force flag MUST be explicit; reject any proposal where destructive flag is on by default | 0 |
+| Execute | `retry_storm` | Failed op auto-retried without backoff, hits rate limit | Exponential backoff mandatory; max 2 retries; surface original error after 2nd fail | 0 |
+| Execute | `partial_rollback` | Multi-step fix aborted midway; some steps already applied | Snapshot resource state via `ve <svc> Describe*` before each destructive step; emit rollback script on partial completion | 0 |
+| Reflexion | `pattern_undercount` | Pattern added to §6 with count=1 then forgotten; threshold for promotion never reached | Self-Review Round 3 MUST scan §6 every run; promote when count ≥ 10 | 0 |
+| Reflexion | `category_mismatch` | Incident pattern placed in §3 `cross_skill` losing orchestration-specific context | §6 owns orchestration layer (§3 = leaf skill internal failures) | 0 |
+
+**Anti-pattern candidates to seed (preventive)**:
+- ❌ AI proposed "restart" without checking active client count
+- ❌ AI picked `ve-ecs-ops` for Redis CPU alarm (wrong routing table match)
+- ❌ AI issued `FlushAll` without `{{user.confirm}}` confirmation
+- ❌ AI made >10 read-only calls for a simple diagnosis (evidence-overfetch)
+- ❌ AI auto-retry without backoff (→ rate limit / API throttle)
+
+---
+
 ## Usage Guidelines
 
 ### For Agents (Pre-flight)
@@ -112,7 +148,7 @@
 ```
 # After completing R1 + R2:
 # 1. Extract new failure patterns from this session
-# 2. Check if pattern already exists (dedup by skill + command + error)
+# 2. Check if pattern already exists (dedup by (skill, pattern))
 # 3. If new: append to appropriate section with count=1
 # 4. If existing: increment count
 # 5. If total lines > 200: prune patterns with count < 3
@@ -133,3 +169,9 @@
   }
 }
 ```
+
+---
+
+## Extracted from GCL Traces (auto-generated)
+
+> This block is **auto-generated** by `scripts/gcl_runner.py`'s Reflexion write-back (`_writeback_failure_pattern` → `gcl_trace_aggregate.update_failure_patterns_file`) at MAX_ITER / SAFETY_FAIL. It is **deduped by `(skill, pattern)`** and is **not** hand-edited — do not modify its contents manually.

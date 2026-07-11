@@ -18,6 +18,10 @@ CLI_APPLICABILITY = {"dual-path", "cli-first", "cli-only", "sdk-only"}
 FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 LEGACY_NO_METADATA: set[str] = set()
 OPTIONAL_CLI: set[str] = set()
+# Skills whose metadata.type is one of these are exempt from the product-skill
+# conventions (ve- prefix, cli_applicability). They live as orchestration/loop
+# agents that coordinate product skills but don't operate a single product.
+ORCHESTRATION_TYPES: set[str] = {"orchestration-skill", "loop-agent", "meta-skill"}
 
 
 def extract_frontmatter(path: Path) -> tuple[str | None, list[str]]:
@@ -49,8 +53,13 @@ def validate_skill(path: Path) -> list[str]:
     if block is None:
         return errs
     name = top_level_field(block, "name")
-    if not name or not name.startswith("ve-"):
-        errs.append(f"{path}: missing or invalid 'name' (must start with ve-)")
+    skill_type = nested_metadata_field(block, "type")
+    is_orchestration = skill_type in ORCHESTRATION_TYPES if skill_type else False
+
+    if not name:
+        errs.append(f"{path}: missing 'name'")
+    elif not name.startswith("ve-") and not is_orchestration:
+        errs.append(f"{path}: missing or invalid 'name' (must start with ve-, unless metadata.type is orchestration-skill/loop-agent/meta-skill)")
 
     if not has_key(block, "description"):
         errs.append(f"{path}: missing 'description'")
@@ -63,7 +72,7 @@ def validate_skill(path: Path) -> list[str]:
     )
     if cli and cli not in CLI_APPLICABILITY:
         errs.append(f"{path}: invalid cli_applicability '{cli}'")
-    elif not cli and name not in LEGACY_NO_METADATA and name not in OPTIONAL_CLI:
+    elif not cli and not is_orchestration and name not in LEGACY_NO_METADATA and name not in OPTIONAL_CLI:
         errs.append(f"{path}: missing cli_applicability")
 
     skill_name = name or ""

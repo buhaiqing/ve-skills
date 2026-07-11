@@ -58,7 +58,7 @@ Each pattern in `docs/failure-patterns.md` follows this structure:
 | Rule | Description |
 |------|-------------|
 | **Token budget** | `docs/failure-patterns.md` <= 200 lines. When exceeded, prune patterns with `count < 3` |
-| **Dedup** | Before adding, check if pattern exists (match by `skill` + `command` + `error`). If exists, increment `count` |
+| **Dedup** | Before adding, check if pattern exists (match by `(skill, pattern)`). If exists, increment `count`. Aligns with `scripts/gcl_trace_aggregate.py` `update_failure_patterns_file` and the `incident-loop-agent` rubric. |
 | **Source** | Patterns come from: (1) GCL trace `failure_pattern` field, (2) lessons learned captured after Self-Review Round 1/2 findings |
 | **Review** | Patterns are reviewed monthly. Patterns with `count >= 10` are candidates for promotion to Anti-Patterns sections |
 
