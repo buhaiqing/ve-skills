@@ -293,6 +293,7 @@ Adaptive compression strategy for token management:
 - **Never invent CLI flags or API parameters.** Only official OpenAPI or `ve <service> <action> --help` verified fields.
 - **Single-product rule.** One `ve-*-ops` skill = one product = one primary resource model.
 - **Prefer editing existing skills over creating new files.** No tutorial-style `.md` at the repo root.
+- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`scripts/validate_skills_frontmatter.py` `ORCHESTRATION_TYPES`). The single-product rule does not apply to them (they coordinate, not own, a product).
 
 ## File Layout Anchors (do not relocate without reason)
 
