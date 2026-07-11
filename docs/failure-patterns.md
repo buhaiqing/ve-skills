@@ -148,7 +148,7 @@
 ```
 # After completing R1 + R2:
 # 1. Extract new failure patterns from this session
-# 2. Check if pattern already exists (dedup by skill + command + error)
+# 2. Check if pattern already exists (dedup by (skill, pattern))
 # 3. If new: append to appropriate section with count=1
 # 4. If existing: increment count
 # 5. If total lines > 200: prune patterns with count < 3
