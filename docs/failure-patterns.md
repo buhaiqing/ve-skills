@@ -104,7 +104,7 @@
 
 > **Status**: this table is **pre-seeded**, not empty. The 14 rows below are **`seed` / `hypothesis`** patterns — they are design placeholders authored up-front, **not** Reflexion memory harvested from real GCL traces.
 >
-> Governance (per `docs/reflexion-memory.md` §4): Reflexion only promotes a pattern once its `count ≥ 3` from *real* incidents. These seed rows start at `Count = 0` and are **excluded** from that threshold until a real incident hits them; only then does the GCL write-back (via `gcl_trace_aggregate`) fill in `Count` with observed data. Do not delete them — they are intentional design placeholders, but they must not be mistaken for learned Reflexion entries.
+> Governance (per `docs/reflexion-memory.md` §4 and `incident-loop-agent/SKILL.md` Operational Best Practices): Reflexion only promotes a pattern once its `count ≥ 10` from *real* incidents. These seed rows start at `Count = 0` and are **excluded** from that threshold until a real incident hits them. Their `Count` column is **manually maintained** and is **not** back-filled by the GCL write-back — real incident hits are aggregated separately by `gcl_runner`'s Reflexion write-back (`gcl_trace_aggregate.update_failure_patterns_file`) into the `## Extracted from GCL Traces (auto-generated)` block (dedup by `(skill, pattern)`). Do not delete the seed rows — they are intentional design placeholders, but they must not be mistaken for learned Reflexion entries.
 
 | Scenario | Failure Pattern | Root Cause | Fix | Count |
 |----------|-----------------|------------|-----|-------|
