@@ -92,5 +92,26 @@
     "skill": "ve-fg-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上函数的调用日志看不到",
+    "should_trigger": false,
+    "skill": "ve-fg-ops",
+    "confidence": "low",
+    "rationale": "not a Function Compute API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 VPC 对等连接",
+    "should_trigger": false,
+    "skill": "ve-fg-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下函数计算的 GPU 实例怎么配置",
+    "should_trigger": false,
+    "skill": "ve-fg-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by Function Compute product"
   }
 ]

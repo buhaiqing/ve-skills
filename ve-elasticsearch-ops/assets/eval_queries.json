@@ -82,5 +82,26 @@
     "skill": "ve-elasticsearch-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 ES 的集群健康状态异常",
+    "should_trigger": false,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "low",
+    "rationale": "not an ES API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 TOS 存储桶",
+    "should_trigger": false,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 ES 的跨集群搜索功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by ES product"
   }
 ]

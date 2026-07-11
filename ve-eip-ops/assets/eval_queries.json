@@ -82,5 +82,26 @@
     "skill": "ve-eip-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 EIP 的流量统计有延迟",
+    "should_trigger": false,
+    "skill": "ve-eip-ops",
+    "confidence": "low",
+    "rationale": "not an EIP API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 MongoDB 实例",
+    "should_trigger": false,
+    "skill": "ve-eip-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 EIP 的 Anycast 加速怎么配置",
+    "should_trigger": false,
+    "skill": "ve-eip-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by EIP product"
   }
 ]

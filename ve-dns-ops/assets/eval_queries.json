@@ -72,5 +72,26 @@
     "skill": "ve-dns-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 DNS 解析记录没有生效",
+    "should_trigger": false,
+    "skill": "ve-dns-ops",
+    "confidence": "low",
+    "rationale": "not a DNS API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建弹性伸缩组",
+    "should_trigger": false,
+    "skill": "ve-dns-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 DNS 的智能解析策略怎么配置",
+    "should_trigger": false,
+    "skill": "ve-dns-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by Private DNS product"
   }
 ]
