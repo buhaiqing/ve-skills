@@ -16,8 +16,8 @@ compatibility: >-
   endpoints (open.volcengineapi.com).
 metadata:
   author: volcengine
-  version: "1.1.0"
-  last_updated: "2026-06-04"
+  version: "1.1.1"
+  last_updated: "2026-07-11"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.14"
   go_version_jit: "1.21+"
@@ -200,12 +200,15 @@ ve cdn ListCdnDomains --Region {{env.VOLCENGINE_REGION}}
 | DescribeCdnDomainHitRate | Query cache hit ratio | Low | None |
 | AnalyzeBandwidthCost | Generate bandwidth cost report | Low | None |
 
+> FinOps Operations 详情 → [references/advanced/finops.md#operations](references/advanced/finops.md#operations)
+
 ## Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-27 | Initial release with domain lifecycle, origin config, caching, HTTPS, access control, purging, and monitoring |
 | 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
+| 1.1.1 | 2026-07-11 | Split FinOps Operations (1 op: AnalyzeBandwidthCost) to `references/advanced/finops.md` (TE-7); SKILL.md retains entry link only |
 
 ## Quality Gate (GCL)
 
@@ -830,69 +833,11 @@ ve cdn UpdateCdnDomainCompression \
   --BrotliSwitch "on"
 ```
 
----
+-## FinOps Operations (Advanced)
 
-## FinOps Operations (Agent-Readable)
+详细 FinOps Operation 步骤（AnalyzeBandwidthCost）见 [`references/advanced/finops.md`](references/advanced/finops.md)。
 
-### Operation: AnalyzeBandwidthCost — Generate Bandwidth Cost Report
-
-Analyzes CDN bandwidth usage and costs for optimization opportunities.
-
-#### Pre-flight Checks
-
-| Check | Method | Expected | On Failure |
-|-------|--------|----------|------------|
-| Credentials | `test -n "$VOLCENGINE_ACCESS_KEY" && test -n "$VOLCENGINE_SECRET_KEY"` | Both set | HALT |
-| Date range | Valid start/end times | Within last 90 days | Adjust range |
-
-#### Execution
-
-```bash
-# Get bandwidth data for all domains
-ve cdn DescribeCdnData \
-  --Region "{{user.region}}" \
-  --StartTime "{{user.start_time}}" \
-  --EndTime "{{user.end_time}}" \
-  --Metric "bandwidth"
-
-# Get cache hit ratio
-ve cdn DescribeCdnDomainHitRate \
-  --Region "{{user.region}}" \
-  --StartTime "{{user.start_time}}" \
-  --EndTime "{{user.end_time}}"
-```
-
-#### Analysis Logic
-
-| Signal | Threshold | Classification | Recommendation |
-|--------|-----------|----------------|----------------|
-| Cache hit rate < 50% | Poor | Optimize cache rules |
-| Cache hit rate 50-70% | Fair | Review cache TTL settings |
-| Cache hit rate > 90% | Excellent | Maintain current config |
-| Origin bandwidth > 30% | High origin dependency | Increase cache TTL |
-| Peak bandwidth variance > 50% | Unpredictable traffic | Enable rate limiting |
-
-#### Output Format
-
-```markdown
-## CDN Bandwidth Analysis — [Date Range]
-
-| Domain | Bandwidth (Peak) | Traffic (Total) | Cache Hit Rate | Origin Pull | Status |
-|--------|-----------------|-----------------|----------------|-------------|--------|
-| cdn.example.com | 1.2 Gbps | 15 TB | 92% | 8% | ✅ Excellent |
-| cdn2.example.com | 800 Mbps | 8 TB | 65% | 35% | ⚠️ Needs Optimization |
-
-### Optimization Opportunities
-- cdn2.example.com: Increase cache TTL for static assets (potential 20% cost reduction)
-- All domains: Enable Brotli compression (potential 15% bandwidth savings)
-
-### Estimated Monthly Savings
-- Cache optimization: ¥2,400/month
-- Compression: ¥1,800/month
-- **Total potential savings: ¥4,200/month**
-```
-
----
+> SKILL.md 中仅保留 FinOps 入口；具体执行步骤在 `references/advanced/finops.md`（TE-7 专业内容分层）。
 
 ## Error Taxonomy
 

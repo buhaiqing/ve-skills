@@ -38,6 +38,68 @@ ve cdn DescribeCdnUpperUsage --body '{"Domains":["{{output.DomainName}}"],"Start
 ve billing DescribeBillSummaryByMonth --body '{"BillingPeriod":"{{env.BILLING_MONTH}}"}'
 ```
 
+## Operations
+
+### Operation: AnalyzeBandwidthCost — Generate Bandwidth Cost Report
+
+Analyzes CDN bandwidth usage and costs for optimization opportunities.
+
+#### Pre-flight Checks
+
+| Check | Method | Expected | On Failure |
+|-------|--------|----------|------------|
+| Credentials | `test -n "$VOLCENGINE_ACCESS_KEY" && test -n "$VOLCENGINE_SECRET_KEY"` | Both set | HALT |
+| Date range | Valid start/end times | Within last 90 days | Adjust range |
+
+#### Execution
+
+```bash
+# Get bandwidth data for all domains
+ve cdn DescribeCdnData \
+  --Region "{{user.region}}" \
+  --StartTime "{{user.start_time}}" \
+  --EndTime "{{user.end_time}}" \
+  --Metric "bandwidth"
+
+# Get cache hit ratio
+ve cdn DescribeCdnDomainHitRate \
+  --Region "{{user.region}}" \
+  --StartTime "{{user.start_time}}" \
+  --EndTime "{{user.end_time}}"
+```
+
+#### Analysis Logic
+
+| Signal | Threshold | Classification | Recommendation |
+|--------|-----------|----------------|----------------|
+| Cache hit rate < 50% | Poor | Optimize cache rules |
+| Cache hit rate 50-70% | Fair | Review cache TTL settings |
+| Cache hit rate > 90% | Excellent | Maintain current config |
+| Origin bandwidth > 30% | High origin dependency | Increase cache TTL |
+| Peak bandwidth variance > 50% | Unpredictable traffic | Enable rate limiting |
+
+#### Output Format
+
+```markdown
+## CDN Bandwidth Analysis — [Date Range]
+
+| Domain | Bandwidth (Peak) | Traffic (Total) | Cache Hit Rate | Origin Pull | Status |
+|--------|-----------------|-----------------|----------------|-------------|--------|
+| cdn.example.com | 1.2 Gbps | 15 TB | 92% | 8% | ✅ Excellent |
+| cdn2.example.com | 800 Mbps | 8 TB | 65% | 35% | ⚠️ Needs Optimization |
+
+### Optimization Opportunities
+- cdn2.example.com: Increase cache TTL for static assets (potential 20% cost reduction)
+- All domains: Enable Brotli compression (potential 15% bandwidth savings)
+
+### Estimated Monthly Savings
+- Cache optimization: ¥2,400/month
+- Compression: ¥1,800/month
+- **Total potential savings: ¥4,200/month**
+```
+
+---
+
 ## Related Resources
 
 - [ve-billing-ops FinOps](../../ve-billing-ops/references/advanced/finops.md)
