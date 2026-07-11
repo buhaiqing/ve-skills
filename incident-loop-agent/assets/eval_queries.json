@@ -1,0 +1,9 @@
+[
+  {"query": "收到 CMS 告警：Redis 实例 CPU 持续 >90%，需要排查并修复", "should_trigger": true, "skill": "incident-loop-agent", "confidence": "high", "reason": "客户侧云 incident 告警，需触发分类→诊断→修复循环"},
+  {"query": "JIRA DOPS 开了一个 Sev-1 工单：线上 RDS 主库延迟飙高影响交易", "should_trigger": true, "skill": "incident-loop-agent", "confidence": "high", "reason": "Sev-1 工单 + 具体症状，符合 SHOULD 触发条件"},
+  {"query": "客户在群里反馈 ECS 实例频繁掉线，附了报错截图", "should_trigger": true, "skill": "incident-loop-agent", "confidence": "high", "reason": "客户反馈 + 具体症状，需 triage"},
+  {"query": "SRE 巡检发现 VPC 网络抖动，到了巡检里程碑要汇总结论", "should_trigger": true, "skill": "incident-loop-agent", "confidence": "medium", "reason": "定时 SRE 巡检到达里程碑，用户希望循环 consolidate 发现"},
+  {"query": "5 分钟内同时收到 ECS、Redis、CLB 三条告警，疑似关联告警风暴", "should_trigger": true, "skill": "incident-loop-agent", "confidence": "high", "reason": "关联告警风暴，需先经 ve-cms-ops 关联分析再分发"},
+  {"query": "列出当前账号下所有 ECS 实例", "should_trigger": false, "skill": "incident-loop-agent", "confidence": "low", "reason": "单一明确 ve ECS 查询，应委派 ve-ecs-ops"},
+  {"query": "ve-rds-mysql-ops 的 SKILL.md 里 §3 讲了什么", "should_trigger": false, "skill": "incident-loop-agent", "confidence": "low", "reason": "纯文档查询，非 incident，应走知识库/文档查询"}
+]
