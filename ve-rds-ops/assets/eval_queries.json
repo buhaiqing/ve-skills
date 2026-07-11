@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create RDS MySQL instance",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "CreateDBInstance"
+    ]
+  },
+  {
     "query": "查看 RDS 实例列表",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "View RDS instance list",
     "should_trigger": true,
     "skill": "ve-rds-ops",
     "confidence": "high",
@@ -30,11 +50,31 @@
     ]
   },
   {
-    "query": "RDS 实例 CPU 使用率过高",
+    "query": "Delete RDS instance",
     "should_trigger": true,
     "skill": "ve-rds-ops",
     "confidence": "high",
     "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DeleteDBInstance"
+    ]
+  },
+  {
+    "query": "RDS 实例 CPU 使用率过高",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope (diagnostics)",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "RDS instance CPU usage too high",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope (diagnostics)",
     "operations": [
       "DescribeDBInstances"
     ]
@@ -44,13 +84,33 @@
     "should_trigger": true,
     "skill": "ve-rds-ops",
     "confidence": "high",
-    "rationale": "matches RDS MySQL operational scope",
+    "rationale": "matches RDS MySQL operational scope (diagnostics)",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "RDS connection limit exceeded",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope (diagnostics)",
     "operations": [
       "DescribeDBInstances"
     ]
   },
   {
     "query": "RDS 存储空间不足",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "RDS storage space insufficient",
     "should_trigger": true,
     "skill": "ve-rds-ops",
     "confidence": "high",
@@ -70,7 +130,27 @@
     ]
   },
   {
+    "query": "Configure RDS backup policy",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "CreateBackup"
+    ]
+  },
+  {
     "query": "RDS 参数组修改",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "ModifyParameterGroup"
+    ]
+  },
+  {
+    "query": "Modify RDS parameter group",
     "should_trigger": true,
     "skill": "ve-rds-ops",
     "confidence": "high",
@@ -90,11 +170,34 @@
     ]
   },
   {
-    "query": "禁用生产 RDS",
-    "should_trigger": false,
+    "query": "Scale RDS instance up or down",
+    "should_trigger": true,
     "skill": "ve-rds-ops",
-    "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "confidence": "high",
+    "rationale": "matches RDS MySQL operational scope",
+    "operations": [
+      "ModifyDBInstanceSpec"
+    ]
+  },
+  {
+    "query": "禁用生产 RDS",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "medium",
+    "rationale": "matches RDS MySQL operational scope (disable production instance)",
+    "operations": [
+      "ModifyDBInstanceSpec"
+    ]
+  },
+  {
+    "query": "Disable production RDS instance",
+    "should_trigger": true,
+    "skill": "ve-rds-ops",
+    "confidence": "medium",
+    "rationale": "matches RDS MySQL operational scope (disable production instance)",
+    "operations": [
+      "ModifyDBInstanceSpec"
+    ]
   },
   {
     "query": "启动 Apache 服务器",
@@ -123,5 +226,12 @@
     "skill": "ve-rds-ops",
     "confidence": "low",
     "rationale": "feature not supported by RDS product"
+  },
+  {
+    "query": "管理 DNS 域名解析",
+    "should_trigger": false,
+    "skill": "ve-rds-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

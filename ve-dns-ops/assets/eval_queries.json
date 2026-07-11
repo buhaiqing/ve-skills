@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create a private DNS zone",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "CreateZone"
+    ]
+  },
+  {
     "query": "添加 DNS 解析记录",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "AddZoneRecord"
+    ]
+  },
+  {
+    "query": "Add a DNS resolution record",
     "should_trigger": true,
     "skill": "ve-dns-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "View DNS resolution records",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "DescribeZoneRecords"
+    ]
+  },
+  {
     "query": "DNS PTR 反向解析",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "AddZoneRecord"
+    ]
+  },
+  {
+    "query": "DNS PTR reverse resolution",
     "should_trigger": true,
     "skill": "ve-dns-ops",
     "confidence": "high",
@@ -50,6 +90,16 @@
     ]
   },
   {
+    "query": "Batch import DNS records",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "ImportZoneRecord"
+    ]
+  },
+  {
     "query": "删除 DNS 记录",
     "should_trigger": true,
     "skill": "ve-dns-ops",
@@ -58,6 +108,34 @@
     "operations": [
       "DeleteZoneRecord"
     ]
+  },
+  {
+    "query": "Delete a DNS record",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "high",
+    "rationale": "matches Private DNS operational scope",
+    "operations": [
+      "DeleteZoneRecord"
+    ]
+  },
+  {
+    "query": "console 上 DNS 解析记录没有生效",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "medium",
+    "rationale": "DNS resolution inquiry, operational scope",
+    "operations": [
+      "DescribeZoneRecords"
+    ]
+  },
+  {
+    "query": "查一下 DNS 的智能解析策略怎么配置",
+    "should_trigger": true,
+    "skill": "ve-dns-ops",
+    "confidence": "medium",
+    "rationale": "DNS configuration inquiry, operational scope",
+    "operations": []
   },
   {
     "query": "创建 ECS 实例",
@@ -74,13 +152,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 DNS 解析记录没有生效",
-    "should_trigger": false,
-    "skill": "ve-dns-ops",
-    "confidence": "low",
-    "rationale": "not a DNS API operation, console-only issue"
-  },
-  {
     "query": "怎么创建弹性伸缩组",
     "should_trigger": false,
     "skill": "ve-dns-ops",
@@ -88,10 +159,24 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 DNS 的智能解析策略怎么配置",
+    "query": "创建 ALB 实例",
     "should_trigger": false,
     "skill": "ve-dns-ops",
     "confidence": "low",
-    "rationale": "feature not supported by Private DNS product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 SLS 日志采集",
+    "should_trigger": false,
+    "skill": "ve-dns-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "怎么创建 Redis 实例",
+    "should_trigger": false,
+    "skill": "ve-dns-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

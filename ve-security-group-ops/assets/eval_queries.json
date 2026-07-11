@@ -4,104 +4,167 @@
     "should_trigger": true,
     "skill": "ve-security-group-ops",
     "confidence": "high",
-    "rationale": "matches Security Group operational scope",
-    "operations": [
-      "CreateSecurityGroup"
-    ]
+    "rationale": "matches Security Group operational scope - create security group",
+    "operations": ["CreateSecurityGroup"]
+  },
+  {
+    "query": "Create a security group",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope - create security group (English)",
+    "operations": ["CreateSecurityGroup"]
   },
   {
     "query": "安全组入方向授权",
     "should_trigger": true,
     "skill": "ve-security-group-ops",
     "confidence": "high",
-    "rationale": "matches Security Group operational scope",
-    "operations": [
-      "AuthorizeSecurityGroupIngress"
-    ]
+    "rationale": "matches Security Group operational scope - ingress authorization",
+    "operations": ["AuthorizeSecurityGroupIngress"]
+  },
+  {
+    "query": "Authorize security group ingress",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope - ingress authorization (English)",
+    "operations": ["AuthorizeSecurityGroupIngress"]
   },
   {
     "query": "安全组出方向授权",
     "should_trigger": true,
     "skill": "ve-security-group-ops",
     "confidence": "high",
-    "rationale": "matches Security Group operational scope",
-    "operations": [
-      "AuthorizeSecurityGroupEgress"
-    ]
+    "rationale": "matches Security Group operational scope - egress authorization",
+    "operations": ["AuthorizeSecurityGroupEgress"]
+  },
+  {
+    "query": "Authorize security group egress",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope - egress authorization (English)",
+    "operations": ["AuthorizeSecurityGroupEgress"]
   },
   {
     "query": "删除安全组规则",
     "should_trigger": true,
     "skill": "ve-security-group-ops",
     "confidence": "high",
-    "rationale": "matches Security Group operational scope",
-    "operations": [
-      "RevokeSecurityGroupIngress"
-    ]
+    "rationale": "matches Security Group operational scope - delete rule",
+    "operations": ["RevokeSecurityGroupIngress"]
+  },
+  {
+    "query": "Delete a security group rule",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope - delete rule (English)",
+    "operations": ["RevokeSecurityGroupIngress"]
   },
   {
     "query": "安全组克隆",
     "should_trigger": true,
     "skill": "ve-security-group-ops",
     "confidence": "high",
-    "rationale": "matches Security Group operational scope",
-    "operations": [
-      "CreateSecurityGroup"
-    ]
+    "rationale": "matches Security Group operational scope - clone security group",
+    "operations": ["CreateSecurityGroup"]
+  },
+  {
+    "query": "Clone a security group",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope - clone (English)",
+    "operations": ["CreateSecurityGroup"]
   },
   {
     "query": "安全组加入实例",
     "should_trigger": true,
     "skill": "ve-security-group-ops",
     "confidence": "high",
-    "rationale": "matches Security Group operational scope",
-    "operations": [
-      "AssociateSecurityGroup"
-    ]
+    "rationale": "matches Security Group operational scope - associate with instance",
+    "operations": ["AssociateSecurityGroup"]
+  },
+  {
+    "query": "Associate a security group with an instance",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope - associate with instance (English)",
+    "operations": ["AssociateSecurityGroup"]
   },
   {
     "query": "批量授权端口 22/3389/443",
     "should_trigger": true,
     "skill": "ve-security-group-ops",
     "confidence": "high",
-    "rationale": "matches Security Group operational scope",
-    "operations": [
-      "AuthorizeSecurityGroupIngress"
-    ]
+    "rationale": "matches Security Group operational scope - bulk port authorization",
+    "operations": ["AuthorizeSecurityGroupIngress"]
+  },
+  {
+    "query": "Batch authorize ports 22/3389/443",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "high",
+    "rationale": "matches Security Group operational scope - bulk port authorization (English)",
+    "operations": ["AuthorizeSecurityGroupIngress"]
+  },
+  {
+    "query": "console 上安全组规则排序怎么调整",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "medium",
+    "rationale": "security group console issue, should route to SG skill",
+    "operations": ["ModifySecurityGroupAttributes"]
+  },
+  {
+    "query": "查一下安全组的流量镜像功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-security-group-ops",
+    "confidence": "medium",
+    "rationale": "security group feature query, should route to SG skill",
+    "operations": ["DescribeSecurityGroups"]
   },
   {
     "query": "创建 VPC 网络",
     "should_trigger": false,
     "skill": "ve-security-group-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "VPC network creation is out of scope for security group",
+    "operations": []
   },
   {
     "query": "部署 Kubernetes",
     "should_trigger": false,
     "skill": "ve-security-group-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
-  },
-  {
-    "query": "console 上安全组规则排序怎么调整",
-    "should_trigger": false,
-    "skill": "ve-security-group-ops",
-    "confidence": "low",
-    "rationale": "not a Security Group API operation, console-only issue"
+    "rationale": "Kubernetes deployment is out of scope for security group",
+    "operations": []
   },
   {
     "query": "怎么创建 ARK 实例",
     "should_trigger": false,
     "skill": "ve-security-group-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "ARK instance creation is out of scope for security group",
+    "operations": []
   },
   {
-    "query": "查一下安全组的流量镜像功能怎么配置",
+    "query": "查询 ECS 实例列表",
     "should_trigger": false,
     "skill": "ve-security-group-ops",
     "confidence": "low",
-    "rationale": "feature not supported by Security Group product"
+    "rationale": "ECS instance listing is out of scope for security group",
+    "operations": []
+  },
+  {
+    "query": "创建 Redis 实例",
+    "should_trigger": false,
+    "skill": "ve-security-group-ops",
+    "confidence": "low",
+    "rationale": "Redis instance creation is out of scope for security group",
+    "operations": []
   }
 ]

@@ -5,9 +5,15 @@
     "skill": "ve-eip-ops",
     "confidence": "high",
     "rationale": "matches EIP operational scope",
-    "operations": [
-      "AllocateEipAddress"
-    ]
+    "operations": ["AllocateEipAddress"]
+  },
+  {
+    "query": "Allocate an EIP",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": ["AllocateEipAddress"]
   },
   {
     "query": "绑定 EIP 到 ECS",
@@ -15,9 +21,15 @@
     "skill": "ve-eip-ops",
     "confidence": "high",
     "rationale": "matches EIP operational scope",
-    "operations": [
-      "AssociateEipAddress"
-    ]
+    "operations": ["AssociateEipAddress"]
+  },
+  {
+    "query": "Bind EIP to ECS",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": ["AssociateEipAddress"]
   },
   {
     "query": "释放 EIP",
@@ -25,9 +37,15 @@
     "skill": "ve-eip-ops",
     "confidence": "high",
     "rationale": "matches EIP operational scope",
-    "operations": [
-      "ReleaseEipAddress"
-    ]
+    "operations": ["ReleaseEipAddress"]
+  },
+  {
+    "query": "Release an EIP",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": ["ReleaseEipAddress"]
   },
   {
     "query": "EIP 流量统计",
@@ -35,9 +53,15 @@
     "skill": "ve-eip-ops",
     "confidence": "high",
     "rationale": "matches EIP operational scope",
-    "operations": [
-      "DescribeEipAddresses"
-    ]
+    "operations": ["DescribeEipAddresses"]
+  },
+  {
+    "query": "EIP traffic statistics",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": ["DescribeEipAddresses"]
   },
   {
     "query": "EIP 带宽调整",
@@ -45,9 +69,15 @@
     "skill": "ve-eip-ops",
     "confidence": "high",
     "rationale": "matches EIP operational scope",
-    "operations": [
-      "ModifyEipAddressAttribute"
-    ]
+    "operations": ["ModifyEipAddressAttribute"]
+  },
+  {
+    "query": "Adjust EIP bandwidth",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": ["ModifyEipAddressAttribute"]
   },
   {
     "query": "EIP 续费",
@@ -55,9 +85,15 @@
     "skill": "ve-eip-ops",
     "confidence": "high",
     "rationale": "matches EIP operational scope",
-    "operations": [
-      "RenewEipAddress"
-    ]
+    "operations": ["RenewEipAddress"]
+  },
+  {
+    "query": "Renew EIP",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": ["RenewEipAddress"]
   },
   {
     "query": "解绑 EIP",
@@ -65,9 +101,31 @@
     "skill": "ve-eip-ops",
     "confidence": "high",
     "rationale": "matches EIP operational scope",
-    "operations": [
-      "DisassociateEipAddress"
-    ]
+    "operations": ["DisassociateEipAddress"]
+  },
+  {
+    "query": "Unbind EIP",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "high",
+    "rationale": "matches EIP operational scope",
+    "operations": ["DisassociateEipAddress"]
+  },
+  {
+    "query": "console 上 EIP 的流量统计有延迟",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions EIP for a support/configuration request",
+    "operations": ["DescribeEipAddresses"]
+  },
+  {
+    "query": "查一下 EIP 的 Anycast 加速怎么配置",
+    "should_trigger": true,
+    "skill": "ve-eip-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions EIP for a configuration request",
+    "operations": ["AllocateEipAddress"]
   },
   {
     "query": "创建 RDS 实例",
@@ -84,13 +142,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 EIP 的流量统计有延迟",
-    "should_trigger": false,
-    "skill": "ve-eip-ops",
-    "confidence": "low",
-    "rationale": "not an EIP API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 MongoDB 实例",
     "should_trigger": false,
     "skill": "ve-eip-ops",
@@ -98,10 +149,17 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 EIP 的 Anycast 加速怎么配置",
+    "query": "部署 Kubernetes 集群",
     "should_trigger": false,
     "skill": "ve-eip-ops",
     "confidence": "low",
-    "rationale": "feature not supported by EIP product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "创建 VPC 和子网",
+    "should_trigger": false,
+    "skill": "ve-eip-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

@@ -4,114 +4,183 @@
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "CreateFunction"
-    ]
+    "rationale": "matches Function Compute operational scope - create function",
+    "operations": ["CreateFunction"]
+  },
+  {
+    "query": "Create a function",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - create function (English)",
+    "operations": ["CreateFunction"]
   },
   {
     "query": "部署函数代码",
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "UpdateFunctionCode"
-    ]
+    "rationale": "matches Function Compute operational scope - deploy function code",
+    "operations": ["UpdateFunctionCode"]
+  },
+  {
+    "query": "Deploy function code",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - deploy function code (English)",
+    "operations": ["UpdateFunctionCode"]
   },
   {
     "query": "配置函数触发器",
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "CreateTrigger"
-    ]
+    "rationale": "matches Function Compute operational scope - configure trigger",
+    "operations": ["CreateTrigger"]
+  },
+  {
+    "query": "Configure function trigger",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - configure trigger (English)",
+    "operations": ["CreateTrigger"]
   },
   {
     "query": "函数异步调用",
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "InvokeFunction"
-    ]
+    "rationale": "matches Function Compute operational scope - async invocation",
+    "operations": ["InvokeFunction"]
+  },
+  {
+    "query": "Async function invocation",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - async invocation (English)",
+    "operations": ["InvokeFunction"]
   },
   {
     "query": "查看函数日志",
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "GetFunctionLogs"
-    ]
+    "rationale": "matches Function Compute operational scope - view function logs",
+    "operations": ["GetFunctionLogs"]
+  },
+  {
+    "query": "View function logs",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - view function logs (English)",
+    "operations": ["GetFunctionLogs"]
   },
   {
     "query": "函数预留实例",
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "PutProvisionConfig"
-    ]
+    "rationale": "matches Function Compute operational scope - reserved instances",
+    "operations": ["PutProvisionConfig"]
+  },
+  {
+    "query": "Configure reserved function instances",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - reserved instances (English)",
+    "operations": ["PutProvisionConfig"]
   },
   {
     "query": "删除函数",
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "DeleteFunction"
-    ]
+    "rationale": "matches Function Compute operational scope - delete function",
+    "operations": ["DeleteFunction"]
+  },
+  {
+    "query": "Delete a function",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - delete function (English)",
+    "operations": ["DeleteFunction"]
   },
   {
     "query": "函数并发配置",
     "should_trigger": true,
     "skill": "ve-fg-ops",
     "confidence": "high",
-    "rationale": "matches Function Compute operational scope",
-    "operations": [
-      "PutFunctionConcurrency"
-    ]
+    "rationale": "matches Function Compute operational scope - concurrency config",
+    "operations": ["PutFunctionConcurrency"]
+  },
+  {
+    "query": "Configure function concurrency",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "high",
+    "rationale": "matches Function Compute operational scope - concurrency config (English)",
+    "operations": ["PutFunctionConcurrency"]
+  },
+  {
+    "query": "控制台上函数的调用日志看不到",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "medium",
+    "rationale": "Function Compute console issue, should route to FG skill for diagnosis",
+    "operations": ["GetFunctionLogs"]
+  },
+  {
+    "query": "查一下函数计算的图形处理器实例怎么配置",
+    "should_trigger": true,
+    "skill": "ve-fg-ops",
+    "confidence": "medium",
+    "rationale": "Function Compute configuration query, should route to FG skill",
+    "operations": ["UpdateFunctionCode"]
   },
   {
     "query": "创建 Kubernetes Deployment",
     "should_trigger": false,
     "skill": "ve-fg-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "Kubernetes Deployment is out of scope for Function Compute",
+    "operations": []
   },
   {
     "query": "配置数据库连接池",
     "should_trigger": false,
     "skill": "ve-fg-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
-  },
-  {
-    "query": "console 上函数的调用日志看不到",
-    "should_trigger": false,
-    "skill": "ve-fg-ops",
-    "confidence": "low",
-    "rationale": "not a Function Compute API operation, console-only issue"
+    "rationale": "database connection pool configuration is out of scope for Function Compute",
+    "operations": []
   },
   {
     "query": "怎么创建 VPC 对等连接",
     "should_trigger": false,
     "skill": "ve-fg-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "VPC peering connection is out of scope for Function Compute",
+    "operations": []
   },
   {
-    "query": "查一下函数计算的 GPU 实例怎么配置",
+    "query": "查询账单明细",
     "should_trigger": false,
     "skill": "ve-fg-ops",
     "confidence": "low",
-    "rationale": "feature not supported by Function Compute product"
+    "rationale": "billing query is out of scope for Function Compute",
+    "operations": []
+  },
+  {
+    "query": "配置安全组规则",
+    "should_trigger": false,
+    "skill": "ve-fg-ops",
+    "confidence": "low",
+    "rationale": "security group rules are out of scope for Function Compute",
+    "operations": []
   }
 ]

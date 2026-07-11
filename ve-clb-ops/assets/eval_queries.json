@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create a CLB instance",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "CreateLoadBalancer"
+    ]
+  },
+  {
     "query": "配置 CLB 监听器",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "CreateListener"
+    ]
+  },
+  {
+    "query": "Configure CLB listener",
     "should_trigger": true,
     "skill": "ve-clb-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Add backend servers",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "AddBackendServers"
+    ]
+  },
+  {
     "query": "CLB 健康检查配置",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "SetListenerHealthCheck"
+    ]
+  },
+  {
+    "query": "CLB health check configuration",
     "should_trigger": true,
     "skill": "ve-clb-ops",
     "confidence": "high",
@@ -50,7 +90,27 @@
     ]
   },
   {
+    "query": "Delete a CLB listener",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "DeleteListener"
+    ]
+  },
+  {
     "query": "CLB 证书管理",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "UploadCertificate"
+    ]
+  },
+  {
+    "query": "CLB certificate management",
     "should_trigger": true,
     "skill": "ve-clb-ops",
     "confidence": "high",
@@ -70,6 +130,34 @@
     ]
   },
   {
+    "query": "CLB access log configuration",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "high",
+    "rationale": "matches CLB operational scope",
+    "operations": [
+      "SetLoadBalancerAccessLog"
+    ]
+  },
+  {
+    "query": "console 上 CLB 的连接数看不到",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "medium",
+    "rationale": "CLB monitoring inquiry, operational scope",
+    "operations": [
+      "DescribeLoadBalancers"
+    ]
+  },
+  {
+    "query": "查一下 CLB 的全链路超时配置",
+    "should_trigger": true,
+    "skill": "ve-clb-ops",
+    "confidence": "medium",
+    "rationale": "CLB configuration inquiry, operational scope",
+    "operations": []
+  },
+  {
     "query": "创建 VPC",
     "should_trigger": false,
     "skill": "ve-clb-ops",
@@ -84,13 +172,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 CLB 的连接数看不到",
-    "should_trigger": false,
-    "skill": "ve-clb-ops",
-    "confidence": "low",
-    "rationale": "not a CLB API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 NFS 文件系统",
     "should_trigger": false,
     "skill": "ve-clb-ops",
@@ -98,10 +179,24 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 CLB 的全链路超时配置",
+    "query": "配置 ECS 安全组",
     "should_trigger": false,
     "skill": "ve-clb-ops",
     "confidence": "low",
-    "rationale": "feature not supported by CLB product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "怎么创建 TOS Bucket",
+    "should_trigger": false,
+    "skill": "ve-clb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查询 CDN 的带宽统计",
+    "should_trigger": false,
+    "skill": "ve-clb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create an SLS project",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateProject"
+    ]
+  },
+  {
     "query": "SLS 日志查询",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "GetProjectLogs"
+    ]
+  },
+  {
+    "query": "SLS log query",
     "should_trigger": true,
     "skill": "ve-sls-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Configure log collection",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateConfig"
+    ]
+  },
+  {
     "query": "SLS 索引配置",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateIndex"
+    ]
+  },
+  {
+    "query": "SLS index configuration",
     "should_trigger": true,
     "skill": "ve-sls-ops",
     "confidence": "high",
@@ -50,7 +90,27 @@
     ]
   },
   {
+    "query": "Create an SLS saved search",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateSavedSearch"
+    ]
+  },
+  {
     "query": "SLS 消费组管理",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "CreateConsumerGroup"
+    ]
+  },
+  {
+    "query": "SLS consumer group management",
     "should_trigger": true,
     "skill": "ve-sls-ops",
     "confidence": "high",
@@ -70,6 +130,34 @@
     ]
   },
   {
+    "query": "Delete an SLS log topic",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "high",
+    "rationale": "matches SLS operational scope",
+    "operations": [
+      "DeleteLogstore"
+    ]
+  },
+  {
+    "query": "console 上 SLS 的查询结果导出报错",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "medium",
+    "rationale": "SLS query export inquiry, operational scope",
+    "operations": [
+      "GetProjectLogs"
+    ]
+  },
+  {
+    "query": "查一下 SLS 的跨域查询功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-sls-ops",
+    "confidence": "medium",
+    "rationale": "SLS configuration inquiry, operational scope",
+    "operations": []
+  },
+  {
     "query": "启动 ECS",
     "should_trigger": false,
     "skill": "ve-sls-ops",
@@ -84,13 +172,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 SLS 的查询结果导出报错",
-    "should_trigger": false,
-    "skill": "ve-sls-ops",
-    "confidence": "low",
-    "rationale": "not an SLS API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 VPN 网关",
     "should_trigger": false,
     "skill": "ve-sls-ops",
@@ -98,10 +179,24 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 SLS 的跨域查询功能怎么配置",
+    "query": "创建 Kafka 实例",
     "should_trigger": false,
     "skill": "ve-sls-ops",
     "confidence": "low",
-    "rationale": "feature not supported by SLS product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 TOS Bucket 生命周期",
+    "should_trigger": false,
+    "skill": "ve-sls-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 CDN 的回源配置",
+    "should_trigger": false,
+    "skill": "ve-sls-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

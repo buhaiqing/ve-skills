@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create RDS PostgreSQL instance",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "CreateDBInstance"
+    ]
+  },
+  {
     "query": "查看 RDS PG 实例列表",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DescribeDBInstances"
+    ]
+  },
+  {
+    "query": "List RDS PG instances",
     "should_trigger": true,
     "skill": "ve-rds-pg-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Delete RDS PG instance",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DeleteDBInstance"
+    ]
+  },
+  {
     "query": "RDS PG 慢查询分析",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DescribeSlowLogs"
+    ]
+  },
+  {
+    "query": "Analyze RDS PG slow queries",
     "should_trigger": true,
     "skill": "ve-rds-pg-ops",
     "confidence": "high",
@@ -50,6 +90,16 @@
     ]
   },
   {
+    "query": "Configure RDS PG connection pool",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "DescribeConnectionPoolInfo"
+    ]
+  },
+  {
     "query": "RDS PG 只读实例",
     "should_trigger": true,
     "skill": "ve-rds-pg-ops",
@@ -60,7 +110,27 @@
     ]
   },
   {
+    "query": "Create RDS PG read-only instance",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "CreateReadOnlyNode"
+    ]
+  },
+  {
     "query": "RDS PG 升级大版本",
+    "should_trigger": true,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "high",
+    "rationale": "matches RDS PostgreSQL operational scope",
+    "operations": [
+      "ModifyDBInstanceMajorVersion"
+    ]
+  },
+  {
+    "query": "Upgrade RDS PG major version",
     "should_trigger": true,
     "skill": "ve-rds-pg-ops",
     "confidence": "high",

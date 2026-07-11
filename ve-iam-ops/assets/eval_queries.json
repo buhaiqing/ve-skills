@@ -5,9 +5,15 @@
     "skill": "ve-iam-ops",
     "confidence": "high",
     "rationale": "matches IAM operational scope",
-    "operations": [
-      "CreateUser"
-    ]
+    "operations": ["CreateUser"]
+  },
+  {
+    "query": "Create an IAM user",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": ["CreateUser"]
   },
   {
     "query": "为用户附加策略",
@@ -15,9 +21,15 @@
     "skill": "ve-iam-ops",
     "confidence": "high",
     "rationale": "matches IAM operational scope",
-    "operations": [
-      "AttachPolicy"
-    ]
+    "operations": ["AttachPolicy"]
+  },
+  {
+    "query": "Attach a policy to a user",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": ["AttachPolicy"]
   },
   {
     "query": "创建 IAM 角色",
@@ -25,9 +37,15 @@
     "skill": "ve-iam-ops",
     "confidence": "high",
     "rationale": "matches IAM operational scope",
-    "operations": [
-      "CreateRole"
-    ]
+    "operations": ["CreateRole"]
+  },
+  {
+    "query": "Create an IAM role",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": ["CreateRole"]
   },
   {
     "query": "IAM 访问密钥轮换",
@@ -35,9 +53,15 @@
     "skill": "ve-iam-ops",
     "confidence": "high",
     "rationale": "matches IAM operational scope",
-    "operations": [
-      "CreateAccessKey"
-    ]
+    "operations": ["CreateAccessKey"]
+  },
+  {
+    "query": "Rotate IAM access keys",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": ["CreateAccessKey"]
   },
   {
     "query": "IAM 策略版本管理",
@@ -45,9 +69,15 @@
     "skill": "ve-iam-ops",
     "confidence": "high",
     "rationale": "matches IAM operational scope",
-    "operations": [
-      "CreatePolicyVersion"
-    ]
+    "operations": ["CreatePolicyVersion"]
+  },
+  {
+    "query": "Manage IAM policy versions",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": ["CreatePolicyVersion"]
   },
   {
     "query": "删除 IAM 用户",
@@ -55,9 +85,15 @@
     "skill": "ve-iam-ops",
     "confidence": "high",
     "rationale": "matches IAM operational scope",
-    "operations": [
-      "DeleteUser"
-    ]
+    "operations": ["DeleteUser"]
+  },
+  {
+    "query": "Delete an IAM user",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": ["DeleteUser"]
   },
   {
     "query": "IAM 权限边界设置",
@@ -65,9 +101,31 @@
     "skill": "ve-iam-ops",
     "confidence": "high",
     "rationale": "matches IAM operational scope",
-    "operations": [
-      "PutUserPermissionsBoundary"
-    ]
+    "operations": ["PutUserPermissionsBoundary"]
+  },
+  {
+    "query": "Set IAM permission boundary",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "high",
+    "rationale": "matches IAM operational scope",
+    "operations": ["PutUserPermissionsBoundary"]
+  },
+  {
+    "query": "console 上 IAM 用户的登录链接在哪里",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions IAM for a support/configuration request",
+    "operations": ["ListUsers"]
+  },
+  {
+    "query": "查一下 IAM 的临时访问令牌怎么配置",
+    "should_trigger": true,
+    "skill": "ve-iam-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions IAM for a configuration request",
+    "operations": ["AssumeRole"]
   },
   {
     "query": "创建云服务器",
@@ -84,13 +142,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 IAM 用户的登录链接在哪里",
-    "should_trigger": false,
-    "skill": "ve-iam-ops",
-    "confidence": "low",
-    "rationale": "not an IAM API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 CLB 负载均衡",
     "should_trigger": false,
     "skill": "ve-iam-ops",
@@ -98,10 +149,17 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 IAM 的临时访问令牌怎么配置",
+    "query": "配置 NAT 网关的 SNAT 规则",
     "should_trigger": false,
     "skill": "ve-iam-ops",
     "confidence": "low",
-    "rationale": "how-to configuration query, not an operational task"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "创建 MongoDB 副本集",
+    "should_trigger": false,
+    "skill": "ve-iam-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

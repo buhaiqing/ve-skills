@@ -4,94 +4,151 @@
     "should_trigger": true,
     "skill": "ve-billing-ops",
     "confidence": "high",
-    "rationale": "matches Billing operational scope",
-    "operations": [
-      "DescribeBillOverview"
-    ]
+    "rationale": "matches Billing operational scope - billing details query",
+    "operations": ["DescribeBillOverview"]
+  },
+  {
+    "query": "Check my billing details",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope - billing details query (English)",
+    "operations": ["DescribeBillOverview"]
   },
   {
     "query": "查看账户余额",
     "should_trigger": true,
     "skill": "ve-billing-ops",
     "confidence": "high",
-    "rationale": "matches Billing operational scope",
-    "operations": [
-      "QueryAccountBalance"
-    ]
+    "rationale": "matches Billing operational scope - account balance query",
+    "operations": ["QueryAccountBalance"]
+  },
+  {
+    "query": "Check my account balance",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope - account balance query (English)",
+    "operations": ["QueryAccountBalance"]
   },
   {
     "query": "设置消费预警",
     "should_trigger": true,
     "skill": "ve-billing-ops",
     "confidence": "high",
-    "rationale": "matches Billing operational scope",
-    "operations": [
-      "SetAlarmRule"
-    ]
+    "rationale": "matches Billing operational scope - spending alert configuration",
+    "operations": ["SetAlarmRule"]
+  },
+  {
+    "query": "Set up a billing spending alert",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope - spending alert (English)",
+    "operations": ["SetAlarmRule"]
   },
   {
     "query": "查看资源消费排名",
     "should_trigger": true,
     "skill": "ve-billing-ops",
     "confidence": "high",
-    "rationale": "matches Billing operational scope",
-    "operations": [
-      "QueryInstanceBill"
-    ]
+    "rationale": "matches Billing operational scope - resource cost ranking",
+    "operations": ["QueryInstanceBill"]
+  },
+  {
+    "query": "View resource cost rankings",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope - resource cost ranking (English)",
+    "operations": ["QueryInstanceBill"]
   },
   {
     "query": "导出月度账单",
     "should_trigger": true,
     "skill": "ve-billing-ops",
     "confidence": "high",
-    "rationale": "matches Billing operational scope",
-    "operations": [
-      "GetBillExportFile"
-    ]
+    "rationale": "matches Billing operational scope - monthly bill export",
+    "operations": ["GetBillExportFile"]
+  },
+  {
+    "query": "Export monthly billing statement",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope - monthly bill export (English)",
+    "operations": ["GetBillExportFile"]
   },
   {
     "query": "查看节省计划",
     "should_trigger": true,
     "skill": "ve-billing-ops",
     "confidence": "high",
-    "rationale": "matches Billing operational scope",
-    "operations": [
-      "DescribeSavingsPlan"
-    ]
+    "rationale": "matches Billing operational scope - savings plan query",
+    "operations": ["DescribeSavingsPlan"]
+  },
+  {
+    "query": "View my billing savings plans",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "high",
+    "rationale": "matches Billing operational scope - savings plan query (English)",
+    "operations": ["DescribeSavingsPlan"]
+  },
+  {
+    "query": "console 上账单导出的文件打不开",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "medium",
+    "rationale": "billing console issue that should route to billing skill for diagnosis",
+    "operations": ["GetBillExportFile"]
+  },
+  {
+    "query": "查一下预算预警的短信通知怎么配置",
+    "should_trigger": true,
+    "skill": "ve-billing-ops",
+    "confidence": "medium",
+    "rationale": "billing budget alert configuration, should route to billing skill",
+    "operations": ["SetAlarmRule"]
   },
   {
     "query": "创建代金券",
     "should_trigger": false,
     "skill": "ve-billing-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "voucher management is not within billing ops scope",
+    "operations": []
   },
   {
     "query": "配置网络",
     "should_trigger": false,
     "skill": "ve-billing-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
-  },
-  {
-    "query": "console 上账单导出的文件打不开",
-    "should_trigger": false,
-    "skill": "ve-billing-ops",
-    "confidence": "low",
-    "rationale": "not a Billing API operation, console-only issue"
+    "rationale": "VPC/network configuration is out of scope for billing",
+    "operations": []
   },
   {
     "query": "怎么创建 Kafka 集群",
     "should_trigger": false,
     "skill": "ve-billing-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "Kafka cluster creation is out of scope for billing",
+    "operations": []
   },
   {
-    "query": "查一下预算预警的短信通知怎么配置",
+    "query": "ecs 实例 CPU 使用率过高",
     "should_trigger": false,
     "skill": "ve-billing-ops",
     "confidence": "low",
-    "rationale": "feature not available via CLI"
+    "rationale": "ECS instance monitoring is out of scope for billing",
+    "operations": []
+  },
+  {
+    "query": "创建 IAM 用户",
+    "should_trigger": false,
+    "skill": "ve-billing-ops",
+    "confidence": "low",
+    "rationale": "IAM user creation is out of scope for billing",
+    "operations": []
   }
 ]

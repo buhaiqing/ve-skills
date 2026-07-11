@@ -5,9 +5,15 @@
     "skill": "ve-vpc-ops",
     "confidence": "high",
     "rationale": "matches VPC operational scope",
-    "operations": [
-      "CreateVpc"
-    ]
+    "operations": ["CreateVpc"]
+  },
+  {
+    "query": "Create a VPC",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": ["CreateVpc"]
   },
   {
     "query": "创建子网",
@@ -15,9 +21,15 @@
     "skill": "ve-vpc-ops",
     "confidence": "high",
     "rationale": "matches VPC operational scope",
-    "operations": [
-      "CreateSubnet"
-    ]
+    "operations": ["CreateSubnet"]
+  },
+  {
+    "query": "Create a VPC subnet",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": ["CreateSubnet"]
   },
   {
     "query": "VPC 添加路由表",
@@ -25,9 +37,15 @@
     "skill": "ve-vpc-ops",
     "confidence": "high",
     "rationale": "matches VPC operational scope",
-    "operations": [
-      "CreateRouteTable"
-    ]
+    "operations": ["CreateRouteTable"]
+  },
+  {
+    "query": "Add a route table to VPC",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": ["CreateRouteTable"]
   },
   {
     "query": "VPC Peering 连接",
@@ -35,9 +53,15 @@
     "skill": "ve-vpc-ops",
     "confidence": "high",
     "rationale": "matches VPC operational scope",
-    "operations": [
-      "CreateVpcPeeringConnection"
-    ]
+    "operations": ["CreateVpcPeeringConnection"]
+  },
+  {
+    "query": "VPC Peering connection",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": ["CreateVpcPeeringConnection"]
   },
   {
     "query": "删除 VPC",
@@ -45,9 +69,15 @@
     "skill": "ve-vpc-ops",
     "confidence": "high",
     "rationale": "matches VPC operational scope",
-    "operations": [
-      "DeleteVpc"
-    ]
+    "operations": ["DeleteVpc"]
+  },
+  {
+    "query": "Delete a VPC",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": ["DeleteVpc"]
   },
   {
     "query": "VPC 流日志",
@@ -55,9 +85,15 @@
     "skill": "ve-vpc-ops",
     "confidence": "high",
     "rationale": "matches VPC operational scope",
-    "operations": [
-      "CreateFlowLog"
-    ]
+    "operations": ["CreateFlowLog"]
+  },
+  {
+    "query": "VPC flow logs",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": ["CreateFlowLog"]
   },
   {
     "query": "网关终端节点",
@@ -65,9 +101,31 @@
     "skill": "ve-vpc-ops",
     "confidence": "high",
     "rationale": "matches VPC operational scope",
-    "operations": [
-      "CreateVpcEndpoint"
-    ]
+    "operations": ["CreateVpcEndpoint"]
+  },
+  {
+    "query": "Create a VPC gateway endpoint",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "high",
+    "rationale": "matches VPC operational scope",
+    "operations": ["CreateVpcEndpoint"]
+  },
+  {
+    "query": "console 上 VPC 的网络拓扑图不显示",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions VPC for a support/configuration request",
+    "operations": ["DescribeVpcs"]
+  },
+  {
+    "query": "查一下 VPC 的广播功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-vpc-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions VPC for a configuration request",
+    "operations": ["CreateVpc"]
   },
   {
     "query": "启动 ECS 实例",
@@ -84,13 +142,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 VPC 的网络拓扑图不显示",
-    "should_trigger": false,
-    "skill": "ve-vpc-ops",
-    "confidence": "low",
-    "rationale": "not a VPC API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 KMS 密钥",
     "should_trigger": false,
     "skill": "ve-vpc-ops",
@@ -98,10 +149,17 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 VPC 的广播功能怎么配置",
+    "query": "配置 NAT 网关的 DNAT 规则",
     "should_trigger": false,
     "skill": "ve-vpc-ops",
     "confidence": "low",
-    "rationale": "feature not supported by VPC product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "申请弹性公网 IP",
+    "should_trigger": false,
+    "skill": "ve-vpc-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

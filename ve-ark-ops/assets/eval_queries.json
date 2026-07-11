@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create ARK instance",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CreateInstance"
+    ]
+  },
+  {
     "query": "ARK 节点扩缩容",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "ScaleOutInstance"
+    ]
+  },
+  {
+    "query": "Scale out ARK instance nodes",
     "should_trigger": true,
     "skill": "ve-ark-ops",
     "confidence": "high",
@@ -30,6 +50,16 @@
     ]
   },
   {
+    "query": "Check ARK monitoring metrics",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "DescribeInstanceMonitor"
+    ]
+  },
+  {
     "query": "删除 ARK 实例",
     "should_trigger": true,
     "skill": "ve-ark-ops",
@@ -40,7 +70,27 @@
     ]
   },
   {
+    "query": "Delete ARK instance",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "DeleteInstance"
+    ]
+  },
+  {
     "query": "ARK 备份恢复",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CreateBackup"
+    ]
+  },
+  {
+    "query": "Restore ARK from backup",
     "should_trigger": true,
     "skill": "ve-ark-ops",
     "confidence": "high",
@@ -74,7 +124,27 @@
     ]
   },
   {
+    "query": "Create ARK migration task",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CreateMigrationTask"
+    ]
+  },
+  {
     "query": "查看 ARK 迁移进度",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "DescribeMigrationTask"
+    ]
+  },
+  {
+    "query": "Check ARK migration progress",
     "should_trigger": true,
     "skill": "ve-ark-ops",
     "confidence": "high",
@@ -94,11 +164,54 @@
     ]
   },
   {
-    "query": "console 上 ARK 的报警没有声音",
-    "should_trigger": false,
+    "query": "Cancel ARK migration",
+    "should_trigger": true,
     "skill": "ve-ark-ops",
-    "confidence": "low",
-    "rationale": "not an ARK operation, console-only issue"
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CancelMigrationTask"
+    ]
+  },
+  {
+    "query": "console 上 ARK 的报警没有声音",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "medium",
+    "rationale": "mentions ARK product, user request about ARK features",
+    "operations": [
+      "DescribeInstanceMonitor"
+    ]
+  },
+  {
+    "query": "ARK alarm not making sound in console",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "medium",
+    "rationale": "mentions ARK product, user request about ARK features",
+    "operations": [
+      "DescribeInstanceMonitor"
+    ]
+  },
+  {
+    "query": "查一下 ARK 的自动暂停功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "medium",
+    "rationale": "mentions ARK product, user request about ARK configuration",
+    "operations": [
+      "ModifyInstance"
+    ]
+  },
+  {
+    "query": "How to configure auto-pause for ARK",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "medium",
+    "rationale": "mentions ARK product, user request about ARK configuration",
+    "operations": [
+      "ModifyInstance"
+    ]
   },
   {
     "query": "怎么创建 CDN 加速域名",
@@ -108,10 +221,17 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 ARK 的自动暂停功能怎么配置",
+    "query": "重启 ECS 实例",
     "should_trigger": false,
     "skill": "ve-ark-ops",
     "confidence": "low",
-    "rationale": "feature not supported by ARK product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查看本月账单",
+    "should_trigger": false,
+    "skill": "ve-ark-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create a Kafka instance",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "CreateInstance"
+    ]
+  },
+  {
     "query": "Kafka Topic 管理",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "CreateTopic"
+    ]
+  },
+  {
+    "query": "Kafka topic management",
     "should_trigger": true,
     "skill": "ve-kafka-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Kafka consumer group management",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "ListConsumerGroups"
+    ]
+  },
+  {
     "query": "Kafka 分区扩缩容",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "ModifyTopicPartition"
+    ]
+  },
+  {
+    "query": "Kafka partition scaling",
     "should_trigger": true,
     "skill": "ve-kafka-ops",
     "confidence": "high",
@@ -50,7 +90,27 @@
     ]
   },
   {
+    "query": "Kafka ACL policy configuration",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "CreateAcl"
+    ]
+  },
+  {
     "query": "Kafka 监控指标",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "GetInstanceConsumerStats"
+    ]
+  },
+  {
+    "query": "Kafka monitoring metrics",
     "should_trigger": true,
     "skill": "ve-kafka-ops",
     "confidence": "high",
@@ -70,6 +130,34 @@
     ]
   },
   {
+    "query": "Delete a Kafka topic",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "high",
+    "rationale": "matches Kafka operational scope",
+    "operations": [
+      "DeleteTopic"
+    ]
+  },
+  {
+    "query": "console 上 Kafka 的消费延迟很高",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "medium",
+    "rationale": "Kafka monitoring inquiry, operational scope",
+    "operations": [
+      "GetInstanceConsumerStats"
+    ]
+  },
+  {
+    "query": "查一下 Kafka 的自动均衡功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-kafka-ops",
+    "confidence": "medium",
+    "rationale": "Kafka configuration inquiry, operational scope",
+    "operations": []
+  },
+  {
     "query": "启动 Web 服务",
     "should_trigger": false,
     "skill": "ve-kafka-ops",
@@ -84,13 +172,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 Kafka 的消费延迟很高",
-    "should_trigger": false,
-    "skill": "ve-kafka-ops",
-    "confidence": "low",
-    "rationale": "not a Kafka API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 DNS 解析记录",
     "should_trigger": false,
     "skill": "ve-kafka-ops",
@@ -98,10 +179,24 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 Kafka 的自动均衡功能怎么配置",
+    "query": "创建 TOS Bucket",
     "should_trigger": false,
     "skill": "ve-kafka-ops",
     "confidence": "low",
-    "rationale": "feature not supported by Kafka product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 ECS 安全组规则",
+    "should_trigger": false,
+    "skill": "ve-kafka-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查询 SLS 日志",
+    "should_trigger": false,
+    "skill": "ve-kafka-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

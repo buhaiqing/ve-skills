@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create VPN gateway",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateVpnGateway"
+    ]
+  },
+  {
     "query": "创建用户网关",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateCustomerGateway"
+    ]
+  },
+  {
+    "query": "Create customer gateway",
     "should_trigger": true,
     "skill": "ve-vpn-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Configure IPSec tunnel",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateVpnConnection"
+    ]
+  },
+  {
     "query": "VPN 隧道状态监控",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "DescribeVpnConnections"
+    ]
+  },
+  {
+    "query": "Monitor VPN tunnel status",
     "should_trigger": true,
     "skill": "ve-vpn-ops",
     "confidence": "high",
@@ -50,7 +90,27 @@
     ]
   },
   {
+    "query": "Delete VPN connection",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "DeleteVpnConnection"
+    ]
+  },
+  {
     "query": "VPN SSL 证书配置",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "high",
+    "rationale": "matches VPN operational scope",
+    "operations": [
+      "CreateSslVpnServer"
+    ]
+  },
+  {
+    "query": "Configure VPN SSL certificate",
     "should_trigger": true,
     "skill": "ve-vpn-ops",
     "confidence": "high",
@@ -75,10 +135,23 @@
   },
   {
     "query": "console 上 VPN 的隧道状态显示断开",
-    "should_trigger": false,
+    "should_trigger": true,
     "skill": "ve-vpn-ops",
-    "confidence": "low",
-    "rationale": "not a VPN API operation, console-only issue"
+    "confidence": "medium",
+    "rationale": "mentions VPN product, user request about VPN connection status",
+    "operations": [
+      "DescribeVpnConnections"
+    ]
+  },
+  {
+    "query": "VPN tunnel status shows disconnected in console",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "medium",
+    "rationale": "mentions VPN product, user request about VPN connection status",
+    "operations": [
+      "DescribeVpnConnections"
+    ]
   },
   {
     "query": "怎么创建 CMS 告警规则",
@@ -89,9 +162,36 @@
   },
   {
     "query": "查一下 VPN 的智能选路功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "medium",
+    "rationale": "mentions VPN product, user request about VPN features",
+    "operations": [
+      "ModifyVpnGatewayAttribute"
+    ]
+  },
+  {
+    "query": "How to configure smart routing for VPN",
+    "should_trigger": true,
+    "skill": "ve-vpn-ops",
+    "confidence": "medium",
+    "rationale": "mentions VPN product, user request about VPN features",
+    "operations": [
+      "ModifyVpnGatewayAttribute"
+    ]
+  },
+  {
+    "query": "创建 TOS 存储桶",
     "should_trigger": false,
     "skill": "ve-vpn-ops",
     "confidence": "low",
-    "rationale": "feature not supported by VPN product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "启用 DDoS 高防",
+    "should_trigger": false,
+    "skill": "ve-vpn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]
