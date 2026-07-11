@@ -49,3 +49,6 @@ audit-results/
 
 # Subagent session artifacts
 .pi-subagents/
+
+# GCL execution log
+gcl.log
