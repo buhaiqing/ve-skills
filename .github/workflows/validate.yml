@@ -29,3 +29,6 @@ jobs:
 
       - name: Run local validation
         run: python3 scripts/validate_local.py
+
+      - name: Check eval regression (absolute match + git-diff)
+        run: python3 scripts/check_eval_regression.py --git-diff origin/main
