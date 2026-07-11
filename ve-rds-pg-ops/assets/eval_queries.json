@@ -82,5 +82,26 @@
     "skill": "ve-rds-pg-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 RDS PG 的监控图表显示异常",
+    "should_trigger": false,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "low",
+    "rationale": "not an RDS PG API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 NAT 网关",
+    "should_trigger": false,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 RDS PG 的跨区域灾备功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-rds-pg-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by RDS PG product"
   }
 ]

@@ -62,5 +62,56 @@
     "skill": "ve-ark-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "创建 ARK 迁移任务",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CreateMigrationTask"
+    ]
+  },
+  {
+    "query": "查看 ARK 迁移进度",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "DescribeMigrationTask"
+    ]
+  },
+  {
+    "query": "撤销 ARK 迁移",
+    "should_trigger": true,
+    "skill": "ve-ark-ops",
+    "confidence": "high",
+    "rationale": "matches ARK operational scope",
+    "operations": [
+      "CancelMigrationTask"
+    ]
+  },
+  {
+    "query": "console 上 ARK 的报警没有声音",
+    "should_trigger": false,
+    "skill": "ve-ark-ops",
+    "confidence": "low",
+    "rationale": "not an ARK operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 CDN 加速域名",
+    "should_trigger": false,
+    "skill": "ve-ark-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 ARK 的自动暂停功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-ark-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by ARK product"
   }
 ]

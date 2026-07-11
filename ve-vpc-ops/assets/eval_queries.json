@@ -82,5 +82,26 @@
     "skill": "ve-vpc-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 VPC 的网络拓扑图不显示",
+    "should_trigger": false,
+    "skill": "ve-vpc-ops",
+    "confidence": "low",
+    "rationale": "not a VPC API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 KMS 密钥",
+    "should_trigger": false,
+    "skill": "ve-vpc-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 VPC 的广播功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-vpc-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by VPC product"
   }
 ]

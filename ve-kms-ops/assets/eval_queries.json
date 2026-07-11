@@ -82,5 +82,26 @@
     "skill": "ve-kms-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 KMS 密钥的轮换记录在哪查看",
+    "should_trigger": false,
+    "skill": "ve-kms-ops",
+    "confidence": "low",
+    "rationale": "not a KMS API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 EIP 弹性公网 IP",
+    "should_trigger": false,
+    "skill": "ve-kms-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 KMS 的跨区域密钥同步怎么配置",
+    "should_trigger": false,
+    "skill": "ve-kms-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by KMS product"
   }
 ]

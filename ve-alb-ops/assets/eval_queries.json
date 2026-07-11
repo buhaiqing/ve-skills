@@ -72,5 +72,26 @@
     "skill": "ve-alb-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上查不到 ALB 的监控数据",
+    "should_trigger": false,
+    "skill": "ve-alb-ops",
+    "confidence": "low",
+    "rationale": "not an ALB operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 Redis 实例",
+    "should_trigger": false,
+    "skill": "ve-alb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 ALB 的 IPV6 转换功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-alb-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by ALB product"
   }
 ]

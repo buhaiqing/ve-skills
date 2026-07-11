@@ -138,3 +138,4 @@
 - [docs/skill-routing-graph.md](skill-routing-graph.md) — 跨产品委派路由
 - [ve-skill-generator/references/ve-skill-template.md](../ve-skill-generator/references/ve-skill-template.md) — skill 模板
 - [ve-skill-generator/SKILL.md](../ve-skill-generator/SKILL.md) — P0/P1 checklist
+- [skill-harness-review-2026-07-05.md](skill-harness-review-2026-07-05.md) — 2026-07-05 全量 29 skill 评审原始报告（已提炼为本文档）

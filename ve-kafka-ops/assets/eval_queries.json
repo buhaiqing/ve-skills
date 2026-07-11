@@ -82,5 +82,26 @@
     "skill": "ve-kafka-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "console 上 Kafka 的消费延迟很高",
+    "should_trigger": false,
+    "skill": "ve-kafka-ops",
+    "confidence": "low",
+    "rationale": "not a Kafka API operation, console-only issue"
+  },
+  {
+    "query": "怎么创建 DNS 解析记录",
+    "should_trigger": false,
+    "skill": "ve-kafka-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 Kafka 的自动均衡功能怎么配置",
+    "should_trigger": false,
+    "skill": "ve-kafka-ops",
+    "confidence": "low",
+    "rationale": "feature not supported by Kafka product"
   }
 ]
