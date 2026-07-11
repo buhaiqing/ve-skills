@@ -293,6 +293,7 @@ Adaptive compression strategy for token management:
 - **Never invent CLI flags or API parameters.** Only official OpenAPI or `ve <service> <action> --help` verified fields.
 - **Single-product rule.** One `ve-*-ops` skill = one product = one primary resource model.
 - **Prefer editing existing skills over creating new files.** No tutorial-style `.md` at the repo root.
+- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`scripts/validate_skills_frontmatter.py` `ORCHESTRATION_TYPES`). The single-product rule does not apply to them (they coordinate, not own, a product).
 
 ## File Layout Anchors (do not relocate without reason)
 
@@ -398,6 +399,8 @@ The Critic itself MUST NOT call any skill — it only emits suggestions.
 
 All 13 `required`-tier, 10 `recommended`-tier, and 6 `optional`-tier skills have GCL rubric + prompt templates.
 See [docs/gcl-spec.md](docs/gcl-spec.md) §11 for the full rollout changelog.
+
+> Additionally, 1 **orchestration skill** `incident-loop-agent` (`metadata.type=orchestration-skill`) is equipped with GCL rubric + prompt templates. It is exempt from the `ve-*` prefix and `cli_applicability` mandate per the Skill Authoring Guardrails exception clause.
 
 ## Evaluation
 
