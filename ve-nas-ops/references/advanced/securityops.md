@@ -1,12 +1,12 @@
-# SecurityOps — NAS Security Operations
+# SecurityOps — NAS (文件存储) Security Operations
 
 > SecurityOps content for non-security-critical skills per TE-7.
-> **Purpose**: NFS/SMB access control, file share encryption, snapshot security, and permission management for Network Attached Storage resources.
+> **Purpose**: NFS/SMB access control, data encryption, snapshot security
 
 ## Security Baseline Checklist
 
 ```markdown
-## NAS Security Baseline — Current
+## NAS Security Baseline — [Date]
 
 ### Access Control
 - [ ] IAM policies scoped to nas required APIs only
@@ -29,3 +29,10 @@
 - [ ] Security-related events have separate alarm rules
 - [ ] Unauthorized access attempts trigger alerts via ve-cms-ops
 ```
+
+## Product-Specific Security Recommendations
+
+- Restrict NAS mount targets to trusted VPC subnets
+- Enable encryption at rest for NAS file systems
+- Set snapshot retention policy aligned with compliance
+

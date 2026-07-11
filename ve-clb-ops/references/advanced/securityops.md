@@ -5,10 +5,34 @@
 
 ## Security Baseline Checklist
 
+```markdown
+## CLB Security Baseline — [Date]
 
+### Access Control
+- [ ] IAM policies scoped to clb required APIs only
+- [ ] No hardcoded credentials in scripts/configs (use {{env.*}} placeholders)
+- [ ] API key rotation schedule documented and tracked
+- [ ] Service accounts mapped to specific CLB operations
+
+### Network Security
+- [ ] CLB endpoint access restricted to trusted networks
+- [ ] Network ACLs / security groups scoped to CLB data plane
+- [ ] Access logging enabled for audit trail
+
+### Data Protection
+- [ ] Data at rest encryption verified
+- [ ] Data in transit encryption enforced (TLS 1.2+)
+- [ ] Data retention policy aligned with compliance requirements
+
+### Audit & Monitoring
+- [ ] CLB operation logging enabled
+- [ ] Security-related events have separate alarm rules
+- [ ] Unauthorized access attempts trigger alerts via ve-cms-ops
+```
 
 ## Product-Specific Security Recommendations
 
 - Disable unnecessary listener protocols
 - Enable CLB access logs for traffic audit
 - Restrict health check source IPs to prevent probing
+
