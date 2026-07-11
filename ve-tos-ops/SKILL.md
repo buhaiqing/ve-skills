@@ -17,8 +17,8 @@ compatibility: >-
   network access to TOS endpoints (tos-{region}.volces.com).
 metadata:
   author: volcengine
-  version: "1.2.0"
-  last_updated: "2026-06-04"
+  version: "1.2.1"
+  last_updated: "2026-07-11"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   go_version_minimum: "1.13"
   cli_applicability: dual-path
@@ -178,6 +178,8 @@ tosutil ls -s
 | CleanupMultipartUploads | Abort incomplete multipart uploads | Low/Low |
 | OptimizeStorageClass | Recommend storage class changes | Med/Low |
 
+> FinOps Operations 详情 → [references/advanced/finops.md#operations](references/advanced/finops.md#operations)
+
 ## Changelog
 
 | Version | Date | Changes |
@@ -185,6 +187,7 @@ tosutil ls -s
 | 1.0.0 | 2026-05-15 | Initial release with bucket/object management, lifecycle, versioning |
 | 1.1.0 | 2026-05-27 | Added FinOps operations (storage analysis, stale detection, cleanup, cost reports) and AIOps knowledge base |
 | 1.2.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md` |
+| 1.2.1 | 2026-07-11 | Split FinOps Operations (5 ops) to `references/advanced/finops.md` (TE-7); SKILL.md retains entry link only |
 
 ## Quality Gate (GCL)
 
@@ -747,127 +750,11 @@ tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} -ps=1
 tosutil cp "{{user.local_file}}" tos://{{user.bucket}}/{{user.object_key}} --task-id <task-id>
 ```
 
----
+## FinOps Operations (Advanced)
 
-## FinOps Operations (Agent-Readable)
+详细 FinOps Operation 步骤（DescribeStorageAnalysis / CleanupMultipartUploads / DetectStaleObjects / OptimizeStorageClass / DescribeCostSummary）见 [`references/advanced/finops.md`](references/advanced/finops.md)。
 
-### Operation: DescribeStorageAnalysis — Analyze Storage Class Distribution
-
-Analyzes bucket storage distribution across storage classes to identify optimization opportunities.
-
-#### Pre-flight Checks
-
-| Check | Method | Expected | On Failure |
-|-------|--------|----------|------------|
-| Bucket exists | `tosutil ls tos://{{user.bucket}}` | Bucket found | HALT |
-| Credentials | `test -n "$TOS_ACCESS_KEY" && test -n "$TOS_SECRET_KEY"` | Both set | HALT |
-
-#### Execution
-
-```bash
-# Get bucket storage class distribution
-tosutil ls tos://{{user.bucket}} -s -ab | awk '{print $2, $3}' | sort | uniq -c | sort -rn
-
-# Get bucket size summary
-tosutil du tos://{{user.bucket}}
-```
-
-#### Analysis Logic
-
-| Storage Class | Recommended Use | Cost Relative to Standard |
-|--------------|-----------------|--------------------------|
-| Standard | Frequent access (daily) | 100% (baseline) |
-| IA (Infrequent Access) | Occasional access (monthly) | ~60% |
-| Archive | Rare access (quarterly, restore needed) | ~40% |
-| ColdArchive | Compliance retention (yearly) | ~20% |
-
----
-
-### Operation: DetectStaleObjects — Find Objects Not Accessed Recently
-
-Identifies objects not accessed for a specified period.
-
-#### Stale Classification
-
-| Last Access | Classification | Recommended Action |
-|-------------|---------------|-------------------|
-| > 30 days | Warm | Consider IA storage class |
-| > 90 days | Cold | Consider Archive storage class |
-| > 365 days | Frozen | Consider deletion or ColdArchive |
-
-#### Execution
-
-```bash
-# List objects with last modified date
-tosutil ls tos://{{user.bucket}} -s -ab
-```
-
----
-
-### Operation: CleanupMultipartUploads — Abort Incomplete Uploads
-
-Finds and aborts multipart uploads incomplete beyond a threshold.
-
-#### Execution
-
-```bash
-# List incomplete multipart uploads
-ve tos ListMultipartUploads --bucket "{{user.bucket}}" --Region "{{env.VOLCENGINE_REGION}}"
-
-# Abort a specific upload
-ve tos AbortMultipartUpload --bucket "{{user.bucket}}" --key "{{user.object_key}}" --upload-id "{{user.upload_id}}" --Region "{{env.VOLCENGINE_REGION}}"
-```
-
----
-
-### Operation: OptimizeStorageClass — Apply Storage Class Transitions
-
-Transitions objects to a more cost-effective storage class.
-
-#### Pre-flight (Safety Gate)
-
-- **MUST** list all objects to be transitioned with current and target class
-- **MUST** warn about retrieval costs and restore times for Archive/ColdArchive
-- **MUST** confirm with user before proceeding
-
-#### Execution
-
-```bash
-# Set lifecycle rule for automatic transition
-ve tos PutBucketLifecycle \
-  --bucket "{{user.bucket}}" \
-  --body '{"Rules": [{"ID": "auto-transition-to-ia", "Status": "Enabled", "Prefix": "logs/", "Transitions": [{"Days": 30, "StorageClass": "IA"}, {"Days": 90, "StorageClass": "Archive"}]}]}'
-```
-
----
-
-### Operation: DescribeCostSummary — Generate TOS Cost Report
-
-Generates a cost summary for all TOS buckets.
-
-#### Execution
-
-```bash
-# List all buckets with sizes
-tosutil ls -s
-
-# Query billing data for TOS
-ve billing DescribeBillDetail --BillingCycle "{{user.billing_cycle}}" --ProductType tos
-```
-
-#### Output Format
-
-```markdown
-## TOS Cost Summary — {{user.billing_cycle}}
-
-| Bucket | Storage | Requests | Bandwidth | Monthly Cost |
-|--------|---------|----------|-----------|-------------|
-| prod-assets | 500 GB (Standard) | 2M | 100 GB | ¥280 |
-| prod-logs | 200 GB (IA) | 500K | 10 GB | ¥65 |
-| **Total** | **700 GB** | **2.5M** | **110 GB** | **¥345** |
-```
-
----
+> SKILL.md 中仅保留 FinOps 入口；具体执行步骤在 `references/advanced/finops.md`（TE-7 专业内容分层）。
 
 ## Error Taxonomy
 
