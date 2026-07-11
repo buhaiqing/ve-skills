@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create NAS file system",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateFileSystem"
+    ]
+  },
+  {
     "query": "挂载 NAS",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateMountTarget"
+    ]
+  },
+  {
+    "query": "Mount NAS file system",
     "should_trigger": true,
     "skill": "ve-nas-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Monitor NAS capacity",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "DescribeFileSystems"
+    ]
+  },
+  {
     "query": "NAS 权限组配置",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateAccessGroup"
+    ]
+  },
+  {
+    "query": "Configure NAS access group",
     "should_trigger": true,
     "skill": "ve-nas-ops",
     "confidence": "high",
@@ -50,6 +90,16 @@
     ]
   },
   {
+    "query": "Manage NAS lifecycle rules",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "CreateLifecycleRule"
+    ]
+  },
+  {
     "query": "删除 NAS 挂载点",
     "should_trigger": true,
     "skill": "ve-nas-ops",
@@ -60,7 +110,27 @@
     ]
   },
   {
+    "query": "Delete NAS mount target",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "DeleteMountTarget"
+    ]
+  },
+  {
     "query": "NAS 加密配置",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "high",
+    "rationale": "matches NAS operational scope",
+    "operations": [
+      "SetFileSystemEncryption"
+    ]
+  },
+  {
+    "query": "Configure NAS encryption",
     "should_trigger": true,
     "skill": "ve-nas-ops",
     "confidence": "high",
@@ -85,10 +155,23 @@
   },
   {
     "query": "console 上 NAS 的挂载命令怎么获取",
-    "should_trigger": false,
+    "should_trigger": true,
     "skill": "ve-nas-ops",
-    "confidence": "low",
-    "rationale": "not a NAS API operation, console-only issue"
+    "confidence": "medium",
+    "rationale": "mentions NAS product, user request about NAS usage",
+    "operations": [
+      "DescribeMountTargets"
+    ]
+  },
+  {
+    "query": "How to get NAS mount command from console",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "medium",
+    "rationale": "mentions NAS product, user request about NAS usage",
+    "operations": [
+      "DescribeMountTargets"
+    ]
   },
   {
     "query": "怎么创建安全组",
@@ -99,9 +182,36 @@
   },
   {
     "query": "查一下 NAS 的跨区域复制功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "medium",
+    "rationale": "mentions NAS product, user request about NAS features",
+    "operations": [
+      "CreateReplicationRule"
+    ]
+  },
+  {
+    "query": "How to configure NAS cross-region replication",
+    "should_trigger": true,
+    "skill": "ve-nas-ops",
+    "confidence": "medium",
+    "rationale": "mentions NAS product, user request about NAS features",
+    "operations": [
+      "CreateReplicationRule"
+    ]
+  },
+  {
+    "query": "创建 IAM 用户",
     "should_trigger": false,
     "skill": "ve-nas-ops",
     "confidence": "low",
-    "rationale": "feature not supported by NAS product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 Redis 集群",
+    "should_trigger": false,
+    "skill": "ve-nas-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

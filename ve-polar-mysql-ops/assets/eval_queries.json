@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create PolarDB cluster",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "CreateDBCluster"
+    ]
+  },
+  {
     "query": "PolarDB 一键升级主版本",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "UpgradeDBClusterVersion"
+    ]
+  },
+  {
+    "query": "Upgrade PolarDB major version",
     "should_trigger": true,
     "skill": "ve-polar-mysql-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Scale up PolarDB storage automatically",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "ModifyDBClusterStorage"
+    ]
+  },
+  {
     "query": "PolarDB 冷热数据分离",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "ModifyDBClusterAttribute"
+    ]
+  },
+  {
+    "query": "Configure PolarDB hot/cold data separation",
     "should_trigger": true,
     "skill": "ve-polar-mysql-ops",
     "confidence": "high",
@@ -50,7 +90,27 @@
     ]
   },
   {
+    "query": "Delete PolarDB cluster",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "DeleteDBCluster"
+    ]
+  },
+  {
     "query": "PolarDB 开启透明加密",
+    "should_trigger": true,
+    "skill": "ve-polar-mysql-ops",
+    "confidence": "high",
+    "rationale": "matches PolarDB MySQL operational scope",
+    "operations": [
+      "ModifyDBClusterEncryption"
+    ]
+  },
+  {
+    "query": "Enable PolarDB transparent encryption",
     "should_trigger": true,
     "skill": "ve-polar-mysql-ops",
     "confidence": "high",

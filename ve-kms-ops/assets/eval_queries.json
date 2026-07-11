@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create KMS key",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "CreateKey"
+    ]
+  },
+  {
     "query": "KMS 密钥轮换策略",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "PutKeyRotation"
+    ]
+  },
+  {
+    "query": "Configure KMS key rotation policy",
     "should_trigger": true,
     "skill": "ve-kms-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Encrypt data with KMS",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "Encrypt"
+    ]
+  },
+  {
     "query": "KMS 解密数据",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "Decrypt"
+    ]
+  },
+  {
+    "query": "Decrypt data with KMS",
     "should_trigger": true,
     "skill": "ve-kms-ops",
     "confidence": "high",
@@ -50,6 +90,16 @@
     ]
   },
   {
+    "query": "Schedule KMS key deletion",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "ScheduleKeyDeletion"
+    ]
+  },
+  {
     "query": "KMS 密钥授权",
     "should_trigger": true,
     "skill": "ve-kms-ops",
@@ -60,7 +110,27 @@
     ]
   },
   {
+    "query": "Grant KMS key permissions",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "CreateKeyGrant"
+    ]
+  },
+  {
     "query": "取消密钥计划删除",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "high",
+    "rationale": "matches KMS operational scope",
+    "operations": [
+      "CancelKeyDeletion"
+    ]
+  },
+  {
+    "query": "Cancel scheduled key deletion",
     "should_trigger": true,
     "skill": "ve-kms-ops",
     "confidence": "high",
@@ -85,10 +155,23 @@
   },
   {
     "query": "console 上 KMS 密钥的轮换记录在哪查看",
-    "should_trigger": false,
+    "should_trigger": true,
     "skill": "ve-kms-ops",
-    "confidence": "low",
-    "rationale": "not a KMS API operation, console-only issue"
+    "confidence": "medium",
+    "rationale": "mentions KMS product, user request about KMS features",
+    "operations": [
+      "DescribeKeyRotation"
+    ]
+  },
+  {
+    "query": "Where to view KMS key rotation history in console",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "medium",
+    "rationale": "mentions KMS product, user request about KMS features",
+    "operations": [
+      "DescribeKeyRotation"
+    ]
   },
   {
     "query": "怎么创建 EIP 弹性公网 IP",
@@ -99,9 +182,36 @@
   },
   {
     "query": "查一下 KMS 的跨区域密钥同步怎么配置",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "medium",
+    "rationale": "mentions KMS product, user request about KMS features",
+    "operations": [
+      "ImportKeyMaterial"
+    ]
+  },
+  {
+    "query": "How to configure cross-region key sync for KMS",
+    "should_trigger": true,
+    "skill": "ve-kms-ops",
+    "confidence": "medium",
+    "rationale": "mentions KMS product, user request about KMS features",
+    "operations": [
+      "ImportKeyMaterial"
+    ]
+  },
+  {
+    "query": "修改 RDS MySQL 参数",
     "should_trigger": false,
     "skill": "ve-kms-ops",
     "confidence": "low",
-    "rationale": "feature not supported by KMS product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置负载均衡监听器",
+    "should_trigger": false,
+    "skill": "ve-kms-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

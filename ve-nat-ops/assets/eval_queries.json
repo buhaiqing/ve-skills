@@ -5,9 +5,15 @@
     "skill": "ve-nat-ops",
     "confidence": "high",
     "rationale": "matches NAT Gateway operational scope",
-    "operations": [
-      "CreateNatGateway"
-    ]
+    "operations": ["CreateNatGateway"]
+  },
+  {
+    "query": "Create a NAT Gateway",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": ["CreateNatGateway"]
   },
   {
     "query": "配置 SNAT 规则",
@@ -15,9 +21,15 @@
     "skill": "ve-nat-ops",
     "confidence": "high",
     "rationale": "matches NAT Gateway operational scope",
-    "operations": [
-      "CreateSnatRule"
-    ]
+    "operations": ["CreateSnatRule"]
+  },
+  {
+    "query": "Configure SNAT rules",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": ["CreateSnatRule"]
   },
   {
     "query": "配置 DNAT 规则",
@@ -25,9 +37,15 @@
     "skill": "ve-nat-ops",
     "confidence": "high",
     "rationale": "matches NAT Gateway operational scope",
-    "operations": [
-      "CreateDnatRule"
-    ]
+    "operations": ["CreateDnatRule"]
+  },
+  {
+    "query": "Configure DNAT rules",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": ["CreateDnatRule"]
   },
   {
     "query": "NAT 网关升级带宽",
@@ -35,9 +53,15 @@
     "skill": "ve-nat-ops",
     "confidence": "high",
     "rationale": "matches NAT Gateway operational scope",
-    "operations": [
-      "ModifyNatGateway"
-    ]
+    "operations": ["ModifyNatGateway"]
+  },
+  {
+    "query": "Upgrade NAT Gateway bandwidth",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": ["ModifyNatGateway"]
   },
   {
     "query": "删除 NAT 网关",
@@ -45,9 +69,15 @@
     "skill": "ve-nat-ops",
     "confidence": "high",
     "rationale": "matches NAT Gateway operational scope",
-    "operations": [
-      "DeleteNatGateway"
-    ]
+    "operations": ["DeleteNatGateway"]
+  },
+  {
+    "query": "Delete a NAT Gateway",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": ["DeleteNatGateway"]
   },
   {
     "query": "SNAT 规则查看",
@@ -55,9 +85,15 @@
     "skill": "ve-nat-ops",
     "confidence": "high",
     "rationale": "matches NAT Gateway operational scope",
-    "operations": [
-      "DescribeSnatTableEntries"
-    ]
+    "operations": ["DescribeSnatTableEntries"]
+  },
+  {
+    "query": "View SNAT rules",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": ["DescribeSnatTableEntries"]
   },
   {
     "query": "DNAT 规则查看",
@@ -65,9 +101,31 @@
     "skill": "ve-nat-ops",
     "confidence": "high",
     "rationale": "matches NAT Gateway operational scope",
-    "operations": [
-      "DescribeDnatTableEntries"
-    ]
+    "operations": ["DescribeDnatTableEntries"]
+  },
+  {
+    "query": "View DNAT rules",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "high",
+    "rationale": "matches NAT Gateway operational scope",
+    "operations": ["DescribeDnatTableEntries"]
+  },
+  {
+    "query": "console 上 NAT 的流量监控不显示",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions NAT Gateway for a support/configuration request",
+    "operations": ["DescribeNatGateways"]
+  },
+  {
+    "query": "查一下 NAT 的双栈网关怎么配置",
+    "should_trigger": true,
+    "skill": "ve-nat-ops",
+    "confidence": "medium",
+    "rationale": "directly mentions NAT Gateway for a configuration request",
+    "operations": ["CreateNatGateway"]
   },
   {
     "query": "创建 ECS 实例",
@@ -84,13 +142,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 NAT 的流量监控不显示",
-    "should_trigger": false,
-    "skill": "ve-nat-ops",
-    "confidence": "low",
-    "rationale": "not a NAT API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 RDS PostgreSQL 实例",
     "should_trigger": false,
     "skill": "ve-nat-ops",
@@ -98,10 +149,17 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 NAT 的双栈网关怎么配置",
+    "query": "创建 ALB 负载均衡",
     "should_trigger": false,
     "skill": "ve-nat-ops",
     "confidence": "low",
-    "rationale": "feature not supported by NAT product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "配置 IAM 用户权限",
+    "should_trigger": false,
+    "skill": "ve-nat-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

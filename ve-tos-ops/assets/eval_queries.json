@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create a TOS bucket",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "CreateBucket"
+    ]
+  },
+  {
     "query": "上传文件到 TOS",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutObject"
+    ]
+  },
+  {
+    "query": "Upload a file to TOS",
     "should_trigger": true,
     "skill": "ve-tos-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "TOS bucket lifecycle rules",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketLifecycle"
+    ]
+  },
+  {
     "query": "TOS 静态网站托管",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketWebsite"
+    ]
+  },
+  {
+    "query": "TOS static website hosting",
     "should_trigger": true,
     "skill": "ve-tos-ops",
     "confidence": "high",
@@ -50,7 +90,27 @@
     ]
   },
   {
+    "query": "TOS cross-region replication",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketReplication"
+    ]
+  },
+  {
     "query": "TOS 存储容量统计",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "GetBucketStatistics"
+    ]
+  },
+  {
+    "query": "TOS storage capacity statistics",
     "should_trigger": true,
     "skill": "ve-tos-ops",
     "confidence": "high",
@@ -70,6 +130,16 @@
     ]
   },
   {
+    "query": "Delete a TOS bucket",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "DeleteBucket"
+    ]
+  },
+  {
     "query": "TOS 访问日志配置",
     "should_trigger": true,
     "skill": "ve-tos-ops",
@@ -80,21 +150,27 @@
     ]
   },
   {
-    "query": "配置 Apache 虚拟主机",
-    "should_trigger": false,
+    "query": "TOS access logging configuration",
+    "should_trigger": true,
     "skill": "ve-tos-ops",
-    "confidence": "low",
-    "rationale": "out of scope for this skill"
-  },
-  {
-    "query": "启动 MySQL 数据库",
-    "should_trigger": false,
-    "skill": "ve-tos-ops",
-    "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "confidence": "high",
+    "rationale": "matches TOS operational scope",
+    "operations": [
+      "PutBucketLogging"
+    ]
   },
   {
     "query": "分析一下 TOS 各个存储类别的分布和成本情况",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps storage analysis scope",
+    "operations": [
+      "DescribeStorageAnalysis"
+    ]
+  },
+  {
+    "query": "Analyze TOS storage class distribution and cost",
     "should_trigger": true,
     "skill": "ve-tos-ops",
     "confidence": "high",
@@ -114,7 +190,27 @@
     ]
   },
   {
+    "query": "Clean up TOS incomplete multipart uploads",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps multipart cleanup scope; CleanupMultipartUploads issues AbortMultipartUpload (mutating) — require explicit confirmation before execution",
+    "operations": [
+      "CleanupMultipartUploads"
+    ]
+  },
+  {
     "query": "TOS 存储成本太高了，帮我把热数据降级到更便宜的存储类别",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps storage class optimization scope",
+    "operations": [
+      "DescribeStorageAnalysis"
+    ]
+  },
+  {
+    "query": "TOS storage cost is too high, downgrade hot data to cheaper storage class",
     "should_trigger": true,
     "skill": "ve-tos-ops",
     "confidence": "high",
@@ -134,12 +230,44 @@
     ]
   },
   {
+    "query": "Detect TOS objects that haven't been accessed for a long time",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS FinOps stale object detection scope",
+    "operations": [
+      "DetectStaleObjects"
+    ]
+  },
+  {
     "query": "TOS 访问一直出问题，根据知识库帮我诊断下故障原因",
     "should_trigger": true,
     "skill": "ve-tos-ops",
     "confidence": "high",
     "rationale": "matches TOS AIOps knowledge-base diagnosis scope",
     "operations": []
+  },
+  {
+    "query": "TOS access keeps failing",
+    "should_trigger": true,
+    "skill": "ve-tos-ops",
+    "confidence": "high",
+    "rationale": "matches TOS AIOps knowledge-base diagnosis scope",
+    "operations": []
+  },
+  {
+    "query": "配置 Apache 虚拟主机",
+    "should_trigger": false,
+    "skill": "ve-tos-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "启动 MySQL 数据库",
+    "should_trigger": false,
+    "skill": "ve-tos-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   },
   {
     "query": "我们公司想买个域名，顺便配置一下 CDN 加速",
@@ -154,5 +282,12 @@
     "skill": "ve-tos-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill (Redis cost optimization belongs to redis-ops)"
+  },
+  {
+    "query": "怎么创建 Kafka 消费者组",
+    "should_trigger": false,
+    "skill": "ve-tos-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

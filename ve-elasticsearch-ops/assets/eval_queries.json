@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create Elasticsearch cluster",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "CreateInstance"
+    ]
+  },
+  {
     "query": "Elasticsearch 节点扩缩容",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "ModifyInstance"
+    ]
+  },
+  {
+    "query": "Scale out Elasticsearch node",
     "should_trigger": true,
     "skill": "ve-elasticsearch-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "Configure Elasticsearch hot-warm node tiers",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "ModifyInstance"
+    ]
+  },
+  {
     "query": "Elasticsearch 开启 HTTPS",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "ModifyInstanceSecurity"
+    ]
+  },
+  {
+    "query": "Enable HTTPS for Elasticsearch",
     "should_trigger": true,
     "skill": "ve-elasticsearch-ops",
     "confidence": "high",
@@ -50,6 +90,16 @@
     ]
   },
   {
+    "query": "Create Elasticsearch snapshot backup",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "CreateSnapshot"
+    ]
+  },
+  {
     "query": "Elasticsearch 磁盘空间不足",
     "should_trigger": true,
     "skill": "ve-elasticsearch-ops",
@@ -60,7 +110,27 @@
     ]
   },
   {
+    "query": "Elasticsearch disk space running low",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "DescribeInstance"
+    ]
+  },
+  {
     "query": "删除 ES 集群",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "high",
+    "rationale": "matches Elasticsearch operational scope",
+    "operations": [
+      "DeleteInstance"
+    ]
+  },
+  {
+    "query": "Delete ES cluster",
     "should_trigger": true,
     "skill": "ve-elasticsearch-ops",
     "confidence": "high",
@@ -84,11 +154,24 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 ES 的集群健康状态异常",
-    "should_trigger": false,
+    "query": "控制台上 ES 的集群健康状态异常",
+    "should_trigger": true,
     "skill": "ve-elasticsearch-ops",
-    "confidence": "low",
-    "rationale": "not an ES API operation, console-only issue"
+    "confidence": "medium",
+    "rationale": "mentions ES product, user request about ES cluster health",
+    "operations": [
+      "DescribeInstance"
+    ]
+  },
+  {
+    "query": "ES cluster health status shows abnormal in console",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "medium",
+    "rationale": "mentions ES product, user request about ES cluster health",
+    "operations": [
+      "DescribeInstance"
+    ]
   },
   {
     "query": "怎么创建 TOS 存储桶",
@@ -99,9 +182,36 @@
   },
   {
     "query": "查一下 ES 的跨集群搜索功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "medium",
+    "rationale": "mentions ES product, user request about ES features",
+    "operations": [
+      "ModifyInstance"
+    ]
+  },
+  {
+    "query": "Configure cross-cluster search for an ES cluster",
+    "should_trigger": true,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "medium",
+    "rationale": "mentions ES product, user request about ES features",
+    "operations": [
+      "ModifyInstance"
+    ]
+  },
+  {
+    "query": "设置 VPC 对等连接",
     "should_trigger": false,
     "skill": "ve-elasticsearch-ops",
     "confidence": "low",
-    "rationale": "feature not supported by ES product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查看 CDN 带宽用量",
+    "should_trigger": false,
+    "skill": "ve-elasticsearch-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

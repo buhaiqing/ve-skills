@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Create an ALB instance",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateLoadBalancer"
+    ]
+  },
+  {
     "query": "配置 ALB 服务器组",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateServerGroup"
+    ]
+  },
+  {
+    "query": "Configure ALB server group",
     "should_trigger": true,
     "skill": "ve-alb-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "ALB rule rewrite",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateRule"
+    ]
+  },
+  {
     "query": "ALB 流量镜像",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "CreateTrafficMirror"
+    ]
+  },
+  {
+    "query": "ALB traffic mirroring",
     "should_trigger": true,
     "skill": "ve-alb-ops",
     "confidence": "high",
@@ -50,6 +90,16 @@
     ]
   },
   {
+    "query": "ALB circuit breaker configuration",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "ModifyServerGroupAttribute"
+    ]
+  },
+  {
     "query": "删除 ALB",
     "should_trigger": true,
     "skill": "ve-alb-ops",
@@ -58,6 +108,34 @@
     "operations": [
       "DeleteLoadBalancer"
     ]
+  },
+  {
+    "query": "Delete an ALB",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "high",
+    "rationale": "matches ALB operational scope",
+    "operations": [
+      "DeleteLoadBalancer"
+    ]
+  },
+  {
+    "query": "console 上查不到 ALB 的监控数据",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "medium",
+    "rationale": "ALB monitoring query, operational scope",
+    "operations": [
+      "DescribeLoadBalancers"
+    ]
+  },
+  {
+    "query": "查一下 ALB 的 IPV6 转换功能怎么配置",
+    "should_trigger": true,
+    "skill": "ve-alb-ops",
+    "confidence": "medium",
+    "rationale": "ALB configuration inquiry, operational scope",
+    "operations": []
   },
   {
     "query": "启动 ECS",
@@ -74,13 +152,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上查不到 ALB 的监控数据",
-    "should_trigger": false,
-    "skill": "ve-alb-ops",
-    "confidence": "low",
-    "rationale": "not an ALB operation, console-only issue"
-  },
-  {
     "query": "怎么创建 Redis 实例",
     "should_trigger": false,
     "skill": "ve-alb-ops",
@@ -88,10 +159,24 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 ALB 的 IPV6 转换功能怎么配置",
+    "query": "Kafka 分区扩缩容",
     "should_trigger": false,
     "skill": "ve-alb-ops",
     "confidence": "low",
-    "rationale": "feature not supported by ALB product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 VPC 的网络ACL配置",
+    "should_trigger": false,
+    "skill": "ve-alb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "怎么创建 RDS 实例",
+    "should_trigger": false,
+    "skill": "ve-alb-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

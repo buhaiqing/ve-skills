@@ -3,121 +3,285 @@
     "query": "创建 ECS 云服务器实例",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["RunInstances"]
+  },
+  {
+    "query": "Create an ECS instance",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["RunInstances"]
   },
   {
     "query": "启动停止云服务器",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["StartInstance", "StopInstance"]
+  },
+  {
+    "query": "Start/stop a cloud server",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["StartInstance", "StopInstance"]
   },
   {
     "query": "ECS 实例 CPU 占用过高",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "ECS instance CPU usage too high",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "云服务器无法连接",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "Cannot connect to cloud server",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "查看 ECS 实例列表",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "List ECS instances",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "ECS 磁盘挂载和扩容",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["AttachVolume", "ExtendVolume"]
+  },
+  {
+    "query": "Attach and expand ECS disk",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["AttachVolume", "ExtendVolume"]
   },
   {
     "query": "ECS 安全组配置",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["AuthorizeSecurityGroupIngress"]
+  },
+  {
+    "query": "Configure ECS security group",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["AuthorizeSecurityGroupIngress"]
   },
   {
     "query": "ECS 快照管理",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["CreateSnapshot", "DescribeSnapshots"]
+  },
+  {
+    "query": "Manage ECS snapshots",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["CreateSnapshot", "DescribeSnapshots"]
   },
   {
     "query": "ECS 实例类型变更",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["ModifyInstanceSpec"]
+  },
+  {
+    "query": "Change ECS instance type",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["ModifyInstanceSpec"]
   },
   {
     "query": "云助手命令执行",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "medium"
+    "confidence": "medium",
+    "rationale": "matches ECS operational scope",
+    "operations": ["RunCommand"]
+  },
+  {
+    "query": "Run Cloud Assistant command",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS operational scope",
+    "operations": ["RunCommand"]
   },
   {
     "query": "创建 RDS 数据库",
     "should_trigger": false,
     "skill": "ve-ecs-ops",
-    "confidence": "low"
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   },
   {
     "query": "配置负载均衡",
     "should_trigger": false,
     "skill": "ve-ecs-ops",
-    "confidence": "low"
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   },
   {
     "query": "部署 Kubernetes",
     "should_trigger": false,
     "skill": "ve-ecs-ops",
-    "confidence": "low"
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   },
   {
     "query": "查询账单明细",
     "should_trigger": false,
     "skill": "ve-ecs-ops",
-    "confidence": "low"
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   },
   {
     "query": "帮我找出长期闲置、CPU 利用率一直很低的 ECS 实例",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS cost optimization scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "Find long-idle ECS instances with low CPU usage",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS cost optimization scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "有没有可以降配优化的 ECS 实例，帮我推荐个更合适的规格",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS right-sizing scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "Any ECS instances that can be downsized, recommend a better spec",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS right-sizing scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "把那些停了很久没用的 ECS 实例清理掉",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "medium"
+    "confidence": "medium",
+    "rationale": "matches ECS cleanup scope",
+    "operations": ["DeleteInstance"]
+  },
+  {
+    "query": "Clean up ECS instances that have been stopped for a long time",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS cleanup scope",
+    "operations": ["DeleteInstance"]
   },
   {
     "query": "查看一下 ECS 资源的成本汇总和账单情况",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS cost scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "Check ECS resource cost summary and billing",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS cost scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "我的 ECS 实例出现异常，根据知识库帮我排查一下故障原因",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS troubleshooting scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "My ECS instance is abnormal, help me troubleshoot using the knowledge base",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS troubleshooting scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "ECS 一下子收到一大波告警，帮我处理下这个告警风暴",
     "should_trigger": true,
     "skill": "ve-ecs-ops",
-    "confidence": "high"
+    "confidence": "high",
+    "rationale": "matches ECS alarm handling scope",
+    "operations": ["DescribeInstances"]
+  },
+  {
+    "query": "My ECS instance is overloaded, handle the high CPU alert",
+    "should_trigger": true,
+    "skill": "ve-ecs-ops",
+    "confidence": "high",
+    "rationale": "matches ECS alarm handling scope",
+    "operations": ["DescribeInstances"]
   },
   {
     "query": "我们公司这个月的财务总账单在哪里查",
@@ -132,5 +296,19 @@
     "skill": "ve-ecs-ops",
     "confidence": "low",
     "rationale": "out of scope for this skill (RDS cost optimization belongs to rds-ops)"
+  },
+  {
+    "query": "配置 NAT 网关的 SNAT 规则",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill (NAT gateway belongs to ve-nat-ops)"
+  },
+  {
+    "query": "查看 VPC 的路由表",
+    "should_trigger": false,
+    "skill": "ve-ecs-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill (VPC route table belongs to ve-vpc-ops)"
   }
 ]

@@ -10,7 +10,27 @@
     ]
   },
   {
+    "query": "Add a CDN acceleration domain",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "CreateDomain"
+    ]
+  },
+  {
     "query": "CDN 缓存刷新",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "RefreshCache"
+    ]
+  },
+  {
+    "query": "CDN cache purge",
     "should_trigger": true,
     "skill": "ve-cdn-ops",
     "confidence": "high",
@@ -30,7 +50,27 @@
     ]
   },
   {
+    "query": "CDN bandwidth statistics",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "DescribeDomainStatistics"
+    ]
+  },
+  {
     "query": "CDN 证书配置",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "CreateSSLForDomain"
+    ]
+  },
+  {
+    "query": "CDN SSL certificate configuration",
     "should_trigger": true,
     "skill": "ve-cdn-ops",
     "confidence": "high",
@@ -50,7 +90,27 @@
     ]
   },
   {
+    "query": "CDN log download",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "DescribeDomainLog"
+    ]
+  },
+  {
     "query": "CDN 回源配置",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "SetOriginConfig"
+    ]
+  },
+  {
+    "query": "CDN origin configuration",
     "should_trigger": true,
     "skill": "ve-cdn-ops",
     "confidence": "high",
@@ -70,6 +130,16 @@
     ]
   },
   {
+    "query": "Delete a CDN domain",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "DeleteDomain"
+    ]
+  },
+  {
     "query": "CDN 访问控制配置",
     "should_trigger": true,
     "skill": "ve-cdn-ops",
@@ -78,6 +148,34 @@
     "operations": [
       "SetRefererConfig"
     ]
+  },
+  {
+    "query": "CDN access control configuration",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "high",
+    "rationale": "matches CDN operational scope",
+    "operations": [
+      "SetRefererConfig"
+    ]
+  },
+  {
+    "query": "console 上 CDN 的统计图表显示不全",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "medium",
+    "rationale": "CDN statistics inquiry, operational scope",
+    "operations": [
+      "DescribeDomainStatistics"
+    ]
+  },
+  {
+    "query": "查一下 CDN 的自定义错误页面怎么配置",
+    "should_trigger": true,
+    "skill": "ve-cdn-ops",
+    "confidence": "medium",
+    "rationale": "CDN configuration inquiry, operational scope",
+    "operations": []
   },
   {
     "query": "创建云服务器",
@@ -94,13 +192,6 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "console 上 CDN 的统计图表显示不全",
-    "should_trigger": false,
-    "skill": "ve-cdn-ops",
-    "confidence": "low",
-    "rationale": "not a CDN API operation, console-only issue"
-  },
-  {
     "query": "怎么创建 PolarDB 集群",
     "should_trigger": false,
     "skill": "ve-cdn-ops",
@@ -108,10 +199,24 @@
     "rationale": "out of scope for this skill"
   },
   {
-    "query": "查一下 CDN 的自定义错误页面怎么配置",
+    "query": "配置 CLB 监听器",
     "should_trigger": false,
     "skill": "ve-cdn-ops",
     "confidence": "low",
-    "rationale": "feature not supported by CDN product"
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "怎么创建 Kafka 实例",
+    "should_trigger": false,
+    "skill": "ve-cdn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
+  },
+  {
+    "query": "查一下 IAM 的权限策略",
+    "should_trigger": false,
+    "skill": "ve-cdn-ops",
+    "confidence": "low",
+    "rationale": "out of scope for this skill"
   }
 ]

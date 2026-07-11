@@ -4,104 +4,167 @@
     "should_trigger": true,
     "skill": "ve-cms-ops",
     "confidence": "high",
-    "rationale": "matches Cloud Monitor operational scope",
-    "operations": [
-      "PutAlarmRule"
-    ]
+    "rationale": "matches Cloud Monitor operational scope - create alarm rule",
+    "operations": ["PutAlarmRule"]
+  },
+  {
+    "query": "Create an alarm rule",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope - create alarm rule (English)",
+    "operations": ["PutAlarmRule"]
   },
   {
     "query": "查看告警历史",
     "should_trigger": true,
     "skill": "ve-cms-ops",
     "confidence": "high",
-    "rationale": "matches Cloud Monitor operational scope",
-    "operations": [
-      "DescribeAlarmHistory"
-    ]
+    "rationale": "matches Cloud Monitor operational scope - view alarm history",
+    "operations": ["DescribeAlarmHistory"]
+  },
+  {
+    "query": "Check alarm history",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope - alarm history (English)",
+    "operations": ["DescribeAlarmHistory"]
   },
   {
     "query": "创建自定义监控",
     "should_trigger": true,
     "skill": "ve-cms-ops",
     "confidence": "high",
-    "rationale": "matches Cloud Monitor operational scope",
-    "operations": [
-      "PutCustomMetricData"
-    ]
+    "rationale": "matches Cloud Monitor operational scope - custom monitoring",
+    "operations": ["PutCustomMetricData"]
+  },
+  {
+    "query": "Create custom monitoring",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope - custom monitoring (English)",
+    "operations": ["PutCustomMetricData"]
   },
   {
     "query": "配置告警通知",
     "should_trigger": true,
     "skill": "ve-cms-ops",
     "confidence": "high",
-    "rationale": "matches Cloud Monitor operational scope",
-    "operations": [
-      "PutNotificationPolicy"
-    ]
+    "rationale": "matches Cloud Monitor operational scope - alarm notification config",
+    "operations": ["PutNotificationPolicy"]
+  },
+  {
+    "query": "Configure alarm notification",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope - alarm notification (English)",
+    "operations": ["PutNotificationPolicy"]
   },
   {
     "query": "删除告警规则",
     "should_trigger": true,
     "skill": "ve-cms-ops",
     "confidence": "high",
-    "rationale": "matches Cloud Monitor operational scope",
-    "operations": [
-      "DeleteAlarmRule"
-    ]
+    "rationale": "matches Cloud Monitor operational scope - delete alarm rule",
+    "operations": ["DeleteAlarmRule"]
+  },
+  {
+    "query": "Delete an alarm rule",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope - delete alarm rule (English)",
+    "operations": ["DeleteAlarmRule"]
   },
   {
     "query": "监控仪表盘配置",
     "should_trigger": true,
     "skill": "ve-cms-ops",
     "confidence": "high",
-    "rationale": "matches Cloud Monitor operational scope",
-    "operations": [
-      "CreateDashboard"
-    ]
+    "rationale": "matches Cloud Monitor operational scope - dashboard config",
+    "operations": ["CreateDashboard"]
+  },
+  {
+    "query": "Configure monitoring dashboard",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope - dashboard config (English)",
+    "operations": ["CreateDashboard"]
   },
   {
     "query": "告警抑制规则",
     "should_trigger": true,
     "skill": "ve-cms-ops",
     "confidence": "high",
-    "rationale": "matches Cloud Monitor operational scope",
-    "operations": [
-      "PutAlarmPolicy"
-    ]
+    "rationale": "matches Cloud Monitor operational scope - alarm suppression rules",
+    "operations": ["PutAlarmPolicy"]
+  },
+  {
+    "query": "Configure alarm suppression rules",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "high",
+    "rationale": "matches Cloud Monitor operational scope - alarm suppression rules (English)",
+    "operations": ["PutAlarmPolicy"]
+  },
+  {
+    "query": "控制台上告警规则配置后不生效",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "medium",
+    "rationale": "CMS console issue about alarm rules, should route to CMS skill for diagnosis",
+    "operations": ["PutAlarmRule"]
+  },
+  {
+    "query": "查一下自定义监控的聚合方式怎么配置",
+    "should_trigger": true,
+    "skill": "ve-cms-ops",
+    "confidence": "medium",
+    "rationale": "custom monitoring configuration query, should route to CMS skill",
+    "operations": ["PutCustomMetricData"]
   },
   {
     "query": "启动 ECS",
     "should_trigger": false,
     "skill": "ve-cms-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "ECS instance operations are out of scope for CMS",
+    "operations": []
   },
   {
     "query": "部署应用",
     "should_trigger": false,
     "skill": "ve-cms-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
-  },
-  {
-    "query": "console 上告警规则配置后不生效",
-    "should_trigger": false,
-    "skill": "ve-cms-ops",
-    "confidence": "low",
-    "rationale": "not a CMS API operation, console-only issue"
+    "rationale": "application deployment is out of scope for CMS",
+    "operations": []
   },
   {
     "query": "怎么创建 SLS 日志项目",
     "should_trigger": false,
     "skill": "ve-cms-ops",
     "confidence": "low",
-    "rationale": "out of scope for this skill"
+    "rationale": "SLS log project creation is out of scope for CMS",
+    "operations": []
   },
   {
-    "query": "查一下自定义监控的聚合方式怎么配置",
+    "query": "调整 Redis 实例规格",
     "should_trigger": false,
     "skill": "ve-cms-ops",
     "confidence": "low",
-    "rationale": "feature not available via CLI"
+    "rationale": "Redis instance resizing is out of scope for CMS",
+    "operations": []
+  },
+  {
+    "query": "创建弹性公网 IP",
+    "should_trigger": false,
+    "skill": "ve-cms-ops",
+    "confidence": "low",
+    "rationale": "EIP creation is out of scope for CMS",
+    "operations": []
   }
 ]

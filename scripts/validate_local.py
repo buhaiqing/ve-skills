@@ -163,6 +163,7 @@ def build_steps(python: str = sys.executable) -> list[Step]:
                 "--structural-critic-only",
             ),
         ),
+        Step("GCL CI gate (all skills)", (python, "scripts/gcl_ci_gate.py", "--skip-incident-loop")),
         Step("GCL trace aggregate", (python, "scripts/gcl_trace_aggregate.py", "--since-hours", "168")),
         Step(
             "Script unit tests",
