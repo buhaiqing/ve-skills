@@ -1,22 +1,122 @@
 [
-  {"query": "Create a Redis cache instance on Volcengine", "should_trigger": true},
-  {"query": "怎么创建缓存数据库Redis实例", "should_trigger": true},
-  {"query": "Redis connection refused after creation", "should_trigger": true},
-  {"query": "Configure Redis allowlist for application servers", "should_trigger": true},
-  {"query": "Scale up Redis instance to 8GB", "should_trigger": true},
-  {"query": "List all Redis instances in cn-beijing", "should_trigger": true},
-  {"query": "Delete my Redis cache instance", "should_trigger": true},
-  {"query": "火山引擎Redis实例备份管理", "should_trigger": true},
-  {"query": "Redis instance performance degradation", "should_trigger": true},
-  {"query": "Change Redis maxmemory-policy parameter", "should_trigger": true},
-  {"query": "Create a VKE Kubernetes cluster", "should_trigger": false},
-  {"query": "Check my Volcengine bill", "should_trigger": false},
-  {"query": "Configure IAM policy for Redis access", "should_trigger": false},
-  {"query": "Set up VPC peering", "should_trigger": false},
-  {"query": "Create an ECS instance", "should_trigger": false},
-  {"query": "Setup RDS MySQL database", "should_trigger": false},
-  {"query": "Manage CDN distribution", "should_trigger": false},
-  {"query": "Configure SLB load balancer", "should_trigger": false},
-  {"query": "Deploy applications to Kubernetes", "should_trigger": false},
-  {"query": "Monitor server CPU usage", "should_trigger": false}
+  {
+    "query": "Create a Redis cache instance on Volcengine",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "怎么创建缓存数据库Redis实例",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Redis connection refused after creation",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Configure Redis allowlist for application servers",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Scale up Redis instance to 8GB",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "List all Redis instances in cn-beijing",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Delete my Redis cache instance",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "火山引擎Redis实例备份管理",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Redis instance performance degradation",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Change Redis maxmemory-policy parameter",
+    "should_trigger": true,
+    "skill": "ve-redis-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Create a VKE Kubernetes cluster",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Check my Volcengine bill",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Configure IAM policy for Redis access",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Set up VPC peering",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Create an ECS instance",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Setup RDS MySQL database",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Manage CDN distribution",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Configure SLB load balancer",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Deploy applications to Kubernetes",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  },
+  {
+    "query": "Monitor server CPU usage",
+    "should_trigger": false,
+    "skill": "ve-redis-ops",
+    "confidence": "medium"
+  }
 ]

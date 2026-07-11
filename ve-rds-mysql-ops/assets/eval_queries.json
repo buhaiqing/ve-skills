@@ -1,22 +1,122 @@
 [
-  {"query": "Create an RDS MySQL instance on Volcengine", "should_trigger": true},
-  {"query": "怎么创建云数据库MySQL实例", "should_trigger": true},
-  {"query": "RDS MySQL connection timeout", "should_trigger": true},
-  {"query": "Modify MySQL max_connections parameter", "should_trigger": true},
-  {"query": "Scale up RDS instance from 4c8g to 8c16g", "should_trigger": true},
-  {"query": "List all MySQL instances in production", "should_trigger": true},
-  {"query": "Delete RDS MySQL instance", "should_trigger": true},
-  {"query": "Restore MySQL from backup to new instance", "should_trigger": true},
-  {"query": "火山引擎RDS MySQL只读节点管理", "should_trigger": true},
-  {"query": "Create database account for application", "should_trigger": true},
-  {"query": "Create a VKE Kubernetes cluster", "should_trigger": false},
-  {"query": "Check my Volcengine bill", "should_trigger": false},
-  {"query": "Configure IAM policy for database access", "should_trigger": false},
-  {"query": "Set up VPC peering", "should_trigger": false},
-  {"query": "Create a Redis cache instance", "should_trigger": false},
-  {"query": "Create an ECS instance", "should_trigger": false},
-  {"query": "Optimize SQL query performance", "should_trigger": false},
-  {"query": "Run database migration scripts", "should_trigger": false},
-  {"query": "Configure SLB for web application", "should_trigger": false},
-  {"query": "Monitor server disk usage", "should_trigger": false}
+  {
+    "query": "Create an RDS MySQL instance on Volcengine",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "怎么创建云数据库MySQL实例",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "RDS MySQL connection timeout",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Modify MySQL max_connections parameter",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Scale up RDS instance from 4c8g to 8c16g",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "List all MySQL instances in production",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Delete RDS MySQL instance",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Restore MySQL from backup to new instance",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "火山引擎RDS MySQL只读节点管理",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Create database account for application",
+    "should_trigger": true,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Create a VKE Kubernetes cluster",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Check my Volcengine bill",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Configure IAM policy for database access",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Set up VPC peering",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Create a Redis cache instance",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Create an ECS instance",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Optimize SQL query performance",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Run database migration scripts",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Configure SLB for web application",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  },
+  {
+    "query": "Monitor server disk usage",
+    "should_trigger": false,
+    "skill": "ve-rds-mysql-ops",
+    "confidence": "high"
+  }
 ]

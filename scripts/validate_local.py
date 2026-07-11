@@ -169,6 +169,7 @@ def build_steps(python: str = sys.executable) -> list[Step]:
             (python, "-m", "unittest", "discover", "-s", "scripts", "-p", "*_test.py", "-v"),
         ),
         Step("GCL Tier-A conformance", (python, "scripts/check_gcl_conformance.py")),
+        Step("Eval regression", (python, "scripts/check_eval_regression.py")),
     ]
 
 
