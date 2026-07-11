@@ -45,7 +45,7 @@ Each pattern in `docs/failure-patterns.md` follows this structure:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `category` | enum | Y | `cli_parameter` \| `skill_generation` \| `cross_skill` \| `runtime` \| `token_efficiency` |
+| `category` | enum | Y | `cli_parameter` \| `skill_generation` \| `cross_skill` \| `runtime` \| `token_efficiency` \| `incident_response` |
 | `skill` | string | Y | Skill name (e.g. `ve-ecs-ops`) |
 | `command` | string | N | The command that failed (for CLI errors) |
 | `error` | string | Y | Error message or pattern description |
@@ -82,6 +82,16 @@ Known failure patterns for this skill:
 | **GCL (Generator-Critic)** | Per-execution | Within-session | — |
 | **Self-Review** (see `AGENTS.md` "Mandatory rule: 2-round self-review") | Per-update | Skill authoring | Reflexion captures patterns from Self-Review discoveries |
 | **Reflexion Memory** | Cross-session | Persistent failure patterns | Aggregates from all sources above |
+
+### 5a. Incident-response-specific patterns
+
+`incident_response` category is reserved for failures occurring in the **orchestration
+layer** (`incident-loop-agent` or equivalent), distinct from `cross_skill` which covers
+failures when one leaf skill internally calls another. See
+[`failure-patterns.md`](./failure-patterns.md) §6 for the table.
+
+- ❌ Treating orchestration failure as leaf-skill failure (use `cross_skill`)
+- ❌ Treating user-confirmation failure as CLI parameter error (use `incident_response`, gate keyword `safety_gate_bypass`)
 
 ## 7. Anti-Patterns
 
