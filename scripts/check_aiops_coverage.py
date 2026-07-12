@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet check aiops`
 """Check AIOps coverage across all 29 skills.
 
 Validates:

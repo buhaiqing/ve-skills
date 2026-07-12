@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet check frontmatter`
 """Validate SKILL.md YAML frontmatter across ve-* skill directories.
 
 Usage:

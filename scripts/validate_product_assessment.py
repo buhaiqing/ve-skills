@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet check assessment`
 """Validate Worker Output Contract example JSON in well-architected-assessment.md files.
 
 Usage:

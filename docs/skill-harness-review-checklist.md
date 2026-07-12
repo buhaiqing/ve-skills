@@ -8,7 +8,7 @@
 
 ## D0 — 评审前准备
 
-- [ ] 运行 `python3 scripts/validate_local.py`，确认自动化套件全绿
+- [ ] 运行 `vet validate --root .`，确认自动化套件全绿
 - [ ] 确认评审范围：单个 skill / 全部 skill / 按产品线
 - [ ] 抓取被审 skill 的 `SKILL.md` + `references/*.md` + `assets/eval_queries.json`
 

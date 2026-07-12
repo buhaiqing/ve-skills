@@ -33,6 +33,12 @@ jobs:
       - name: Check GCL conformance
         run: cmd/bin/vet check gcl --root .
 
+      - name: Check AIOps/FinOps/SecurityOps coverage
+        run: cmd/bin/vet check aiops --root .
+
+      - name: Check product assessment
+        run: cmd/bin/vet check assessment --root .
+
       - name: Check eval regression (absolute + git-diff)
         run: cmd/bin/vet check eval --root . --git-diff origin/main
 

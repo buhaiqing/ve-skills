@@ -1,7 +1,7 @@
 # 内联脚本模式（Inline Script Pattern）
 
 > **用途**：将 Python 函数的函数体序列化为 `python3 -c '...'` 内联脚本，避免创建临时 .py 文件。
-> **使用场景**：`scripts/validate_local.py` 中的 `_inline_script()` 辅助函数。
+> **使用场景**：`scripts/validate_local.py`（已废弃，由 `vet validate` 取代）中的 `_inline_script()` 辅助函数。
 > 沉淀自 2026-07-05 validate_local.py 开发过程中的两次修复经历。
 
 ---
@@ -20,7 +20,7 @@
 
 ## 实现
 
-参考 `scripts/validate_local.py` 中的 `_inline_script()`：
+参考 `scripts/validate_local.py`（已废弃）中的 `_inline_script()`：
 
 ```python
 def _inline_script(fn):
@@ -97,6 +97,6 @@ sys.exit(main())
 
 如果未来脚本数量增长，可以考虑：
 
-1. **多文件拆分**：每个检查独立为 `scripts/check_*.py`，`validate_local.py` 只编排不内含逻辑
+1. **多文件拆分**：每个检查独立为 `scripts/check_*.py`（现已统一到 `cmd/vet/` 的 `internal/check/*`），`validate_local.py` 只编排不内含逻辑
 2. **`subprocess.run(sys.executable, "-c", ...)`** 保持当前模式，但将 `_inline_script` 改为从独立文件中读取代码而非 `inspect.getsource`
 3. **pytest 替代**：如果检查逻辑需要 mock/parametrize

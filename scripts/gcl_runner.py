@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet gcl run`
 """GCL Orchestrator (Phase 2) — Generator execution loop with external Critic injection.
 
 Implements the **Orchestrator (O)** role from AGENTS.md GCL spec. Generator runs

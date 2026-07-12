@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet validate`
 """Run the local validation suite that mirrors the CI quality gates."""
 
 from __future__ import annotations

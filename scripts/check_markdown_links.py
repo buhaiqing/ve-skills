@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet check links`
 """Validate local Markdown links and explicit repository path references.
 
 This is a lightweight, stdlib-only guard for token-efficient documentation:

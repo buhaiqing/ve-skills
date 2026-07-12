@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet check eval`
 """Eval regression checker — intent-classification regression for all 28 skills.
 
 Reads each skill's ``assets/eval_queries.json``, parses its

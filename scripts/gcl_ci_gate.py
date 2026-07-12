@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet gcl gate`
 """GCL CI gate — structural smoke test across all ve-*-ops skills.
 
 Runs ``scripts/gcl_runner.py`` with ``--structural-critic-only --max-iter 1``

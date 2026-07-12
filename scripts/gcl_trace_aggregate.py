@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet gcl trace`
 """Aggregate GCL trace files into a quality summary (AGENTS.md GCL Phase 3).
 
 Reads ``audit-results/gcl-trace-*.json`` (or ``--input`` paths), emits

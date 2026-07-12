@@ -198,7 +198,7 @@ Verify against reality, not memory:
 ### 评审执行步骤（按顺序）
 
 ```
-1. 运行自动化检查 → vet validate --root . （或 python3 scripts/validate_local.py 作为原始参考实现）
+1. 运行自动化检查 → vet validate --root . （`scripts/validate_local.py` 为已废弃的原始参考实现）
 2. 检查 frontmatter → name/description/license/compatibility 齐全
 3. 检查 Trigger & Scope → SHOULD/SHOULD NOT 子节存在，确认路由边界
 4. 检查 Steps → 每个操作有明确的 I/O 定义和失败处理
@@ -305,7 +305,7 @@ Adaptive compression strategy for token management:
 - **Never invent CLI flags or API parameters.** Only official OpenAPI or `ve <service> <action> --help` verified fields.
 - **Single-product rule.** One `ve-*-ops` skill = one product = one primary resource model.
 - **Prefer editing existing skills over creating new files.** No tutorial-style `.md` at the repo root.
-- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`scripts/validate_skills_frontmatter.py` `ORCHESTRATION_TYPES`). The single-product rule does not apply to them (they coordinate, not own, a product). The GCL conformance allowlist (`ORCHESTRATION_TYPES`) lives in `cmd/vet/internal/check/frontmatter/frontmatter.go` (and is mirrored in the legacy `scripts/validate_skills_frontmatter.py`).
+- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`ORCHESTRATION_TYPES`, defined in `cmd/vet/internal/check/frontmatter/frontmatter.go`). The single-product rule does not apply to them (they coordinate, not own, a product). The legacy `scripts/validate_skills_frontmatter.py` mirrored this allowlist.
 
 ## File Layout Anchors (do not relocate without reason)
 
@@ -343,7 +343,7 @@ Skill-owned artifacts MUST NOT be placed at repo root. Use this split:
 |---|---|---|
 | `ve-*-ops/assets/` | `eval_queries.json`, `example-config.yaml`, `*.schema.json`, skill-specific templates | Cross-skill executables |
 | `ve-*-ops/references/` | Runbooks, output contracts in Markdown, delegation stubs | Duplicate JSON schemas that belong in `assets/` |
-| `scripts/` (repo root) | Shared validation scripts (`validate_local.py`, `check_gcl_conformance.py`, etc.) — pre-commit use | JSON Schema, handoff contracts, example YAML |
+| `scripts/` (repo root) | **Deprecated** Python validation scripts (`validate_local.py`, `check_gcl_conformance.py`, etc.) — superseded by `cmd/vet/`; kept only as reference | JSON Schema, handoff contracts, example YAML |
 
 **Owner skill rule:** the skill that **defines and primarily consumes** the contract owns the file. Secondary consumers link to the owner via relative path — they do not copy or re-home the schema.
 
@@ -352,7 +352,7 @@ Skill-owned artifacts MUST NOT be placed at repo root. Use this split:
 2. Create under `ve-<owner>-ops/assets/<name>.schema.json`.
 3. Reference from owner `SKILL.md` / `references/` and owner `example-config.yaml` if config-driven.
 4. Secondary skills cite the owner path (e.g. `../ve-<owner>-ops/assets/...`) — never `assets/` at repo root.
-5. If a future `scripts/*.py` emits JSON matching the schema, its docstring MUST point at the owner skill path (script ≠ schema owner).
+5. If a future `scripts/*.py` (or `cmd/vet/` check) emits JSON matching the schema, its docstring MUST point at the owner skill path (script ≠ schema owner).
 
 **Anti-pattern (banned):** creating `assets/` at repo root because a script is shared — shared **code** lives in `scripts/`; shared **contracts** still belong to an owning skill.
 
@@ -424,7 +424,7 @@ The `vet` CLI (from `cmd/vet/`) is the primary validation tool for pre-commit ch
 
 ### Runtime GCL
 
-`vet gcl run` (Go port of `scripts/gcl_runner.py`) implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
+`vet gcl run` (Go port of the deprecated `scripts/gcl_runner.py`) implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
 - External Critic via `--critic-json` or stdin (production mode)
 - `--structural-critic-only` for CI/local structural smoke tests only (NOT for production mutations)
 - `vet gcl gate` runs the structural CI gate across all skills; `vet gcl trace` aggregates `audit-results/gcl-trace-*.json` into a quality summary.
@@ -450,7 +450,7 @@ GCL runs MUST use externally supplied isolated Critic scores in production. Manu
 
 ## Files that DO NOT exist
 
-- **`scripts/` directory** at repo root contains validation scripts (`validate_local.py`, `check_gcl_conformance.py`, `check_markdown_links.py`, etc.). These are used for pre-commit validation. There is no `.github/workflows/` directory — CI has not been set up yet.
+- **`scripts/` directory** at repo root contains **deprecated** Python validation scripts (`validate_local.py`, `check_gcl_conformance.py`, `check_markdown_links.py`, etc.) — superseded by `cmd/vet/`. They are kept only as reference implementations.
 - **No `package.json`, `Makefile`, `CI configs`, `build scripts`, `typechecker`, or non-stdlib test runner** — except:
 - **No `CLAUDE.md` at repo root** — this file (`AGENTS.md`) is the agent guidance entry point, imported via `@CLAUDE.md`.
 - **No `opencode.json`, `.cursorrules`, or similar IDE configs.**

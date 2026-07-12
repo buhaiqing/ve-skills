@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: superseded by cmd/vet — run `vet check gcl`
 """GCL Tier-A conformance checker.
 
 Verifies that each of the 29 ``ve-*-ops`` skills ships the canonical
