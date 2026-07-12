@@ -52,3 +52,6 @@ audit-results/
 
 # GCL execution log
 gcl.log
+
+# CodeGraph local index — never commit
+.codegraph/
