@@ -4,11 +4,12 @@ project_name: vet
 
 before:
   hooks:
-    - go mod tidy
+    - cd cmd/vet && go mod tidy
 
 builds:
   - id: vet
-    main: ./cmd/vet
+    dir: ./cmd/vet
+    main: .
     binary: vet
     env:
       - CGO_ENABLED=0
@@ -26,9 +27,12 @@ archives:
   - id: vet
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    formats:
+      - tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     files:
       - LICENSE*
       - README*
