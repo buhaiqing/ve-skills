@@ -12,7 +12,7 @@
 
 - 工具位置：`cmd/vet/` 独立 Go module。二进制名：`vet`。
 - 旧 `.py`：先保留标 deprecated，过渡后删。测试：用 `scripts/fixtures/` 对拍保证等价。
-- 发布触发：tag `vet/v*` → goreleaser。
+- 发布触发：tag `v*` → goreleaser（标准 semver；`vet/v*` 因非 semver 被 goreleaser 拒绝，已改为 `vX.Y.Z`）。
 - **CodeGraph 已 init 本仓库**（287 nodes / 528 edges），`.codegraph/` 已入 `.gitignore`。
 
 ### 0.1 使用入口事实（已澄清）
@@ -100,7 +100,7 @@ CodeGraph sync 在两层的触发方式不同：
 
 ### M1 — 脚手架 + 发布管线（串行，有构建依赖）
 - 🔒 M1.1：建 `cmd/vet/` module（`go.mod`/`main.go` 路由骨架/`README.md`）→ 后续依赖此产物
-- M1.2：goreleaser + GitHub Actions release 流程（占位 `vet version` 跑通 5 平台）｜依赖 M1.1
+- M1.2：goreleaser + GitHub Actions release 流程（占位 `vet version` 跑通 6 平台：linux/darwin/windows × amd64/arm64）｜依赖 M1.1
 - M1.3：CodeGraph 收录 `cmd/vet/`（`codegraph sync` + `query vet`）｜最后
 
 ### M2 — 校验类（check 组，🔀 全 7 个可并行）
@@ -127,8 +127,9 @@ CodeGraph sync 在两层的触发方式不同：
 - M4.3 AGENTS.md / SKILL.md 指引改 `vet`；CodeGraph 节补翻译辅助指引
 
 ### M5 — 首次发布（串行）
-- M5.1 打 tag `vet/v0.1.0` → goreleaser 出 5 平台 Release
+- M5.1 打 tag `v0.1.0`（标准 semver；goreleaser 要求 tag 必须是合法 semver，`vet/v*` 前缀会被拒绝）→ goreleaser 出 6 平台 Release
 - M5.2 `cmd/vet/README.md` 写安装/用法/CodeGraph 辅助翻译示例
+- M5.3 `Makefile` 提供 `make release VERSION=x.y.z` 一键打 tag + 推送，触发 GitHub Action 自动发布（无人工步骤）；`.env` 提供 `GITHUB_TOKEN`/`INSTALL_DIR` 配置
 
 ### 并行执行约束
 - 每个并行子任务在**独立 git worktree** 开发（git-worktree.md），互不踩文件。
@@ -165,11 +166,11 @@ CodeGraph sync 在两层的触发方式不同：
 ## 6. 状态
 
 - **M0**：✅ 完成（push / codegraph init / 计划定稿 / AGENTS.md CodeGraph 节）
-- **M1**：✅ 完成（cmd/vet module + 路由骨架 + goreleaser 5平台 + release/vet-test Actions + install.sh + CodeGraph 收录；commit `30786cf`）
+- **M1**：✅ 完成（cmd/vet module + 路由骨架 + goreleaser 6平台 + release/vet-test Actions + install.sh + CodeGraph 收录；commit `30786cf`）
 - **M2.1** `vet check frontmatter`：✅ 完成（Go 端口，等价 29/29；本会话修复 inverted-OK bug 后提交）
 - **M2.2–M2.7** `vet check aiops|assessment|gcl|links|eval` + `vet validate`：✅ 完成（commit `0b4b932`；aiops 补测试，assessment 改 3-value 签名，validate 修 step 计数 + --list）
 - **M3** `vet gcl run|gate|trace`：✅ 完成（commit `13d3c13`；共享包 secret/critic/trace + run/gate/trace，凭据遮蔽已验证，Go 测试通过）
 - **M4** CI/文档切换：✅ 完成（commit `13d3c13`；validate.yml 改调 vet，AGENTS.md 指 vet，CodeGraph 节已含翻译辅助指引）
-- **M5** 首次发布 tag `vet/v0.1.0`：✅ 完成（commit `4e30fea` 修复 goreleaser v2 配置；tag 已打并推送，GitHub Action 跨平台制品发布）
+- **M5** 首次发布 tag `v0.1.0`：✅ 完成（commit `553f9b0`；修复 goreleaser `before.hooks` 中 `cd` 非可执行文件导致的发布失败；GitHub Action 已成功构建 6 平台制品并创建 GitHub Release `v0.1.0`；`make release VERSION=0.1.x` 可一键复现）
 
 > 开发过程按里程碑推进，每里程碑结束汇报结果，不跨里程碑自动推进。
