@@ -53,5 +53,8 @@ audit-results/
 # GCL execution log
 gcl.log
 
+# GoReleaser build output (cross-platform artifacts)
+dist/
+
 # CodeGraph local index — never commit
 .codegraph/

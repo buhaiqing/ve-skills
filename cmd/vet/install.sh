@@ -44,8 +44,10 @@ LATEST="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
 [ -n "$LATEST" ] || err "could not determine latest release tag"
 echo "latest: $LATEST"
 
-# strip leading "vet/" prefix if present (tag is vet/vX.Y.Z)
+# strip any leading "vet/" or "v" prefix so VERSION is bare X.Y.Z
+# (tag may be vet/vX.Y.Z or vX.Y.Z; archive uses bare version)
 VERSION="${LATEST#vet/}"
+VERSION="${VERSION#v}"
 
 # --- find asset for this platform ------------------------------------------
 ASSET="${BINARY}_${VERSION}_${OS}_${ARCH}.tar.gz"
