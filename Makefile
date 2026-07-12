@@ -13,7 +13,8 @@
 -include .env
 
 REPO        ?= buhaiqing/ve-skills
-VERSION     := $(shell v=$$(git describe --tags --always --dirty 2>/dev/null || echo "0.0.0-dev"); echo "$${v#v}")
+NULL        := /dev/null
+VERSION     := $(shell (git describe --tags --always --dirty 2>$(NULL) || echo "0.0.0-dev") | sed 's/^v//')
 TAG         := v$(VERSION:v%=%)
 REMOTE      ?= origin
 
