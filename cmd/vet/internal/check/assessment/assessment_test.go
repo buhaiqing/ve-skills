@@ -105,22 +105,31 @@ func TestCheckDir(t *testing.T) {
 	noContract := writeAssessment(t, dir, "ve-nocontract-ops", noContractExample())
 	none := writeAssessment(t, dir, "ve-none-ops", noExampleDoc())
 
-	results, files := CheckDir(dir)
-	if len(files) != 4 {
-		t.Fatalf("expected 4 files, got %d: %v", len(files), files)
+	errs, files, examples := CheckDir(dir)
+	if files != 4 {
+		t.Fatalf("expected 4 files, got %d", files)
 	}
-	if _, ok := results[good]; ok {
-		t.Fatalf("ve-good-ops should have no errors, got %v", results[good])
+	has := func(sub string) bool {
+		for _, e := range errs {
+			if strings.Contains(e, sub) {
+				return true
+			}
+		}
+		return false
 	}
-	if _, ok := results[bad]; !ok {
+	if has(good) {
+		t.Fatalf("ve-good-ops should have no errors, got %v", errs)
+	}
+	if !has(bad) {
 		t.Fatal("ve-bad-ops should have errors")
 	}
-	if _, ok := results[noContract]; !ok {
+	if !has(noContract) {
 		t.Fatal("ve-nocontract-ops should have missing-section error")
 	}
-	if _, ok := results[none]; !ok {
+	if !has(none) {
 		t.Fatal("ve-none-ops should have no-example error")
 	}
+	_ = examples
 }
 
 func mustObj(t *testing.T, doc string) map[string]any {

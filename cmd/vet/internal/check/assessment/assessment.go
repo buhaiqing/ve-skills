@@ -156,44 +156,42 @@ func ValidateAssessment(data any, source string) []string {
 }
 
 // CheckDir scans well-architected-assessment.md files under ve-*-ops and
-// returns a per-file error map (only files with errors are present) plus the
-// sorted file list — matching the frontmatter package's CheckDir signature.
-func CheckDir(root string) (map[string][]string, []string) {
-	results := make(map[string][]string)
+// returns all validation errors, the number of files checked, and the number
+// of example JSON blocks validated.
+func CheckDir(root string) ([]string, int, int) {
+	var allErrs []string
+	filesChecked := 0
+	examplesChecked := 0
+
 	pattern := filepath.Join(root, "ve-*-ops", "references", "well-architected-assessment.md")
 	matches, _ := filepath.Glob(pattern)
 	sort.Strings(matches)
-
 	for _, md := range matches {
 		text, err := os.ReadFile(md)
 		if err != nil {
 			continue
 		}
+		filesChecked++
 		t := string(text)
-		var fileErrs []string
 		if !strings.Contains(t, "Worker Output Contract") {
-			fileErrs = append(fileErrs, md+": missing 'Worker Output Contract' section")
+			allErrs = append(allErrs, md+": missing 'Worker Output Contract' section")
 		}
 		examples := extractExamples(t)
 		if len(examples) == 0 {
-			fileErrs = append(fileErrs, md+": no product_assessment JSON example found")
-			results[md] = fileErrs
+			allErrs = append(allErrs, md+": no product_assessment JSON example found")
 			continue
 		}
-		line := 1
 		for _, raw := range examples {
+			examplesChecked++
 			var obj any
 			if err := json.Unmarshal([]byte(raw), &obj); err != nil {
-				fileErrs = append(fileErrs, md+": JSON parse error: "+err.Error())
+				allErrs = append(allErrs, md+": JSON parse error: "+err.Error())
 				continue
 			}
-			fileErrs = append(fileErrs, ValidateAssessment(obj, md+":"+strconv.Itoa(line))...)
-		}
-		if len(fileErrs) > 0 {
-			results[md] = fileErrs
+			allErrs = append(allErrs, ValidateAssessment(obj, md)...)
 		}
 	}
-	return results, matches
+	return allErrs, filesChecked, examplesChecked
 }
 
 func extractExamples(text string) []string {

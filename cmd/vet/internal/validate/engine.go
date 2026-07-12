@@ -188,13 +188,14 @@ func runStep(root string, step Step) int {
 // sorted list of failing step names (matching frontmatter.CheckDir's shape
 // conceptually). When listOnly is true, no commands are executed; the step
 // commands are printed instead and (nil, nil) is returned.
-func Run(root string, listOnly bool) (map[string][]string, []string) {
+func Run(root string, listOnly bool) (map[string][]string, []string, int) {
 	steps := buildSteps()
+	total := len(steps)
 	if listOnly {
 		for _, s := range steps {
 			fmt.Printf("%s: %s\n", s.name, strings.Join(s.argv, " "))
 		}
-		return nil, nil
+		return nil, nil, total
 	}
 
 	failErrs := make(map[string][]string)
@@ -211,7 +212,7 @@ func Run(root string, listOnly bool) (map[string][]string, []string) {
 	if len(failed) == 0 {
 		fmt.Fprintln(os.Stderr, "\nOK: local validation suite passed")
 	}
-	return failErrs, failed
+	return failErrs, failed, total
 }
 
 // relSkillPath mirrors the Python f.relative_to(root) for a skill SKILL.md.
@@ -221,4 +222,13 @@ func relSkillPath(root, skillPath string) string {
 		return skillPath
 	}
 	return rel
+}
+
+// StepNames returns the friendly names of all validation steps, for --list.
+func StepNames() []string {
+	var names []string
+	for _, s := range buildSteps() {
+		names = append(names, s.name)
+	}
+	return names
 }
