@@ -140,6 +140,60 @@ ve-ecs-ops/
     └── example-config.yaml
 ```
 
+## vet CLI（技能校验工具）
+
+`vet` 是本项目自带的 Go 校验工具，用于本地或 pre-commit 校验 skills 的 frontmatter、链接、GCL、eval 等。
+
+**跨平台一键安装** —— 不需要关心你用的是 macOS / Linux 还是 Windows，复制下面对应的一行命令即可，脚本会自动识别系统架构、下载匹配的包并完成安装：
+
+| 平台 | 一键安装命令 |
+|------|-------------|
+| **macOS / Linux** | `curl -fsSL https://raw.githubusercontent.com/buhaiqing/ve-skills/main/cmd/vet/install.sh \| bash` |
+| **Windows (PowerShell)** | `irm https://raw.githubusercontent.com/buhaiqing/ve-skills/main/cmd/vet/install.ps1 \| iex` |
+
+- 自动匹配当前 OS / 架构（linux/darwin/windows × amd64/arm64），默认装到**用户可写目录**，**无需 sudo / 管理员提权**。
+- macOS/Linux 默认装到 `~/.local/bin`，Windows 默认装到 `%LOCALAPPDATA%\Programs\vet` 并自动加入用户 PATH。
+- 也可克隆仓库后 `make install`（等价于 `bash cmd/vet/install.sh`）。
+
+> 自定义安装路径：`INSTALL_DIR=/opt/bin curl ... | bash`（或 PowerShell 传 `-InstallDir`）。
+
+### 更新到新版本
+
+安装器是**幂等**的，且**已是最新版时会自动跳过下载**——任何时候重跑同一条安装命令即可升级，无需卸载：
+
+```bash
+# macOS / Linux：重跑即升级
+curl -fsSL https://raw.githubusercontent.com/buhaiqing/ve-skills/main/cmd/vet/install.sh | bash
+
+# Windows：重跑即升级
+irm https://raw.githubusercontent.com/buhaiqing/ve-skills/main/cmd/vet/install.ps1 | iex
+```
+
+### 安装指定版本
+
+```bash
+# macOS / Linux
+VERSION=0.1.4 curl -fsSL https://raw.githubusercontent.com/buhaiqing/ve-skills/main/cmd/vet/install.sh | bash
+
+# Windows（先下载脚本再指定版本）
+irm https://raw.githubusercontent.com/buhaiqing/ve-skills/main/cmd/vet/install.ps1 -OutFile install.ps1
+.\install.ps1 -Version 0.1.4
+```
+
+### 验证
+
+```bash
+vet version                 # 打印当前版本
+vet validate --root .       # 全量校验本仓库 skills
+```
+
+### 从源码构建（贡献者）
+
+```bash
+make build                  # 构建当前平台二进制到 cmd/bin/vet
+make test                   # 运行 Go 测试
+```
+
 ## 火山引擎 CLI 行为特征
 
 ### 正确 CLI 调用模式

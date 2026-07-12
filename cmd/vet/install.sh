@@ -1,53 +1,83 @@
 #!/usr/bin/env bash
 #
-# install.sh — install or update the `vet` CLI.
+# install.sh — one-shot install / update for the `vet` CLI.
 #
-# Always fetches the LATEST GitHub Release of the ve-skills `vet` tool and
-# installs the binary matching the current OS/architecture into INSTALL_DIR
-# (default: /usr/local/bin). Re-running this script updates to the newest
-# version (idempotent, one-shot, no background daemon).
+# Cross-platform: works on macOS, Linux and Windows (Git Bash / WSL / MSYS).
+# Automatically detects OS + architecture, picks the matching GitHub Release
+# asset, and installs with zero manual steps. Re-running updates in place.
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/buhaiqing/ve-skills/main/cmd/vet/install.sh | bash
-#   # or after cloning:
+#   # or after cloning the repo:
 #   bash cmd/vet/install.sh
+#   # install a specific version:
+#   VERSION=0.1.4 curl -fsSL ... | bash
+#
+# Env overrides:
+#   VERSION       pin a version (default: latest release)
+#   INSTALL_DIR   install path (default: ~/.local/bin on *nix, %LOCALAPPDATA%\Programs\vet on Windows)
 #
 set -euo pipefail
 
 REPO="buhaiqing/ve-skills"
 BINARY="vet"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
-VERSION_FILE="${INSTALL_DIR}/${BINARY}.version"
 
 err() { echo "error: $*" >&2; exit 1; }
 
 # --- detect OS / arch -------------------------------------------------------
-OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+RAW_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
 case "$ARCH" in
   x86_64 | amd64) ARCH="amd64" ;;
   arm64 | aarch64) ARCH="arm64" ;;
   *) err "unsupported architecture: $ARCH" ;;
 esac
-case "$OS" in
+case "$RAW_OS" in
   linux) OS="linux" ;;
   darwin) OS="darwin" ;;
-  *) err "unsupported OS: $OS (only linux/darwin supported)" ;;
+  # Git Bash / MSYS2 / Cygwin report windows-like uname; WSL reports linux
+  mingw32* | mingw64* | msys* | cygwin* | uwin*) OS="windows" ;;
+  *) err "unsupported OS: $RAW_OS (only linux/darwin/windows supported)" ;;
 esac
+BIN_NAME="$BINARY"
+[ "$OS" = "windows" ] && BIN_NAME="${BINARY}.exe"
 
-# --- resolve latest version -------------------------------------------------
+# --- default install dir (user-writable, no sudo) ---------------------------
+if [ -z "${INSTALL_DIR:-}" ]; then
+  if [ "$OS" = "windows" ]; then
+    INSTALL_DIR="${LOCALAPPDATA:-$HOME/AppData/Local}/Programs/vet"
+  else
+    INSTALL_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
+  fi
+fi
+VERSION_FILE="${INSTALL_DIR}/${BINARY}.version"
+
+# --- resolve version --------------------------------------------------------
 command -v curl >/dev/null 2>&1 || err "curl is required"
-echo "resolving latest $BINARY release for ${OS}/${ARCH} ..."
-LATEST="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
-  | grep -m1 '"tag_name"' \
-  | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')"
-[ -n "$LATEST" ] || err "could not determine latest release tag"
-echo "latest: $LATEST"
 
-# strip any leading "vet/" or "v" prefix so VERSION is bare X.Y.Z
-# (tag may be vet/vX.Y.Z or vX.Y.Z; archive uses bare version)
-VERSION="${LATEST#vet/}"
-VERSION="${VERSION#v}"
+if [ -n "${VERSION:-}" ]; then
+  # accept with or without a leading v
+  VERSION="${VERSION#v}"
+  LATEST="v${VERSION}"
+else
+  echo "resolving latest $BINARY release for ${OS}/${ARCH} ..."
+  LATEST="$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+    | grep -m1 '"tag_name"' \
+    | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')"
+  [ -n "$LATEST" ] || err "could not determine latest release tag"
+  VERSION="${LATEST#vet/}"
+  VERSION="${VERSION#v}"
+fi
+
+# --- skip if already up to date ---------------------------------------------
+if [ -f "$VERSION_FILE" ]; then
+  CURRENT="$(cat "$VERSION_FILE" 2>/dev/null || true)"
+  if [ "$CURRENT" = "$VERSION" ]; then
+    echo "✅ $BIN_NAME $VERSION is already installed at $INSTALL_DIR/$BIN_NAME (nothing to do)"
+    "$INSTALL_DIR/$BIN_NAME" version 2>/dev/null || true
+    exit 0
+  fi
+fi
 
 # --- find asset for this platform ------------------------------------------
 ASSET="${BINARY}_${VERSION}_${OS}_${ARCH}.tar.gz"
@@ -63,25 +93,35 @@ if ! curl -fsSL "$URL" -o "$TMP/$ASSET"; then
   curl -fsSL "$URL" -o "$TMP/$ASSET" || err "download failed: $URL"
 fi
 
-# --- extract & install ------------------------------------------------------
+# --- extract ----------------------------------------------------------------
 if [[ "$ASSET" == *.zip ]]; then
-  command -v unzip >/dev/null 2>&1 || err "unzip is required for windows asset"
-  unzip -o "$TMP/$ASSET" -d "$TMP" >/dev/null
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -o "$TMP/$ASSET" -d "$TMP" >/dev/null
+  elif tar -xf "$TMP/$ASSET" -C "$TMP" 2>/dev/null; then
+    :
+  else
+    err "need unzip or tar to extract the windows .zip asset"
+  fi
 else
   tar -xzf "$TMP/$ASSET" -C "$TMP"
 fi
 
-# goreleaser archives nest the binary under the archive name dir; find it
-SRC="$(find "$TMP" -type f -name "$BINARY" | head -1)"
-[ -n "$SRC" ] || err "binary $BINARY not found in archive"
+SRC="$(find "$TMP" -type f \( -name "$BINARY" -o -name "${BINARY}.exe" \) | head -1)"
+[ -n "$SRC" ] || err "binary $BIN_NAME not found in archive"
 
-echo "installing to $INSTALL_DIR/$BINARY"
-if [ -w "$INSTALL_DIR" ]; then
-  install -m 0755 "$SRC" "$INSTALL_DIR/$BINARY"
+# --- install ----------------------------------------------------------------
+mkdir -p "$INSTALL_DIR"
+echo "installing to $INSTALL_DIR/$BIN_NAME"
+if [ "$OS" = "windows" ]; then
+  install -m 0755 "$SRC" "$INSTALL_DIR/$BIN_NAME" 2>/dev/null \
+    || cp "$SRC" "$INSTALL_DIR/$BIN_NAME" \
+    || err "$INSTALL_DIR is not writable; run from an elevated shell or set INSTALL_DIR to a writable path"
+elif [ -w "$INSTALL_DIR" ]; then
+  install -m 0755 "$SRC" "$INSTALL_DIR/$BIN_NAME"
 else
-  sudo install -m 0755 "$SRC" "$INSTALL_DIR/$BINARY"
+  sudo install -m 0755 "$SRC" "$INSTALL_DIR/$BIN_NAME"
 fi
 echo "$VERSION" > "$VERSION_FILE"
 
-echo "✅ $BINARY $VERSION installed at $INSTALL_DIR/$BINARY"
-"$INSTALL_DIR/$BINARY" version
+echo "✅ $BIN_NAME $VERSION installed at $INSTALL_DIR/$BIN_NAME"
+"$INSTALL_DIR/$BIN_NAME" version
