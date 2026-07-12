@@ -100,7 +100,7 @@ CodeGraph sync 在两层的触发方式不同：
 
 ### M1 — 脚手架 + 发布管线（串行，有构建依赖）
 - 🔒 M1.1：建 `cmd/vet/` module（`go.mod`/`main.go` 路由骨架/`README.md`）→ 后续依赖此产物
-- M1.2：goreleaser + GitHub Actions release 流程（占位 `vet version` 跑通 6 平台：linux/darwin/windows × amd64/arm64）｜依赖 M1.1
+- M1.2：goreleaser + GitHub Actions release 流程（占位 `vet version` 跑通 6 平台：linux/darwin/windows × amd64/arm64；详见 M1 scaffold 子文档）｜依赖 M1.1
 - M1.3：CodeGraph 收录 `cmd/vet/`（`codegraph sync` + `query vet`）｜最后
 
 ### M2 — 校验类（check 组，🔀 全 7 个可并行）
@@ -166,11 +166,13 @@ CodeGraph sync 在两层的触发方式不同：
 ## 6. 状态
 
 - **M0**：✅ 完成（push / codegraph init / 计划定稿 / AGENTS.md CodeGraph 节）
-- **M1**：✅ 完成（cmd/vet module + 路由骨架 + goreleaser 6平台 + release/vet-test Actions + install.sh + CodeGraph 收录；commit `30786cf`）
+- **M1**：✅ 完成（cmd/vet module + 路由骨架 + goreleaser 6平台 + release/vet-test Actions + install.sh + CodeGraph 收录；原 commit 在 force-push 前，见下方注）
 - **M2.1** `vet check frontmatter`：✅ 完成（Go 端口，等价 29/29；本会话修复 inverted-OK bug 后提交）
-- **M2.2–M2.7** `vet check aiops|assessment|gcl|links|eval` + `vet validate`：✅ 完成（commit `0b4b932`；aiops 补测试，assessment 改 3-value 签名，validate 修 step 计数 + --list）
-- **M3** `vet gcl run|gate|trace`：✅ 完成（commit `13d3c13`；共享包 secret/critic/trace + run/gate/trace，凭据遮蔽已验证，Go 测试通过）
-- **M4** CI/文档切换：✅ 完成（commit `13d3c13`；validate.yml 改调 vet，AGENTS.md 指 vet，CodeGraph 节已含翻译辅助指引）
-- **M5** 首次发布 tag `v0.1.0`：✅ 完成（commit `553f9b0`；修复 goreleaser `before.hooks` 中 `cd` 非可执行文件导致的发布失败；GitHub Action 已成功构建 6 平台制品并创建 GitHub Release `v0.1.0`；`make release VERSION=0.1.x` 可一键复现）
+- **M2.2–M2.7** `vet check aiops|assessment|gcl|links|eval` + `vet validate`：✅ 完成（原 commit `0b4b932` 在 force-push 前；aiops 补测试，assessment 改 3-value 签名，validate 修 step 计数 + --list）
+- **M3** `vet gcl run|gate|trace`：✅ 完成（原 commit `13d3c13` 在 force-push 前；共享包 secret/critic/trace + run/gate/trace，凭据遮蔽已验证，Go 测试通过）
+- **M4** CI/文档切换：✅ 完成（原 commit `13d3c13` 在 force-push 前；validate.yml 改调 vet，AGENTS.md 指 vet，CodeGraph 节已含翻译辅助指引）
+- **M5** 首次发布 tag `v0.1.0` / `v0.1.1`：✅ 完成（commit `6d69585` 为 force-push 后 main 头；`553f9b0` 修复 goreleaser `before.hooks` 中 `cd` 非可执行文件导致的发布失败；`6e8ef77` 为 v0.1.1 发布；GitHub Action 已成功构建 6 平台制品并创建 GitHub Release；`make release VERSION=0.1.x` 可一键复现）
+
+> **注（commit 引用）**：M1–M4 的提交在 M5 的 `git push --force` 中已被重写，原哈希（`30786cf` / `0b4b932` / `13d3c13`）在 `origin/main` 上不可达；完整 pre-force-push 历史已备份至分支 `backup/pre-go-migration-main`。M5 之后的哈希（`553f9b0` / `6d69585` / `6e8ef77`）为当前可达提交。
 
 > 开发过程按里程碑推进，每里程碑结束汇报结果，不跨里程碑自动推进。

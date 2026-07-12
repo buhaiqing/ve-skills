@@ -1,7 +1,7 @@
 # M1 — 脚手架 + 发布管线（vet）
 
 > **父计划**：`2026-07-12-python-to-go-cli.md`
-> **目标**：建立 `cmd/vet/` Go module、goreleaser + GitHub Actions 发布管线，用占位命令 `vet version` 跑通 5 平台交叉编译与 Release 流程。
+> **目标**：建立 `cmd/vet/` Go module、goreleaser + GitHub Actions 发布管线，用占位命令 `vet version` 跑通 6 平台交叉编译与 Release 流程。
 > **依赖**：无（M0 已完成：仓库已 `codegraph init`，AGENTS.md 规则就位）。
 > **并行性**：M1 内部**串行**（M1.1 module 是 M1.2 goreleaser 的构建依赖）。
 
@@ -37,22 +37,22 @@ GOOS=windows GOARCH=amd64 go build -o /tmp/vet.exe . && echo "windows ok"
 ## M1.2 — goreleaser + GitHub Actions 发布管线
 
 ### 交付物
-- `.goreleaser.yaml`：build 5 平台（darwin/arm64、darwin/amd64、linux/arm64、linux/amd64、windows/amd64），binary 名 `vet`，含 `version`/`commit`/`date` ldflags。
-- `.github/workflows/release.yml`：on `push.tags: ["vet/v*"]`，步骤：checkout（fetch-depth 0）→ setup-go → goreleaser `--clean`，发 GitHub Release + 资产。
+- `.goreleaser.yaml`：build 6 平台（linux/darwin/windows × amd64/arm64），binary 名 `vet`，含 `version`/`commit`/`date` ldflags。
+- `.github/workflows/release.yml`：on `push.tags: ["v*"]`，步骤：checkout（fetch-depth 0）→ setup-go → goreleaser `--clean`，发 GitHub Release + 资产。
 - 可选：`.github/workflows/test.yml` 或并入现有 validate.yml：PR 时 `cd cmd/vet && go build ./... && go test ./...`。
 
 ### 要求
 - goreleaser 配置 `archives` 含 `checksum`。
-- tag 格式 `vet/v0.1.0` → Release 名 `vet-v0.1.0`。
+- tag 格式 `v0.1.0`（semver；`vet/v*` 前缀非 semver，被 goreleaser 拒绝）→ Release 名 `vet-v0.1.0`。
 - 不提交 token；用 `GITHUB_TOKEN`（Actions 默认提供）。
 
 ### 验证（不实际发 Release）
 ```bash
 cd cmd/vet
-goreleaser build --snapshot --clean   # 本地出 5 平台二进制到 dist/
+goreleaser build --snapshot --clean   # 本地出 6 平台二进制到 dist/
 goreleaser check                       # 配置校验
 ```
-- 退出：本地 `goreleaser build --snapshot` 成功生成 5 平台产物。
+- 退出：本地 `goreleaser build --snapshot` 成功生成 6 平台产物。
 
 ---
 
@@ -77,7 +77,7 @@ codegraph status           # Files 数应较 M0 的 37 增加
 ## 退出标准（M1 整体）
 - [ ] `go build ./...` + 三平台交叉编译通过
 - [ ] `./vet version` 正常输出
-- [ ] `goreleaser build --snapshot` 出 5 平台二进制
+- [ ] `goreleaser build --snapshot` 出 6 平台二进制
 - [ ] `goreleaser check` 通过
 - [ ] CodeGraph 含 `cmd/vet/` 节点
 - [ ] 独立 commit（M1.1/M1.2/M1.3 可分 commit，建议 M1.1+1.2 合并一 commit、M1.3 一 commit）

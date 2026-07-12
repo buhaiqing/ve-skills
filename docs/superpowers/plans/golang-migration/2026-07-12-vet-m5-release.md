@@ -31,7 +31,7 @@
 - [x] GitHub Release `v0.1.1` 含 6 平台资产（run 29196098814 success，tag 触发全自动化）
 - [x] `install.sh` 一键安装 + 始终指向 latest，实测下载安装 `v0.1.1` 成功（`vet 0.1.1`，frontmatter 29/29 通过）
 - [x] `make release` / `make release-api` 两条发布路径均可用
-- [x] 代码已 force-push 至 `origin/main`（`6d69585`）；原 82 个 origin/main 提交已备份至 `backup/pre-go-migration-main`
+- [x] 代码已 force-push 至 `origin/main`（`6d69585` 为当前 main 头；`553f9b0` 修复 `before.hooks` 发布失败，`6e8ef77` 为 v0.1.1 发布）；原 82 个 origin/main 提交已备份至 `backup/pre-go-migration-main`
 - [x] 安装命令经实测可下载执行（见 M5.2）
 
 ## 状态
