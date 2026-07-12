@@ -7,193 +7,196 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/aiops"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/assessment"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/eval"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/gcl"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/links"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/gate"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/run"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 )
 
+// stepOutcome is the result of running one validation step.
+type stepOutcome struct {
+	errors   []string // per-finding messages (empty => pass)
+	advisory bool     // if advisory, a non-empty errors list does not break the suite
+}
+
 // Step is a single validation step, mirroring the Python Step dataclass.
+// Unlike the old implementation (which shelled out to python3 for every
+// check), each step runs in-process against the equivalent `vet check` /
+// `vet gcl` package — no Python interpreter required.
 type Step struct {
 	name string
-	argv []string // command to execute externally (python3 ...)
+	run  func(root string) stepOutcome
 }
 
-// python3 returns the python interpreter path, preferring "python3".
-func python3() string {
-	if p, err := exec.LookPath("python3"); err == nil {
-		return p
+// mapFailed reports whether a (results map, skill list) pair has any failure.
+func mapFailed(results map[string][]string) []string {
+	var errs []string
+	for _, es := range results {
+		errs = append(errs, es...)
 	}
-	return "python3"
+	return errs
 }
 
-// buildSteps constructs the full validation step list, faithfully mirroring
-// build_steps() in scripts/validate_local.py. Inline-python checks are kept as
-// pure-Go helpers (see validate.go) but are ALSO emitted as `python3 -c`
-// commands below so the external-execution semantics are preserved: when
-// runLive is true, runStep executes the argv via os/exec exactly like the
-// original. For the four inline checks we additionally expose the generated
-// Python source via inlineScriptSource so the behavior is verifiable.
+// mapFailedOK mirrors mapFailed but treats an empty map as pass.
+func checkMap(root string, fn func(string) (map[string][]string, []string)) stepOutcome {
+	res, _ := fn(root)
+	return stepOutcome{errors: mapFailed(res)}
+}
+
+// buildSteps constructs the full validation step list, mirroring
+// build_steps() in scripts/validate_local.py but executed in pure Go.
 func buildSteps() []Step {
-	py := python3()
 	steps := []Step{
-		{name: "File integrity (null byte check)", argv: []string{py, "-c", inlineScriptSource("file_integrity")}},
-		{name: "Frontmatter validation", argv: []string{py, "scripts/validate_skills_frontmatter.py"}},
-		{name: "Required sections presence", argv: []string{py, "-c", inlineScriptSource("required_sections")}},
-		{name: "Error Taxonomy (≥10 codes, HALT/RETRY)", argv: []string{py, "-c", inlineScriptSource("error_taxonomy")}},
-		{name: "TE-1 hardcoded version scan", argv: []string{py, "-c", inlineScriptSource("te1_hardcodes")}},
-		{name: "Markdown local links", argv: []string{py, "scripts/check_markdown_links.py"}},
 		{
-			name: "GCL runner smoke test",
-			argv: []string{py, "scripts/gcl_runner.py", "run", "--skill", "ve-skill-generator",
-				"--request", "CI smoke test", "--command",
-				`echo {"Response":{"RequestId":"ci-smoke"}}`, "--max-iter", "1", "--structural-critic-only"},
+			name: "File integrity (null byte check)",
+			run: func(root string) stepOutcome {
+				return stepOutcome{errors: checkFileIntegrity(root)}
+			},
 		},
-		{name: "GCL CI gate (all skills)", argv: []string{py, "scripts/gcl_ci_gate.py", "--skip-incident-loop"}},
-		{name: "GCL trace aggregate", argv: []string{py, "scripts/gcl_trace_aggregate.py", "--since-hours", "168"}},
-		{name: "Script unit tests", argv: []string{py, "-m", "unittest", "discover", "-s", "scripts", "-p", "*_test.py", "-v"}},
-		{name: "GCL Tier-A conformance", argv: []string{py, "scripts/check_gcl_conformance.py"}},
-		{name: "Eval regression", argv: []string{py, "scripts/check_eval_regression.py"}},
+		{
+			name: "Frontmatter validation",
+			run:  func(root string) stepOutcome { return checkMap(root, frontmatter.CheckDir) },
+		},
+		{
+			name: "Required sections presence",
+			run: func(root string) stepOutcome {
+				return stepOutcome{errors: checkRequiredSections(root)}
+			},
+		},
+		{
+			name: "Error Taxonomy (≥10 codes, HALT/RETRY)",
+			run: func(root string) stepOutcome {
+				return stepOutcome{errors: checkErrorTaxonomy(root), advisory: true}
+			},
+		},
+		{
+			name: "TE-1 hardcoded version scan",
+			run: func(root string) stepOutcome {
+				return stepOutcome{errors: checkTE1Hardcodes(root), advisory: true}
+			},
+		},
+		{
+			name: "Markdown local links",
+			run:  func(root string) stepOutcome { return checkMap(root, links.CheckDir) },
+		},
+		{
+			name: "AIOps / FinOps / eval coverage",
+			run: func(root string) stepOutcome {
+				rep := aiops.CheckDir(root)
+				var errs []string
+				errs = append(errs, rep.SkillsMissingAIOps...)
+				errs = append(errs, rep.SkillsMissingFinOps...)
+				errs = append(errs, rep.SkillsMissingEval...)
+				errs = append(errs, rep.EvalParseFail...)
+				return stepOutcome{errors: errs}
+			},
+		},
+		{
+			name: "GCL Tier-A conformance",
+			run:  func(root string) stepOutcome { return checkMap(root, gcl.CheckDir) },
+		},
+		{
+			name: "Eval regression",
+			run:  func(root string) stepOutcome { return checkMap(root, eval.CheckDir) },
+		},
+		{
+			name: "Product assessment examples",
+			run: func(root string) stepOutcome {
+				errs, _, _ := assessment.CheckDir(root)
+				return stepOutcome{errors: errs}
+			},
+		},
+		{
+			name: "GCL runner structural smoke",
+			run: func(root string) stepOutcome {
+				code := run.Run(run.Options{
+					Root:           root,
+					Skill:          "ve-skill-generator",
+					Request:        "CI smoke test",
+					Command:        `echo {"Response":{"RequestId":"ci-smoke"}}`,
+					MaxIter:        1,
+					Timeout:        30,
+					StructuralOnly: true,
+				}).ExitCode
+				if code == 0 || code == 1 {
+					return stepOutcome{}
+				}
+				return stepOutcome{errors: []string{fmt.Sprintf("gcl run structural smoke exited with %d", code)}}
+			},
+		},
+		{
+			name: "GCL CI gate (all skills)",
+			run: func(root string) stepOutcome {
+				code := gate.Run(root, nil, true, false)
+				if code == 0 {
+					return stepOutcome{}
+				}
+				return stepOutcome{errors: []string{fmt.Sprintf("gcl gate exited with %d", code)}}
+			},
+		},
+		{
+			name: "GCL trace aggregate",
+			run: func(root string) stepOutcome {
+				hours := 168
+				code := trace.CmdAggregate(root, nil, &hours)
+				// No traces in a clean checkout is the normal state, so this
+				// step is advisory rather than breaking the suite.
+				return stepOutcome{errors: nil, advisory: code != 0}
+			},
+		},
+		{
+			name: "Unit tests (go test ./...)",
+			run: func(root string) stepOutcome {
+				return goTestStep(root)
+			},
+		},
 	}
 	return steps
 }
 
-// inlineScriptSource returns the generated `python3 -c` source for an inline
-// check, mirroring _inline_script in the Python original (function body
-// dedented/indented under a main() that calls sys.exit(main())).
-func inlineScriptSource(which string) string {
-	return "import sys\nfrom pathlib import Path\ndef main():\n    root = Path.cwd()\n" +
-		inlineScriptBody(which) +
-		"\nsys.exit(main())\n"
-}
-
-func inlineScriptBody(which string) string {
-	switch which {
-	case "file_integrity":
-		return "    errors = []\n" +
-			"    for f in sorted(root.glob('ve-*/SKILL.md')):\n" +
-			"        if b'\\x00' in f.read_bytes():\n" +
-			"            errors.append(str(f.relative_to(root)) + ': contains null bytes')\n" +
-			"    if errors:\n" +
-			"        for e in errors:\n" +
-			"            print('  FAIL: ' + e)\n" +
-			"        return 1\n" +
-			"    print('  OK: all SKILL.md files are clean UTF-8 text')\n" +
-			"    return 0"
-	case "required_sections":
-		return "    HARD = {'## Trigger & Scope', '## Quality Gate (GCL)'}\n" +
-			"    errors = []\n" +
-			"    warnings = []\n" +
-			"    for f in sorted(root.glob('ve-*/SKILL.md')):\n" +
-			"        skill = f.parent.name\n" +
-			"        if skill == 've-skill-generator':\n" +
-			"            continue\n" +
-			"        text = f.read_text(encoding='utf-8')\n" +
-			"        has_ts = '## Trigger & Scope' in text or '## Trigger & Scope (Agent-Readable)' in text\n" +
-			"        has_shall = '### SHOULD Use This Skill When' in text\n" +
-			"        has_shall_not = '### SHOULD NOT Use This Skill When' in text\n" +
-			"        has_gcl = '## Quality Gate (GCL)' in text\n" +
-			"        has_what = '### What This Skill Does' in text\n" +
-			"        has_ops = '## Operational Best Practices' in text\n" +
-			"        has_next = '### Next Steps' in text\n" +
-			"        if not has_ts:\n" +
-			"            errors.append(skill + ': missing ## Trigger & Scope')\n" +
-			"        elif not has_shall or not has_shall_not:\n" +
-			"            errors.append(skill + ': ## Trigger & Scope lacks SHOULD/SHOULD NOT subsections')\n" +
-			"        if not has_gcl:\n" +
-			"            errors.append(skill + ': missing ## Quality Gate (GCL)')\n" +
-			"        if not has_what:\n" +
-			"            errors.append(skill + ': missing ### What This Skill Does (IMPORTANT — MUST exist)')\n" +
-			"        if not has_ops:\n" +
-			"            errors.append(skill + ': missing ## Operational Best Practices (IMPORTANT — MUST exist)')\n" +
-			"        if not has_next:\n" +
-			"            warnings.append(skill + ': missing ### Next Steps')\n" +
-			"    for e in errors:\n" +
-			"        print('  FAIL: ' + e)\n" +
-			"    for w in warnings:\n" +
-			"        print('  WARN: ' + w)\n" +
-			"    if errors:\n" +
-			"        return 1\n" +
-			"    print('  OK: all harness-critical sections present')\n" +
-			"    return 0"
-	case "error_taxonomy":
-		return "    import re\n" +
-			"    warnings = []\n" +
-			"    for f in sorted(root.glob('ve-*/SKILL.md')):\n" +
-			"        skill = f.parent.name\n" +
-			"        if skill == 've-skill-generator':\n" +
-			"            continue\n" +
-			"        text = f.read_text(encoding='utf-8')\n" +
-			"        if '## Error Taxonomy' not in text:\n" +
-			"            warnings.append(skill + ': missing ## Error Taxonomy')\n" +
-			"            continue\n" +
-			"        classes = re.findall(r\"^\\|\\s*`[^`]+`\\s*\\|\\s*[^|]+?\\|\\s*[^|]*?\\*\\*(HALT|RETRY)\\*\\*\", text, re.MULTILINE)\n" +
-			"        if len(classes) < 10:\n" +
-			"            warnings.append(skill + ': ## Error Taxonomy has only ' + str(len(classes)) + ' codes, need ≥10')\n" +
-			"        elif 'HALT' not in classes:\n" +
-			"            warnings.append(skill + ': ## Error Taxonomy missing HALT classification')\n" +
-			"        elif 'RETRY' not in classes:\n" +
-			"            warnings.append(skill + ': ## Error Taxonomy missing RETRY classification')\n" +
-			"    for w in warnings:\n" +
-			"        print('  WARN: ' + w)\n" +
-			"    if warnings:\n" +
-			"        print('  → ' + str(len(warnings)) + ' error taxonomy issue(s) found (advisory)')\n" +
-			"        return 0\n" +
-			"    print('  OK: all skills have ## Error Taxonomy with ≥10 codes including HALT/RETRY')\n" +
-			"    return 0"
-	case "te1_hardcodes":
-		return "    import re\n" +
-			"    PATTERNS = [\n" +
-			"        ('EngineVersion', r'\"EngineVersion\":\\s*\"\\d+\\.\\d+\"'),\n" +
-			"        ('MongoVersion', r'\"MongoVersion\":\\s*\"\\d+\\.\\d+\"'),\n" +
-			"        ('--MongoVersion', r'--MongoVersion\\s+\\d+\\.\\d+'),\n" +
-			"        ('--Version', r'--Version\\s+\"\\d+\\.\\d+\"'),\n" +
-			"        ('--TargetVersion', r'--TargetVersion\\s+\"\\d+\\.\\d+\"'),\n" +
-			"    ]\n" +
-			"    warnings = []\n" +
-			"    for glob_pat in ('ve-*/references/cli-usage.md', 've-*/SKILL.md'):\n" +
-			"        for f in sorted(root.glob(glob_pat)):\n" +
-			"            text = f.read_text(encoding='utf-8')\n" +
-			"            rel = f.relative_to(root)\n" +
-			"            for label, pattern in PATTERNS:\n" +
-			"                for m in re.finditer(pattern, text):\n" +
-			"                    warnings.append(str(rel) + ': TE-1 hardcoded ' + label + ' → ' + m.group())\n" +
-			"    for w in warnings:\n" +
-			"        print('  WARN: ' + w)\n" +
-			"    if not warnings:\n" +
-			"        print('  OK: no hardcoded version numbers detected')\n" +
-			"    else:\n" +
-			"        print('  → ' + str(len(warnings)) + ' TE-1 candidate(s) found (advisory)')\n" +
-			"    return 0"
-	}
-	return ""
-}
-
-// runStep executes one step via os/exec in cwd=root, mirroring run_step().
-func runStep(root string, step Step) int {
-	fmt.Fprintf(os.Stderr, "\n==> %s\n", step.name)
-	fmt.Fprintf(os.Stderr, "$ %s\n", strings.Join(step.argv, " "))
-	cmd := exec.Command(step.argv[0], step.argv[1:]...)
-	cmd.Dir = root
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+// goTestStep runs the vet module's Go test suite. Mirrors the original
+// `python3 -m unittest discover -s scripts` step, but exercises the Go
+// package tests instead.
+func goTestStep(root string) stepOutcome {
+	vetDir := filepath.Join(root, "cmd", "vet")
+	cmd := exec.Command("go", "test", "./...")
+	cmd.Dir = vetDir
+	var stdout, stderr strings.Builder
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		if ee, ok := err.(*exec.ExitError); ok {
-			return ee.ExitCode()
+		var errs []string
+		for _, line := range strings.Split(stderr.String(), "\n") {
+			if strings.TrimSpace(line) != "" {
+				errs = append(errs, line)
+			}
 		}
-		return 1
+		if len(errs) == 0 {
+			errs = append(errs, "go test failed")
+		}
+		return stepOutcome{errors: errs}
 	}
-	return 0
+	return stepOutcome{}
 }
 
-// Run mirrors main(): executes every step in order, stopping at the first
-// non-zero return. Returns (errors, failedStepNames) where errors maps each
-// failed step name to its captured stderr lines, and the second value is the
-// sorted list of failing step names (matching frontmatter.CheckDir's shape
-// conceptually). When listOnly is true, no commands are executed; the step
-// commands are printed instead and (nil, nil) is returned.
+// Run executes every step in order, stopping at the first non-advisory
+// failure. Returns (errors, failedStepNames, totalSteps) where errors maps
+// each failed step name to its finding lines, and failedStepNames is the
+// sorted list of failing step names. When listOnly is true, no steps are
+// executed; the step commands are printed instead and (nil, nil, total) is
+// returned.
 func Run(root string, listOnly bool) (map[string][]string, []string, int) {
 	steps := buildSteps()
 	total := len(steps)
 	if listOnly {
 		for _, s := range steps {
-			fmt.Printf("%s: %s\n", s.name, strings.Join(s.argv, " "))
+			fmt.Printf("%s\n", s.name)
 		}
 		return nil, nil, total
 	}
@@ -201,27 +204,30 @@ func Run(root string, listOnly bool) (map[string][]string, []string, int) {
 	failErrs := make(map[string][]string)
 	var failed []string
 	for _, s := range steps {
-		if rc := runStep(root, s); rc != 0 {
-			fmt.Fprintf(os.Stderr, "\nFAILED: %s exited with %d\n", s.name, rc)
-			failErrs[s.name] = []string{fmt.Sprintf("exited with %d", rc)}
-			failed = append(failed, s.name)
-			break
+		out := s.run(root)
+		if len(out.errors) == 0 {
+			continue
 		}
+		if out.advisory {
+			fmt.Fprintf(os.Stderr, "\nADVISORY: %s — %d finding(s)\n", s.name, len(out.errors))
+			for _, e := range out.errors {
+				fmt.Fprintf(os.Stderr, "  WARN: %s\n", e)
+			}
+			continue
+		}
+		fmt.Fprintf(os.Stderr, "\nFAILED: %s\n", s.name)
+		for _, e := range out.errors {
+			fmt.Fprintf(os.Stderr, "  FAIL: %s\n", e)
+		}
+		failErrs[s.name] = out.errors
+		failed = append(failed, s.name)
+		break
 	}
 	sort.Strings(failed)
 	if len(failed) == 0 {
 		fmt.Fprintln(os.Stderr, "\nOK: local validation suite passed")
 	}
 	return failErrs, failed, total
-}
-
-// relSkillPath mirrors the Python f.relative_to(root) for a skill SKILL.md.
-func relSkillPath(root, skillPath string) string {
-	rel, err := filepath.Rel(root, skillPath)
-	if err != nil {
-		return skillPath
-	}
-	return rel
 }
 
 // StepNames returns the friendly names of all validation steps, for --list.

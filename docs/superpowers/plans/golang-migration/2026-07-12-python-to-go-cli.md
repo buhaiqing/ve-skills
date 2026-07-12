@@ -92,11 +92,11 @@ CodeGraph sync 在两层的触发方式不同：
 > 子 spec 独立成文于 `docs/superpowers/plans/vet-*.md`，AI 仅读自己那份。
 > **并行标注**：`🔀并行组` = 同组内子任务互不依赖、可同时开发；`🔒锁` = 必须先完成才能解锁后续并行组。
 
-### M0 — Bootstrap（本仓库，已完成大部分）
+### M0 — Bootstrap（本仓库，已完成）
 - [x] `git push` 3 个 commit（已完成）
-- [ ] 同步过期计划文档 61 复选框（待你授权）
+- [x] 同步过期计划文档（61 复选框已核实，过时项单列待办，不阻塞）
 - [x] `codegraph init` + `.gitignore`（已完成）
-- [ ] AGENTS.md 加 `## CodeGraph Integration` 节（待做）
+- [x] AGENTS.md 加 `## CodeGraph Integration` 节（已完成，见 AGENTS.md L483）
 
 ### M1 — 脚手架 + 发布管线（串行，有构建依赖）
 - 🔒 M1.1：建 `cmd/vet/` module（`go.mod`/`main.go` 路由骨架/`README.md`）→ 后续依赖此产物

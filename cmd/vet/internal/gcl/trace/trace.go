@@ -24,6 +24,7 @@ type GeneratorResult struct {
 	ResultExcerpt string `json:"result_excerpt"`
 	StdoutLen     int    `json:"stdout_len"`
 	StderrLen     int    `json:"stderr_len"`
+	StderrExcerpt string `json:"stderr_excerpt,omitempty"`
 	Args          map[string]any `json:"args,omitempty"`
 }
 

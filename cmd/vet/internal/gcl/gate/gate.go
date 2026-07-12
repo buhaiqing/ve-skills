@@ -40,7 +40,7 @@ type Report struct {
 // SmokeSkill runs the structural smoke for a single skill.
 func SmokeSkill(root, skill string) Report {
 	r := Report{Skill: skill, ExitCode: -1}
-	code := run.Run(run.Options{
+	res := run.Run(run.Options{
 		Root:           root,
 		Skill:          skill,
 		Request:        "CI gate smoke: " + skill,
@@ -49,9 +49,12 @@ func SmokeSkill(root, skill string) Report {
 		Timeout:        30,
 		StructuralOnly: true,
 	})
-	r.ExitCode = code
+	r.ExitCode = res.ExitCode
+	r.TimedOut = res.TimedOut
+	r.TraceLine = res.TraceLine
+	r.StderrLine = res.StderrLine
 	// runner returns 0 (PASS) or 1 (MAX_ITER) — both structurally acceptable
-	r.OK = code == 0 || code == 1
+	r.OK = res.ExitCode == 0 || res.ExitCode == 1
 	return r
 }
 
@@ -93,7 +96,12 @@ func Run(root string, skills []string, skipIncidentLoop bool, jsonOut bool) int 
 			if i > 0 {
 				fmt.Print(",")
 			}
-			fmt.Printf("{\"skill\":%q,\"ok\":%t,\"exit_code\":%d}", r.Skill, r.OK, r.ExitCode)
+			if r.TimedOut || r.TraceLine != "" || r.StderrLine != "" {
+				fmt.Printf("{\"skill\":%q,\"ok\":%t,\"exit_code\":%d,\"timed_out\":%t,\"trace_line\":%q,\"stderr_first_line\":%q}",
+					r.Skill, r.OK, r.ExitCode, r.TimedOut, r.TraceLine, r.StderrLine)
+			} else {
+				fmt.Printf("{\"skill\":%q,\"ok\":%t,\"exit_code\":%d}", r.Skill, r.OK, r.ExitCode)
+			}
 		}
 		fmt.Println("]}")
 	} else {
@@ -103,6 +111,11 @@ func Run(root string, skills []string, skipIncidentLoop bool, jsonOut bool) int 
 			for _, r := range reports {
 				if !r.OK {
 					reason := "exit_code=" + itoa(r.ExitCode)
+					if r.StderrLine != "" {
+						reason += " stderr=" + r.StderrLine
+					} else if r.TraceLine != "" {
+						reason += " " + r.TraceLine
+					}
 					if r.TimedOut {
 						reason = "TIMEOUT"
 					}

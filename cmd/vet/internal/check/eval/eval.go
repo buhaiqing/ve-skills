@@ -36,9 +36,8 @@ var exempt = map[string]bool{
 }
 
 // defaultBaseRev is the git ref compared against when git-diff mode is enabled.
-// Mirrors the Python --git-diff default ("HEAD~1"); for the bare CheckDir we
-// compare against the merge-base with origin/main (falling back to main).
-const defaultBaseRev = "origin/main"
+// Mirrors the Python --git-diff default (const="HEAD~1").
+const defaultBaseRev = "HEAD~1"
 
 // scoring stop-words excluded from significant-token coverage.
 var stopWords = map[string]bool{
@@ -163,10 +162,8 @@ func validateEvalSchema(data []map[string]any, skillDir string) []string {
 			errors = append(errors, skillDir+": entry["+itoa(i)+"] is not a dict")
 			continue
 		}
-		for _, k := range requiredKeys {
-			if _, ok := entry[k]; !ok {
-				errors = append(errors, skillDir+": entry["+itoa(i)+"] missing keys: {"+k+"}")
-			}
+		if missing := missingKeys(entry, requiredKeys); len(missing) > 0 {
+			errors = append(errors, skillDir+": entry["+itoa(i)+"] missing keys: {"+strings.Join(missing, ", ")+"}")
 		}
 		q, ok := entry["query"].(string)
 		if !ok || strings.TrimSpace(q) == "" {
@@ -464,6 +461,17 @@ func stringOr(v any) string {
 		return s
 	}
 	return "<nil>"
+}
+
+// missingKeys returns the required keys absent from entry, in required order.
+func missingKeys(entry map[string]any, required []string) []string {
+	var miss []string
+	for _, k := range required {
+		if _, ok := entry[k]; !ok {
+			miss = append(miss, k)
+		}
+	}
+	return miss
 }
 
 // ── public API ──────────────────────────────────────────────────────

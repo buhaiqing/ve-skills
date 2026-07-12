@@ -116,6 +116,7 @@ func runCommand(command string, timeout int, extraEnv map[string]string) trace.G
 			ResultExcerpt: "TIMEOUT after " + itoa(timeout) + "s",
 			StdoutLen:     len(stdout.String()),
 			StderrLen:     len(stderr.String()),
+			StderrExcerpt: firstLine(secret.MaskSecrets(stderr.String())),
 		}
 	}
 	combined := secret.MaskSecrets(stdout.String() + stderr.String())
@@ -129,6 +130,7 @@ func runCommand(command string, timeout int, extraEnv map[string]string) trace.G
 		ResultExcerpt: excerpt,
 		StdoutLen:     len(stdout.String()),
 		StderrLen:     len(stderr.String()),
+		StderrExcerpt: firstLine(secret.MaskSecrets(stderr.String())),
 	}
 }
 
@@ -278,8 +280,19 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 	}
 }
 
-// Run executes the GCL loop. Returns the process exit code.
-func Run(opts Options) int {
+// Result is the outcome of a Run, carrying the process exit code plus the
+// timing/error signals needed by upstream reporters (vet gcl gate).
+type Result struct {
+	ExitCode   int
+	TimedOut   bool
+	TraceLine  string
+	StderrLine string
+}
+
+// Run executes the GCL loop and returns a Result. The exit code matches the
+// legacy Python runner: 0 PASS, 1 MAX_ITER, 2 invalid critic, 3 SAFETY_FAIL;
+// -1 on an unexpected internal error.
+func Run(opts Options) Result {
 	if opts.MaxIter <= 0 {
 		opts.MaxIter = SkillMaxIter[opts.Skill]
 		if opts.MaxIter == 0 {
@@ -306,12 +319,14 @@ func Run(opts Options) int {
 	}
 
 	criticFeedback := ""
+	var lastGen trace.GeneratorResult
 	for iter := 1; iter <= opts.MaxIter; iter++ {
 		gen := runCommand(opts.Command, opts.Timeout, map[string]string{
-			"GCL_CRITIC_FEEDBACK":      criticFeedback,
+			"GCL_CRITIC_FEEDBACK":        criticFeedback,
 			"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
 		})
 		gen.Args = map[string]any{"iter": iter, "critic_feedback": orEmpty(criticFeedback)}
+		lastGen = gen
 
 		var c *critic.CriticResult
 		if opts.StructuralOnly {
@@ -335,27 +350,27 @@ func Run(opts Options) int {
 				path, _ := trace.PersistTrace(opts.Root, "", tr)
 				writebackFailurePattern(opts.Root, opts.Skill, fp)
 				fmt.Fprintf(os.Stderr, "SAFETY_FAIL — credential leak detected — trace: %s\n", path)
-				return 3
+				return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
 			loaded, err := loadCritic(opts.CriticJSON, opts.CriticStdin)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "ERROR: invalid critic JSON: %v\n", err)
-				return 2
+				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
 			if loaded == nil && opts.CriticCommand != "" {
 				loaded2, err := runIsolatedCritic(opts, operationIntent, gen, tr.Iterations)
 				if err != nil {
-					return 2
+					return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 				}
 				loaded = loaded2
 			}
 			if loaded == nil {
 				fmt.Fprintln(os.Stderr, "ERROR: No Critic payload. Pass --critic-json, pipe JSON to stdin, --critic-command <cmd>, or use --structural-critic-only for rule-based audit.")
-				return 2
+				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
 			if errs := critic.ValidatePayload(*loaded); len(errs) > 0 {
 				fmt.Fprintf(os.Stderr, "ERROR: Invalid critic JSON: %s\n", strings.Join(errs, "; "))
-				return 2
+				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
 			c = loaded
 		}
@@ -374,14 +389,14 @@ func Run(opts Options) int {
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
 			writebackFailurePattern(opts.Root, opts.Skill, fp)
 			fmt.Fprintf(os.Stderr, "SAFETY_FAIL — trace: %s\n", path)
-			return 3
+			return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 		}
 		if decision == "PASS" {
 			out := gen.ResultExcerpt
 			tr.Final = trace.Final{Status: "PASS", Iter: iter, Output: &out}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
 			fmt.Printf("PASS (iter %d) — trace: %s\n", iter, path)
-			return 0
+			return Result{ExitCode: 0, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 		}
 		criticFeedback = strings.Join(firstN(c.Suggestions, 3), "; ")
 	}
@@ -399,5 +414,10 @@ func Run(opts Options) int {
 	path, _ := trace.PersistTrace(opts.Root, "", tr)
 	writebackFailurePattern(opts.Root, opts.Skill, fp)
 	fmt.Fprintf(os.Stderr, "MAX_ITER — trace: %s\n", path)
-	return 1
+	return Result{
+		ExitCode:   1,
+		TimedOut:   strings.HasPrefix(lastGen.ResultExcerpt, "TIMEOUT"),
+		TraceLine:  lastGen.ResultExcerpt,
+		StderrLine: lastGen.StderrExcerpt,
+	}
 }

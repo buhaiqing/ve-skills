@@ -36,6 +36,7 @@ type skillResult struct {
 	EvalQueries    bool   `json:"eval_queries"`
 	EvalTrigger    int    `json:"eval_trigger"`
 	EvalNonTrigger int    `json:"eval_non_trigger"`
+	ParseFail      bool   `json:"eval_parse_fail"`
 	HasAdvanced    bool   `json:"has_advanced"`
 }
 
@@ -80,6 +81,12 @@ func checkSkill(root, skill string) skillResult {
 					r.EvalNonTrigger++
 				}
 			}
+		} else {
+			// Corrupt JSON must be classified separately from "missing":
+			// the file exists but does not parse, distinct from a missing
+			// eval_queries.json (which leaves EvalQueries=false via the
+			// outer os.ReadFile error branch).
+			r.ParseFail = true
 		}
 	}
 	return r
@@ -121,6 +128,9 @@ func CheckDir(root string) Report {
 				missingFinOps = append(missingFinOps, r.Skill)
 			}
 		}
+		if r.ParseFail {
+			parseFail = append(parseFail, r.Skill)
+		}
 		if r.EvalQueries {
 			evalSkills++
 			if r.EvalTrigger >= 5 && r.EvalNonTrigger >= 2 {
@@ -128,7 +138,7 @@ func CheckDir(root string) Report {
 			} else {
 				evalQualityBad = append(evalQualityBad, r)
 			}
-		} else {
+		} else if !r.ParseFail {
 			missingEval = append(missingEval, r.Skill)
 		}
 	}

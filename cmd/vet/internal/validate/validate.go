@@ -1,13 +1,14 @@
-// Package validate is a faithful Go port of scripts/validate_local.py.
+// Package validate is the pure-Go implementation of the local validation
+// suite formerly driven by scripts/validate_local.py.
 //
-// The Python original builds a list of Steps, where some steps run external
-// scripts (validate_skills_frontmatter.py, check_markdown_links.py, ...) and
-// several steps dynamically generate inline Python source and execute it via
-// `python3 -c`. This port preserves that "execute external command" behavior:
-// the four checks that the original implemented as inline Python
-// (_check_file_integrity, _check_required_sections, _check_error_taxonomy,
-// _check_te1_hardcodes) are reimplemented as pure-Go helpers so their output
-// matches the original, and the script-based steps are delegated to `python3`.
+// The original Python built a list of Steps, where some ran external scripts
+// (validate_skills_frontmatter.py, check_markdown_links.py, ...) and several
+// generated inline Python executed via `python3 -c`. This Go port runs every
+// check in-process by calling the equivalent `vet check` / `vet gcl` packages
+// directly — no python3 dependency. The four checks the Python original
+// implemented as inline Python (file integrity, required sections, error
+// taxonomy, TE-1 hardcodes) are implemented here as pure-Go helpers and wired
+// in as steps (see engine.go buildSteps).
 package validate
 
 import (
@@ -43,9 +44,8 @@ func readText(p string) string {
 	return string(b)
 }
 
-// CheckFileIntegrity mirrors _check_file_integrity: every ve-*/SKILL.md must
-// be null-byte free.
-func CheckFileIntegrity(root string) []string {
+// checkFileIntegrity: every ve-*/SKILL.md must be null-byte free.
+func checkFileIntegrity(root string) []string {
 	var errs []string
 	for _, f := range skillDirs(root) {
 		data, err := os.ReadFile(f)
@@ -68,18 +68,10 @@ func bytesContainNull(b []byte) bool {
 	return false
 }
 
-// CheckRequiredSections mirrors _check_required_sections. ve-skill-generator
-// is a meta-skill and is skipped. Errors are returned; missing "### Next Steps"
-// is advisory (warning) and not returned here.
-func CheckRequiredSections(root string) []string {
-	hard := []string{
-		"## Trigger & Scope",
-		"## Quality Gate (GCL)",
-		"### What This Skill Does",
-		"## Operational Best Practices",
-		"### Next Steps",
-	}
-	_ = hard
+// checkRequiredSections. ve-skill-generator is a meta-skill and is skipped.
+// Errors are returned; missing "### Next Steps" is advisory (warning) and not
+// returned here.
+func checkRequiredSections(root string) []string {
 	var errs []string
 	for _, f := range skillDirs(root) {
 		skill := filepath.Base(filepath.Dir(f))
@@ -95,7 +87,6 @@ func CheckRequiredSections(root string) []string {
 		hasGCL := strings.Contains(text, "## Quality Gate (GCL)")
 		hasWhat := strings.Contains(text, "### What This Skill Does")
 		hasOps := strings.Contains(text, "## Operational Best Practices")
-		hasNext := strings.Contains(text, "### Next Steps")
 
 		if !hasTS {
 			errs = append(errs, skill+": missing ## Trigger & Scope")
@@ -111,14 +102,13 @@ func CheckRequiredSections(root string) []string {
 		if !hasOps {
 			errs = append(errs, skill+": missing ## Operational Best Practices (IMPORTANT — MUST exist)")
 		}
-		_ = hasNext
 	}
 	return errs
 }
 
-// CheckErrorTaxonomy mirrors _check_error_taxonomy. This is advisory in the
-// original (returns 0 regardless); returns warnings here so callers may decide.
-func CheckErrorTaxonomy(root string) []string {
+// checkErrorTaxonomy is advisory: returns warnings for skills missing a
+// sufficient ## Error Taxonomy (≥10 codes incl. HALT/RETRY).
+func checkErrorTaxonomy(root string) []string {
 	re := regexp.MustCompile(`(?m)^\s*\|[ ]*` + "`" + `[^` + "`" + `]+` + "`" + `[ ]*\|[ ]*[^|]+?\|[ ]*[^|]*?\*\*(HALT|RETRY)\*\*`)
 	var warns []string
 	for _, f := range skillDirs(root) {
@@ -147,7 +137,7 @@ func CheckErrorTaxonomy(root string) []string {
 	return warns
 }
 
-// te1Patterns mirrors the PATTERNS list in _check_te1_hardcodes.
+// te1Patterns mirrors the PATTERNS list in the original _check_te1_hardcodes.
 var te1Patterns = []struct{ label, pattern string }{
 	{"EngineVersion", `"EngineVersion":\s*"\d+\.\d+"`},
 	{"MongoVersion", `"MongoVersion":\s*"\d+\.\d+"`},
@@ -156,9 +146,8 @@ var te1Patterns = []struct{ label, pattern string }{
 	{"--TargetVersion", `--TargetVersion\s+"\d+\.\d+"`},
 }
 
-// CheckTE1Hardcodes mirrors _check_te1_hardcodes. Advisory (returns 0 in the
-// original); returns candidate warnings here.
-func CheckTE1Hardcodes(root string) []string {
+// checkTE1Hardcodes is advisory: returns candidate hardcoded-version warnings.
+func checkTE1Hardcodes(root string) []string {
 	var warns []string
 	for _, glob := range []string{"ve-*/references/cli-usage.md", "ve-*/SKILL.md"} {
 		matches, _ := filepath.Glob(filepath.Join(root, glob))

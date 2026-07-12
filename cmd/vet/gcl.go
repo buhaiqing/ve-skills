@@ -62,7 +62,7 @@ func runGCLRun(args []string) {
 		CriticJSON:     *criticJSON,
 		CriticStdin:    *criticStdin,
 		CriticCommand:  *criticCmd,
-	})
+	}).ExitCode
 	os.Exit(code)
 }
 

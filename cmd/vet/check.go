@@ -40,7 +40,8 @@ func runCheck(args []string) {
 	fs := flag.NewFlagSet("check "+name, flag.ExitOnError)
 	root := fs.String("root", repoRoot(), "repo root to scan")
 	jsonOut := fs.Bool("json", false, "emit machine-readable JSON")
-	gitDiff := fs.String("git-diff", "", "base revision for semantic-drift (eval only)")
+	gitDiff := fs.Bool("git-diff", false, "enable git-diff semantic-drift (eval only); base defaults to HEAD~1")
+	gitDiffBase := fs.String("git-diff-base", "HEAD~1", "base revision for --git-diff semantic-drift (eval only)")
 	fs.Parse(rest)
 
 	switch name {
@@ -59,8 +60,8 @@ func runCheck(args []string) {
 	case "eval":
 		var evalRes map[string][]string
 		var evalSkills []string
-		if *gitDiff != "" {
-			evalRes, evalSkills = eval.CheckDirGitDiff(*root, *gitDiff)
+		if *gitDiff {
+			evalRes, evalSkills = eval.CheckDirGitDiff(*root, *gitDiffBase)
 		} else {
 			evalRes, evalSkills = eval.CheckDir(*root)
 		}
@@ -130,6 +131,12 @@ func aiopsCheck(root string, jsonOut bool) {
 	if len(rep.SkillsMissingEval) > 0 {
 		fmt.Println("\nMissing eval_queries.json:")
 		for _, s := range rep.SkillsMissingEval {
+			fmt.Printf("  - %s\n", s)
+		}
+	}
+	if len(rep.EvalParseFail) > 0 {
+		fmt.Println("\nCorrupt eval_queries.json (JSON parse failure):")
+		for _, s := range rep.EvalParseFail {
 			fmt.Printf("  - %s\n", s)
 		}
 	}

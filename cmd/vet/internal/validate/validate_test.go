@@ -2,14 +2,13 @@ package validate
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
 // writeSkill writes a SKILL.md (and optional extra files) under a temp root and
-// returns the root path. Caller must os.RemoveAll the result.
+// returns the root path.
 func writeSkill(t *testing.T, files map[string]string) string {
 	t.Helper()
 	root := t.TempDir()
@@ -71,12 +70,12 @@ done
 
 func TestCheckFileIntegrity(t *testing.T) {
 	root := writeSkill(t, map[string]string{"ve-good/SKILL.md": goodSkill})
-	if errs := CheckFileIntegrity(root); len(errs) != 0 {
+	if errs := checkFileIntegrity(root); len(errs) != 0 {
 		t.Fatalf("expected no errors, got %v", errs)
 	}
 
 	root2 := writeSkill(t, map[string]string{"ve-bad/SKILL.md": "hello\x00world"})
-	errs := CheckFileIntegrity(root2)
+	errs := checkFileIntegrity(root2)
 	if len(errs) != 1 || !containsStr(errs[0], "contains null bytes") {
 		t.Fatalf("expected null byte error, got %v", errs)
 	}
@@ -84,19 +83,19 @@ func TestCheckFileIntegrity(t *testing.T) {
 
 func TestCheckRequiredSections(t *testing.T) {
 	root := writeSkill(t, map[string]string{"ve-good/SKILL.md": goodSkill})
-	if errs := CheckRequiredSections(root); len(errs) != 0 {
+	if errs := checkRequiredSections(root); len(errs) != 0 {
 		t.Fatalf("expected no errors, got %v", errs)
 	}
 
 	// meta-skill must be skipped even if missing sections
 	rootMeta := writeSkill(t, map[string]string{"ve-skill-generator/SKILL.md": "no sections here"})
-	if errs := CheckRequiredSections(rootMeta); len(errs) != 0 {
+	if errs := checkRequiredSections(rootMeta); len(errs) != 0 {
 		t.Fatalf("meta-skill should be skipped, got %v", errs)
 	}
 
 	bad := "name: ve-bad\n\n# No trigger section\n"
 	rootBad := writeSkill(t, map[string]string{"ve-bad/SKILL.md": bad})
-	errs := CheckRequiredSections(rootBad)
+	errs := checkRequiredSections(rootBad)
 	if len(errs) == 0 {
 		t.Fatal("expected missing-section errors")
 	}
@@ -107,13 +106,13 @@ func TestCheckRequiredSections(t *testing.T) {
 
 func TestCheckErrorTaxonomy(t *testing.T) {
 	root := writeSkill(t, map[string]string{"ve-good/SKILL.md": goodSkill})
-	if w := CheckErrorTaxonomy(root); len(w) != 0 {
+	if w := checkErrorTaxonomy(root); len(w) != 0 {
 		t.Fatalf("expected no taxonomy warnings, got %v", w)
 	}
 
 	// missing taxonomy → advisory warning
 	rootMissing := writeSkill(t, map[string]string{"ve-bad/SKILL.md": goodSkillNoTaxonomy()})
-	if w := CheckErrorTaxonomy(rootMissing); len(w) == 0 || !containsStr(w[0], "missing ## Error Taxonomy") {
+	if w := checkErrorTaxonomy(rootMissing); len(w) == 0 || !containsStr(w[0], "missing ## Error Taxonomy") {
 		t.Fatalf("expected missing-taxonomy warning, got %v", w)
 	}
 }
@@ -122,7 +121,7 @@ func TestCheckTE1Hardcodes(t *testing.T) {
 	// Hardcoded EngineVersion inside a JSON body should be flagged.
 	src := "do something\n\"EngineVersion\": \"5.0\"\nrest"
 	root := writeSkill(t, map[string]string{"ve-bad/SKILL.md": src})
-	w := CheckTE1Hardcodes(root)
+	w := checkTE1Hardcodes(root)
 	if len(w) == 0 {
 		t.Fatal("expected a TE-1 hardcoded version warning")
 	}
@@ -132,24 +131,38 @@ func TestCheckTE1Hardcodes(t *testing.T) {
 
 	// No hardcodes → clean.
 	rootClean := writeSkill(t, map[string]string{"ve-good/SKILL.md": goodSkill})
-	if w := CheckTE1Hardcodes(rootClean); len(w) != 0 {
+	if w := checkTE1Hardcodes(rootClean); len(w) != 0 {
 		t.Fatalf("expected no TE-1 warnings, got %v", w)
 	}
 }
 
-func TestInlineScriptSourceShape(t *testing.T) {
-	for _, which := range []string{"file_integrity", "required_sections", "error_taxonomy", "te1_hardcodes"} {
-		src := inlineScriptSource(which)
-		if !containsStr(src, "def main():") {
-			t.Fatalf("%s: missing main()", which)
+func TestBuildStepsPureGo(t *testing.T) {
+	// The validation suite must not depend on python3 — every step runs
+	// in-process Go. Assert the step list is non-empty and that none of
+	// the step names reference an external python interpreter.
+	steps := buildSteps()
+	if len(steps) == 0 {
+		t.Fatal("expected non-empty step list")
+	}
+	for _, s := range steps {
+		if s.run == nil {
+			t.Fatalf("step %q has nil run func", s.name)
 		}
-		if !containsStr(src, "sys.exit(main())") {
-			t.Fatalf("%s: missing sys.exit(main())", which)
+	}
+	// Regression guard: the suite used to shell out to python3 scripts.
+	// The unit-test step exercises `go test`, never `python3`.
+	for _, s := range steps {
+		if strings.Contains(s.name, "python3") {
+			t.Fatalf("step %q still references python3", s.name)
 		}
-		// The four inline sources must be syntactically valid Python.
-		if _, err := execPython("-c", src); err != nil {
-			t.Fatalf("%s: generated python invalid: %v", which, err)
-		}
+	}
+}
+
+func TestRunListOnlyDoesNotExecute(t *testing.T) {
+	root := writeSkill(t, map[string]string{"ve-good/SKILL.md": goodSkill})
+	_, _, total := Run(root, true)
+	if total != len(buildSteps()) {
+		t.Fatalf("listOnly total %d != buildSteps %d", total, len(buildSteps()))
 	}
 }
 
@@ -182,11 +195,4 @@ done
 
 func containsStr(s, sub string) bool {
 	return strings.Contains(s, sub)
-}
-
-func execPython(args ...string) (string, error) {
-	py := python3()
-	cmd := exec.Command(py, args...)
-	out, err := cmd.CombinedOutput()
-	return string(out), err
 }
