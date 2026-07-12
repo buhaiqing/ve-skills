@@ -2,10 +2,6 @@ version: 2
 
 project_name: vet
 
-before:
-  hooks:
-    - cd cmd/vet && go mod tidy
-
 builds:
   - id: vet
     dir: ./cmd/vet
