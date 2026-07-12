@@ -12,11 +12,23 @@ These supplement `CLAUDE.md` (imported above). They encode lessons that have alr
 
 ---
 
+## Code Quality Rule (applies to `cmd/vet/**` Go code)
+
+All Go code under `cmd/vet/` MUST uphold:
+
+- **Reusability** — extract shared logic into `internal/` packages; do not duplicate helpers across commands.
+- **Simplicity** — keep it minimal; no premature abstraction, no dead code, no over-engineering.
+- **Readability** — clear names that state intent; comments explain WHY not WHAT.
+- **Testability** — pure, deterministic functions; cover happy path + error path with `_test.go`.
+- **Security** — never log or commit real credentials; mask secrets in all trace/GCL output; keep the credential-masking path covered by tests.
+
+---
+
 ## Repository Type — Read This First
 
 This repo contains **only Markdown skill specifications**. There is:
 
-- **No build system, no tests, no lint, no package manager.** Do not run `go build`, `go test`, `npm`, `pip`, `make`, etc. — they will fail or do nothing.
+- **No build system, no tests, no lint, no package manager** — *except* the `vet` Go CLI under `cmd/vet/` (its own `go.mod`; build/test/lint there are real and required). For everything else (the Markdown skill specs), do not run `go build`, `go test`, `npm`, `pip`, `make`, etc. — they will fail or do nothing.
 - **No runtime code.** The `ve` CLI and Go SDK referenced in skills are *consumed by* generated skills at execution time, not built here.
 - **No CI workflows yet.** Verification is human review against the P0/P1 checklist in `ve-skill-generator/SKILL.md` (see also **Files that DO NOT exist** below).
 
