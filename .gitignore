@@ -58,3 +58,6 @@ dist/
 
 # CodeGraph local index — never commit
 .codegraph/
+
+# vet CLI build output
+cmd/bin/

@@ -1,6 +1,6 @@
 # Makefile — vet CLI release automation
 #
-# Fully automated flow:  make release VERSION=0.1.1
+# Fully automated flow:  make release VERSION=0.1.1   (VERSION may omit the 'v' prefix)
 #   1. creates git tag v0.1.1
 #   2. pushes the tag  ->  GitHub Action (.github/workflows/release.yml)
 #                         builds 6 cross-platform binaries and creates the
@@ -13,8 +13,8 @@
 -include .env
 
 REPO        ?= buhaiqing/ve-skills
-VERSION     ?= 0.1.3
-TAG         := v$(VERSION)
+VERSION     := $(shell v=$$(git describe --tags --always --dirty 2>/dev/null || echo "0.0.0-dev"); echo "$${v#v}")
+TAG         := v$(VERSION:v%=%)
 REMOTE      ?= origin
 
 .PHONY: help tag push release release-api build test install clean check
@@ -24,6 +24,7 @@ help:
 	@echo "  make release VERSION=0.1.1      tag v0.1.1 + push  -> GitHub Action publishes the release"
 	@echo "  make tag VERSION=0.1.1          create + push tag only"
 	@echo "  make release-api VERSION=0.1.1  create GitHub Release directly via API (needs GITHUB_TOKEN)"
+	@echo "  (VERSION may be given with or without the 'v' prefix, e.g. v0.1.1 == 0.1.1)"
 	@echo "  make build                      build vet for the current platform"
 	@echo "  make test                       run go tests"
 	@echo "  make install                    install vet via install.sh"
@@ -45,7 +46,8 @@ release-api:
 	goreleaser release --clean
 
 build:
-	cd cmd/vet && go build -o ../bin/vet .
+	@mkdir -p cmd/bin
+	cd cmd/vet && go build -ldflags "-X main.version=$(VERSION) -X main.commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo '')" -o $(CURDIR)/cmd/bin/vet .
 
 test:
 	cd cmd/vet && go test ./...

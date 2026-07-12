@@ -19,7 +19,8 @@ import (
 )
 
 // version is overridden at build time via -ldflags "-X main.version=...".
-var version = "0.0.0-dev"
+var version = ""
+var commit = ""
 
 func main() {
 	if len(os.Args) < 2 {
@@ -61,5 +62,13 @@ Use "vet <command> -h" for more information.`)
 func runVersion(args []string) {
 	fs := flag.NewFlagSet("version", flag.ExitOnError)
 	fs.Parse(args)
-	fmt.Printf("vet %s\n", version)
+	v := version
+	if v == "" {
+		v = "0.0.0-dev"
+	}
+	if commit != "" {
+		fmt.Printf("vet %s (%s)\n", v, commit)
+	} else {
+		fmt.Printf("vet %s\n", v)
+	}
 }
