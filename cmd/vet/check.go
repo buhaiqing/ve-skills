@@ -40,6 +40,7 @@ func runCheck(args []string) {
 	fs := flag.NewFlagSet("check "+name, flag.ExitOnError)
 	root := fs.String("root", repoRoot(), "repo root to scan")
 	jsonOut := fs.Bool("json", false, "emit machine-readable JSON")
+	gitDiff := fs.String("git-diff", "", "base revision for semantic-drift (eval only)")
 	fs.Parse(rest)
 
 	switch name {
@@ -56,7 +57,13 @@ func runCheck(args []string) {
 		linkRes, linkSkills := links.CheckDir(*root)
 		perSkillCheck("links", linkRes, linkSkills, *jsonOut)
 	case "eval":
-		evalRes, evalSkills := eval.CheckDir(*root)
+		var evalRes map[string][]string
+		var evalSkills []string
+		if *gitDiff != "" {
+			evalRes, evalSkills = eval.CheckDirGitDiff(*root, *gitDiff)
+		} else {
+			evalRes, evalSkills = eval.CheckDir(*root)
+		}
 		perSkillCheck("eval", evalRes, evalSkills, *jsonOut)
 	default:
 		fmt.Fprintf(os.Stderr, "vet check %s: not implemented yet\n", name)
