@@ -85,7 +85,7 @@ Verify against reality, not memory:
 | Any skill harness review | Walk [docs/skill-harness-review-checklist.md](docs/skill-harness-review-checklist.md) D0-D4 |
 | Any Go SDK example code change | `python3 -m py_compile <file>` if Python; Go examples are illustrative — no build step |
 
-> **Note:** This repo has automated validation scripts in `scripts/` for pre-commit checks (see **Files that DO NOT exist** below). After changes, run `python3 scripts/validate_local.py` if available, then supplement with manual checks against the P0/P1 checklist.
+> **Note:** This repo has a Go validation CLI, `vet` (built from `cmd/vet/`), which replaces the legacy Python scripts in `scripts/` for pre-commit checks. After changes, run `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`), then supplement with manual checks against the P0/P1 checklist. The Python scripts remain as the original reference implementation.
 
 ---
 
@@ -186,7 +186,7 @@ Verify against reality, not memory:
 ### 评审执行步骤（按顺序）
 
 ```
-1. 运行自动化检查 → python3 scripts/validate_local.py
+1. 运行自动化检查 → vet validate --root . （或 python3 scripts/validate_local.py 作为原始参考实现）
 2. 检查 frontmatter → name/description/license/compatibility 齐全
 3. 检查 Trigger & Scope → SHOULD/SHOULD NOT 子节存在，确认路由边界
 4. 检查 Steps → 每个操作有明确的 I/O 定义和失败处理
@@ -293,7 +293,7 @@ Adaptive compression strategy for token management:
 - **Never invent CLI flags or API parameters.** Only official OpenAPI or `ve <service> <action> --help` verified fields.
 - **Single-product rule.** One `ve-*-ops` skill = one product = one primary resource model.
 - **Prefer editing existing skills over creating new files.** No tutorial-style `.md` at the repo root.
-- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`scripts/validate_skills_frontmatter.py` `ORCHESTRATION_TYPES`). The single-product rule does not apply to them (they coordinate, not own, a product).
+- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`scripts/validate_skills_frontmatter.py` `ORCHESTRATION_TYPES`). The single-product rule does not apply to them (they coordinate, not own, a product). The GCL conformance allowlist (`ORCHESTRATION_TYPES`) lives in `cmd/vet/internal/check/frontmatter/frontmatter.go` (and is mirrored in the legacy `scripts/validate_skills_frontmatter.py`).
 
 ## File Layout Anchors (do not relocate without reason)
 
@@ -408,13 +408,14 @@ See [docs/gcl-spec.md](docs/gcl-spec.md) §11 for the full rollout changelog.
 
 ### Build-time regression
 
-Automated validation scripts are available in `scripts/` for pre-commit checks (see **Files that DO NOT exist** below). After changing any skill, run `python3 scripts/validate_local.py` if available, then manually verify against the P0/P1 checklist in `ve-skill-generator/SKILL.md` and the 2-round self-review above.
+The `vet` CLI (from `cmd/vet/`) is the primary validation tool for pre-commit checks, replacing the legacy Python scripts in `scripts/`. After changing any skill, run `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`), then manually verify against the P0/P1 checklist in `ve-skill-generator/SKILL.md` and the 2-round self-review above. The Python scripts remain as the original reference implementation.
 
 ### Runtime GCL
 
-`scripts/gcl_runner.py` implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
+`vet gcl run` (Go port of `scripts/gcl_runner.py`) implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
 - External Critic via `--critic-json` or stdin (production mode)
 - `--structural-critic-only` for CI/local structural smoke tests only (NOT for production mutations)
+- `vet gcl gate` runs the structural CI gate across all skills; `vet gcl trace` aggregates `audit-results/gcl-trace-*.json` into a quality summary.
 
 GCL runs MUST use externally supplied isolated Critic scores in production. Manual execution following `docs/gcl-spec.md` is also acceptable.
 

@@ -13,24 +13,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for git merge-base (eval regression --git-diff)
+          fetch-depth: 0  # needed for git merge-base (eval --git-diff)
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          python-version: "3.11"
+          go-version: "1.22"
 
-      - name: Validate skills frontmatter
-        run: python3 scripts/validate_skills_frontmatter.py
+      - name: Build vet
+        working-directory: cmd/vet
+        run: go build -o ../bin/vet .
+
+      - name: Check skill frontmatter
+        run: cmd/bin/vet check frontmatter --root .
 
       - name: Check markdown links
-        run: python3 scripts/check_markdown_links.py
+        run: cmd/bin/vet check links --root .
 
       - name: Check GCL conformance
-        run: python3 scripts/check_gcl_conformance.py
+        run: cmd/bin/vet check gcl --root .
 
-      - name: Run local validation
-        run: python3 scripts/validate_local.py
+      - name: Check eval regression (absolute + git-diff)
+        run: cmd/bin/vet check eval --root . --git-diff origin/main
 
-      - name: Check eval regression (absolute match + git-diff)
-        run: python3 scripts/check_eval_regression.py --git-diff origin/main
+      - name: Run local validation suite
+        run: cmd/bin/vet validate --root .
+
+      - name: GCL structural CI gate
+        run: cmd/bin/vet gcl gate --root . --skip-incident-loop
