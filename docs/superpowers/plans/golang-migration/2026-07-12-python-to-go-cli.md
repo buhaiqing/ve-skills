@@ -165,6 +165,11 @@ CodeGraph sync 在两层的触发方式不同：
 ## 6. 状态
 
 - **M0**：✅ 完成（push / codegraph init / 计划定稿 / AGENTS.md CodeGraph 节）
-- **M1–M5**：⏳ 待执行（独立文档已就绪）
+- **M1**：✅ 完成（cmd/vet module + 路由骨架 + goreleaser 5平台 + release/vet-test Actions + install.sh + CodeGraph 收录；commit `30786cf`）
+- **M2.1** `vet check frontmatter`：✅ 完成（Go 端口，等价 29/29；本会话修复 inverted-OK bug 后提交）
+- **M2.2–M2.7** `vet check aiops|assessment|gcl|links|eval` + `vet validate`：⏳ 待执行
+- **M3** `vet gcl run|gate|trace`：⏳ 待执行（gcl.go 占位）
+- **M4** CI/文档切换：⏳ 待执行
+- **M5** 首次发布 tag `vet/v0.1.0`：⏳ 待执行
 
 > 开发过程按里程碑推进，每里程碑结束汇报结果，不跨里程碑自动推进。
