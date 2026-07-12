@@ -13,7 +13,7 @@
 -include .env
 
 REPO        ?= buhaiqing/ve-skills
-VERSION     ?= 0.1.0
+VERSION     ?= 0.1.3
 TAG         := v$(VERSION)
 REMOTE      ?= origin
 
