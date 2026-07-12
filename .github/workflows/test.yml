@@ -1,0 +1,53 @@
+name: test
+
+on:
+  pull_request:
+    paths:
+      - "cmd/vet/**"
+      - ".goreleaser.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "cmd/vet/**"
+      - ".goreleaser.yaml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build
+        working-directory: cmd/vet
+        run: go build ./...
+
+      - name: Test
+        working-directory: cmd/vet
+        run: go test ./...
+
+  goreleaser-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Check GoReleaser config
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check
