@@ -71,6 +71,11 @@
 □ 5. 标注规范文档第 §4 把 metadata 列为 C18（新增 DoD 项）
 □ 6. 全局门禁：go build + go vet 干净
 □ 7. vet check frontmatter --root . 干净（验证 SKILL.md 未破 frontmatter）
+□ 8. vet check aiops --root . / vet check assessment --root . 仍干净（防误改高级章节）
+□ 9. 每个被修改的 8 个 SKILL.md 的 `Changelog` 已追加版本条目（版本/日期/变更说明）
+□ 10. `ve-skill-generator/references/leaf-op-metadata-spec.md` 的 `last_updated` 字段已刷新
+□ 11. `incident-loop-agent/references/policies/domain-allowlist.md`（T03）已能引用本规范作为输入
+□ 12. ledger 已登记（格式：`## T04 YYYY-MM-DD — done` + 8 skill 与规范 doc 一句话清单）
 ```
 
 ## 5. 验证命令

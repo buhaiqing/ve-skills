@@ -176,7 +176,10 @@ Strictly sequential at the gate level: **P2 (AUTO path) cannot ship before P3 (m
 ## 9. References
 
 - [`docs/autonomous-ops-roadmap.md`](./autonomous-ops-roadmap.md) — M1 (this plan) → M4, rating baseline, cross-cutting gates
-- [`docs/l2-to-l3-tasks/`](./l2-to-l3-tasks/) — **per-task cards for AI-driven iteration** (T01–T08, index, trace ledger)
+- [`docs/l2-to-l3-tasks/AGENTS.md`](./l2-to-l3-tasks/AGENTS.md) — **AI Agent 入口规则**（能力边界 + TDD + GCL + 文档更新）
+- [`docs/l2-to-l3-tasks/`](./l2-to-l3-tasks/) — per-task cards for AI-driven iteration (T01–T08, index, trace ledger)
+- [`docs/l3-to-l4-tasks/AGENTS.md`](./l3-to-l4-tasks/AGENTS.md) — L4 升级的 AI Agent 入口规则（前置 L2→L3 完成）
+- [`docs/l3-to-l4-tasks/`](./l3-to-l4-tasks/) — M2–M4 task cards (T09–T16, L3→L4)
 - [`incident-loop-agent/SKILL.md`](./incident-loop-agent/SKILL.md) — current loop contract (blocker lines `:150-154,184`)
 - [`ve-skill-generator/references/enhanced-self-healing-framework.md`](./ve-skill-generator/references/enhanced-self-healing-framework.md) — self-healing L1 (current) → L5 ladder (M2 later)
 - [`docs/reflexion-memory.md`](./reflexion-memory.md) — learning boundary (HINT vs constraint; M3 later)

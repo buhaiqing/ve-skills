@@ -57,6 +57,9 @@
 □ 5. metadata_complete=false → 默认 ASK（fail-safe）
 □ 6. 文件 ≤ 3 KB
 □ 7. draft 2020-12 标记
+□ 8. `incident-loop-agent/SKILL.md` 的 `## References` 已同步 `execution-risk.schema.json` 路径
+□ 9. T01 的 `execution-risk.md` 已能反向引用本 schema 文件名（防止双源真相漂移）
+□ 10. ledger 已登记（含 schema 字节数）
 ```
 
 ## 5. 验证命令

@@ -54,6 +54,9 @@
 □ 7. 行数 ≤ 100
 □ 8. 顶部 1 句话 Purpose 明确"L2→L3 替换硬门"
 □ 9. TE-3/6/8 检查通过（自查）
+□ 10. `incident-loop-agent/SKILL.md` 的 `## References` 小节已新增 `execution-risk.md` 路径
+□ 11. `incident-loop-agent/SKILL.md` 的 `Changelog` 已追加版本条目（版本/日期/变更说明）
+□ 12. ledger 已登记（格式：`## T01 YYYY-MM-DD — done` + 交付物一句话）
 ```
 
 ## 5. 验证命令

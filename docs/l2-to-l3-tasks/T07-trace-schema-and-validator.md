@@ -70,6 +70,11 @@ func Check(root string) error
 □ 6. cmd/vet check trace --root . 对伪造文件（含 redaction_pass=false）报错
 □ 7. cmd/vet check trace --root . 对伪造文件（缺 RequestId）报错
 □ 8. go test ./... 包含 trace_test
+□ 9. `incident-loop-agent/SKILL.md` 的 `## Operational Best Practices` 已确认 trace 路径写法与 schema 一致
+□ 10. `.github/workflows/validate.yml` 已加入 `vet check trace --root .` 阶段（如尚未）
+□ 11. `cmd/vet/check.go` 与 `cmd/vet/internal/check/trace/` 的 README 已同步新子命令
+□ 12. `docs/gcl-spec.md` §9 anti-patterns 段落确认未引入新禁止行为；如引入则 §8 同步登记
+□ 13. ledger 已登记（含 schema 必填字段摘要 + 反例 case 编号）
 ```
 
 ## 5. 验证命令

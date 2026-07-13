@@ -50,6 +50,11 @@ ASK 类别仍要求 `{{user.confirm}}`（保持 L2 安全底线），
 □ 5. What This Skill Does 加 auto-exec 一句
 □ 6. 至少 2 个新的 references 链接存在
 □ 7. vet check frontmatter / gcl 仍干净
+□ 8. `incident-loop-agent/SKILL.md` frontmatter 的 `version` 已 bump（v0.1.0 → v0.2.0），`last_updated` 已更新
+□ 9. `incident-loop-agent/SKILL.md` 的 `Changelog` 已追加版本条目（含本次变更摘要）
+□ 10. `incident-loop-agent/SKILL.md` 的 `## References` 已新增 `execution-risk.md` / `domain-allowlist.md` 等本卡引入的引用路径
+□ 11. `incident-loop-agent/references/rubric.md` 的 Reflexion 评分维度已确认仍覆盖本卡改动
+□ 12. ledger 已登记（格式：`## T05 YYYY-MM-DD — done` + 交付物一句话）
 ```
 
 ## 5. 验证命令

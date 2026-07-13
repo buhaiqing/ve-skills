@@ -73,6 +73,16 @@ func RunLoop(planPath string) (*Trace, error)
 □ 7. `vet gcl run --help` 已含 incident-loop 入口（既有，非新建）
 □ 8. vet gcl run --max-iter 0 ... 显式报错（不静默忽略）
 □ 9. 单元测试覆盖：safety=0 → REFUSE；destructive → max_iter=2；非 destructive → max_iter=3
+□ 10. **GCL 规范门禁**（依赖 [`../../docs/gcl-spec.md`](../../docs/gcl-spec.md)）：
+    - Generator / Critic 上下文隔离（不在同一 goroutine/shared state 中评分）
+    - Safety=0 → ABORT 不可降级
+    - trace 必含 RequestId + `redaction_pass: true`
+    - max_iter 超限 trace 含 `unresolved_items` 字段
+□ 11. `vet gcl run --help` 输出新增 `--max-iter` 与 `--critic-json` 两个开关的可读说明
+□ 12. `incident-loop-agent/SKILL.md` frontmatter `compatibility` 字段已从 `scripts/gcl_runner.py` 改为 `vet gcl run`（如未改由 T06 修改）
+□ 13. `.github/workflows/validate.yml` 已加入 `vet gcl run --dry-run` 阶段（如尚未）
+□ 14. `docs/gcl-spec.md` §9 anti-patterns 段落确认未引入新禁止行为；如引入则 §8 同步登记
+□ 15. ledger 已登记（含版本/日期；含 4 函数名 + 9 格矩阵覆盖摘要）
 ```
 
 ## 5. 验证命令

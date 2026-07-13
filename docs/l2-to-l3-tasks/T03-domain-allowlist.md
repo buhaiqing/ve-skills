@@ -47,6 +47,9 @@ L3 起步要"窄"（防 safety regression），先放 8 个 `incident-loop-agent
 □ 4. §3 explicit exclusions 显式列出"destructive ops 全列"原则
 □ 5. §4 expansion policy 给出 count/时间/事故三维条件
 □ 6. 行数 ≤ 80
+□ 7. `incident-loop-agent/SKILL.md` 的 `## References` 已同步 `domain-allowlist.md` 路径
+□ 8. `incident-loop-agent/SKILL.md` frontmatter `coordinates` 字段与 allowlist §1 列表 1:1 一致（grep 对照 `incident-loop-agent/SKILL.md` 的 coordinates 块）
+□ 9. ledger 已登记（含 8 skill 列表摘要）
 ```
 
 ## 5. 验证命令

@@ -71,7 +71,12 @@ func Check(planPath string) error
 □ 6. go build + go vet + go test 全部绿
 □ 7. go test -run TestSafetyInvariant 覆盖 3 条不变量
 □ 8. vet check policyguard --root . 对干净仓库给 OK
-□ 9. CI（validate.yml）已含 vet check policyguard
+□ 9. CI（validate.yml）已含 vet check policyguard — **本卡强制要求**（缺此步骤则视为未完成 L3 出口）
+□ 10. `.github/workflows/validate.yml` 同步更新（步骤顺序：`build vet → check frontmatter → check gcl → check eval → check policyguard → validate`）
+□ 11. `incident-loop-agent/assets/eval_queries.json` 的 `last_updated` 字段已刷新
+□ 12. `incident-loop-agent/SKILL.md` 的 `## What This Skill Does` 已确认覆盖 policyguard 用途
+□ 13. `cmd/vet/internal/check/policyguard/` 的 README.md 已写（含 3 条不变量的陈述与示例）
+□ 14. ledger 已登记（含 9 case 与 3 条不变量名单）
 ```
 
 ## 5. 验证命令

@@ -9,6 +9,8 @@ These supplement `CLAUDE.md` (imported above). They encode lessons that have alr
 > - `docs/self-review-checklist.md` — Round 1 (C1–C17) + Round 2 (F1–F13) checklists + validation matrix
 > - `docs/execution-strategy.md` — E1–E4 decision rules, runtime adaptation, retro reflection
 > - `docs/l2-to-l3-plan.md` — detailed L2→L3 (conditional autonomy) execution plan (M1 expansion)
+> - `docs/l2-to-l3-tasks/AGENTS.md` — AI 入口规则 for L2→L3 tasks (Karpathy + TDD + GCL + 文档更新)
+> - `docs/l3-to-l4-tasks/AGENTS.md` — AI 入口规则 for L3→L4 tasks (envelope / SLO / 自愈 L3 / Reflexion 4 级)
 > - `docs/codegraph-integration.md` — CodeGraph two-tier sync rules
 > - `docs/inline-script-pattern.md` — `_inline_script()` implementation constraints for validation scripts
 >
@@ -318,6 +320,8 @@ CodeGraph (`codegraph` CLI) 维护仓库知识图谱，使 AI 能检索符号、
 | `docs/self-review-checklist.md` | **Two-round self-review checklist** — Round 1 (C1–C17) + Round 2 (F1–F13) + validation matrix |
 | `docs/execution-strategy.md` | **Execution strategy** — E1–E4 parallel/adaptive/reflection rules + retro checklist |
 | `docs/l2-to-l3-plan.md` | **L2→L3 plan** — conditional-autonomy execution plan (M1): execution-risk policy + P1–P7 tasks + L3 DoD |
+| `docs/l2-to-l3-tasks/AGENTS.md` | **L2→L3 task AGENTS.md** — AI entry rules (Karpathy + TDD + GCL + 文档更新 + 12 节工程化规则) |
+| `docs/l3-to-l4-tasks/AGENTS.md` | **L3→L4 task AGENTS.md** — AI entry rules (Karpathy + L4 envelope / SLO / 自愈 / Reflexion 4 级 + 13 节工程化规则) |
 | `docs/codegraph-integration.md` | **CodeGraph integration** — two-tier sync rules for knowledge-graph maintenance |
 | `docs/inline-script-pattern.md` | **Inline script pattern** — `_inline_script()` implementation constraints for validation scripts |
 | `docs/superpowers/plans/golang-migration/2026-07-12-python-to-go-cli.md` | **Python→Go (`vet`) + CodeGraph 计划** — 里程碑、子任务拆分、并行策略 |
