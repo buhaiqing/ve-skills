@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Execution Risk Policy (L3)",
+  "description": "Machine-readable twin of references/policies/execution-risk.md. Scores a dispatch_plan op as AUTO/ASK/REFUSE. Safety=0 always REFUSE; missing metadata always ASK (fail-safe). Covers the 9-cell matrix of T01 §2.",
+  "type": "object",
+  "required": ["operation", "decision"],
+  "properties": {
+    "operation": {
+      "type": "object",
+      "required": ["safety_class", "blast_radius", "confidence", "safety", "metadata_complete"],
+      "properties": {
+        "safety_class": { "enum": ["read-only", "state-changing", "destructive"] },
+        "blast_radius": { "enum": ["single", "multi", "account-or-region", "unknown"] },
+        "confidence": { "enum": ["low", "medium", "high"] },
+        "safety": { "type": "integer", "enum": [0, 1] },
+        "metadata_complete": { "type": "boolean" }
+      }
+    },
+    "decision": { "enum": ["AUTO", "ASK", "REFUSE"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "operation": { "properties": { "safety": { "const": 0 } } } } },
+      "then": { "properties": { "decision": { "const": "REFUSE" } } },
+      "else": {
+        "allOf": [
+          {
+            "if": { "properties": { "operation": { "properties": { "metadata_complete": { "const": false } } } } },
+            "then": { "properties": { "decision": { "enum": ["ASK", "REFUSE"] } } },
+            "else": {
+              "allOf": [
+                { "if": { "properties": { "operation": { "properties": { "safety_class": { "const": "read-only" } } } } }, "then": { "properties": { "decision": { "const": "AUTO" } } } },
+                { "if": { "properties": { "operation": { "properties": { "safety_class": { "const": "destructive" } } } } }, "then": { "properties": { "decision": { "const": "ASK" } } } },
+                { "if": { "properties": { "operation": { "properties": { "safety_class": { "const": "state-changing" }, "blast_radius": { "const": "single" }, "confidence": { "const": "high" } } } } }, "then": { "properties": { "decision": { "const": "AUTO" } } } },
+                { "if": { "properties": { "operation": { "properties": { "safety_class": { "const": "state-changing" }, "blast_radius": { "not": { "const": "single" } } } } } }, "then": { "properties": { "decision": { "const": "ASK" } } } },
+                { "if": { "properties": { "operation": { "properties": { "safety_class": { "const": "state-changing" }, "blast_radius": { "const": "single" }, "confidence": { "not": { "const": "high" } } } } } }, "then": { "properties": { "decision": { "const": "ASK" } } } }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
