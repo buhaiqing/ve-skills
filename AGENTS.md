@@ -60,6 +60,14 @@ Verification for skill edits = re-reading the file plus walking the P0/P1 checkl
 
 ---
 
+## Session-Observed Environment Notes (2026-07-13)
+
+> 沉淀自 L2→L3 任务（T01–T04）执行复盘，适用于本仓库所有 Agent 任务。
+
+- **Background 子代理派发在本环境不可用**：`task(subagent_type="executor"/"build", run_in_background=true)` 会静默超时（"Task timed out after 30 minutes of inactivity" / "Task delegation failed"），代理实际从未运行；前台 `task()` 也须用 `category` 参数，不能直接传 `subagent_type="Sisyphus-Junior"`（报 "Cannot use subagent_type directly"）。→ **多文件机械性改动直接在主代理内完成**，勿派发子代理。
+- **机械性批量改写**（如给 N 个 SKILL.md 操作表统一加列）：用一次性 `/tmp/*.py` 脚本（不入库、非仓库工具，符合"仓库内不新增 Python 工具"约束）最可靠；改完用 grep 验证每行生效。
+- `vet validate --root .` 的链接检查有**预存坏链**（`enhanced-self-healing-framework.md` / `AGENTS.md` / `ve-ecs-ops/SKILL.md` / `reflexion-memory.md` 的 `./` 链接，早于本任务、非本任务引入），与卡片范围无关；卡片 DoD 门禁 `vet check frontmatter/aiops/assessment` 保持绿即可，勿被预存链接失败阻塞。
+
 ## MANDATORY: Two-Round Self-Review After Every Skill Update
 
 After ANY edit to a `ve-*-ops/SKILL.md`, its `references/*.md`, `assets/*`, or to `ve-skill-generator/**`, you MUST run **two rounds of self-review** before declaring done. Fix every issue surfaced — do not just list them.
