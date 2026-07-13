@@ -165,31 +165,31 @@ ve billing DescribeBills --Period "$(date +%Y-%m)" --Region "{{env.VOLCENGINE_RE
 
 | Operation | Description | Complexity | Risk Level | | safety_class | blast_radius |
 |-----------|-------------|------------|------------||---|---|
-| **Core Queries** | | | | | state-changing | single |
+| **Core Queries** | | | | | |
 | DescribeBills | Query monthly bills | Low | None | | read-only | single |
 | DescribeBillDetail | Get bill line items | Low | None | | read-only | single |
 | DescribeBalance | Check account balance | Low | None | | read-only | single |
-| **Budget Management** | | | | | state-changing | single |
+| **Budget Management** | | | | | |
 | CreateBudget | Set spending budget | Medium | Low | | state-changing | single |
 | DescribeBudgets | List budgets | Low | None | | read-only | single |
 | ModifyBudget | Update budget threshold | Medium | Low | | state-changing | single |
 | DeleteBudget | Remove budget | Low | Medium | | destructive | single |
-| **Reserved Instances** | | | | | state-changing | single |
+| **Reserved Instances** | | | | | |
 | DescribeReservedInstances | View RI utilization | Low | None | | read-only | single |
-| **Analyzers** | | | | | state-changing | single |
-| AnalyzeCostTrend | Month-over-month trend analysis | Medium | None | | state-changing | single |
+| **Analyzers** | | | | | |
+| AnalyzeCostTrend | Month-over-month trend analysis | Medium | None | | read-only | single |
 | FindCostDrivers | Top N cost driver identification | Medium | None | | read-only | single |
-| AnalyzeRIUtilization | RI coverage and utilization analysis | Medium | None | | state-changing | single |
-| DetectCostAnomaly | Identify abnormal cost changes | Medium | None | | state-changing | single |
-| PredictSpending | Month-end cost forecast | Medium | None | | state-changing | single |
-| **Optimizers** | | | | | state-changing | single |
+| AnalyzeRIUtilization | RI coverage and utilization analysis | Medium | None | | read-only | single |
+| DetectCostAnomaly | Identify abnormal cost changes | Medium | None | | read-only | single |
+| PredictSpending | Month-end cost forecast | Medium | None | | read-only | single |
+| **Optimizers** | | | | | |
 | GenerateRightSizingRec | Right-sizing recommendations | High | Medium | | state-changing | single |
-| IdentifyIdleResources | Idle resource detection | Medium | None | | state-changing | single |
-| **Reports** | | | | | state-changing | single |
-| GenerateDailyReport | Daily billing summary | Low | None | | state-changing | single |
-| GenerateWeeklyReport | Weekly cost analysis | Medium | None | | state-changing | single |
-| GenerateMonthlyReport | Monthly deep-dive analysis | High | None | | state-changing | single |
-| GenerateOptimizationReport | Cost optimization proposal | High | None | | state-changing | single |
+| IdentifyIdleResources | Idle resource detection | Medium | None | | read-only | single |
+| **Reports** | | | | | |
+| GenerateDailyReport | Daily billing summary | Low | Low | | state-changing | single |
+| GenerateWeeklyReport | Weekly cost analysis | Medium | Medium | | state-changing | single |
+| GenerateMonthlyReport | Monthly deep-dive analysis | High | Medium | | state-changing | single |
+| GenerateOptimizationReport | Cost optimization proposal | High | Medium | | state-changing | single |
 
 ## Execution Flows (Agent-Readable)
 

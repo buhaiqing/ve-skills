@@ -179,9 +179,9 @@ ve kms CreateKey --KeySpec AES_256 --KeyUsage ENCRYPT_DECRYPT --Region {{env.VOL
 | EnableKey | Enable a disabled key | Low | Low | | state-changing | single |
 | DisableKey | Disable a key (reversible) | Low | Medium | | state-changing | single |
 | ScheduleKeyDeletion | Schedule key deletion (irreversible after waiting period) | Medium | 🔴 **High** | | state-changing | single |
-| CancelKeyDeletion | Cancel pending deletion | Low | Low | | destructive | single |
+| CancelKeyDeletion | Cancel pending deletion | Low | Low | | state-changing | single |
 | Encrypt | Encrypt plaintext data | Low | Low | | state-changing | single |
-| Decrypt | Decrypt ciphertext | Low | ✅ None | | state-changing | single |
+| Decrypt | Decrypt ciphertext | Low | ✅ None | | read-only | single |
 | GenerateDataKey | Generate a data key (returns plaintext + encrypted) | Medium | 🔴 **High** — handle plaintext securely | | state-changing | single |
 | GenerateDataKeyWithoutPlaintext | Generate data key (encrypted only) | Low | Low | | state-changing | single |
 | DescribeKeyRotation | View rotation status | Low | ✅ None | | read-only | single |
@@ -190,7 +190,7 @@ ve kms CreateKey --KeySpec AES_256 --KeyUsage ENCRYPT_DECRYPT --Region {{env.VOL
 | GetKeyPolicy | Get key access policy | Low | ✅ None | | read-only | single |
 | CreateGrant | Create a grant for key access | Medium | Medium | | state-changing | single |
 | ListGrants | List grants for a key | Low | ✅ None | | read-only | single |
-| RevokeGrant | Revoke a grant | Low | Medium | | destructive | single |
+| RevokeGrant | Revoke a grant | Low | Medium | | state-changing | single |
 
 ## Changelog
 | Version | Date | Changes |
