@@ -19,3 +19,27 @@
 - GCL 纪律式自审 PASS（Safety=1），trace: `_trace/gcl-trace-T01-20260713-a1f3c9.md`
 - T02/T03 可解锁
 
+## T02 2026-07-13 — done
+
+- 交付：`incident-loop-agent/assets/execution-risk.schema.json`（≤3KB, draft 2020-12）
+- 9-cell 决策矩阵 + Safety=0→REFUSE（if/then 硬规则）+ 缺元数据→ASK（fail-safe）
+- 与 `execution-risk.md` prose 对齐；jsonschema 校验 9 cell 全 PASS、Safety=0 必 REFUSE、缺字段必 ASK
+- 提交 dd0ee22（feature/t02-execution-risk-schema → main）
+- T05 可解锁（schema 已就绪，T06 scorer 可消费）
+
+## T03 2026-07-13 — done
+
+- 交付：`incident-loop-agent/references/policies/domain-allowlist.md`（48 行）
+- 8 协调 skill 1:1 对应 `coordinates`；每 skill 症状白名单；显式排除 destructive op；扩展策略（≥10 traces + 0 incident + 30d）
+- 提交 150a477（feature/t03-domain-allowlist → main）
+- T05 可解锁
+
+## T04 2026-07-13 — done
+
+- 交付：`ve-skill-generator/references/leaf-op-metadata-spec.md` + 8 leaf SKILL.md 操作表加 `safety_class`/`blast_radius` 两列
+- 8 skill 操作表头均含两列，操作行数与加标行数一致（cms 12 / ecs 24 / rds 18 / redis 16 / vpc 11 / iam 23 / kms 17 / billing 25）
+- 保守分类：destructive/read-only 按关键词，其余 state-changing；blast_radius 默认 single
+- `vet check frontmatter/aiops/assessment` 全绿
+- 提交 02a7290（feature/t04-leaf-op-metadata → main）
+- T05 可解锁
+

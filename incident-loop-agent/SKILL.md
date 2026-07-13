@@ -220,10 +220,14 @@ This skill never reimplements routing. It loads the routing table, matches, and 
 ## References
 
 - `references/policies/execution-risk.md` — L3 graded execution-risk policy (replaces the L2 `{{user.confirm}}` hard gate); `risk × blast_radius × confidence → AUTO/ASK/REFUSE` with a Safety = 0 → REFUSE floor.
+- `references/policies/execution-risk.schema.json` — machine-readable twin of the policy; draft 2020-12, enum-validated `Operation` shape, and `if/then` hard rules: Safety = 0 → REFUSE (overrides all cells), missing metadata → ASK (fail-safe). Consumed by the T06 scorer.
+- `references/policies/domain-allowlist.md` — narrow L3 AUTO eligibility: the 8 coordinated skills (matches `coordinates` 1:1) + per-skill symptom whitelist + explicit destructive-op exclusions + expansion policy.
+- `ve-skill-generator/references/leaf-op-metadata-spec.md` — contract for per-operation `safety_class` + `blast_radius` columns (the L3 policy inputs); placement rule, fail-safe (missing → ASK), and C18 update rule.
 
 ## Changelog
 
 | Version | Date | Change |
 |---------|------|--------|
+| 0.3.0   | 2026-07-13 | L3 policy foundation complete (T01–T04): add `execution-risk.schema.json` (machine-readable policy twin, Safety=0→REFUSE + missing→ASK hard rules), `domain-allowlist.md` (8 coordinated skills + per-skill symptom whitelist + destructive exclusions + expansion policy), and `ve-skill-generator/references/leaf-op-metadata-spec.md` (per-op `safety_class`/`blast_radius` contract — 8 leaf SKILL.md operation tables now annotated). |
 | 0.2.0   | 2026-07-13 | Add L3 execution-risk policy (`references/policies/execution-risk.md`); `## References` now links the graded AUTO/ASK/REFUSE policy replacing the L2 blanket `{{user.confirm}}` gate. |
 | 0.1.0   | 2026-07-10 | Initial skeleton: 7-step loop, 7-dim rubric, 5 prompt templates, Skill-Routing-Graph integration, Reflexion write-back into `docs/failure-patterns.md` (`## Extracted from GCL Traces` block). |
