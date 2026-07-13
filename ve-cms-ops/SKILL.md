@@ -168,25 +168,25 @@ ve metrics GetMetricData --Namespace Volcengine_ECS --MetricName CpuUtilization 
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
-| GetMetricData | Query time-series metric data | Medium | None |
-| ListMetrics | List available metrics for a namespace | Low | None |
-| CreateAlarm | Create an alarm strategy | Medium | Medium |
-| EnableAlarm | Enable an alarm strategy | Low | Low |
-| DisableAlarm | Disable an alarm strategy | Low | Low |
-| DeleteAlarm | Delete an alarm strategy | Low | **High** |
-| ListAlarms | List all alarm rules | Low | None |
-| CreateAlarmTemplate | Create an alarm template | Medium | Medium |
-| ApplyAlarmTemplate | Apply template to resources | Medium | Medium |
-| ListEvents | Query system events | Low | None |
-| DescribeContactGroups | List notification groups | Low | None |
-| CreateContactGroup | Create a notification group | Low | Low |
+| Operation | Description | Complexity | Risk Level | | safety_class | blast_radius |
+|-----------|-------------|------------|------------||---|---|
+| GetMetricData | Query time-series metric data | Medium | None | | read-only | single |
+| ListMetrics | List available metrics for a namespace | Low | None | | read-only | single |
+| CreateAlarm | Create an alarm strategy | Medium | Medium | | state-changing | single |
+| EnableAlarm | Enable an alarm strategy | Low | Low | | state-changing | single |
+| DisableAlarm | Disable an alarm strategy | Low | Low | | state-changing | single |
+| DeleteAlarm | Delete an alarm strategy | Low | **High** | | destructive | single |
+| ListAlarms | List all alarm rules | Low | None | | read-only | single |
+| CreateAlarmTemplate | Create an alarm template | Medium | Medium | | state-changing | single |
+| ApplyAlarmTemplate | Apply template to resources | Medium | Medium | | state-changing | single |
+| ListEvents | Query system events | Low | None | | read-only | single |
+| DescribeContactGroups | List notification groups | Low | None | | read-only | single |
+| CreateContactGroup | Create a notification group | Low | Low | | state-changing | single |
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.2 | 2026-07-13 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.0.1 | 2026-05-28 | Enhanced error handling taxonomy with 12 CMS-specific error codes; added retry strategy matrix |
 | 1.0.0 | 2026-05-15 | Initial release with core capabilities: GetMetricData (time-series queries), ListMetrics (namespace metrics), CreateAlarm/EnableAlarm/DisableAlarm/DeleteAlarm (alarm lifecycle), CreateAlarmTemplate/ApplyAlarmTemplate (template management), ListEvents (system events), DescribeContactGroups/CreateContactGroup (notification groups); includes CLI dual-path execution (ve CLI + Go SDK fallback), Pre-flight→Execute→Validate→Recover workflow, namespace convention guide (ECS/RDS/Redis/VKE/TOS/SLB/VPC), security credential masking guidelines |
 | 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |

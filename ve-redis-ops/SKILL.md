@@ -144,29 +144,29 @@ ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1
 
 ## Capabilities at a Glance
 
-| Operation | Description | ⚡ Complexity | 🛡️ Risk |
-|-----------|-------------|------------|------|
-| CreateDBInstance | Create Redis instance | Medium | Low |
-| DescribeDBInstanceDetail | Get instance details | Low | ✅ None |
-| DescribeDBInstances | List all instances | Low | ✅ None |
-| 🔴 DeleteDBInstance | Delete instance | Low | 🔴 **High** |
-| 🔴 ModifyDBInstanceSpec | Change instance spec | Medium | Medium |
-| 🔴 RestartDBInstance | Restart instance | Low | Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
-| 🔴 ModifyDBInstanceParameters | Modify parameters | Medium | Medium |
-| CreateAllowList | Create IP whitelist | Low | Low |
-| DescribeAllowLists | List allowlists | Low | ✅ None |
-| 🔴 ModifyAllowList | Update allowlist | Low | Low |
-| 🔴 DeleteAllowList | Delete allowlist | Low | Medium |
-| DescribeAccounts | List accounts | Low | ✅ None |
-| 🔴 CreateAccount | Create DB account | Low | Medium |
-| DescribeBackups | List backups | Low | ✅ None |
-| CreateBackup | Create manual backup | Low | Low |
+| Operation | Description | ⚡ Complexity | 🛡️ Risk | | safety_class | blast_radius |
+|-----------|-------------|------------|------||---|---|
+| CreateDBInstance | Create Redis instance | Medium | Low | | state-changing | single |
+| DescribeDBInstanceDetail | Get instance details | Low | ✅ None | | read-only | single |
+| DescribeDBInstances | List all instances | Low | ✅ None | | read-only | single |
+| 🔴 DeleteDBInstance | Delete instance | Low | 🔴 **High** | | destructive | single |
+| 🔴 ModifyDBInstanceSpec | Change instance spec | Medium | Medium | | state-changing | single |
+| 🔴 RestartDBInstance | Restart instance | Low | Medium | | state-changing | single |
+| DescribeDBInstanceParameters | Query parameters | Low | ✅ None | | read-only | single |
+| 🔴 ModifyDBInstanceParameters | Modify parameters | Medium | Medium | | state-changing | single |
+| CreateAllowList | Create IP whitelist | Low | Low | | state-changing | multi |
+| DescribeAllowLists | List allowlists | Low | ✅ None | | read-only | single |
+| 🔴 ModifyAllowList | Update allowlist | Low | Low | | state-changing | multi |
+| 🔴 DeleteAllowList | Delete allowlist | Low | Medium | | destructive | single |
+| DescribeAccounts | List accounts | Low | ✅ None | | read-only | single |
+| 🔴 CreateAccount | Create DB account | Low | Medium | | state-changing | account-or-region |
+| DescribeBackups | List backups | Low | ✅ None | | read-only | single |
+| CreateBackup | Create manual backup | Low | Low | | state-changing | single |
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-07-13 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.0.0 | 2026-05-16 | Initial release with Redis instance lifecycle |
 | 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md`; `max_iter=2` for destructive / state_changing ops, `max_iter=3` for read-only ops |
 

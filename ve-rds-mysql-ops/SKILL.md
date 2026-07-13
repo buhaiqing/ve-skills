@@ -167,31 +167,31 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 
 ## Capabilities at a Glance
 
-| Operation | Description | ⚡ Complexity | 🛡️ Risk |
-|-----------|-------------|------------|------|
-| CreateDBInstance | Create MySQL instance | Medium | Low |
-| DescribeDBInstanceDetail | Get instance details | Low | ✅ None |
-| DescribeDBInstances | List all instances | Low | ✅ None |
-| DeleteDBInstance | Delete instance | Low | 🔴 **High** |
-| ModifyDBNodeSpec | Modify node spec/storage | Medium | Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
-| ModifyDBInstanceParameter | Modify parameters | Medium | Medium |
-| DescribeRegions | List regions | Low | ✅ None |
-| DescribeAvailabilityZones | List AZs | Low | ✅ None |
-| ListDBInstanceIPLists | List IP whitelist | Low | ✅ None |
-| ModifyDBInstanceIPList | Modify IP whitelist | Low | Low |
-| DescribeDBAccounts | List accounts | Low | ✅ None |
-| CreateDBAccount | Create DB account | Low | Medium |
-| DeleteDBAccount | Delete account | Low | Medium |
-| DescribeBackups | List backups | Low | ✅ None |
-| CreateBackup | Create backup | Low | Low |
-| RestoreToNewInstance | Restore from backup | High | Medium |
-| RebuildDBInstance | Rebuild instance | High | 🔴 **High** |
+| Operation | Description | ⚡ Complexity | 🛡️ Risk | | safety_class | blast_radius |
+|-----------|-------------|------------|------||---|---|
+| CreateDBInstance | Create MySQL instance | Medium | Low | | state-changing | single |
+| DescribeDBInstanceDetail | Get instance details | Low | ✅ None | | read-only | single |
+| DescribeDBInstances | List all instances | Low | ✅ None | | read-only | single |
+| DeleteDBInstance | Delete instance | Low | 🔴 **High** | | destructive | single |
+| ModifyDBNodeSpec | Modify node spec/storage | Medium | Medium | | state-changing | single |
+| DescribeDBInstanceParameters | Query parameters | Low | ✅ None | | read-only | single |
+| ModifyDBInstanceParameter | Modify parameters | Medium | Medium | | state-changing | single |
+| DescribeRegions | List regions | Low | ✅ None | | read-only | single |
+| DescribeAvailabilityZones | List AZs | Low | ✅ None | | read-only | single |
+| ListDBInstanceIPLists | List IP whitelist | Low | ✅ None | | read-only | single |
+| ModifyDBInstanceIPList | Modify IP whitelist | Low | Low | | state-changing | single |
+| DescribeDBAccounts | List accounts | Low | ✅ None | | read-only | single |
+| CreateDBAccount | Create DB account | Low | Medium | | state-changing | account-or-region |
+| DeleteDBAccount | Delete account | Low | Medium | | destructive | single |
+| DescribeBackups | List backups | Low | ✅ None | | read-only | single |
+| CreateBackup | Create backup | Low | Low | | state-changing | single |
+| RestoreToNewInstance | Restore from backup | High | Medium | | state-changing | single |
+| RebuildDBInstance | Rebuild instance | High | 🔴 **High** | | destructive | single |
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-07-13 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.0.0 | 2026-05-16 | Initial release with RDS MySQL lifecycle |
 | 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md` |
 

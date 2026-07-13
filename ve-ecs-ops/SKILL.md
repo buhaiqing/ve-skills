@@ -179,32 +179,32 @@ ve ecs DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | ⚡ Complexity | 🛡️ Risk Level |
-|-----------|-------------|------------|------------|
-| RunInstances | Create one or more ECS instances | High | Medium |
-| DescribeInstances | Query instance list and details | Low | None |
-| DescribeSpotPriceHistory | Query spot instance price history | Low | None |
-| StartInstance | Start a stopped instance | Low | Low |
-| StopInstance | Stop a running instance | Low | Medium |
-| RebootInstance | Reboot an instance | Low | Medium |
-| ModifyInstanceSpec | Change instance type (resize) | Medium | High |
-| ModifyInstanceAttribute | Modify instance name, description, etc. | Low | Low |
-| DeleteInstance | Delete an instance | Low | **High** — irreversible |
-| CreateVolume | Create a cloud disk | Medium | Low |
-| AttachVolume | Attach a disk to an instance | Medium | Medium |
-| CreateSnapshot | Create a disk snapshot | Low | Low |
-| CreateImage | Create a custom image | Low | Low |
-| CreateKeyPair | Create an SSH key pair | Low | Low |
-| InvokeCommand | Remote command execution via Cloud Assistant | Medium | Medium |
-| DescribeInvocations | Query Cloud Assistant job results | Low | None |
-| StopInvocation | Cancel a running Cloud Assistant job | Low | Low |
-| AssignPrivateIpAddresses | Assign private IPs to ENI | Low | Low |
-| DescribeIdleInstances | Find instances with low utilization | Low | None |
-| RightSizeInstance | Recommend optimal instance type | Medium | Low |
-| DescribeCostSummary | Generate cost report for ECS resources | Low | None |
-| CleanupStoppedInstances | Remove stopped instances older than threshold | Low | **High** |
-| CleanupOrphanedDisks | Delete unattached cloud disks | Low | **High** |
-| CleanupOldSnapshots | Delete snapshots older than threshold | Low | Medium |
+| Operation | Description | ⚡ Complexity | 🛡️ Risk Level | | safety_class | blast_radius |
+|-----------|-------------|------------|------------||---|---|
+| RunInstances | Create one or more ECS instances | High | Medium | | state-changing | single |
+| DescribeInstances | Query instance list and details | Low | None | | read-only | single |
+| DescribeSpotPriceHistory | Query spot instance price history | Low | None | | read-only | single |
+| StartInstance | Start a stopped instance | Low | Low | | state-changing | single |
+| StopInstance | Stop a running instance | Low | Medium | | state-changing | single |
+| RebootInstance | Reboot an instance | Low | Medium | | state-changing | single |
+| ModifyInstanceSpec | Change instance type (resize) | Medium | High | | state-changing | single |
+| ModifyInstanceAttribute | Modify instance name, description, etc. | Low | Low | | state-changing | single |
+| DeleteInstance | Delete an instance | Low | **High** — irreversible | | destructive | single |
+| CreateVolume | Create a cloud disk | Medium | Low | | state-changing | single |
+| AttachVolume | Attach a disk to an instance | Medium | Medium | | state-changing | single |
+| CreateSnapshot | Create a disk snapshot | Low | Low | | state-changing | single |
+| CreateImage | Create a custom image | Low | Low | | state-changing | single |
+| CreateKeyPair | Create an SSH key pair | Low | Low | | state-changing | single |
+| InvokeCommand | Remote command execution via Cloud Assistant | Medium | Medium | | state-changing | single |
+| DescribeInvocations | Query Cloud Assistant job results | Low | None | | read-only | single |
+| StopInvocation | Cancel a running Cloud Assistant job | Low | Low | | state-changing | single |
+| AssignPrivateIpAddresses | Assign private IPs to ENI | Low | Low | | state-changing | single |
+| DescribeIdleInstances | Find instances with low utilization | Low | None | | read-only | single |
+| RightSizeInstance | Recommend optimal instance type | Medium | Low | | state-changing | single |
+| DescribeCostSummary | Generate cost report for ECS resources | Low | None | | read-only | single |
+| CleanupStoppedInstances | Remove stopped instances older than threshold | Low | **High** | | destructive | single |
+| CleanupOrphanedDisks | Delete unattached cloud disks | Low | **High** | | destructive | single |
+| CleanupOldSnapshots | Delete snapshots older than threshold | Low | Medium | | destructive | single |
 
 > FinOps Operations 详情 → [references/advanced/finops.md#operations](references/advanced/finops.md#operations)
 
@@ -823,9 +823,9 @@ delegates on the next iteration:
 The Critic itself MUST NOT call any of the above — it only emits suggestions.
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-07-13 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.0.0 | 2026-05-15 | Initial release with instance lifecycle, disk, snapshot, and image management |
 | 1.1.0 | 2026-05-27 | Added FinOps operations (idle detection, right-sizing, cleanup, cost reports) and AIOps knowledge base |
 | 1.2.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md`; `max_iter=2` for destructive / state_changing ops, `max_iter=3` for read-only ops |

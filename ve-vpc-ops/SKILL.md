@@ -149,24 +149,24 @@ ve vpc DescribeVpcs --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
-| CreateVpc | Create a VPC with CIDR block | Medium | Low |
-| DescribeVpcs | Query VPC list and details | Low | None |
-| DeleteVpc | Delete a VPC (must be empty) | Low | **High** — irreversible |
-| ModifyVpcAttribute | Modify VPC name/description | Low | Low |
-| CreateSubnet | Create a subnet within VPC | Medium | Low |
-| DescribeSubnets | Query subnet list | Low | None |
-| DeleteSubnet | Delete a subnet (must be empty) | Low | **High** — irreversible |
-| CreateRouteTable | Create a route table | Medium | Low |
-| DescribeRouteTables | List route tables | Low | None |
-| CreateRouteEntry | Add a route entry | Medium | Medium |
-| DeleteRouteEntry | Remove a route entry | Low | Medium |
+| Operation | Description | Complexity | Risk Level | | safety_class | blast_radius |
+|-----------|-------------|------------|------------||---|---|
+| CreateVpc | Create a VPC with CIDR block | Medium | Low | | state-changing | single |
+| DescribeVpcs | Query VPC list and details | Low | None | | read-only | single |
+| DeleteVpc | Delete a VPC (must be empty) | Low | **High** — irreversible | | destructive | single |
+| ModifyVpcAttribute | Modify VPC name/description | Low | Low | | state-changing | single |
+| CreateSubnet | Create a subnet within VPC | Medium | Low | | state-changing | single |
+| DescribeSubnets | Query subnet list | Low | None | | read-only | single |
+| DeleteSubnet | Delete a subnet (must be empty) | Low | **High** — irreversible | | destructive | single |
+| CreateRouteTable | Create a route table | Medium | Low | | state-changing | single |
+| DescribeRouteTables | List route tables | Low | None | | read-only | single |
+| CreateRouteEntry | Add a route entry | Medium | Medium | | state-changing | single |
+| DeleteRouteEntry | Remove a route entry | Low | Medium | | destructive | single |
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-07-13 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.0.0 | 2026-05-25 | Initial release with VPC, Subnet, Route Table management |
 | 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
 
