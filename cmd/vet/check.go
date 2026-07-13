@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/aiops"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/assessment"
@@ -15,6 +16,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/gcl"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/links"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/policyguard"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/trace"
 )
 
 // checkReport is the machine-readable shape emitted with --json.
@@ -32,7 +34,7 @@ type checkSummary struct {
 
 func runCheck(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard)")
+		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard|trace)")
 		os.Exit(2)
 	}
 	name := args[0]
@@ -69,6 +71,8 @@ func runCheck(args []string) {
 		perSkillCheck("eval", evalRes, evalSkills, *jsonOut)
 	case "policyguard":
 		pgCheck(*root, *jsonOut)
+		case "trace":
+			traceCheck(*root, *jsonOut)
 	default:
 		fmt.Fprintf(os.Stderr, "vet check %s: not implemented yet\n", name)
 		os.Exit(3)
@@ -203,6 +207,54 @@ func pgCheck(root string, jsonOut bool) {
 		os.Exit(1)
 	}
 	fmt.Println("OK: policyguard passed")
+}
+
+func traceCheck(root string, jsonOut bool) {
+	auditDir := filepath.Join(root, "audit-results")
+	entries, err := os.ReadDir(auditDir)
+	if os.IsNotExist(err) || len(entries) == 0 {
+		if jsonOut {
+			fmt.Println(`{"ok":true,"reason":"no traces found"}`)
+		} else {
+			fmt.Println("OK: no trace files found")
+		}
+		return
+	}
+	if err != nil {
+		if jsonOut {
+			fmt.Printf(`{"ok":false,"error":"read audit-results: %v"}`+"\n", err)
+		} else {
+			fmt.Printf("FAIL: read audit-results: %v\n", err)
+		}
+		os.Exit(1)
+	}
+	var failCount, checked int
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
+			continue
+		}
+		// Only check incident-trace-*.json (new schema)
+		if !strings.HasPrefix(entry.Name(), "incident-trace-") {
+			continue
+		}
+		checked++
+		path := filepath.Join(auditDir, entry.Name())
+		if err := trace.Check(path); err != nil {
+			failCount++
+			if !jsonOut {
+				fmt.Printf("FAIL %s: %v\n", entry.Name(), err)
+			}
+		}
+	}
+	if jsonOut {
+		b, _ := json.MarshalIndent(map[string]any{"ok": failCount == 0, "checked": len(entries), "failures": failCount}, "", "  ")
+		fmt.Println(string(b))
+		return
+	}
+	if failCount > 0 {
+		os.Exit(1)
+	}
+	fmt.Printf("OK: %d trace file(s) passed\n", len(entries))
 }
 
 func emitCheck(name string, summary checkSummary, jsonOut bool) {

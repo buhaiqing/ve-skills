@@ -72,3 +72,11 @@
 - scoreDecision 单测：TestScoreDecision_9Cell / TestScoreDecision_DestructiveNeverAuto / TestScoreDecision_SafetyZeroRefuse 全 PASS
 - go build/vet/test 全绿；vet check frontmatter/gcl/eval/policyguard 全绿
 - .github/workflows/ 不存在，跳过 CI 相关 DoD
+
+## T07 2026-07-13 — done
+
+- incident-loop-agent/assets/trace.schema.json 新建（必填 ticket_id / started_at / finished_at / policy_decision / redaction_pass + iterations[].ve_calls[].request_id）
+- cmd/vet/internal/check/trace/trace.go 新建（含 Check / CheckDir，含 3 个 test fixture）
+- cmd/vet/check.go 注册 trace 子命令；traceCheck 只检查 incident-trace-*.json（跳过 legacy gcl-trace-*.json）
+- go build/vet/test 全绿；vet check trace 全绿（6 条 incident-trace 通过）
+- gcl-spec.md §9 / §12 / workflow 无需修改（schema 由 T06 DoD #9 覆盖）

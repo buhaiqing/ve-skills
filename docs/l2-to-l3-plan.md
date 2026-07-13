@@ -180,9 +180,9 @@ Strictly sequential at the gate level: **P2 (AUTO path) cannot ship before P3 (m
 - [`docs/l2-to-l3-tasks/`](./l2-to-l3-tasks/) — per-task cards for AI-driven iteration (T01–T08, index, trace ledger)
 - [`docs/l3-to-l4-tasks/AGENTS.md`](./l3-to-l4-tasks/AGENTS.md) — L4 升级的 AI Agent 入口规则（前置 L2→L3 完成）
 - [`docs/l3-to-l4-tasks/`](./l3-to-l4-tasks/) — M2–M4 task cards (T09–T16, L3→L4)
-- [`incident-loop-agent/SKILL.md`](./incident-loop-agent/SKILL.md) — current loop contract (blocker lines `:150-154,184`)
-- [`ve-skill-generator/references/enhanced-self-healing-framework.md`](./ve-skill-generator/references/enhanced-self-healing-framework.md) — self-healing L1 (current) → L5 ladder (M2 later)
+- [`incident-loop-agent/SKILL.md`](../incident-loop-agent/SKILL.md) — current loop contract (blocker lines `:150-154,184`)
+- [`ve-skill-generator/references/enhanced-self-healing-framework.md`](../ve-skill-generator/references/enhanced-self-healing-framework.md) — self-healing L1 (current) → L5 ladder (M2 later)
 - [`docs/reflexion-memory.md`](./reflexion-memory.md) — learning boundary (HINT vs constraint; M3 later)
 - [`docs/gcl-spec.md`](./gcl-spec.md) — GCL rubric / termination
-- [`AGENTS.md`](./AGENTS.md) — "All Tools MUST Be Go" (vet is the enforcement CLI), two-round self-review, TE rules
-- [`ve-ecs-ops/SKILL.md`](./ve-ecs-ops/SKILL.md) — example leaf op classification (`:769-772`), the prose-only gap P3 fixes
+- [`AGENTS.md`](../AGENTS.md) — "All Tools MUST Be Go" (vet is the enforcement CLI), two-round self-review, TE rules
+- [`ve-ecs-ops/SKILL.md`](../ve-ecs-ops/SKILL.md) — example leaf op classification (`:769-772`), the prose-only gap P3 fixes

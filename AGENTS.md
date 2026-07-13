@@ -307,6 +307,21 @@ CodeGraph (`codegraph` CLI) 维护仓库知识图谱，使 AI 能检索符号、
 
 完整的两层触发与同步规则见 **[docs/codegraph-integration.md](docs/codegraph-integration.md)**。
 
+### MANDATORY: CodeGraph MCP 优先于 grep/read
+
+> **强规则：所有代码理解任务（符号查找、调用链追溯、影响面分析）必须先用 CodeGraph MCP (`codegraph_explore`)，再用 grep/read 补充。**
+
+**为什么**：CodeGraph 的 AST + 调用图覆盖了 grep 无法到达的跳转表（接口实现、动态派送、跨包调用）。纯文本搜索会漏掉真实调用者。
+
+**强制执行顺序**：
+1. `codegraph_explore <symbol>` → 获取符号定义 + 调用者 + 影响面
+2. 仅在 CodeGraph 索引缺失或不确定时用 grep/read 交叉验证
+3. 修改代码前必须用 CodeGraph 确认所有调用方都已知
+
+**禁用**：用 grep 替代 CodeGraph 做调用链分析；用 read 替代 codegraph_explore 做符号定位（CodeGraph 更快更准）。
+
+**例外**：纯文本内容搜索（如日志关键字、文档内容）除外。
+
 ---
 
 ## Communication (Language)

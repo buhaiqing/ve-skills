@@ -124,7 +124,33 @@ func normalizeTarget(raw string) string {
 	if i := strings.Index(target, "?"); i >= 0 {
 		target = target[:i]
 	}
+	// Strip a trailing ":line" or ":line-line" reference (e.g. file.md:42,
+	// file.md:10-20) so "see file at line N" notations resolve to the file.
+	if i := strings.LastIndex(target, ":"); i >= 0 {
+		if isLineRef(target[i+1:]) {
+			target = target[:i]
+		}
+	}
 	return target
+}
+
+// isLineRef reports whether s is a line reference: digits, or digits-digits.
+func isLineRef(s string) bool {
+	if s == "" {
+		return false
+	}
+	parts := strings.SplitN(s, "-", 2)
+	for _, p := range parts {
+		if p == "" {
+			return false
+		}
+		for _, c := range p {
+			if c < '0' || c > '9' {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // looksLikeRepoPath reports whether a backtick-quoted token is an explicit

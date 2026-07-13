@@ -1,0 +1,17 @@
+{
+  "ticket_id": "TEST-123",
+  "started_at": "2026-07-13T00:00:00Z",
+  "finished_at": "2026-07-13T00:01:00Z",
+  "policy_decision": "AUTO",
+  "iterations": [
+    {
+      "ve_calls": [
+        {
+          "action": "ve ecs DescribeInstances",
+          "status": "ok"
+        }
+      ]
+    }
+  ],
+  "redaction_pass": true
+}

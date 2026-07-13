@@ -159,14 +159,14 @@ ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
 | DeleteUser | Delete an IAM user | Low | 🔴 **High** — check dependencies | | destructive | single |
 | CreatePolicy | Create a custom policy | Medium | Medium | | state-changing | single |
 | AttachPolicy | Attach policy to user/role/group | Low | Medium | | state-changing | single |
-| DetachPolicy | Detach policy from identity | Low | Medium | | destructive | single |
+| DetachPolicy | Detach policy from identity | Low | Medium | | state-changing | single |
 | DeletePolicy | Delete a custom policy | Low | 🔴 **High** — check attachments | | destructive | single |
 | CreateRole | Create an IAM role | Medium | Low | | state-changing | single |
 | AssumeRole | Get temporary credentials | Medium | Medium | | state-changing | single |
 | DeleteRole | Delete an IAM role | Low | 🔴 **High** — check assumptions | | destructive | single |
 | CreateGroup | Create an IAM group | Low | Low | | state-changing | single |
 | AddUserToGroup | Add user to group | Low | Low | | state-changing | single |
-| RemoveUserFromGroup | Remove user from group | Low | Low | | destructive | single |
+| RemoveUserFromGroup | Remove user from group | Low | Low | | state-changing | single |
 | DeleteGroup | Delete an IAM group | Low | 🔴 **High** — check members | | destructive | single |
 | CreateSAMLProvider | Create SAML identity provider | High | Medium | | state-changing | single |
 | CreateOIDCProvider | Create OIDC identity provider | High | Medium | | state-changing | single |

@@ -33,6 +33,15 @@ func TestNormalizeTarget(t *testing.T) {
 		{"docs/x.md?q=1", "docs/x.md"},
 		{"<http://x.com>", ""},
 		{"", ""},
+		// "see file at line N" notations resolve to the file itself.
+		{"docs/reflexion-memory.md:63", "docs/reflexion-memory.md"},
+		{"docs/reflexion-memory.md:76", "docs/reflexion-memory.md"},
+		{"ve-ecs-ops/SKILL.md:769-772", "ve-ecs-ops/SKILL.md"},
+		{"ve-ecs-ops/SKILL.md:769", "ve-ecs-ops/SKILL.md"},
+		{"ve-skill-generator/references/enhanced-self-healing-framework.md:29",
+			"ve-skill-generator/references/enhanced-self-healing-framework.md"},
+		// Non-numeric suffix must be left untouched.
+		{"docs/x.md:note", "docs/x.md:note"},
 	}
 	for _, c := range cases {
 		if got := normalizeTarget(c.in); got != c.want {

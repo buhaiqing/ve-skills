@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12",
+  "title": "Incident Loop Trace",
+  "description": "Schema for incident-loop-agent GCL trace files written to audit-results/incident-trace-<ticket_id>-<ISO>.json",
+  "type": "object",
+  "required": ["ticket_id", "started_at", "finished_at", "policy_decision", "iterations", "redaction_pass"],
+  "properties": {
+    "ticket_id": {
+      "type": "string",
+      "description": "JIRA/DOPS/CMS ticket or alarm ID"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the loop started"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the loop finished"
+    },
+    "policy_decision": {
+      "type": "string",
+      "enum": ["AUTO", "ASK", "REFUSE"],
+      "description": "Policy verdict from T05 Step 5a scoreDecision"
+    },
+    "iterations": {
+      "type": "array",
+      "description": "One entry per GCL loop iteration",
+      "items": {
+        "type": "object",
+        "required": ["ve_calls"],
+        "properties": {
+          "ve_calls": {
+            "type": "array",
+            "description": "All ve CLI invocations in this iteration",
+            "items": {
+              "type": "object",
+              "required": ["request_id", "action", "status"],
+              "properties": {
+                "request_id": {
+                  "type": "string",
+                  "description": "RequestId from ve CLI output (required, must be non-empty)"
+                },
+                "action": {
+                  "type": "string",
+                  "description": "ve <svc> <Action> command string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["ok", "error", "partial"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "redaction_pass": {
+      "type": "boolean",
+      "const": true,
+      "description": "Must be true — credentials must be masked in all trace output"
+    }
+  }
+}
