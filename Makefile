@@ -18,7 +18,7 @@ VERSION     := $(shell (git describe --tags --always --dirty 2>$(NULL) || echo "
 TAG         := v$(VERSION:v%=%)
 REMOTE      ?= origin
 
-.PHONY: help tag push release release-api build test install clean check
+.PHONY: help tag push release release-api build vet test install clean check
 
 help:
 	@echo "Targets:"
@@ -49,6 +49,9 @@ release-api:
 build:
 	@mkdir -p cmd/bin
 	cd cmd/vet && go build -ldflags "-X main.version=$(VERSION) -X main.commit=$(shell git rev-parse --short HEAD 2>/dev/null || echo '')" -o $(CURDIR)/cmd/bin/vet .
+
+vet:
+	cd cmd/vet && go vet ./...
 
 test:
 	cd cmd/vet && go test ./...
