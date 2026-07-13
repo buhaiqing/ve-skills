@@ -163,33 +163,33 @@ ve billing DescribeBills --Period "$(date +%Y-%m)" --Region "{{env.VOLCENGINE_RE
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
-| **Core Queries** | | | |
-| DescribeBills | Query monthly bills | Low | None |
-| DescribeBillDetail | Get bill line items | Low | None |
-| DescribeBalance | Check account balance | Low | None |
-| **Budget Management** | | | |
-| CreateBudget | Set spending budget | Medium | Low |
-| DescribeBudgets | List budgets | Low | None |
-| ModifyBudget | Update budget threshold | Medium | Low |
-| DeleteBudget | Remove budget | Low | Medium |
-| **Reserved Instances** | | | |
-| DescribeReservedInstances | View RI utilization | Low | None |
-| **Analyzers** | | | |
-| AnalyzeCostTrend | Month-over-month trend analysis | Medium | None |
-| FindCostDrivers | Top N cost driver identification | Medium | None |
-| AnalyzeRIUtilization | RI coverage and utilization analysis | Medium | None |
-| DetectCostAnomaly | Identify abnormal cost changes | Medium | None |
-| PredictSpending | Month-end cost forecast | Medium | None |
-| **Optimizers** | | | |
-| GenerateRightSizingRec | Right-sizing recommendations | High | Medium |
-| IdentifyIdleResources | Idle resource detection | Medium | None |
-| **Reports** | | | |
-| GenerateDailyReport | Daily billing summary | Low | None |
-| GenerateWeeklyReport | Weekly cost analysis | Medium | None |
-| GenerateMonthlyReport | Monthly deep-dive analysis | High | None |
-| GenerateOptimizationReport | Cost optimization proposal | High | None |
+| Operation | Description | Complexity | Risk Level | | safety_class | blast_radius |
+|-----------|-------------|------------|------------||---|---|
+| **Core Queries** | | | | | state-changing | single |
+| DescribeBills | Query monthly bills | Low | None | | read-only | single |
+| DescribeBillDetail | Get bill line items | Low | None | | read-only | single |
+| DescribeBalance | Check account balance | Low | None | | read-only | single |
+| **Budget Management** | | | | | state-changing | single |
+| CreateBudget | Set spending budget | Medium | Low | | state-changing | single |
+| DescribeBudgets | List budgets | Low | None | | read-only | single |
+| ModifyBudget | Update budget threshold | Medium | Low | | state-changing | single |
+| DeleteBudget | Remove budget | Low | Medium | | destructive | single |
+| **Reserved Instances** | | | | | state-changing | single |
+| DescribeReservedInstances | View RI utilization | Low | None | | read-only | single |
+| **Analyzers** | | | | | state-changing | single |
+| AnalyzeCostTrend | Month-over-month trend analysis | Medium | None | | state-changing | single |
+| FindCostDrivers | Top N cost driver identification | Medium | None | | read-only | single |
+| AnalyzeRIUtilization | RI coverage and utilization analysis | Medium | None | | state-changing | single |
+| DetectCostAnomaly | Identify abnormal cost changes | Medium | None | | state-changing | single |
+| PredictSpending | Month-end cost forecast | Medium | None | | state-changing | single |
+| **Optimizers** | | | | | state-changing | single |
+| GenerateRightSizingRec | Right-sizing recommendations | High | Medium | | state-changing | single |
+| IdentifyIdleResources | Idle resource detection | Medium | None | | state-changing | single |
+| **Reports** | | | | | state-changing | single |
+| GenerateDailyReport | Daily billing summary | Low | None | | state-changing | single |
+| GenerateWeeklyReport | Weekly cost analysis | Medium | None | | state-changing | single |
+| GenerateMonthlyReport | Monthly deep-dive analysis | High | None | | state-changing | single |
+| GenerateOptimizationReport | Cost optimization proposal | High | None | | state-changing | single |
 
 ## Execution Flows (Agent-Readable)
 
@@ -440,9 +440,9 @@ ve billing DescribeReservedInstances --Region "{{env.VOLCENGINE_REGION}}"
 - [GCL Prompt Templates](references/prompt-templates.md)
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.5.1 | 2026-07-13 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.5.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
 | 1.4.0 | 2026-06-02 | Complete observability integration (CMS/SLS/Prometheus/Slack/PagerDuty), 3 new example assets, full SDK/CLI scripts for all integration patterns |
 | 1.3.0 | 2026-06-02 | Full UX compliance: Complete Execution Flows (4-phase), 16 Error Taxonomy entries, Prerequisites, Response Conventions, State Transitions |

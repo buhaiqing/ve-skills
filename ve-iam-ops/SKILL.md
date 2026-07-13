@@ -150,36 +150,36 @@ ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
-| CreateUser | Create a new IAM user | Low | Low |
-| ListUsers | List all IAM users | Low | ✅ None |
-| GetUser | Get user details | Low | ✅ None |
-| UpdateUser | Update user attributes | Low | Low |
-| DeleteUser | Delete an IAM user | Low | 🔴 **High** — check dependencies |
-| CreatePolicy | Create a custom policy | Medium | Medium |
-| AttachPolicy | Attach policy to user/role/group | Low | Medium |
-| DetachPolicy | Detach policy from identity | Low | Medium |
-| DeletePolicy | Delete a custom policy | Low | 🔴 **High** — check attachments |
-| CreateRole | Create an IAM role | Medium | Low |
-| AssumeRole | Get temporary credentials | Medium | Medium |
-| DeleteRole | Delete an IAM role | Low | 🔴 **High** — check assumptions |
-| CreateGroup | Create an IAM group | Low | Low |
-| AddUserToGroup | Add user to group | Low | Low |
-| RemoveUserFromGroup | Remove user from group | Low | Low |
-| DeleteGroup | Delete an IAM group | Low | 🔴 **High** — check members |
-| CreateSAMLProvider | Create SAML identity provider | High | Medium |
-| CreateOIDCProvider | Create OIDC identity provider | High | Medium |
-| ListAccessKeys | List user's access keys | Low | ✅ None |
-| CreateAccessKey | Create access key for user | Low | 🔴 **High** — secret key shown once |
-| DeleteAccessKey | Delete user's access key | Low | 🔴 **High** — irreversible |
-| GetCredentialReport | Generate credential report | Medium | ✅ None |
-| UpdateLoginProfile | Set user console password | Low | Medium |
+| Operation | Description | Complexity | Risk Level | | safety_class | blast_radius |
+|-----------|-------------|------------|------------||---|---|
+| CreateUser | Create a new IAM user | Low | Low | | state-changing | single |
+| ListUsers | List all IAM users | Low | ✅ None | | read-only | single |
+| GetUser | Get user details | Low | ✅ None | | read-only | single |
+| UpdateUser | Update user attributes | Low | Low | | state-changing | single |
+| DeleteUser | Delete an IAM user | Low | 🔴 **High** — check dependencies | | destructive | single |
+| CreatePolicy | Create a custom policy | Medium | Medium | | state-changing | single |
+| AttachPolicy | Attach policy to user/role/group | Low | Medium | | state-changing | single |
+| DetachPolicy | Detach policy from identity | Low | Medium | | destructive | single |
+| DeletePolicy | Delete a custom policy | Low | 🔴 **High** — check attachments | | destructive | single |
+| CreateRole | Create an IAM role | Medium | Low | | state-changing | single |
+| AssumeRole | Get temporary credentials | Medium | Medium | | state-changing | single |
+| DeleteRole | Delete an IAM role | Low | 🔴 **High** — check assumptions | | destructive | single |
+| CreateGroup | Create an IAM group | Low | Low | | state-changing | single |
+| AddUserToGroup | Add user to group | Low | Low | | state-changing | single |
+| RemoveUserFromGroup | Remove user from group | Low | Low | | destructive | single |
+| DeleteGroup | Delete an IAM group | Low | 🔴 **High** — check members | | destructive | single |
+| CreateSAMLProvider | Create SAML identity provider | High | Medium | | state-changing | single |
+| CreateOIDCProvider | Create OIDC identity provider | High | Medium | | state-changing | single |
+| ListAccessKeys | List user's access keys | Low | ✅ None | | read-only | single |
+| CreateAccessKey | Create access key for user | Low | 🔴 **High** — secret key shown once | | state-changing | single |
+| DeleteAccessKey | Delete user's access key | Low | 🔴 **High** — irreversible | | destructive | single |
+| GetCredentialReport | Generate credential report | Medium | ✅ None | | read-only | single |
+| UpdateLoginProfile | Set user console password | Low | Medium | | state-changing | single |
 
 ## Changelog
-
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-07-13 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.0.0 | 2026-05-27 | Initial release with user, policy, role, group, identity provider, and audit operations |
 | 1.1.0 | 2026-06-04 | Phase 1 GCL rollout: added `## Quality Gate (GCL)` chapter, `references/rubric.md`, `references/prompt-templates.md`; `max_iter=2` for destructive / state_changing ops, `max_iter=3` for read-only ops |
 
