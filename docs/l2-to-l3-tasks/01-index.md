@@ -7,7 +7,7 @@
 
 | ID | 卡片 | 主题 | 预计影响面 | 依赖 | 估时 | 状态 |
 |----|------|------|-----------|------|------|------|
-| T01 | [T01-execution-risk-policy.md](./T01-execution-risk-policy.md) | 编写 `execution-risk.md` 决策规范（prose） | 1 新文件 | — | 0.5d | 🟡 TODO |
+| T01 | [T01-execution-risk-policy.md](./T01-execution-risk-policy.md) | 编写 `execution-risk.md` 决策规范（prose） | 1 新文件 | — | 0.5d | ✅ DONE |
 | T02 | [T02-execution-risk-schema.md](./T02-execution-risk-schema.md) | 编写 `execution-risk.schema.json` JSON Schema | 1 新文件 | T01 | 0.5d | 🟡 TODO |
 | T03 | [T03-domain-allowlist.md](./T03-domain-allowlist.md) | 编写 `domain-allowlist.md`（8 协调 skill 种子列表） | 1 新文件 | T01 | 0.25d | 🟡 TODO |
 | T04 | [T04-leaf-op-metadata-annotation.md](./T04-leaf-op-metadata-annotation.md) | 在 8 个 leaf skill 加上 `safety_class` / `blast_radius` 元数据 | 8 个 SKILL.md 改 1 行 | — | 1d | 🟡 TODO |

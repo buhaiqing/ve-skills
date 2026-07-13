@@ -217,8 +217,13 @@ This skill never reimplements routing. It loads the routing table, matches, and 
 - Read `docs/skill-routing-graph.md` — the routing table this skill consumes
 - Read `docs/failure-patterns.md` `## Extracted from GCL Traces` (auto-generated) and `## 6. Incident Response Failures` (seeded) — where this skill's learning lives
 
+## References
+
+- `references/policies/execution-risk.md` — L3 graded execution-risk policy (replaces the L2 `{{user.confirm}}` hard gate); `risk × blast_radius × confidence → AUTO/ASK/REFUSE` with a Safety = 0 → REFUSE floor.
+
 ## Changelog
 
 | Version | Date | Change |
 |---------|------|--------|
+| 0.2.0   | 2026-07-13 | Add L3 execution-risk policy (`references/policies/execution-risk.md`); `## References` now links the graded AUTO/ASK/REFUSE policy replacing the L2 blanket `{{user.confirm}}` gate. |
 | 0.1.0   | 2026-07-10 | Initial skeleton: 7-step loop, 7-dim rubric, 5 prompt templates, Skill-Routing-Graph integration, Reflexion write-back into `docs/failure-patterns.md` (`## Extracted from GCL Traces` block). |
