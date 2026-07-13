@@ -1,0 +1,13 @@
+{
+  "operations": [
+    {
+      "skill": "ve-ecs-ops",
+      "command": "DeleteInstance",
+      "safety_class": "destructive",
+      "blast_radius": "single",
+      "confidence": "high",
+      "safety": 1.0,
+      "metadata_ok": true
+    }
+  ]
+}

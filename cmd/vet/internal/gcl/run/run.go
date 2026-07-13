@@ -50,6 +50,62 @@ var (
 	negationPattern  = regexp.MustCompile(`\b(Enable|Activate|Allow|Grant|Create)\w*(Protection|Policy|Rule|Firewall)\b`)
 )
 
+var allowedSkills = map[string]bool{
+	"ve-cms-ops":       true,
+	"ve-ecs-ops":       true,
+	"ve-rds-mysql-ops": true,
+	"ve-redis-ops":     true,
+	"ve-vpc-ops":       true,
+	"ve-iam-ops":       true,
+	"ve-kms-ops":       true,
+	"ve-billing-ops":   true,
+}
+
+// OpDecision is the policy decision for one operation.
+type OpDecision int
+
+const (
+	OpRefuse OpDecision = iota
+	OpAsk
+	OpAuto
+)
+
+func (d OpDecision) String() string {
+	switch d {
+	case OpRefuse:
+		return "REFUSE"
+	case OpAsk:
+		return "ASK"
+	case OpAuto:
+		return "AUTO"
+	}
+	return "UNKNOWN"
+}
+
+// scoreDecision applies the execution-risk policy to a single operation.
+// Returns the policy verdict: AUTO, ASK, or REFUSE.
+func scoreDecision(skill, safetyClass, blastRadius, confidence string, safety float64, metadataOK bool) OpDecision {
+	if safety == 0 {
+		return OpRefuse
+	}
+	if safetyClass == "destructive" {
+		return OpAsk
+	}
+	if !metadataOK {
+		return OpAsk
+	}
+	if !allowedSkills[skill] {
+		return OpAsk
+	}
+	if safetyClass == "read_only" && confidence == "high" {
+		return OpAuto
+	}
+	if safetyClass == "mutating" && blastRadius == "single" && confidence == "high" {
+		return OpAuto
+	}
+	return OpAsk
+}
+
 // Options is the resolved configuration for a run.
 type Options struct {
 	Root              string

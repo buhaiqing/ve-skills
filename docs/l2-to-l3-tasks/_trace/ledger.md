@@ -55,3 +55,20 @@
 - References 已存在 `execution-risk.md` / `domain-allowlist.md`（T01/T03 已加，无需重复）
 - vet check frontmatter (29/29) + gcl (30/30) 全绿
 - T06 / T08 可消费（policy 现已在 loop 内）
+
+## T08 2026-07-13 — done
+
+- eval_queries.json 扩至 16 case（9 覆盖 3 类 AUTO/ASK/REFUSE × 场景），每 case 含 expected_decision
+- cmd/vet/internal/check/policyguard/ 新建（含 policyguard.go + policyguard_test.go + testdata/ + README.md）
+- policyguard.Check/CheckPlan/CheckPlanWithReport/ComputeDecision 4 函数；3 条不变量：safety=0→REFUSE、destructive→not AUTO、missing meta→not AUTO
+- cmd/vet/check.go 注册 policyguard 子命令
+- go build/vet/test 全绿；vet check policyguard 全绿
+- .github/workflows/validate.yml 不存在，跳过 CI 相关 DoD
+
+## T06 2026-07-13 — done
+
+- incident-loop-agent/SKILL.md + rubric.md 的 scripts/gcl_runner.py 全部替换为 vet gcl run
+- cmd/vet/internal/gcl/run/run.go 新增 allowedSkills + OpDecision + scoreDecision（含 9 格矩阵）
+- scoreDecision 单测：TestScoreDecision_9Cell / TestScoreDecision_DestructiveNeverAuto / TestScoreDecision_SafetyZeroRefuse 全 PASS
+- go build/vet/test 全绿；vet check frontmatter/gcl/eval/policyguard 全绿
+- .github/workflows/ 不存在，跳过 CI 相关 DoD

@@ -78,3 +78,65 @@ func TestRunResultTimedOut(t *testing.T) {
 		t.Fatalf("unexpected TimedOut for clean structural smoke (exit %d)", res.ExitCode)
 	}
 }
+
+// TestScoreDecision_9Cell covers the 9-cell decision matrix:
+// - read_only + high → AUTO
+// - mutating + single + high → AUTO
+// - destructive + any → ASK
+// - safety=0 → REFUSE (hard floor, overrides everything)
+// - missing metadata → ASK (fail-safe)
+func TestScoreDecision_9Cell(t *testing.T) {
+	cases := []struct {
+		skill      string
+		safetyClass string
+		blastRadius string
+		confidence string
+		safety     float64
+		metadataOK bool
+		want       OpDecision
+	}{
+		// AUTO cases
+		{"ve-ecs-ops", "read_only", "single", "high", 1.0, true, OpAuto},
+		{"ve-rds-mysql-ops", "read_only", "single", "high", 1.0, true, OpAuto},
+		{"ve-ecs-ops", "mutating", "single", "high", 1.0, true, OpAuto},
+		// ASK cases
+		{"ve-ecs-ops", "destructive", "single", "high", 1.0, true, OpAsk},
+		{"ve-ecs-ops", "mutating", "multi", "high", 1.0, true, OpAsk},
+		{"ve-redis-ops", "read_only", "single", "low", 1.0, true, OpAsk},
+		{"ve-unknown-ops", "read_only", "single", "high", 1.0, true, OpAsk},
+		// REFUSE: safety=0 hard floor
+		{"ve-ecs-ops", "read_only", "single", "high", 0.0, true, OpRefuse},
+		// REFUSE: destructive + safety=0
+		{"ve-redis-ops", "destructive", "single", "high", 0.0, true, OpRefuse},
+		// ASK: missing metadata (fail-safe)
+		{"ve-ecs-ops", "read_only", "single", "high", 1.0, false, OpAsk},
+	}
+	for _, c := range cases {
+		got := scoreDecision(c.skill, c.safetyClass, c.blastRadius, c.confidence, c.safety, c.metadataOK)
+		if got != c.want {
+			t.Errorf("scoreDecision(%q,%q,%q,%q,%.1f,%v) = %v, want %v",
+				c.skill, c.safetyClass, c.blastRadius, c.confidence, c.safety, c.metadataOK, got, c.want)
+		}
+	}
+}
+
+// TestScoreDecision_DestructiveNeverAuto: destructive ops must never get AUTO.
+func TestScoreDecision_DestructiveNeverAuto(t *testing.T) {
+	// mutating can be AUTO (single + high); only truly destructive is blocked
+	for _, sc := range []string{"destructive"} {
+		got := scoreDecision("ve-ecs-ops", sc, "single", "high", 1.0, true)
+		if got == OpAuto {
+			t.Errorf("safety_class=%q should never be AUTO, got AUTO", sc)
+		}
+	}
+}
+
+// TestScoreDecision_SafetyZeroRefuse: safety=0 must always be REFUSE.
+func TestScoreDecision_SafetyZeroRefuse(t *testing.T) {
+	for _, sc := range []string{"read_only", "mutating", "destructive"} {
+		got := scoreDecision("ve-ecs-ops", sc, "single", "high", 0.0, true)
+		if got != OpRefuse {
+			t.Errorf("safety=0 with safety_class=%q: got %v, want REFUSE", sc, got)
+		}
+	}
+}

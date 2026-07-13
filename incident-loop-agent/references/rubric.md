@@ -128,7 +128,7 @@ Did the loop **write** what it learned?
 | **0.5** | Some patterns persisted; some silently dropped. |
 | **0** | Patterns observed but not persisted. |
 
-> The write-back is **automatic** (driven by `scripts/gcl_runner.py` at MAX_ITER / SAFETY_FAIL), not a manual `append` by this skill. The `## 6. Incident Response Failures` table in `docs/failure-patterns.md` is a **separate, manually-seeded** section (columns `Scenario | Failure Pattern | Root Cause | Fix | Count`, dedup by `(scenario, failure_pattern)`) — it is NOT written by the write-back mechanism.
+> The write-back is **automatic** (driven by `vet gcl run` at MAX_ITER / SAFETY_FAIL), not a manual `append` by this skill. The `## 6. Incident Response Failures` table in `docs/failure-patterns.md` is a **separate, manually-seeded** section (columns `Scenario | Failure Pattern | Root Cause | Fix | Count`, dedup by `(scenario, failure_pattern)`) — it is NOT written by the write-back mechanism.
 
 Specific checks:
 

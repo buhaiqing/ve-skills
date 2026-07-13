@@ -15,7 +15,7 @@ compatibility: >-
   available, `ve` CLI installed and authenticated (`VOLCENGINE_ACCESS_KEY`,
   `VOLCENGINE_SECRET_KEY`), `docs/skill-routing-graph.md` reachable,
   `docs/failure-patterns.md` reachable (for Reflexion step), GCL runner
-  (`scripts/gcl_runner.py`) available, and a Harness AI Agent runtime
+  (`vet gcl run`) available, and a Harness AI Agent runtime
   compatible with the existing `ve-skill-generator` flow.
 metadata:
   author: ve-skills
@@ -145,7 +145,7 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 ### Step 4 — Propose fix + GCL loop
 
 - Build `dispatch_plan` = `{operations[], blast_radius, pre_state_snapshot, rollback_plan}`.
-- Run GCL via `scripts/gcl_runner.py` with this skill's `references/rubric.md`.
+- Run GCL via `vet gcl run` with this skill's `references/rubric.md`.
 - Safety must equal 1.0 on every destructive operation.
 - `max_iter = 3` for repair loop; `max_iter = 2` for any destructive.
 
@@ -175,7 +175,7 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 
 ### Step 7 — Reflexion (automatic write-back)
 
-- Failure patterns are **not** hand-written by this skill. When the GCL loop ends (MAX_ITER / SAFETY_FAIL), `scripts/gcl_runner.py` calls `_writeback_failure_pattern` → `gcl_trace_aggregate.update_failure_patterns_file`, which appends/merges the pattern into `docs/failure-patterns.md` `## Extracted from GCL Traces (auto-generated)` block (fields `skill` / `pattern` / `category` / `source`), **dedup by `(skill, pattern)`**.
+- Failure patterns are **not** hand-written by this skill. When the GCL loop ends (MAX_ITER / SAFETY_FAIL), `vet gcl run` calls `_writeback_failure_pattern` → `gcl_trace_aggregate.update_failure_patterns_file`, which appends/merges the pattern into `docs/failure-patterns.md` `## Extracted from GCL Traces (auto-generated)` block (fields `skill` / `pattern` / `category` / `source`), **dedup by `(skill, pattern)`**.
 - The separate `## 6. Incident Response Failures` table is a manually-seeded, design-placeholder section (dedup by `(scenario, failure_pattern)`); it is not produced by the write-back.
 - At session end, also update this skill's own working memory (`memory/working.json`) with `last_run`, `triage_class`, `success`.
 

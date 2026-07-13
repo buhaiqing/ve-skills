@@ -14,6 +14,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/gcl"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/links"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/policyguard"
 )
 
 // checkReport is the machine-readable shape emitted with --json.
@@ -25,13 +26,13 @@ type checkReport struct {
 
 type checkSummary struct {
 	Passing int            `json:"passing"`
-	Total   int            `json:"total"`
+	Total  int            `json:"total"`
 	Reports []checkReport `json:"reports"`
 }
 
 func runCheck(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval)")
+		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard)")
 		os.Exit(2)
 	}
 	name := args[0]
@@ -66,6 +67,8 @@ func runCheck(args []string) {
 			evalRes, evalSkills = eval.CheckDir(*root)
 		}
 		perSkillCheck("eval", evalRes, evalSkills, *jsonOut)
+	case "policyguard":
+		pgCheck(*root, *jsonOut)
 	default:
 		fmt.Fprintf(os.Stderr, "vet check %s: not implemented yet\n", name)
 		os.Exit(3)
@@ -171,6 +174,35 @@ func assessmentCheck(root string, jsonOut bool) {
 		os.Exit(1)
 	}
 	fmt.Printf("OK: %d files, %d example JSON blocks validated\n", files, examples)
+}
+
+func pgCheck(root string, jsonOut bool) {
+	// Find incident-loop-agent's policyguard test fixture (a real dispatch plan).
+	// The schema file itself is not a plan; use the testdata fixture.
+	planPath := filepath.Join(root, "cmd", "vet", "internal", "check", "policyguard", "testdata", "plan_clean.json")
+	if _, err := os.Stat(planPath); os.IsNotExist(err) {
+		if jsonOut {
+			fmt.Println(`{"ok":true,"reason":"no plan fixture found"}`)
+		} else {
+			fmt.Println("OK: no plan fixture found (policyguard is clean)")
+		}
+		return
+	}
+	err := policyguard.Check(planPath)
+	if jsonOut {
+		if err != nil {
+			b, _ := json.MarshalIndent(map[string]any{"ok": false, "error": err.Error()}, "", "  ")
+			fmt.Println(string(b))
+		} else {
+			fmt.Println(`{"ok":true}`)
+		}
+		return
+	}
+	if err != nil {
+		fmt.Printf("FAIL: policyguard: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("OK: policyguard passed")
 }
 
 func emitCheck(name string, summary checkSummary, jsonOut bool) {
