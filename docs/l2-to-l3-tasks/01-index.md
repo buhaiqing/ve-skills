@@ -11,7 +11,7 @@
 | T02 | [T02-execution-risk-schema.md](./T02-execution-risk-schema.md) | 编写 `execution-risk.schema.json` JSON Schema | 1 新文件 | T01 | 0.5d | ✅ DONE |
 | T03 | [T03-domain-allowlist.md](./T03-domain-allowlist.md) | 编写 `domain-allowlist.md`（8 协调 skill 种子列表） | 1 新文件 | T01 | 0.25d | ✅ DONE |
 | T04 | [T04-leaf-op-metadata-annotation.md](./T04-leaf-op-metadata-annotation.md) | 在 8 个 leaf skill 加上 `safety_class` / `blast_radius` 元数据 | 8 个 SKILL.md 改 1 行 | — | 1d | ✅ DONE |
-| T05 | [T05-incident-loop-skill-wiring.md](./T05-incident-loop-skill-wiring.md) | 把策略接入 loop（Step 5 改造 + 变量表） | 1 个 SKILL.md | T01, T02, T03, T04 | 1d | 🟡 TODO |
+| T05 | [T05-incident-loop-skill-wiring.md](./T05-incident-loop-skill-wiring.md) | 把策略接入 loop（Step 5 改造 + 变量表） | 1 个 SKILL.md | T01, T02, T03, T04 | 1d | ✅ DONE |
 | T06 | [T06-gcl-runner-runtime.md](./T06-gcl-runner-runtime.md) | 把 v0.1.0 skeleton 提升为生产 runtime（`vet gcl run` 替换 Python 脚本） | 1 个 .go + 1 个 Go 工具 | T05 | 2d | 🟡 TODO |
 | T07 | [T07-trace-schema-and-validator.md](./T07-trace-schema-and-validator.md) | 全链路 trace schema + `vet` 校验（RequestId 必填） | 1 个 JSON Schema + 1 个 Go 校验 | T06 | 1d | 🟡 TODO |
 | T08 | [T08-eval-and-safety-guard.md](./T08-eval-and-safety-guard.md) | eval 覆盖 AUTO/ASK/REFUSE + Safety-invariant guard | 1 个 JSON + 1 个 Go 断言 | T01, T05 | 1d | 🟡 TODO |

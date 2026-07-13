@@ -19,8 +19,8 @@ compatibility: >-
   compatible with the existing `ve-skill-generator` flow.
 metadata:
   author: ve-skills
-  version: "0.1.0"
-  last_updated: "2026-07-10"
+  version: "0.3.1"
+  last_updated: "2026-07-13"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   type: orchestration-skill
   guidance_freedom_level: medium
@@ -105,8 +105,10 @@ This skill MUST refuse to run a leaf `ve <service> <Action>` directly; it constr
 | `{{env.VOLCENGINE_ACCESS_KEY}}` | From runtime | NEVER ask; fail if unset |
 | `{{env.VOLCENGINE_SECRET_KEY}}` | From runtime | NEVER ask; fail if unset |
 | `{{env.VOLCENGINE_REGION}}` | From runtime | Use documented default if skill allows |
-| `{{user.confirm}}` | Yes/No to destructive op | MUST be collected before Safety=1 floor |
+| `{{user.confirm}}` | Yes/No to ASK-class op | Collected only when `{{policy.decision}} == ASK` |
 | `{{user.scope_choice}}` | When dispatch_plan lists multiple resource scopes | Collect before dispatch |
+| `{{policy.decision}}` | Per-operation policy verdict | Computed by T06 `scoreDecision`; one of `AUTO`, `ASK`, or `REFUSE` |
+| `{{policy.reason}}` | Human-readable decision rationale | Always populated; trace-only field |
 | `{{user.ticket_id}}` | JIRA / DOPS / CMS alarm ID | Echo into trace |
 | `{{input.incident_payload}}` | From triggering channel (alarm JSON, ticket, chat) | Required entrypoint |
 | `{{output.triage_class}}` | routing-graph primary skill | Internal only |
@@ -147,11 +149,23 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 - Safety must equal 1.0 on every destructive operation.
 - `max_iter = 3` for repair loop; `max_iter = 2` for any destructive.
 
-### Step 5 — Confirm (user gate, mandatory on destructive)
+### Step 5 — Confirm (user gate, ASK-class only)
 
-- Collect `{{user.confirm}}` for every operation whose safety_class == destructive.
-- Silent default = **REFUSE**. No implicit `--force` allowed.
-- Trace records the user response verbatim.
+- Read `{{policy.decision}}` for each operation (computed by T06 scorer before this step).
+- If `{{policy.decision}} == ASK`: collect `{{user.confirm}}` verbatim; trace it.
+- If `{{policy.decision}} == AUTO`: proceed directly to Step 6 (no prompt).
+- If `{{policy.decision}} == REFUSE`: skip to Step 7 with `failure_pattern = "policy_refused"`; do NOT execute the operation.
+- **No silent default** — every REFUSE is explicit from the policy scorer.
+
+### Step 5a — Policy evaluation
+
+- Before Step 5, the T06 scorer computes `{{policy.decision}}` per operation using:
+  - Inputs: `safety_class`, `blast_radius`, `confidence`, `safety` from leaf-op metadata
+  - Policy: `references/policies/execution-risk.md` (3×3 decision matrix, Safety=0→REFUSE hard floor)
+  - Schema: `assets/execution-risk.schema.json` (if/then hard rules)
+  - Allowlist: `references/policies/domain-allowlist.md` (AUTO eligibility per skill)
+- Output: one `{{policy.decision}}` (`AUTO`/`ASK`/`REFUSE`) and `{{policy.reason}}` per operation
+- `{{policy.decision}}` is then read in Step 5 to route each operation appropriately
 
 ### Step 6 — Execute (delegated, not direct)
 
@@ -181,7 +195,7 @@ See `references/rubric.md` for the per-dimension rules.
 
 - **Trace every iteration** — even when the loop exits on PASS, persist the trace to `audit-results/incident-trace-<ticket_id>-<ISO>.json`. Trace MUST include `RequestId`s from every `ve` call.
 - **Bounded Reflexion** — `docs/failure-patterns.md` ≤ 200 lines. Prune patterns with `count < 3`. Promote patterns with `count ≥ 10` to Anti-Patterns in `ve-*-ops` skills.
-- **No autopilot for destructive ops** — every destructive step has a `{{user.confirm}}` gate. No exceptions.
+- **No autopilot for non-AUTO class** — only operations with `{{policy.decision}} == AUTO` auto-execute; ASK requires `{{user.confirm}}`; REFUSE is blocked outright.
 - **No credential in trace** — `<masked>` only, `redaction_pass: true`.
 - **First incident is the slowest** — expect the GCL loop to fail once before the rubric converges. The second incident on the same symptom should be faster if Reflexion worked.
 
@@ -202,6 +216,7 @@ This skill never reimplements routing. It loads the routing table, matches, and 
 - Runs a bounded GCL loop with Safety = 1 floor
 - Persists every failure pattern via GCL Reflexion write-back into `docs/failure-patterns.md` `## Extracted from GCL Traces` for next-time speedup
 - Hands off all leaf `ve` calls to the matched `ve-*-ops` skill
+- Auto-executes policy-AUTO operations without human prompt; prompts only for ASK; blocks REFUSE outright
 
 ## What This Skill Does NOT Do
 
@@ -228,6 +243,7 @@ This skill never reimplements routing. It loads the routing table, matches, and 
 
 | Version | Date | Change |
 |---------|------|--------|
+| 0.3.1   | 2026-07-13 | T05 wiring: replace L2 `{{user.confirm}}` hard gate with policy decision gate; add `{{policy.decision}}`/`{{policy.reason}}` variables; Step 5 now reads policy verdict (AUTO→auto-exec, ASK→prompt, REFUSE→block); add Step 5a policy-evaluation description; bump `version` → 0.3.1. |
 | 0.3.0   | 2026-07-13 | L3 policy foundation complete (T01–T04): add `execution-risk.schema.json` (machine-readable policy twin, Safety=0→REFUSE + missing→ASK hard rules), `domain-allowlist.md` (8 coordinated skills + per-skill symptom whitelist + destructive exclusions + expansion policy), and `ve-skill-generator/references/leaf-op-metadata-spec.md` (per-op `safety_class`/`blast_radius` contract — 8 leaf SKILL.md operation tables now annotated). |
 | 0.2.0   | 2026-07-13 | Add L3 execution-risk policy (`references/policies/execution-risk.md`); `## References` now links the graded AUTO/ASK/REFUSE policy replacing the L2 blanket `{{user.confirm}}` gate. |
 | 0.1.0   | 2026-07-10 | Initial skeleton: 7-step loop, 7-dim rubric, 5 prompt templates, Skill-Routing-Graph integration, Reflexion write-back into `docs/failure-patterns.md` (`## Extracted from GCL Traces` block). |

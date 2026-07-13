@@ -43,3 +43,15 @@
 - 提交 02a7290（feature/t04-leaf-op-metadata → main）
 - T05 可解锁
 
+
+## T05 2026-07-13 — done
+
+- 改造 Step 5 为 policy 决策门（移除 "Silent default = REFUSE" 硬门）
+- 新增 `{{policy.decision}}` / `{{policy.reason}}` 变量声明（Variable Convention）
+- 新增 Step 5a — Policy evaluation 小节（描述 T06 scorer 计算逻辑）
+- :184 修订为 "No autopilot for non-AUTO class"（非硬门措辞）
+- What This Skill Does 新增 auto-exec 一句
+- version bump: 0.1.0 → 0.3.1，Changelog 追加 0.3.1 条目
+- References 已存在 `execution-risk.md` / `domain-allowlist.md`（T01/T03 已加，无需重复）
+- vet check frontmatter (29/29) + gcl (30/30) 全绿
+- T06 / T08 可消费（policy 现已在 loop 内）
