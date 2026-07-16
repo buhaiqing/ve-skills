@@ -98,8 +98,12 @@ SLS (Simple Log Service / 日志服务, also known as TLS - Total Log Service) o
 | `{{user.topic_name}}` | User-supplied log topic name | Ask once; reuse |
 | `{{user.ttl_days}}` | User-supplied TTL in days | Ask once; format integer |
 | `{{user.shipper_id}}` | User-supplied shipper ID | Format UUID |
+| `{{user.shipper_name}}` | User-supplied shipper name | Ask once; reuse |
+| `{{user.description}}` | User-supplied resource description | Ask once; reuse; optional |
 | `{{output.project_id}}` | From CreateProject response | Parse from `$.ProjectId` |
 | `{{output.topic_id}}` | From CreateTopic response | Parse from `$.TopicId` |
+| `{{output.shipper_id}}` | From CreateShipper response | Parse from `$.ShipperId` |
+| `{{output.shipper_name}}` | From CreateShipper response | Parse from `$.ShipperName` |
 
 > **Security Warning (Credential Masking — MANDATORY):** **NEVER** log, print, or expose `VOLCENGINE_SECRET_KEY`.
 
@@ -127,6 +131,11 @@ SLS (Simple Log Service / 日志服务, also known as TLS - Total Log Service) o
 | DescribeIndex | `$.IndexRules` | object | Index configuration |
 | DescribeIndex | `$.IndexRules.FullText` | object | Full-text index config |
 | DescribeIndex | `$.IndexRules.KeyValue` | object | Key-value index config |
+| CreateShipper | `$.ShipperId` | string | Created shipper ID — parse to `{{output.shipper_id}}` |
+| CreateShipper | `$.ShipperName` | string | Created shipper name — parse to `{{output.shipper_name}}` |
+| DeleteProject | `$.ProjectId` | string | Deleted project ID — empty when gone (poll DescribeProjects → 404) |
+| DeleteTopic | `$.TopicId` | string | Deleted topic ID — empty when gone (poll DescribeTopics → 404) |
+| DeleteShipper | `$.ShipperId` | string | Deleted shipper ID — empty when gone (poll DescribeShippers → 404) |
 | DescribeShippers | `$.Shippers` | array | LogShipper list |
 | DescribeShippers | `$.Shippers[].ShipperName` | string | Shipper name |
 | DescribeShippers | `$.Shippers[].DestinationType` | string | Destination type (TOS, etc.) |
@@ -297,22 +306,95 @@ ve tls ModifyTopic \
 
 ### Operation: DeleteTopic — Delete Log Topic
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** log topic `{{user.topic_id}}` (name: `{{user.topic_name}}`) in project `{{user.project_id}}`.
+> This is **IRREVERSIBLE** — all logs stored in this topic are destroyed and cannot be recovered. Any LogShippers delivering from this topic will break.
+> Type the topic ID `{{user.topic_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete
-- **MUST** warn about data loss — all logs in topic will be deleted
-- **MUST** check if LogShipper is configured (delivery may break)
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** verify no active LogShippers depend on this topic (delivery would break):
 
 ```bash
-# Check for active shippers
+# Check for active shippers — MUST be empty (TotalCount = 0)
 ve tls DescribeShippers --Region "{{user.region}}" --ProjectId "{{user.project_id}}" --TopicId "{{user.topic_id}}"
 ```
+
+3. If non-zero shippers are returned, **HALT** and warn the user to delete or re-point the shippers first.
 
 #### Execution
 
 ```bash
 ve tls DeleteTopic --Region "{{user.region}}" --ProjectId "{{user.project_id}}" --TopicId "{{user.topic_id}}"
 ```
+
+#### Validation
+
+Poll `DescribeTopics` until the topic is not found (404).
+
+---
+
+### Operation: DeleteProject — Delete Log Project
+
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** log project `{{user.project_id}}` (name: `{{user.project_name}}`).
+> This is **IRREVERSIBLE** — **ALL topics, all logs, all indexes, and all LogShippers** under this project are destroyed. Data loss is total.
+> Type the project ID `{{user.project_id}}` to confirm, or reply `abort` to cancel.
+
+#### Pre-flight (Safety Gate)
+
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** verify the project has no remaining topics (deleting a non-empty project fails or cascades):
+
+```bash
+# List topics in the project — MUST be empty (TotalCount = 0)
+ve tls DescribeTopics --Region "{{user.region}}" --ProjectId "{{user.project_id}}"
+```
+
+3. If any topics are returned, **HALT** and require the user to delete all topics first (each via the DeleteTopic flow above).
+
+#### Execution
+
+```bash
+ve tls DeleteProject --Region "{{user.region}}" --ProjectId "{{user.project_id}}"
+```
+
+#### Validation
+
+Poll `DescribeProjects` until the project is not found (404).
+
+---
+
+### Operation: DeleteShipper — Delete LogShipper
+
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** LogShipper `{{user.shipper_id}}` (name: `{{user.shipper_name}}`) for topic `{{user.topic_id}}`.
+> This is **IRREVERSIBLE** — log delivery to the destination (e.g. TOS bucket) stops immediately and the shipper configuration cannot be recovered.
+> Type the shipper ID `{{user.shipper_id}}` to confirm, or reply `abort` to cancel.
+
+#### Pre-flight (Safety Gate)
+
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** warn: ongoing log delivery stops immediately; already-delivered data in the destination is unaffected.
+3. **SHOULD** verify the shipper exists before deletion:
+
+```bash
+# Verify the shipper is present
+ve tls DescribeShipper --Region "{{user.region}}" --ProjectId "{{user.project_id}}" --TopicId "{{user.topic_id}}" --ShipperId "{{user.shipper_id}}"
+```
+
+4. If the shipper is not found, **HALT** and report — nothing to delete.
+
+#### Execution
+
+```bash
+ve tls DeleteShipper --Region "{{user.region}}" --ProjectId "{{user.project_id}}" --TopicId "{{user.topic_id}}" --ShipperId "{{user.shipper_id}}"
+```
+
+#### Validation
+
+Poll `DescribeShippers` until the shipper is not found (404).
 
 ---
 
@@ -585,6 +667,25 @@ ve tls SearchLogs --Region "{{user.region}}" --ProjectId "{{user.project_id}}" -
 | Parse failures | Log format doesn't match extractor | Update extractor configuration |
 
 ---
+
+## Failure Feedback Format
+
+When an operation fails, present the result to the user using this standardized block so failures are actionable and consistent:
+
+```
+❌ **Operation Failed: <OperationName>**
+- **Error code**: `<code>` (from the table below)
+- **What happened**: <one-line plain-language explanation>
+- **Why it matters**: <impact on the user's resources / data / delivery>
+- **Action required**: <concrete next step — e.g. fix input, wait for state, or HALT and escalate>
+- **Retry policy**: <0 retries; HALT> or <N retries with backoff> — state explicitly, never silent-retry
+```
+
+Rules:
+- **MUST** surface the raw error code from the API — do not paraphrase into a generic "something went wrong".
+- **MUST** state the retry policy (0 retries → HALT, or bounded retries) so the user knows whether the action auto-repeats.
+- **MUST NOT** log or echo `{{env.VOLCENGINE_SECRET_KEY}}` in any failure output.
+- On `**HALT**` conditions, stop the runbook and wait for explicit user direction — do not fall through to the next operation.
 
 ## Error Taxonomy
 

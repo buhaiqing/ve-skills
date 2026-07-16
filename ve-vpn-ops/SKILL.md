@@ -29,6 +29,7 @@ metadata:
     - VOLCENGINE_ACCESS_KEY
     - VOLCENGINE_SECRET_KEY
     - VOLCENGINE_REGION
+    - VPN_PORT
 ---
 
 > This skill follows the [Agent Skill OpenSpec](https://agentskills.io/specification).
@@ -105,11 +106,22 @@ VPN (虚拟专用网络) on Volcengine (火山引擎) provides secure encrypted 
 | `{{user.ssl_vpn_client_cert_name}}` | User-supplied SSL VPN client cert name | Ask once; reuse |
 | `{{user.vpc_id}}` | User-supplied VPC ID | Format `vpc-xxxxxxxxx` |
 | `{{user.subnet_id}}` | User-supplied Subnet ID | Format `subnet-xxxxxxxxx` |
+| `{{user.bandwidth}}` | VPN Gateway bandwidth in Mbps | Ask once; reuse; valid range 1-1000 |
+| `{{user.customer_ip}}` | Customer Gateway public IPv4 address | Ask once; reuse; must be public routable |
+| `{{user.pre_shared_key}}` | IPSec pre-shared key (PSK) | Ask once; reuse; **NEVER log or echo** |
+| `{{user.local_cidr}}` | Local subnet CIDR(s) for IPSec | Ask once; reuse; non-overlapping |
+| `{{user.remote_cidr}}` | Remote subnet CIDR(s) for IPSec | Ask once; reuse; non-overlapping |
+| `{{user.local_subnet}}` | Local subnets accessible via SSL VPN | Ask once; reuse; valid CIDR |
+| `{{user.client_ip_pool}}` | Client IP pool for SSL VPN clients | Ask once; reuse; valid CIDR |
+| `{{env.VPN_PORT}}` | SSL VPN server port (from environment) | NEVER ask the user; fail if unset |
 | `{{output.vpn_gateway_id}}` | From CreateVpnGateway response | Parse from `$.Result.VpnGatewayId` |
 | `{{output.customer_gateway_id}}` | From CreateCustomerGateway response | Parse from `$.Result.CustomerGatewayId` |
 | `{{output.vpn_connection_id}}` | From CreateVpnConnection response | Parse from `$.Result.VpnConnectionId` |
 | `{{output.ssl_vpn_server_id}}` | From CreateSslVpnServer response | Parse from `$.Result.SslVpnServerId` |
 | `{{output.ssl_vpn_client_cert_id}}` | From CreateSslVpnClientCert response | Parse from `$.Result.SslVpnClientCertId` |
+| `{{output.certificate}}` | Client certificate (PEM) from CreateSslVpnClientCert | Parse from `$.Result.Certificate`; save immediately |
+| `{{output.private_key}}` | Client private key (PEM) from CreateSslVpnClientCert | Parse from `$.Result.PrivateKey`; save securely; returned only once |
+| `{{output.ca_cert}}` | CA certificate (PEM) from CreateSslVpnClientCert | Parse from `$.Result.CaCert`; save immediately |
 
 > **`{{env.*}}` MUST NOT** be collected from the user. **`{{user.*}}`** MUST be collected interactively when missing.
 
@@ -145,8 +157,9 @@ VPN (虚拟专用网络) on Volcengine (火山引擎) provides secure encrypted 
 | CreateSslVpnServer | `$.Result.SslVpnServerId` | string | Created SSL VPN Server ID |
 | DescribeSslVpnServers | `$.Result.SslVpnServers` | array | SSL VPN Server list |
 | CreateSslVpnClientCert | `$.Result.SslVpnClientCertId` | string | Created SSL VPN client cert ID |
-| CreateSslVpnClientCert | `$.Result.Certificate` | string | Client certificate (PEM) |
-| CreateSslVpnClientCert | `$.Result.PrivateKey` | string | Client private key (PEM) — **SAVE IMMEDIATELY** |
+| CreateSslVpnClientCert | `$.Result.Certificate` | string | Client certificate (PEM) — parse to `{{output.certificate}}` |
+| CreateSslVpnClientCert | `$.Result.PrivateKey` | string | Client private key (PEM) — parse to `{{output.private_key}}`; **SAVE IMMEDIATELY**, returned only once |
+| CreateSslVpnClientCert | `$.Result.CaCert` | string | CA certificate (PEM) — parse to `{{output.ca_cert}}` |
 
 ### Expected State Transitions
 
@@ -389,20 +402,25 @@ done
 
 ### Operation: DeleteVpnGateway — Delete VPN Gateway
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** VPN Gateway `{{user.vpn_gateway_id}}` (name: `{{user.vpn_gateway_name}}`).
+> This is **IRREVERSIBLE** — all IPSec connections and SSL VPN Servers attached to this gateway are destroyed, and all VPN tunnels are terminated.
+> Type the gateway ID `{{user.vpn_gateway_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete of `{{user.vpn_gateway_name}}` (ID: `{{user.vpn_gateway_id}}`)
-- **MUST NOT** proceed without clear user assent
-- **MUST** verify VPN Gateway has no IPSec connections or SSL VPN Servers
-- **MUST** warn: deleting the gateway will terminate all VPN connections
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** verify the gateway has no dependent resources before deletion:
 
 ```bash
-# Check for IPSec connections
+# Check for IPSec connections — MUST be empty (TotalCount = 0)
 ve vpn DescribeVpnConnections --Region "{{user.region}}" --VpnGatewayId "{{user.vpn_gateway_id}}"
 
-# Check for SSL VPN Servers
+# Check for SSL VPN Servers — MUST be empty (TotalCount = 0)
 ve vpn DescribeSslVpnServers --Region "{{user.region}}" --VpnGatewayId "{{user.vpn_gateway_id}}"
 ```
+
+3. If either returns non-zero resources, **HALT** and warn the user to delete the dependent resources first.
 
 #### Execution — CLI (`ve`)
 
@@ -452,15 +470,22 @@ ve vpn CreateCustomerGateway \
 
 ### Operation: DeleteCustomerGateway — Delete Customer Gateway
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** Customer Gateway `{{user.customer_gateway_id}}` (name: `{{user.customer_gateway_name}}`).
+> This is **IRREVERSIBLE** — any IPSec connections referencing this gateway are severed.
+> Type the gateway ID `{{user.customer_gateway_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation
-- **MUST** verify Customer Gateway is not associated with any IPSec connections
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** verify the Customer Gateway is not associated with any IPSec connections:
 
 ```bash
-# Check for IPSec connections
+# Check for IPSec connections — MUST be empty (TotalCount = 0)
 ve vpn DescribeVpnConnections --Region "{{user.region}}" --CustomerGatewayId "{{user.customer_gateway_id}}"
 ```
+
+3. If non-zero connections are returned, **HALT** and warn the user to delete the IPSec connections first.
 
 #### Execution
 
@@ -559,10 +584,23 @@ done
 
 ### Operation: DeleteVpnConnection — Delete IPSec Connection
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** IPSec connection `{{user.vpn_connection_id}}` (name: `{{user.vpn_connection_name}}`).
+> This is **IRREVERSIBLE** — the VPN tunnel is terminated immediately and all encrypted traffic between the two sites stops.
+> Type the connection ID `{{user.vpn_connection_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation
-- **MUST** warn: this will terminate the VPN tunnel immediately
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** warn: this will terminate the VPN tunnel immediately.
+3. **SHOULD** verify the connection exists and is in a deletable state before deletion:
+
+```bash
+# Verify the IPSec connection is present and check its status
+ve vpn DescribeVpnConnections --Region "{{user.region}}" --VpnConnectionIds '["{{user.vpn_connection_id}}"]'
+```
+
+4. If the connection is not found, **HALT** and report — nothing to delete.
 
 #### Execution
 
@@ -620,15 +658,22 @@ ve vpn CreateSslVpnServer \
 
 ### Operation: DeleteSslVpnServer — Delete SSL VPN Server
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** SSL VPN Server `{{user.ssl_vpn_server_id}}` (name: `{{user.ssl_vpn_server_name}}`).
+> This is **IRREVERSIBLE** — all client certificates under this server are invalidated and all remote-access VPN clients lose connectivity.
+> Type the server ID `{{user.ssl_vpn_server_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation
-- **MUST** verify no client certificates are associated (or warn about them)
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** verify no client certificates are associated (or warn about them):
 
 ```bash
-# Check for client certificates
+# Check for client certificates — MUST be empty (TotalCount = 0)
 ve vpn DescribeSslVpnClientCerts --Region "{{user.region}}" --SslVpnServerId "{{user.ssl_vpn_server_id}}"
 ```
+
+3. If non-zero certificates are returned, **HALT** and warn the user to revoke/delete the client certs first.
 
 #### Execution
 
@@ -679,10 +724,23 @@ chmod 600 client.key
 
 ### Operation: DeleteSslVpnClientCert — Delete SSL VPN Client Certificate
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** SSL VPN client certificate `{{user.ssl_vpn_client_cert_id}}` (name: `{{user.ssl_vpn_client_cert_name}}`).
+> This is **IRREVERSIBLE** — the client will lose VPN access immediately and the certificate cannot be recovered (the private key was returned only once at creation).
+> Type the cert ID `{{user.ssl_vpn_client_cert_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation
-- **MUST** warn: client will lose VPN access immediately
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** warn: client will lose VPN access immediately.
+3. **SHOULD** verify the certificate exists before deletion:
+
+```bash
+# Verify the client certificate is present
+ve vpn DescribeSslVpnClientCerts --Region "{{user.region}}" --SslVpnServerId "{{user.ssl_vpn_server_id}}"
+```
+
+4. If the certificate is not found, **HALT** and report — nothing to delete.
 
 #### Execution
 
@@ -694,6 +752,25 @@ ve vpn DeleteSslVpnClientCert \
 ```
 
 ---
+
+## Failure Feedback Format
+
+When an operation fails, present the result to the user using this standardized block so failures are actionable and consistent:
+
+```
+❌ **Operation Failed: <OperationName>**
+- **Error code**: `<code>` (from the table below)
+- **What happened**: <one-line plain-language explanation>
+- **Why it matters**: <impact on the user's resources / connectivity>
+- **Action required**: <concrete next step — e.g. fix input, wait for state, or HALT and escalate>
+- **Retry policy**: <0 retries; HALT> or <N retries with backoff> — state explicitly, never silent-retry
+```
+
+Rules:
+- **MUST** surface the raw error code from the API — do not paraphrase into a generic "something went wrong".
+- **MUST** state the retry policy (0 retries → HALT, or bounded retries) so the user knows whether the action auto-repeats.
+- **MUST NOT** log or echo `{{user.pre_shared_key}}` / `{{output.private_key}}` in any failure output.
+- On `**HALT**` conditions, stop the runbook and wait for explicit user direction — do not fall through to the next operation.
 
 ## Error Taxonomy
 
