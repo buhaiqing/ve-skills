@@ -100,6 +100,7 @@ ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capaci
 | `{{user.instance_type}}` | User-supplied instance type (e.g., ecs.g3i.large) | Ask once; reuse |
 | `{{user.vpc_id}}` | User-supplied VPC ID | Format `vpc-xxxxxxxxx` |
 | `{{user.subnet_id}}` | User-supplied subnet ID | Format `subnet-xxxxxxxxx` |
+| `{{user.next_token}}` | Pagination cursor for `MaxResults`/`NextToken` | Ask once on first page; reuse from prior `$.NextToken`; omit on first call |
 | `{{output.instance_id}}` | From RunInstances/DescribeInstances response | Parse from `$.Result.InstanceIds[0]` or `$.Result.Instances[].InstanceId` |
 | `{{output.status}}` | Instance lifecycle state | Parse from `$.Result.Instances[].Status` |
 
@@ -460,13 +461,17 @@ Poll until status transitions `RUNNING` → `REBOOTING` → `RUNNING` (max 300s)
 
 ### Operation: DeleteInstance — Delete Instance
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** instance `{{user.instance_name}}` (ID: `{{user.instance_id}}`).
+> This is **IRREVERSIBLE** — attached cloud disks and the instance itself are destroyed.
+> Type the instance ID `{{user.instance_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete of instance `{{user.instance_name}}` (ID: `{{user.instance_id}}`)
-- **MUST NOT** proceed without clear user assent
-- **MUST** verify instance is in `STOPPED` state (cannot delete running instances)
-- **MUST** warn about attached cloud disks — they may be deleted with the instance
-- **MUST** warn about deletion protection — verify it is disabled
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** verify instance is in `STOPPED` state (cannot delete running instances).
+3. **MUST** warn about attached cloud disks — they may be deleted with the instance.
+4. **MUST** warn about deletion protection — verify it is disabled:
 
 ```bash
 # Check deletion protection status
@@ -734,6 +739,14 @@ ve ecs DescribeNetworkInterfaces \
 > SKILL.md 中仅保留 FinOps 入口；具体执行步骤在 `references/advanced/finops.md`（TE-7 专业内容分层）。
 
 ## Error Taxonomy
+
+> **Failure Feedback Format (UX Standard):** When an operation fails, report it in this structured form so the user always gets an actionable next step:
+> ```
+> ❌ <Operation> Failed
+> What happened: <one-line error from API `Message` or matched Error Taxonomy row>
+> How to fix: <Resolution from the table below>
+> Next steps: <concrete command or action to recover>
+> ```
 
 | Code | Description | Resolution |
 |------|-------------|------------|

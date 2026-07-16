@@ -299,11 +299,25 @@ Poll DescribeSubnets until status is `Available`.
 
 ### Operation: DeleteVpc — Delete VPC
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** VPC `{{user.vpc_id}}` (name: `{{user.vpc_name}}`).
+> This is **IRREVERSIBLE** — all subnets, route tables, and resources inside the VPC are destroyed.
+> Type the VPC ID `{{user.vpc_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete
-- **MUST** verify VPC has no subnets, instances, or other resources
-- **MUST NOT** proceed without clear user assent
+1. **MUST** obtain explicit user confirmation (type-to-confirm above) — **MUST NOT** proceed without clear assent.
+2. **MUST** verify the VPC is empty before deletion:
+
+```bash
+# List subnets in the VPC — MUST be empty (TotalCount = 0)
+ve vpc DescribeSubnets --Region "{{user.region}}" --VpcId "{{user.vpc_id}}"
+
+# List route tables in the VPC — MUST be empty (TotalCount = 0)
+ve vpc DescribeRouteTables --Region "{{user.region}}" --VpcId "{{user.vpc_id}}"
+```
+
+3. If either returns non-zero resources, **HALT** and warn the user to clean up first.
 
 #### Execution
 
@@ -346,6 +360,14 @@ ve vpc CreateRouteEntry \
 ---
 
 ## Error Taxonomy
+
+> **Failure Feedback Format (UX Standard):** When an operation fails, report it in this structured form so the user always gets an actionable next step:
+> ```
+> ❌ <Operation> Failed
+> What happened: <one-line error from API `Message` or matched Error Taxonomy row>
+> How to fix: <Resolution from the table below>
+> Next steps: <concrete command or action to recover>
+> ```
 
 | Code | Description | Resolution |
 |------|-------------|------------|
