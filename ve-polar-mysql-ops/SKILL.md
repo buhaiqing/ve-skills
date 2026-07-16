@@ -213,12 +213,7 @@ ve polardb_mysql DescribeDBClusters --Region "{{env.VOLCENGINE_REGION}}" --PageN
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety |
-|---|---|---|---|
-| **Destructive** | `DeleteDBCluster` | 2 | 1.0 |
-| **State-changing** | `ModifyDBNodeSpec`, `ScaleStorage`, `Failover`, `RestartDBInstance`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList`, `ModifyDBEndpoint` | 2 | 1.0 |
-| **Mutating** | `CreateDBCluster`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance`, `CreateReadOnlyNode` | 2 | ≥0.5 |
-| **Read-only** | `DescribeDBClusters`, `DescribeDBClusterDetail`, `DescribeDBNodes`, `DescribeDBInstanceParameters`, `DescribeDBAccounts` | 3 | ≥0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop & Safety
 - **DeleteDBCluster**: ALL compute nodes + shared storage + data lost.

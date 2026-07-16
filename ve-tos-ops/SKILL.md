@@ -199,12 +199,7 @@ tosutil ls -s
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety floor |
-|---|---|---|---|
-| **Destructive** | `DeleteBucket`, `DeleteObject` (single + prefix recursive) | 2 | 1.0 (mandatory) |
-| **State-changing** | `PutBucketLifecycle`, `PutBucketVersioning`, `PutBucketACL`, `OptimizeStorageClass`, `AbortMultipartUpload` | 2 | 1.0 (mandatory) |
-| **Mutating** | `CreateBucket`, `PutObject`, `CopyObject`, `CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload`, `PresignURL` | 2 | ≥ 0.5 |
-| **Read-only** | `ListBuckets`, `ListObjects`, `GetObject`, `GetBucketLocation`, `DescribeStorageAnalysis`, `DetectStaleObjects`, `CleanupMultipartUploads` (list-only), `DescribeCostSummary` | 3 | ≥ 0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop
 

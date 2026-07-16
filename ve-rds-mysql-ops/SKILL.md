@@ -204,12 +204,7 @@ ve rds_mysql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumb
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety floor |
-|---|---|---|---|
-| 🔴 **Destructive** | `DeleteDBInstance`, `DeleteDBAccount`, `RebuildDBInstance` | 2 | 1.0 (mandatory) |
-| 🟡 **State-changing** | `ModifyDBNodeSpec`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList` | 2 | 1.0 (mandatory) |
-| **Mutating** | `CreateDBInstance`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance` | 2 | ≥ 0.5 |
-| ✅ **Read-only** | `DescribeDBInstanceDetail`, `DescribeDBInstances`, `DescribeDBInstanceParameters`, `DescribeRegions`, `DescribeAvailabilityZones`, `ListDBInstanceIPLists`, `DescribeDBAccounts`, `DescribeBackups` | 3 | ≥ 0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop
 

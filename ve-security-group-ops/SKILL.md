@@ -183,12 +183,7 @@ ve vpc DescribeSecurityGroups --Region {{env.VOLCENGINE_REGION}}
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety |
-|---|---|---|---|
-| **Destructive** | `DeleteSecurityGroup`, `RevokeSecurityGroupIngress`, `RevokeSecurityGroupEgress` | 2 | 1.0 |
-| **State-changing** | `AuthorizeSecurityGroupIngress`, `AuthorizeSecurityGroupEgress`, `ModifySecurityGroupAttributes` | 2 | 1.0 |
-| **Mutating** | `CreateSecurityGroup` | 2 | ≥0.5 |
-| **Read-only** | `DescribeSecurityGroups`, `DescribeSecurityGroupAttributes`, `AuditSecurityGroupRules`, `DetectExposedPorts`, `FindUnusedSecurityGroups`, `DetectRuleConflicts` | 3 | ≥0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop & Safety
 - **DeleteSecurityGroup**: check no instance attached; irreversibe.

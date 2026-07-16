@@ -2,19 +2,7 @@
 
 These supplement `CLAUDE.md` (imported above). They encode lessons that have already cost agent sessions in this repo.
 
-> **Content hierarchy**: This file is the entry point. Detailed specifications live in `docs/`:
-> - `docs/gcl-spec.md` — full GCL specification (purpose, roles, loop flow, trace, prompt templates, changelog)
-> - `docs/token-efficiency.md` — full TE rules with code examples (TE-1 through TE-9)
-> - `docs/skill-harness-review-checklist.md` — reusable P0-P3 review checklist for all ve-*-ops skills
-> - `docs/self-review-checklist.md` — Round 1 (C1–C17) + Round 2 (F1–F13) checklists + validation matrix
-> - `docs/execution-strategy.md` — E1–E4 decision rules, runtime adaptation, retro reflection
-> - `docs/l2-to-l3-plan.md` — detailed L2→L3 (conditional autonomy) execution plan (M1 expansion)
-> - `docs/l2-to-l3-tasks/AGENTS.md` — AI 入口规则 for L2→L3 tasks (Karpathy + TDD + GCL + 文档更新)
-> - `docs/l3-to-l4-tasks/AGENTS.md` — AI 入口规则 for L3→L4 tasks (envelope / SLO / 自愈 L3 / Reflexion 4 级)
-> - `docs/codegraph-integration.md` — CodeGraph two-tier sync rules
-> - `docs/inline-script-pattern.md` — `_inline_script()` implementation constraints for validation scripts
->
-> Keep this file in sync with `docs/` files. When updating either, verify the other stays aligned.
+> **Content hierarchy**: This file is the entry point. See [docs/README.md](docs/README.md) for full documentation index organized by role (使用者 / 开发者 / 审查者).
 
 ---
 
@@ -143,52 +131,26 @@ Full Round 1 (C1–C17) structural/spec-compliance table and Round 2 (F1–F13) 
 
 ## File Layout Anchors (do not relocate without reason)
 
+完整目录树见 [docs/README.md](docs/README.md)。核心结构：
+
 ```
-ve-skill-generator/                  meta-skill: how to author new skills
-  SKILL.md                           generator workflow + P0/P1 checklist
-  references/
-    ve-skill-template.md             canonical skill template
-    cli-behavior.md                  verified `ve` CLI conventions
-    execution-environment.md         CLI + Go SDK setup
-    user-experience-spec.md          UX requirements every generated skill must follow
-    governance-and-adversarial-review.md
-ve-[product]-ops/                    one per Volcengine product
-  SKILL.md                           main runbook
-  references/                        6 standard reference files
-  assets/example-config.yaml
-docs/
-  gcl-spec.md                        full GCL specification
-  token-efficiency.md                detailed TE rules with code examples
-  document-integrity.md              link validation & dedup scripts
-  failure-patterns.md                Reflexion memory store
-  inline-script-pattern.md           _inline_script() constraints
-  reflexion-memory.md                cross-session failure-pattern memory
-  skill-harness-review-checklist.md  P0-P3 review checklist
-  skill-routing-graph.md             cross-skill alarm routing
+ve-skill-generator/    meta-skill: how to author new skills
+ve-[product]-ops/       one per Volcengine product (SKILL.md + references/ + assets/)
+docs/                  详细索引见 [docs/README.md](docs/README.md)
+incident-loop-agent/    orchestration skill (exempt from ve-* naming rule)
 ```
 
-`.omc/` and `.omo/` are tool-local state and are gitignored — do not commit anything inside them.
+`.omc/` and `.omo/` are tool-local state and are gitignored.
 
 ### Asset & Schema Placement Rules (mandatory)
 
-Skill-owned artifacts MUST NOT be placed at repo root. Use this split:
-
-| Location | Allowed contents | Forbidden |
+| Location | Allowed | Forbidden |
 |---|---|---|
-| `ve-*-ops/assets/` | `eval_queries.json`, `example-config.yaml`, `*.schema.json`, skill-specific templates | Cross-skill executables |
-| `ve-*-ops/references/` | Runbooks, output contracts in Markdown, delegation stubs | Duplicate JSON schemas that belong in `assets/` |
-| `scripts/` (repo root) | **Deprecated** Python validation scripts (`validate_local.py`, `check_gcl_conformance.py`, etc.) — superseded by `cmd/vet/`; kept only as reference | JSON Schema, handoff contracts, example YAML |
+| `ve-*-ops/assets/` | `eval_queries.json`, `example-config.yaml`, `*.schema.json` | Cross-skill executables |
+| `ve-*-ops/references/` | Runbooks, output contracts in Markdown | JSON schemas (→ `assets/`) |
+| `scripts/` (repo root) | **Deprecated** — superseded by `cmd/vet/` | New schemas or contracts |
 
-**Owner skill rule:** the skill that **defines and primarily consumes** the contract owns the file. Secondary consumers link to the owner via relative path — they do not copy or re-home the schema.
-
-**When adding a new `*.schema.json` or handoff contract:**
-1. Pick the owner skill (primary consumer of the JSON contract).
-2. Create under `ve-<owner>-ops/assets/<name>.schema.json`.
-3. Reference from owner `SKILL.md` / `references/` and owner `example-config.yaml` if config-driven.
-4. Secondary skills cite the owner path (e.g. `../ve-<owner>-ops/assets/...`) — never `assets/` at repo root.
-5. If a future `scripts/*.py` (or `cmd/vet/` check) emits JSON matching the schema, its docstring MUST point at the owner skill path (script ≠ schema owner).
-
-**Anti-pattern (banned):** creating `assets/` at repo root because a script is shared — shared **code** lives in `scripts/`; shared **contracts** still belong to an owning skill.
+**Owner skill rule**: the skill that defines and consumes a contract owns it. Create `ve-<owner>-ops/assets/<name>.schema.json`; secondary skills link via relative path. Anti-pattern: `assets/` at repo root — contracts belong to owning skill, not shared at root.
 
 ---
 
@@ -282,22 +244,11 @@ GCL runs MUST use externally supplied isolated Critic scores in production. Manu
 
 ## Runtime Quality Gates: GCL & Reflexion
 
-Detailed specs in [docs/gcl-spec.md](docs/gcl-spec.md) and [docs/reflexion-memory.md](docs/reflexion-memory.md).
+详细规范见 [docs/gcl-spec.md](docs/gcl-spec.md)（GCL）和 [docs/reflexion-memory.md](docs/reflexion-memory.md)（Reflexion）。
 
-| Spec | Read before modifying |
-|---|---|
-| `docs/gcl-spec.md` | any `## Quality Gate (GCL)` section, `references/rubric.md`, `references/prompt-templates.md`, or GCL-related runner code |
-| `docs/reflexion-memory.md` | `docs/failure-patterns.md`, trace `failure_pattern` extraction, Reflexion retrieval/persistence logic, or failure-memory governance |
+**GCL 硬约束**：G+C 上下文隔离 · Critic 只读 · Safety=0 必须 ABORT · 有界 max_iterations · `{{env.*}}`/`{{user.*}}`/`{{output.*}}` 占位符 · trace 持久化并脱敏凭证。
 
-### Hard Constraints Summary
-
-**GCL:** Isolated G+C contexts · Critic read-only · Safety=0 must ABORT · max_iterations bounded · `{{env.*}}`/`{{user.*}}`/`{{output.*}}` placeholders · Trace persisted with masked credentials.
-
-**Reflexion:** Optional hint · `docs/failure-patterns.md` ≤ 200 lines · Dedup by skill+command+error · Patterns from GCL trace only.
-
-### Relationship to build-time self-review
-
-Build-time 2-round self-review and runtime GCL are independent gates. A clean self-review does not exempt runtime scoring; a passing GCL rubric does not exempt sloppy skill updates.
+**Build-time 自检与 runtime GCL 互相独立**：自检通过 ≠ GCL 通过；GCL 通过 ≠ 自检可以敷衍。
 
 ---
 

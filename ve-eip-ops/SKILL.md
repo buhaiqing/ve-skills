@@ -181,12 +181,7 @@ ve eip DescribeEipAddresses --Region {{env.VOLCENGINE_REGION}}
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety floor |
-|---|---|---|---|
-| **Destructive** | `ReleaseEipAddress` | 2 | 1.0 (mandatory) |
-| **State-changing** | `DisassociateEipAddress`, `AssociateEipAddress`, `ModifyEipBandwidth` | 2 | 1.0 (mandatory) |
-| **Mutating** | `AllocateEipAddress`, `ModifyEipAddressAttributes`, `RenewEipAddress`, `TagEipAddress` | 2 | ≥ 0.5 |
-| **Read-only** | `DescribeEipAddresses`, `DescribeEipBandwidth`, `DescribeEipAddressAttributes` | 3 | ≥ 0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop
 

@@ -782,12 +782,7 @@ ve ecs DescribeNetworkInterfaces \
 
 ### Operation Tiers (from `references/rubric.md` §0)
 
-| Tier | Operations | `max_iter` | Safety floor |
-|---|---|---|---|
-| **Destructive** | `DeleteInstance`, `DeleteDisk`, `DeleteSnapshot`, `DeleteImage`, `DeleteKeyPair`, `DeleteNetworkInterface` | 2 | 1.0 (mandatory) |
-| **State-changing** | `StopInstance`, `RebootInstance`, `ModifyInstanceSpec`, `ModifyInstanceAttribute`, `TerminateInstances`, `StopInvocation` | 2 | 1.0 (mandatory) |
-| **Mutating** | `RunInstances`, `CreateDisk`, `CreateSnapshot`, `CreateImage`, `CreateKeyPair`, `AttachDisk`, `DetachDisk`, `InvokeCommand` | 2 | ≥ 0.5 |
-| **Read-only** | `DescribeInstances`, `DescribeDisks`, `DescribeSnapshots`, `DescribeImages`, `DescribeKeyPairs`, `DescribeRegions`, `DescribeInstanceTypes`, `DescribeInvocationResults`, `DescribeIdleInstances`, `DescribeCostSummary` | 3 | ≥ 0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop
 

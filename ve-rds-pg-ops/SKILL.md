@@ -198,12 +198,7 @@ ve rds_postgresql DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --Pag
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety |
-|---|---|---|---|
-| 🔴 **Destructive** | `DeleteDBInstance`, `DeleteDBAccount` | 2 | 1.0 |
-| 🟡 **State-changing** | `ModifyDBInstanceSpec`, `ModifyDBInstanceParameter`, `ModifyDBInstanceIPList`, `RestartDBInstance` | 2 | 1.0 |
-| 🟢 **Mutating** | `CreateDBInstance`, `CreateDBAccount`, `CreateBackup`, `RestoreToNewInstance`, `CreateReadOnlyNode` | 2 | ≥0.5 |
-| ℹ️ **Read-only** | `DescribeDBInstances`, `DescribeDBInstanceDetail`, `DescribeDBInstanceParameters`, `DescribeAccounts`, `DescribeBackups` | 3 | ≥0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop & Safety
 - **DeleteDBInstance**: check deletion protection; warn irreversible data loss.

@@ -213,12 +213,7 @@ ve elasticsearch DescribeInstances --Region {{env.VOLCENGINE_REGION}}
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety |
-|---|---|---|---|
-| **Destructive** | `DeleteInstance`, `DeleteIndex`, `DeleteSnapshot` | 2 | 1.0 |
-| **State-changing** | `ModifyInstanceSpec`, `RestartInstance`, `UpgradeVersion`, `EnableKibana`, `DisableKibana`, `InstallPlugin`, `UninstallPlugin`, `ModifyInstanceChargeType` | 2 | 1.0 |
-| **Mutating** | `CreateInstance`, `CreateIndex`, `CreateSnapshot`, `KibanaCreateUser` | 2 | ≥0.5 |
-| **Read-only** | `DescribeInstances`, `DescribeIndices`, `DescribeSnapshots`, `DescribePlugins`, `DescribeKibana` | 3 | ≥0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop & Safety
 - **DeleteInstance**: ALL indices+data+snapshots lost.

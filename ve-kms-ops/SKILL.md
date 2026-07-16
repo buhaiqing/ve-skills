@@ -210,12 +210,7 @@ ve kms CreateKey --KeySpec AES_256 --KeyUsage ENCRYPT_DECRYPT --Region {{env.VOL
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety floor |
-|---|---|---|---|
-| **Destructive** | `ScheduleKeyDeletion` | 2 | 1.0 (mandatory) — `PendingWindowInDays` ≥ 7 required |
-| **State-changing** | `DisableKey`, `UpdateKeyRotation`, `PutKeyPolicy`, `RevokeGrant`, `DeleteKeyMaterial` | 2 | 1.0 (mandatory) |
-| **Mutating** | `CreateKey`, `EnableKey`, `CreateGrant`, `CancelKeyDeletion`, `Encrypt`, `Decrypt`, `GenerateDataKey`, `GenerateDataKeyWithoutPlaintext` | 2 | ≥ 0.5 |
-| **Read-only** | `DescribeKey`, `DescribeKeys`, `DescribeKeyRotation`, `ListGrants`, `GetKeyPolicy` | 3 | ≥ 0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop
 

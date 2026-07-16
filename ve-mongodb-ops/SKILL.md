@@ -215,12 +215,7 @@ ve mongodb DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety |
-|---|---|---|---|
-| **Destructive** | `DeleteDBInstance` | 2 | 1.0 |
-| **State-changing** | `ModifyDBInstanceSpec`, `RestartDBInstance`, `ModifyDBInstanceIPList`, `CreateDatabase`, `CreateDBAccount` | 2 | 1.0 |
-| **Mutating** | `CreateDBInstance`, `CreateBackup`, `RestoreToNewInstance` | 2 | ≥0.5 |
-| **Read-only** | `DescribeDBInstances`, `DescribeDBInstanceDetail`, `DescribeDBAccounts`, `DescribeDatabases`, `DescribeBackups` | 3 | ≥0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop & Safety
 - **DeleteDBInstance**: check deletion protection; ALL data lost.

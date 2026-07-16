@@ -179,12 +179,7 @@ ve redis DescribeDBInstances --Region "{{env.VOLCENGINE_REGION}}" --PageNumber 1
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety floor |
-|---|---|---|---|
-| **Destructive** | `DeleteDBInstance`, `DeleteAllowList` | 2 | 1.0 (mandatory) |
-| **State-changing** | `ModifyDBInstanceSpec`, `RestartDBInstance`, `ModifyDBInstanceParameters`, `ModifyAllowList`, `CreateAccount` | 2 | 1.0 (mandatory) |
-| **Mutating** | `CreateDBInstance`, `CreateBackup`, `CreateAllowList` | 2 | ≥ 0.5 |
-| **Read-only** | `DescribeDBInstanceDetail`, `DescribeDBInstances`, `DescribeAllowLists`, `DescribeAccounts`, `DescribeBackups`, `DescribeDBInstanceParameters` | 3 | ≥ 0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop
 

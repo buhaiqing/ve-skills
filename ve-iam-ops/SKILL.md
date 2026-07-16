@@ -211,12 +211,7 @@ ve iam ListUsers --Region {{env.VOLCENGINE_REGION}}
 
 ### Operation Tiers
 
-| Tier | Operations | `max_iter` | Safety floor |
-|---|---|---|---|
-| **Destructive** | `DeleteUser`, `DeletePolicy`, `DeleteRole`, `DeleteGroup`, `DeleteAccessKey`, `DeleteSAMLProvider`, `DeleteOIDCProvider` | 2 | 1.0 (mandatory) |
-| **State-changing** | `DetachUserPolicy`, `DetachRolePolicy`, `DetachGroupPolicy`, `RemoveUserFromGroup`, `UpdateLoginProfile`, `UpdateUser`, `UpdatePolicy`, `UpdateRole`, `UpdateAccessKey` | 2 | 1.0 (mandatory) |
-| **Mutating** | `CreateUser`, `CreatePolicy`, `CreateRole`, `CreateGroup`, `AddUserToGroup`, `AttachUserPolicy`, `AttachRolePolicy`, `AttachGroupPolicy`, `CreateAccessKey`, `CreateSAMLProvider`, `CreateOIDCProvider`, `AssumeRole` | 2 | ≥ 0.5 |
-| **Read-only** | `ListUsers`, `ListPolicies`, `ListRoles`, `ListGroups`, `GetUser`, `GetRole`, `GetGroup`, `GetPolicy`, `GetCredentialReport`, `ListAccessKeys`, `ListAttachedUserPolicies`, `ListAttachedRolePolicies`, `ListAttachedGroupPolicies`, `ListGroupsForUser`, `ListEntitiesForPolicy`, `GetLoginProfile`, `GenerateCredentialReport` | 3 | ≥ 0 |
+> See [`references/rubric.md` §0](references/rubric.md#0-operation-tier) for the full operation tier table.
 
 ### Loop
 
