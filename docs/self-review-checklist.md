@@ -66,4 +66,4 @@ Verify against reality, not memory:
 | Any skill harness review | Walk `docs/skill-harness-review-checklist.md` D0-D4 |
 | Any Go SDK example code change | `python3 -m py_compile <file>` if Python; Go examples are illustrative — no build step |
 
-> **Note:** This repo has a Go validation CLI, `vet` (built from `cmd/vet/`), which replaces the legacy Python scripts in `scripts/` for pre-commit checks. After changes, run `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`), then supplement with manual checks against the P0/P1 checklist. The Python scripts remain as the original reference implementation.
+> **Note:** This repo has a Go validation CLI, `vet` (built from `cmd/vet/`), for pre-commit checks. After changes, run `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`), then supplement with manual checks against the P0/P1 checklist.

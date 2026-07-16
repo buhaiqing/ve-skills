@@ -208,7 +208,7 @@ Refactor → 消除重复、提升可读性，不改变行为
 | Test | `cd cmd/vet && go test ./...` |
 | Publishable | `make build` 产出二进制 + `make vet` |
 
-**禁止**：Python / Bash / shell 编写新工具。`scripts/*.py` 仅为参考实现，不再扩展。
+**禁止**：Python / Bash / shell 编写新工具。所有工具必须是 Go 代码。
 
 ### T4. 凭证安全（强制）
 

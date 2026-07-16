@@ -28,7 +28,7 @@ All Go code under `cmd/vet/` MUST uphold:
 | **Publishable** | 工具具备发布路径（如 `Makefile` target / 带版本号的构建），且 `go vet ./...` 干净 | `go vet ./...`、`make build` / 发布 target |
 
 执行细则：
-- **禁止用 Python / Bash / shell 编写独立工具。** 遗留的 `scripts/*.py` 仅作参考实现，MUST NOT 再扩展新功能；新增能力 → 在 `cmd/` 下新增 Go 代码（或扩展既有 Go 模块）。
+- **禁止用 Python / Bash / shell 编写独立工具。** 所有可执行工具必须是 Go 代码（见 MANDATORY 规则）；新增能力 → 在 `cmd/` 下新增 Go 代码（或扩展既有 Go 模块）。
 - **Markdown skill 规格不是"工具"**，不受本规则约束——它们仍是 prose。本规则只管可执行工具、CLI、校验器与自动化。
 - 任何新增/修改工具的 PR/变更 MUST 证明 `go build` + `go vet` 干净；CI/发布必须能产出二进制。
 - 例外需每笔变更显式获得用户批准；无批准 = MUST 为 Go。
@@ -40,7 +40,7 @@ All Go code under `cmd/vet/` MUST uphold:
 This repo contains **only Markdown skill specifications** plus **Go tooling** (`cmd/vet/` and any future `cmd/*` Go modules). There is:
 
 - **Go tooling has a real build system** — each tool is its own Go module (`go.mod`); `go build`, `go test`, `go vet`, `make` apply *to the Go modules only*. For the Markdown skill specs themselves, do not run build/test commands — they are prose, not code.
-- **No non-Go tools.** New operational tooling MUST be Go (see MANDATORY rule above). The legacy Python scripts in `scripts/` are deprecated reference only.
+- **No non-Go tools.** All operational tooling MUST be Go (see MANDATORY rule above).
 - **No runtime code.** The `ve` CLI and Go SDK referenced in skills are *consumed by* generated skills at execution time, not built here.
 - **No CI workflows yet.** Verification is human review against the P0/P1 checklist in `ve-skill-generator/SKILL.md` (see also **Files that DO NOT exist** below).
 
@@ -127,7 +127,7 @@ Full Round 1 (C1–C17) structural/spec-compliance table and Round 2 (F1–F13) 
 - **Never invent CLI flags or API parameters.** Only official OpenAPI or `ve <service> <action> --help` verified fields.
 - **Single-product rule.** One `ve-*-ops` skill = one product = one primary resource model.
 - **Prefer editing existing skills over creating new files.** No tutorial-style `.md` at the repo root.
-- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`ORCHESTRATION_TYPES`, defined in `cmd/vet/internal/check/frontmatter/frontmatter.go`). The single-product rule does not apply to them (they coordinate, not own, a product). The legacy `scripts/validate_skills_frontmatter.py` mirrored this allowlist.
+- **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`ORCHESTRATION_TYPES`, defined in `cmd/vet/internal/check/frontmatter/frontmatter.go`). The single-product rule does not apply to them (they coordinate, not own, a product). The `ORCHESTRATION_TYPES` allowlist is defined in `cmd/vet/internal/check/frontmatter/frontmatter.go`.
 
 ## File Layout Anchors (do not relocate without reason)
 
@@ -148,7 +148,7 @@ incident-loop-agent/    orchestration skill (exempt from ve-* naming rule)
 |---|---|---|
 | `ve-*-ops/assets/` | `eval_queries.json`, `example-config.yaml`, `*.schema.json` | Cross-skill executables |
 | `ve-*-ops/references/` | Runbooks, output contracts in Markdown | JSON schemas (→ `assets/`) |
-| `scripts/` (repo root) | **Deprecated** — superseded by `cmd/vet/` | New schemas or contracts |
+| `scripts/` (repo root) | **已删除** — 已迁移到 `cmd/vet/` | ~~Deprecated~~ |
 
 **Owner skill rule**: the skill that defines and consumes a contract owns it. Create `ve-<owner>-ops/assets/<name>.schema.json`; secondary skills link via relative path. Anti-pattern: `assets/` at repo root — contracts belong to owning skill, not shared at root.
 
@@ -202,11 +202,11 @@ See [docs/gcl-spec.md](docs/gcl-spec.md) §11 for the full rollout changelog.
 
 ### Build-time regression
 
-The `vet` CLI (from `cmd/vet/`) is the primary validation tool for pre-commit checks, replacing the legacy Python scripts in `scripts/`. After changing any skill, run `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`), then manually verify against the P0/P1 checklist in `ve-skill-generator/SKILL.md` and the 2-round self-review above. The Python scripts remain as the original reference implementation.
+The `vet` CLI (from `cmd/vet/`) is the primary validation tool for pre-commit checks. After changing any skill, run `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`), then manually verify against the P0/P1 checklist in `ve-skill-generator/SKILL.md` and the 2-round self-review above.
 
 ### Runtime GCL
 
-`vet gcl run` (Go port of the deprecated `scripts/gcl_runner.py`) implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
+`vet gcl run` implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
 - External Critic via `--critic-json` or stdin (production mode)
 - `--structural-critic-only` for CI/local structural smoke tests only (NOT for production mutations)
 - `vet gcl gate` runs the structural CI gate across all skills; `vet gcl trace` aggregates `audit-results/gcl-trace-*.json` into a quality summary.
@@ -232,7 +232,7 @@ GCL runs MUST use externally supplied isolated Critic scores in production. Manu
 
 ## Files that DO NOT exist
 
-- **`scripts/` directory** at repo root contains **deprecated** Python validation scripts (`validate_local.py`, `check_gcl_conformance.py`, `check_markdown_links.py`, etc.) — superseded by `cmd/vet/`. They are kept only as reference implementations.
+<!-- `scripts/` 已删除 — 已迁移到 cmd/vet/ Go 工具 -->
 - **No `package.json`, `CI configs`, `build scripts`, `typechecker`, or non-stdlib test runner** at repo root *for the Markdown specs*.
 - **Go tool modules (`cmd/*`) legitimately own their own `Makefile`, `go.mod`, `go.sum`, CI, and release targets** — these are required by the MANDATORY "All Tools MUST Be Written in Go" rule above, not banned.
 - **No `CLAUDE.md` at repo root** — this file (`AGENTS.md`) is the agent guidance entry point, imported via `@CLAUDE.md`.

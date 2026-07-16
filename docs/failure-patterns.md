@@ -174,4 +174,4 @@
 
 ## Extracted from GCL Traces (auto-generated)
 
-> This block is **auto-generated** by `vet gcl trace` (Go port of the deprecated `scripts/gcl_runner.py`) Reflexion write-back (`_writeback_failure_pattern` → `gcl_trace_aggregate.update_failure_patterns_file`) at MAX_ITER / SAFETY_FAIL. It is **deduped by `(skill, pattern)`** and is **not** hand-edited — do not modify its contents manually.
+> This block is **auto-generated** by `vet gcl trace` Reflexion write-back (`_writeback_failure_pattern` → `update_failure_patterns_file`) at MAX_ITER / SAFETY_FAIL. It is **deduped by `(skill, pattern)`** and is **not** hand-edited — do not modify its contents manually.

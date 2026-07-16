@@ -3,24 +3,24 @@
 > 任务来源：[`../l2-to-l3-plan.md`](../l2-to-l3-plan.md) §4 (P4)
 > 依赖：T05
 > 预计工作量：1–1.5 天（增强既有运行时，非从零构建 — 见 §2）
-> 状态：🟡 TODO
+> 状态：✅ DONE（2026-07-17）— `scripts/` 已删除，Go 工具完整覆盖
 
 ## 1. 目标
 
 把 `incident-loop-agent` 的 v0.1.0 skeleton 提升为**生产 runtime**：
-用 `vet gcl run`（Go 工具）替换废弃的 `scripts/gcl_runner.py`，
+用 `vet gcl run`（Go 工具）替换已删除的 `scripts/gcl_runner.py`，
 并落实 `max_iter` 强制、retry/backoff、partial-rollback 检测，
 以及核心 9 格 `scoreDecision` 评分器（消费 T02 schema + T03 allowlist + T04 元数据）。
 
 > **TDD 要求**：本卡既有/新增函数（含 `scoreDecision`）须先写失败测试再实现，单测见 §5。
 
 > **背景**：AGENTS.md 强制"All Tools MUST Be Go" —
-> 当前 `incident-loop-agent` SKILL.md 仍引用 `scripts/gcl_runner.py`（已废弃），
+> 当前 `incident-loop-agent` SKILL.md 仍引用 `scripts/gcl_runner.py`（已删除），
 > 必须迁移到 `vet gcl run`（在 `cmd/vet/internal/gcl/run/` 下）。
 
 ## 2. 背景
 
-- 现状：`incident-loop-agent/SKILL.md:146` 引用 `scripts/gcl_runner.py`
+- 现状：`incident-loop-agent/SKILL.md:146` 原引用 `scripts/gcl_runner.py`（已删除）
 - 目标：`vet gcl run --skill incident-loop-agent --plan <dispatch_plan>`
 - Go 工具入口：`cmd/vet/gcl.go` + `cmd/vet/internal/gcl/run/`
 - `max_iter` 策略：`SKILL.md:148` — "max_iter=3 for repair, max_iter=2 for destructive"
@@ -64,7 +64,7 @@ func RunLoop(planPath string) (*Trace, error)
 ## 4. DoD
 
 ```
-□ 1. SKILL.md 全文无 "scripts/gcl_runner.py" 引用
+✅ 1. SKILL.md 全文无 "scripts/gcl_runner.py" 引用（脚本已删除）
 □ 2. SKILL.md 引用 vet gcl run 至少 1 处
 □ 3. compatibility frontmatter 已更新
 □ 4. cmd/vet/internal/gcl/run/run.go 新增/增强 5 个函数（含核心 `scoreDecision`）

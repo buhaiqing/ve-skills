@@ -67,7 +67,7 @@
 
 ## T06 2026-07-13 — done
 
-- incident-loop-agent/SKILL.md + rubric.md 的 scripts/gcl_runner.py 全部替换为 vet gcl run
+- incident-loop-agent/SKILL.md + rubric.md 的 scripts/gcl_runner.py 全部替换为 vet gcl run ✅（2026-07-17: scripts/ 已删除）
 - cmd/vet/internal/gcl/run/run.go 新增 allowedSkills + OpDecision + scoreDecision（含 9 格矩阵）
 - scoreDecision 单测：TestScoreDecision_9Cell / TestScoreDecision_DestructiveNeverAuto / TestScoreDecision_SafetyZeroRefuse 全 PASS
 - go build/vet/test 全绿；vet check frontmatter/gcl/eval/policyguard 全绿
