@@ -140,3 +140,80 @@ func TestScoreDecision_SafetyZeroRefuse(t *testing.T) {
 		}
 	}
 }
+
+// TestPolicyInputs_FailSafe verifies the pre-execution policy gate degrades
+// safely when no Critic evidence exists yet (first iteration): destructive ops
+// are never AUTO, and unknown skills/missing metadata fall back to ASK.
+func TestPolicyInputs_FailSafe(t *testing.T) {
+	cases := []struct {
+		skill   string
+		command string
+		want    OpDecision
+	}{
+		{"ve-ecs-ops", "ve ecs DeleteInstances --Ids i", OpAsk},  // destructive → ASK (Run downgrades to REFUSE)
+		{"ve-ecs-ops", "ve ecs DescribeInstances", OpAuto},        // read_only + high confidence (allow-list) → AUTO
+		{"ve-unknown-ops", "ve unknown Describe", OpAsk},         // not in allow-list → ASK
+	}
+	for _, c := range cases {
+		sClass, bRadius, conf, safety, metaOK := policyInputs(c.skill, deriveOperationIntent(c.skill, c.command), nil)
+		got := scoreDecision(c.skill, sClass, bRadius, conf, safety, metaOK)
+		if got != c.want {
+			t.Errorf("policyInputs+scoreDecision(%q,%q) = %v, want %v", c.skill, c.command, got, c.want)
+		}
+	}
+}
+
+// TestRun_PolicyBlocksDestructive asserts the execution-risk gate is wired into
+// Run(): a destructive command must NOT execute and must exit POLICY_BLOCK (4)
+// with policy_decision=REFUSE in the trace.
+func TestRun_PolicyBlocksDestructive(t *testing.T) {
+	res := Run(Options{
+		Root:           t.TempDir(),
+		Skill:          "ve-ecs-ops",
+		Request:        "unit-test: destructive must be blocked",
+		Command:        "ve ecs DeleteInstances --InstanceIds i-xxx",
+		MaxIter:        1,
+		Timeout:        10,
+		StructuralOnly: true,
+	})
+	if res.ExitCode != 4 {
+		t.Fatalf("destructive op should be POLICY_BLOCK (exit 4), got exit %d", res.ExitCode)
+	}
+}
+
+// TestRun_PolicyAutoReadonly asserts a read-only command passes the gate and
+// actually executes (policy_decision=AUTO recorded in the trace iteration).
+func TestRun_PolicyAutoReadonly(t *testing.T) {
+	res := Run(Options{
+		Root:           t.TempDir(),
+		Skill:          "ve-ecs-ops",
+		Request:        "unit-test: readonly should auto-execute",
+		Command:        `echo {"Response":{"RequestId":"ut-readonly"}}`,
+		MaxIter:        1,
+		Timeout:        10,
+		StructuralOnly: true,
+	})
+	if res.ExitCode == 4 {
+		t.Fatalf("read-only op must not be POLICY_BLOCK, got exit 4 (trace: %s)", res.TraceLine)
+	}
+}
+
+// TestRun_PolicyAskNeedsConfirm asserts an ASK-class op (outside allow-list)
+// without --confirmed is blocked, and with --confirmed it executes.
+func TestRun_PolicyAskNeedsConfirm(t *testing.T) {
+	cmd := `echo {"Response":{"RequestId":"ut-ask"}}`
+	blocked := Run(Options{
+		Root: t.TempDir(), Skill: "ve-unknown-ops", Request: "ask-no-confirm",
+		Command: cmd, MaxIter: 1, Timeout: 10, StructuralOnly: true,
+	})
+	if blocked.ExitCode != 4 {
+		t.Fatalf("ASK without --confirmed should be POLICY_BLOCK, got exit %d", blocked.ExitCode)
+	}
+	confirmed := Run(Options{
+		Root: t.TempDir(), Skill: "ve-unknown-ops", Request: "ask-with-confirm",
+		Command: cmd, MaxIter: 1, Timeout: 10, StructuralOnly: true, Confirmed: true,
+	})
+	if confirmed.ExitCode == 4 {
+		t.Fatalf("ASK with --confirmed should execute, got POLICY_BLOCK (exit 4)")
+	}
+}

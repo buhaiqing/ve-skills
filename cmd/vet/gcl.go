@@ -45,6 +45,7 @@ func runGCLRun(args []string) {
 	criticJSON := fs.String("critic-json", "", "external Critic JSON file")
 	criticStdin := fs.Bool("critic-stdin", false, "read Critic JSON from stdin")
 	criticCmd := fs.String("critic-command", "", "isolated Critic command (separate process)")
+	confirmed := fs.Bool("confirmed", false, "vouch for ASK-class operations (otherwise treated as blocked in non-interactive mode)")
 	fs.Parse(args)
 
 	if *skill == "" || *request == "" || *command == "" {
@@ -62,6 +63,7 @@ func runGCLRun(args []string) {
 		CriticJSON:     *criticJSON,
 		CriticStdin:    *criticStdin,
 		CriticCommand:  *criticCmd,
+		Confirmed:      *confirmed,
 	}).ExitCode
 	os.Exit(code)
 }

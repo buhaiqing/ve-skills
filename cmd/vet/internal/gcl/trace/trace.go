@@ -41,6 +41,10 @@ type Iteration struct {
 	Generator GeneratorResult `json:"generator"`
 	Critic  CriticRecord    `json:"critic"`
 	Decision string         `json:"decision"`
+	// PolicyDecision records the execution-risk verdict (AUTO/ASK/REFUSE)
+	// from scoreDecision, applied before the generator command runs. Empty
+	// for pre-policy traces.
+	PolicyDecision string `json:"policy_decision,omitempty"`
 }
 
 // FailurePattern mirrors the Reflexion failure-pattern schema.

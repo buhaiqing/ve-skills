@@ -45,8 +45,10 @@ var failureSignatures = []struct {
 }
 
 var (
-	destructiveVerbs = regexp.MustCompile(`\b(Delete|Remove|Terminate|Destroy|Stop|Shutdown|PowerOff|Release|Revoke|Disable|Deactivate|Flush|Purge|Drop|Truncate|Detach|Disassociate|Revoke\w*Access|Revoke\w*Permission)\b`)
-	mutatingVerbs    = regexp.MustCompile(`\b(Create|Add|Allocate|Attach|Assign|Authorize|Enable|Activate|Modify|Update|Set|Change|Resize|Rebuild|Reboot|Restart)\b`)
+	// Verbs may be written as standalone tokens (Delete --x) or CamelCase
+	// action names (DeleteInstances), hence the optional ([A-Z]\w*)? suffix.
+	destructiveVerbs = regexp.MustCompile(`\b(Delete|Remove|Terminate|Destroy|Stop|Shutdown|PowerOff|Release|Revoke|Disable|Deactivate|Flush|Purge|Drop|Truncate|Detach|Disassociate)([A-Z]\w*)?\b`)
+	mutatingVerbs    = regexp.MustCompile(`\b(Create|Add|Allocate|Attach|Assign|Authorize|Enable|Activate|Modify|Update|Set|Change|Resize|Rebuild|Reboot|Restart)([A-Z]\w*)?\b`)
 	negationPattern  = regexp.MustCompile(`\b(Enable|Activate|Allow|Grant|Create)\w*(Protection|Policy|Rule|Firewall)\b`)
 )
 
@@ -118,6 +120,10 @@ type Options struct {
 	CriticJSON        string
 	CriticStdin       bool
 	CriticCommand     string
+	// Confirmed lets an external caller vouch for ASK-class operations
+	// (e.g. a human gate upstream). In the non-interactive `vet gcl run`
+	// runtime ASK is otherwise treated as REFUSE (no human to ask).
+	Confirmed bool
 }
 
 // deriveOperationIntent mirrors gcl_runner.derive_operation_intent.
@@ -137,6 +143,52 @@ func deriveOperationIntent(skill, command string) map[string]any {
 		return map[string]any{"operation": "modify_" + resource, "resource_scope": []string{}, "expected_state": "MODIFIED", "safety_class": "mutating"}
 	}
 	return map[string]any{"operation": "describe", "resource_scope": []string{}, "expected_state": "UNCHANGED", "safety_class": "read_only"}
+}
+
+// policyInputs derives the scoreDecision arguments from the operation intent
+// and (optional) Critic scores. The execution-risk gate runs BEFORE the
+// generator command, so on the first iteration no Critic scores exist yet —
+// we fail-safe to low confidence and a passable safety, which keeps
+// non-read-only ops out of AUTO until evidence accrues.
+func policyInputs(skill string, intent map[string]any, scores map[string]float64) (safetyClass, blastRadius, confidence string, safety float64, metadataOK bool) {
+	safetyClass, _ = intent["safety_class"].(string)
+	if safetyClass == "" {
+		safetyClass = "read_only"
+	}
+	// A single `ve <svc> <Action>` maps to a single resource by default.
+	blastRadius = "single"
+	// Leaf skills now expose machine-readable safety_class/blast_radius; if
+	// the intent resolved to a known class we treat metadata as present.
+	metadataOK = safetyClass != "" && allowedSkills[skill]
+	if scores == nil {
+		// No Critic evidence yet. Read-only ops are inherently safe → treat as
+		// high confidence so they AUTO-execute (L3 happy path). Mutating /
+		// destructive ops stay low confidence → fall to ASK/REFUSE (conservative).
+		if safetyClass == "read_only" {
+			confidence = "high"
+		} else {
+			confidence = "low"
+		}
+		safety = 1.0
+		return
+	}
+	if s, ok := scores["safety"]; ok {
+		safety = s
+	} else {
+		safety = 1.0
+	}
+	// Map the lowest non-passing rubric dimension to a confidence bucket.
+	confidence = "high"
+	for _, dim := range []string{"correctness", "idempotency", "traceability", "spec_compliance"} {
+		if v, ok := scores[dim]; ok && v < 1.0 {
+			confidence = "medium"
+			break
+		}
+	}
+	if v, ok := scores["safety"]; ok && v < 1.0 {
+		confidence = "low"
+	}
+	return
 }
 
 // runCommand mirrors gcl_runner.run_command with masking.
@@ -377,11 +429,39 @@ func Run(opts Options) Result {
 	criticFeedback := ""
 	var lastGen trace.GeneratorResult
 	for iter := 1; iter <= opts.MaxIter; iter++ {
+		// Execution-risk gate (L3): score the operation BEFORE running it.
+		sClass, bRadius, conf, safety, metaOK := policyInputs(opts.Skill, operationIntent, nil)
+		policy := scoreDecision(opts.Skill, sClass, bRadius, conf, safety, metaOK)
+		// Block unless AUTO, or ASK with an external confirmation supplied.
+		if policy != OpAuto && !(policy == OpAsk && opts.Confirmed) {
+			blocked := policy
+			// ASK without confirmation in a non-interactive runtime has no
+			// human to ask → degrade to REFUSE for the recorded decision.
+			if policy == OpAsk {
+				blocked = OpRefuse
+			}
+			tr.Iterations = append(tr.Iterations, trace.Iteration{
+				Iter:    iter,
+				Generator: trace.GeneratorResult{Command: secret.MaskSecrets(opts.Command)},
+				Decision: "POLICY_BLOCK",
+				PolicyDecision: blocked.String(),
+			})
+			tr.Final = trace.Final{Status: "POLICY_BLOCK", Iter: iter, Output: nil,
+				FailurePattern: &trace.FailurePattern{
+					Category: "execution_risk", Skill: opts.Skill, Command: opts.Command,
+					Error: "operation blocked by execution-risk policy: " + blocked.String(), Fix: "escalate to human or supply --confirmed for ASK class",
+				}}
+			path, _ := trace.PersistTrace(opts.Root, "", tr)
+			writebackFailurePattern(opts.Root, opts.Skill, tr.Final.FailurePattern)
+			fmt.Fprintf(os.Stderr, "POLICY_BLOCK (%s) — trace: %s\n", blocked.String(), path)
+			return Result{ExitCode: 4, TraceLine: "blocked:" + blocked.String(), StderrLine: "blocked:" + blocked.String()}
+		}
+
 		gen := runCommand(opts.Command, opts.Timeout, map[string]string{
 			"GCL_CRITIC_FEEDBACK":        criticFeedback,
 			"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
 		})
-		gen.Args = map[string]any{"iter": iter, "critic_feedback": orEmpty(criticFeedback)}
+		gen.Args = map[string]any{"iter": iter, "critic_feedback": orEmpty(criticFeedback), "policy_decision": "AUTO"}
 		lastGen = gen
 
 		var c *critic.CriticResult
@@ -391,16 +471,17 @@ func Run(opts Options) Result {
 			c = &res
 		} else {
 			if secret.HasCredentialLeak(gen.ResultExcerpt) {
-				tr.Iterations = append(tr.Iterations, trace.Iteration{
-					Iter:      iter,
-					Generator: gen,
-					Critic: trace.CriticRecord{
-						Scores:      map[string]float64{"correctness": 0, "safety": 0, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0.5},
-						Suggestions: []string{"Credential leak in generator output — mask secrets and re-run"},
-						Blocking:    true,
-					},
-					Decision: "SAFETY_FAIL",
-				})
+			tr.Iterations = append(tr.Iterations, trace.Iteration{
+				Iter:      iter,
+				Generator: gen,
+				Critic: trace.CriticRecord{
+					Scores:      map[string]float64{"correctness": 0, "safety": 0, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0.5},
+					Suggestions: []string{"Credential leak in generator output — mask secrets and re-run"},
+					Blocking:    true,
+				},
+				Decision:       "SAFETY_FAIL",
+				PolicyDecision: "AUTO",
+			})
 				fp := extractFailurePattern(opts.Skill, opts.Command, gen, nil)
 				tr.Final = trace.Final{Status: "SAFETY_FAIL", Iter: iter, Output: nil, FailurePattern: fp}
 				path, _ := trace.PersistTrace(opts.Root, "", tr)
@@ -436,7 +517,8 @@ func Run(opts Options) Result {
 			Iter:      iter,
 			Generator: gen,
 			Critic:    trace.CriticRecord{Scores: c.Scores, Suggestions: c.Suggestions, Blocking: c.Blocking},
-			Decision: decision,
+			Decision:       decision,
+			PolicyDecision: "AUTO",
 		})
 
 		if decision == "SAFETY_FAIL" {
