@@ -300,7 +300,7 @@ Poll DescribeSubnets until status is `Available`.
 ### Operation: DeleteVpc — Delete VPC
 
 > ⚠️ **Destructive Action Confirmation**
-> You are about to **permanently delete** VPC `{{user.vpc_id}}` (name: `{{user.vpc_name}}`).
+> You are about to **permanently delete** VPC `{{user.vpc_id}}`.
 > This is **IRREVERSIBLE** — all subnets, route tables, and resources inside the VPC are destroyed.
 > Type the VPC ID `{{user.vpc_id}}` to confirm, or reply `abort` to cancel.
 
