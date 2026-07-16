@@ -54,6 +54,12 @@ User Request
     - derive sanitized operation_intent (operation, expected_state, resource_scope, safety_class; no raw user wording or credentials)
      │
      ▼
+[0.5] Execution-Risk Gate (L3)           ← runs BEFORE any command executes
+    - scoreDecision(skill, safety_class, blast_radius, confidence, safety, metadataOK)
+    - REFUSE / ASK-without-confirm → BLOCK (no execution; POLICY_BLOCK, exit 4)
+    - AUTO (or ASK with --confirmed)   → proceed
+     │
+     ▼
 [1] Generate (G) ───────────────────────┐
     - run ve <svc> <Action> --<Param>   │  (CLI primary, see CLAUDE.md)
     - OR JIT Go SDK script              │  (fallback)
@@ -76,6 +82,13 @@ User Request
      └──────────────────────────────────┘
 ```
 
+The Execution-Risk Gate (step [0.5]) enforces the `AUTO`/`ASK`/`REFUSE` policy
+defined in `incident-loop-agent/references/policies/execution-risk.md`. It runs
+**before** Generate so the loop can never execute an operation the policy
+refuses. Destructive operations are never `AUTO`; in the non-interactive
+`vet gcl run` runtime an `ASK` without `--confirmed` degrades to `REFUSE`.
+
+
 The Orchestrator owns `operation_intent` generation during Pre-flight. It MUST derive this sanitized object before Critic scoring; the object may include `operation`, `expected_state`, `resource_scope`, and `safety_class`, but MUST NOT include raw user wording, credentials, or unmasked sensitive identifiers. The Critic receives only this sanitized `operation_intent` (never the raw user request) to prevent "answer-aligned" rubber-stamping.
 
 ## 5. Termination (first match wins)
@@ -85,8 +98,11 @@ The Orchestrator owns `operation_intent` generation during Pre-flight. It MUST d
 | **PASS** | Every rubric dimension meets its threshold → return G's result |
 | **MAX_ITER** | Reached `max_iterations` (default 3, 2 for destructive skills) → return **best-so-far** + unresolved rubric items |
 | **SAFETY_FAIL** | Safety = 0 → **ABORT**; never return partial or "best-effort" output |
+| **POLICY_BLOCK** | Execution-Risk Gate refused the operation (`REFUSE`, or `ASK` without `--confirmed` in non-interactive mode) → **no execution**; exit code 4; trace records `policy_decision` |
 
 `max_iterations` defaults per skill class — see §8.
+
+Exit codes: `0` PASS · `1` MAX_ITER · `2` invalid/missing Critic input · `3` SAFETY_FAIL · `4` POLICY_BLOCK.
 
 ## 6. Trace & Audit (mandatory)
 
@@ -115,10 +131,11 @@ Every GCL run MUST persist a JSON trace:
           "correctness": 1, "safety": 1, "idempotency": 0.5,
           "traceability": 1, "spec_compliance": 1
         },
-        "suggestions": ["..."],
-        "blocking": false
+      "suggestions": ["..."],
+      "blocking": false
       },
-      "decision": "RETRY"
+      "decision": "RETRY",
+      "policy_decision": "AUTO"
     }
   ],
   "final": {
@@ -242,10 +259,10 @@ Generator is the executor on the next iteration.
 | Phase | Status | Primary artifact | Gate |
 |---|---|---|---|
 | 1 | Done | `ve-ecs-ops/references/{rubric.md,prompt-templates.md}` | ECS pilot for destructive operations |
-| 2 | Done | `vet gcl run` (orig. `scripts/gcl_runner.py`, now deprecated) | External Critic via `--critic-json`/stdin |
-| 3 | Done | `vet gcl trace` (orig. `scripts/gcl_trace_aggregate.py`, now deprecated) + quality summary | Quality summary feeds monitoring / inspection |
+| 2 | Done | `vet gcl run` | External Critic via `--critic-json`/stdin |
+| 3 | Done | `vet gcl trace` + quality summary | Quality summary feeds monitoring / inspection |
 | 4 | Done | Full rollout: all 29 skills GCL-equipped | Complete coverage across all product skills |
-| 4.1 | Done | `vet check gcl` (orig. `scripts/check_gcl_conformance.py`, now deprecated) | CI gate for Tier-A conformance |
+| 4.1 | Done | `vet check gcl` | CI gate for Tier-A conformance |
 
 Detailed phase changes live in the changelog below.
 
@@ -262,7 +279,7 @@ GCL traces include a `failure_pattern` field in the `final` object (see SS6). Th
 
 | Version | Date | Change |
 |---|---|---|
-| 1.18.0 | 2026-06-19 | **Phase 4.1 (done):** `vet check gcl` (orig. `scripts/check_gcl_conformance.py`, now deprecated) -- CI gate for Tier-A conformance across all 29 skills; spec enhanced with `operation_intent`, enhanced trace schema, Reflexion Integration, Rollout Roadmap, and See also sections |
+| 1.18.0 | 2026-06-19 | **Phase 4.1 (done):** `vet check gcl` -- CI gate for Tier-A conformance across all 29 skills; spec enhanced with `operation_intent`, enhanced trace schema, Reflexion Integration, Rollout Roadmap, and See also sections |
 | 1.17.0 | 2026-06-19 | ve-rds-ops (RDS MySQL variant) GCL rollout; full coverage of all 29 skills |
 | 1.16.0 | 2026-06-04 | ve-skill-generator meta-skill GCL rollout |
 | 1.15.0 | 2026-06-04 | optional tier rollout (max_iter=5): cdn, dns, kafka, sls, billing |
