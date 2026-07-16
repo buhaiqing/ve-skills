@@ -139,8 +139,13 @@ ECS (云服务器) on Volcengine (火山引擎) provides scalable compute capaci
 | CreateSnapshot | `$.Result.SnapshotId` | string | Snapshot ID |
 | CreateKeyPair | `$.Result.KeyPairName` | string | Key pair name |
 | CreateKeyPair | `$.Result.PrivateKey` | string | PEM private key |
-| DeleteInstance | `$.ResponseMetadata.RequestId` | string | Request ID |
+| DeleteInstance | `$.ResponseMetadata.RequestId` | string | Request ID — poll DescribeInstances → 404 when gone |
+| DeleteSnapshot | `$.ResponseMetadata.RequestId` | string | Request ID — poll DescribeSnapshots → 404 when gone |
+| DeleteVolume | `$.ResponseMetadata.RequestId` | string | Request ID — poll DescribeDisks → 404 when gone |
 | StartInstance | `$.ResponseMetadata.RequestId` | string | Request ID |
+| CleanupStoppedInstances | `$.ResponseMetadata.RequestId` | string | Per-instance delete — poll DescribeInstances → 0 count when all gone |
+| CleanupOrphanedDisks | `$.ResponseMetadata.RequestId` | string | Per-disk delete — poll DescribeDisks → 0 count when all gone |
+| CleanupOldSnapshots | `$.ResponseMetadata.RequestId` | string | Per-snapshot delete — poll DescribeSnapshots → 404 when gone |
 
 ### Instance State Transitions
 

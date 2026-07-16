@@ -139,9 +139,15 @@ ve ecs DescribeInstanceTypes --Region "{{user.region}}" | jq '.Result.InstanceTy
 
 Identifies and removes ECS instances that have been stopped beyond a threshold.
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** N stopped ECS instances older than `{{user.days_threshold}}` days.
+> This is **IRREVERSIBLE** — attached cloud disks and EIPs are released; instance data is destroyed.
+> Type `confirm cleanup` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: deleting N stopped instances older than {{user.days_threshold}} days
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
+- **MUST** list all instances to be deleted with details
 - **MUST NOT** proceed without clear user assent
 - **MUST** list all instances to be deleted with details
 - **MUST** warn about attached disks and EIPs
@@ -173,9 +179,14 @@ ve ecs DescribeInstances --Region "{{user.region}}" --InstanceIds '["{{user.inst
 
 Identifies and removes cloud disks not attached to any instance.
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** N unattached cloud disks.
+> This is **IRREVERSIBLE** — disk data is permanently destroyed; ensure no valuable data remains.
+> Type `confirm cleanup` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation before deletion
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
 - **MUST** check disk has no recent snapshots (or create snapshot first)
 - **MUST** list all orphaned disks with size and creation date
 
@@ -195,6 +206,16 @@ ve ecs DeleteDisk --Region "{{user.region}}" --DiskId "{{user.disk_id}}"
 ### Operation: CleanupOldSnapshots — Delete Old Snapshots
 
 Identifies and removes snapshots older than a threshold.
+
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** snapshots older than `{{user.cutoff_date}}`.
+> This is **IRREVERSIBLE** — deleted snapshots cannot be recovered; data loss risk.
+> Type `confirm cleanup` to confirm, or reply `abort` to cancel.
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
+- **MUST** list all snapshots to be deleted with size, creation date, and source disk
 
 #### Execution
 

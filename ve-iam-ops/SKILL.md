@@ -90,9 +90,19 @@ IAM (Identity and Access Management, 身份与访问管理) on Volcengine (火�
 | `{{user.role_name}}` | IAM role name | Ask once |
 | `{{user.group_name}}` | IAM group name | Ask once |
 | `{{user.provider_name}}` | Identity provider name | Ask once |
+| `{{user.access_key_id}}` | Access key ID to delete | Ask once; confirm before deletion |
+| `{{user.account_id}}` | Volcengine account ID | Ask once; used in AssumeRole and cross-account trust |
+| `{{user.org_unit}}` | Organization unit path | Ask once; optional, used in CreateUser path |
+| `{{user.password}}` | Console password for user | Ask once; never log or echo |
+| `{{user.policy_description}}` | Policy description | Ask once; optional |
+| `{{user.role_description}}` | Role description | Ask once; optional |
+| `{{user.session_name}}` | Role session name | Ask once; used in AssumeRole |
+| `{{user.trusted_account_id}}` | Trusted account ID for cross-account trust | Ask once; used in CreateRole trust policy |
 | `{{output.user_id}}` | User ID from API response | Parse from response |
 | `{{output.policy_arn}}` | Policy ARN from response | Parse from response |
 | `{{output.role_arn}}` | Role ARN from response | Parse from response |
+| `{{output.group_id}}` | Group ID from CreateGroup response | Parse from response |
+| `{{output.access_key_id}}` | Access key ID from CreateAccessKey response | Parse from response |
 
 > **Security Warning (Credential Masking):** NEVER log, print, or expose `VOLCENGINE_SECRET_KEY` or any credential value. Verify existence only with `test -n "$VOLCENGINE_SECRET_KEY"`.
 
@@ -120,6 +130,13 @@ IAM (Identity and Access Management, 身份与访问管理) on Volcengine (火�
 | AssumeRole | `$.Result.Credentials.SecretKey` | string | Temporary secret key |
 | AssumeRole | `$.Result.Credentials.SessionToken` | string | Session token |
 | AssumeRole | `$.Result.Credentials.Expiration` | string | Credential expiration time |
+| CreateRole | `$.Result.Role.RoleId` | string | Created role ID — parse to `{{output.role_id}}` |
+| CreateGroup | `$.Result.Group.GroupId` | string | Created group ID — parse to `{{output.group_id}}` |
+| DeleteUser | `$.Result.UserId` | string | Deleted user ID — empty when gone (poll GetUser → 404) |
+| DeletePolicy | `$.Result.PolicyName` | string | Deleted policy name — empty when gone (poll GetPolicy → 404) |
+| DeleteRole | `$.Result.RoleName` | string | Deleted role name — empty when gone (poll GetRole → 404) |
+| DeleteGroup | `$.Result.GroupId` | string | Deleted group ID — empty when gone (poll GetGroup → 404) |
+| DeleteAccessKey | `$.Result.AccessKeyId` | string | Deleted access key ID — empty when gone (poll ListAccessKeys → 404) |
 
 ## Quick Start
 
@@ -325,10 +342,14 @@ ve iam GetUser \
 
 ### Operation: DeleteUser — Delete an IAM User
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** IAM user `{{user.user_name}}`.
+> This is **IRREVERSIBLE** — attached policies, group memberships, access keys, and login profile are also removed.
+> Type the user name `{{user.user_name}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete of user `{{user.user_name}}`
-- **MUST NOT** proceed without clear user assent
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
 - **MUST** verify user has no dependencies:
   - No attached policies (detach first)
   - No group memberships (remove first)
@@ -514,9 +535,14 @@ ve iam DetachGroupPolicy \
 
 ### Operation: DeletePolicy — Delete a Custom Policy
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** IAM policy `{{user.policy_name}}`.
+> This is **IRREVERSIBLE** — the policy is removed from all attached users, roles, and groups.
+> Type the policy name `{{user.policy_name}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete of policy `{{user.policy_name}}`
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
 - **MUST** verify policy is not attached to any user, role, or group
 
 ```bash
@@ -598,6 +624,56 @@ ve iam GetRole \
 
 ---
 
+### Operation: DeleteRole — Delete an IAM Role
+
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** IAM role `{{user.role_name}}`.
+> This is **IRREVERSIBLE** — any user or service assuming this role will lose access.
+> Type the role name `{{user.role_name}}` to confirm, or reply `abort` to cancel.
+
+#### Pre-flight (Safety Gate)
+
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
+- **MUST** verify no resources are granted this role via AssumeRole:
+  - No active AssumeRole sessions (revoke sessions first)
+  - No trust policy conditions that would be broken
+
+```bash
+# Check which entities assume this role
+ve iam ListEntitiesForPolicy \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --PolicyName "{{user.role_name}}"
+```
+
+#### Execution
+
+```bash
+# Delete role
+ve iam DeleteRole \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --RoleName "{{user.role_name}}"
+```
+
+#### Validation
+
+```bash
+# Verify role no longer exists
+ve iam GetRole \
+  --Region "{{env.VOLCENGINE_REGION}}" \
+  --RoleName "{{user.role_name}}" \
+  && echo "ROLE STILL EXISTS" || echo "ROLE DELETED"
+```
+
+#### Failure Recovery
+
+| Error Pattern | Agent Action |
+|--------------|-------------|
+| `DeleteConflict` | HALT; role has active sessions or attached policies — detach and revoke sessions first |
+| `NoSuchEntity` | Role already deleted; skip |
+| `Unauthorized` | HALT; check IAM permissions for DeleteRole |
+
+---
+
 ### Operation: AssumeRole — Get Temporary Credentials
 
 #### Execution
@@ -659,9 +735,14 @@ ve iam RemoveUserFromGroup \
 
 ### Operation: DeleteGroup — Delete an IAM Group
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** IAM group `{{user.group_name}}`.
+> This is **IRREVERSIBLE** — all members lose group permissions immediately.
+> Type the group name `{{user.group_name}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete of group `{{user.group_name}}`
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
 - **MUST** verify group has no members and no attached policies
 
 ```bash
@@ -711,9 +792,14 @@ See [Key Response Fields](#key-response-fields-centralized-json-paths) table abo
 
 ### Operation: DeleteAccessKey — Delete Access Key
 
+> ⚠️ **Destructive Action Confirmation**
+> You are about to **permanently delete** access key `{{user.access_key_id}}` for user `{{user.user_name}}`.
+> This is **IRREVERSIBLE** — any application using this key will lose access immediately.
+> Type the access key ID `{{user.access_key_id}}` to confirm, or reply `abort` to cancel.
+
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: irreversible delete of access key `{{user.access_key_id}}`
+- **MUST** obtain explicit confirmation (type-to-confirm above) — **MUST NOT** proceed without clear user assent
 - **MUST** warn: this will invalidate any applications using this key
 
 #### Execution
@@ -758,6 +844,25 @@ ve iam GetCredentialReport \
 ```
 
 ---
+
+## Failure Feedback Format
+
+When an operation fails, present the result to the user using this standardized block so failures are actionable and consistent:
+
+```
+❌ **Operation Failed: <OperationName>**
+- **Error code**: `<code>` (from the table below)
+- **What happened**: <one-line plain-language explanation>
+- **Why it matters**: <impact on the user's resources / data / delivery>
+- **Action required**: <concrete next step — e.g. fix input, wait for state, or HALT and escalate>
+- **Retry policy**: <0 retries; HALT> or <N retries with backoff> — state explicitly, never silent-retry
+```
+
+Rules:
+- **MUST** surface the raw error code from the API — do not paraphrase into a generic "something went wrong".
+- **MUST** state the retry policy (0 retries → HALT, or bounded retries) so the user knows whether the action auto-repeats.
+- **MUST NOT** log or echo `{{env.VOLCENGINE_SECRET_KEY}}` in any failure output.
+- On `**HALT**` conditions, stop the runbook and wait for explicit user direction — do not fall through to the next operation.
 
 ## Error Taxonomy
 
