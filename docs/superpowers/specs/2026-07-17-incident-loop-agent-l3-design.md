@@ -55,7 +55,7 @@ else:                                 → ASK
 2. `safetyClass == "destructive"` → never AUTO (ASK or REFUSE only).
 3. `metadataOK == false` → never AUTO (fail-safe ASK).
 
-> **Note on destructive → ASK (not REFUSE):** This is intentional and **spec-compliant** (`execution-risk.md §2/§5`, T06 DoD line 71). A destructive op is not silent-refused; it is escalated to ASK so an upstream human gate (`--confirmed`) can authorize it. A blanket REFUSE would be the L2 behavior and is not the L3 design. The non-interactive runtime degrades an unconfirmed ASK to REFUSE (no human to ask).
+> **Note on destructive → ASK (not REFUSE):** This is intentional and **spec-compliant** (`execution-risk.md §2/§5`, T06 DoD line 71). A destructive op is not silent-refused; it is escalated to ASK so an upstream human gate (`--confirmed`) can authorize it. A blanket REFUSE would be the L2 behavior and is not the L3 design. The non-interactive runtime degrades an unconfirmed ASK to REFUSE (no human to ask). To keep this safe without downgrading to REFUSE, every `--confirmed` authorization is required to carry provenance (`--confirmed-by`) recorded in the trace (`Iteration.ConfirmedBy`), so the audit trail always answers "who authorized this op" — see §Audit-chain hardening.
 
 ---
 
@@ -124,7 +124,10 @@ A `--confirmed` that authorizes an ASK-class op is only meaningful when a human 
 
 ## Component 4 — Trace schema addition
 
-`trace.Iteration` gains `PolicyDecision string` (JSON `policy_decision`). Persisted on every iteration so the gate verdict is auditable.
+`trace.Iteration` gains two fields, persisted on every iteration so the gate verdict and its authorization provenance are auditable:
+
+- `PolicyDecision string` (JSON `policy_decision`) — the execution-risk verdict (AUTO/ASK/REFUSE).
+- `ConfirmedBy string` (JSON `confirmed_by`, omitempty) — provenance of an external confirmation that authorized an ASK-class op to execute (ticket id / human handle). Empty when no confirmation was supplied.
 
 ---
 
@@ -132,11 +135,11 @@ A `--confirmed` that authorizes an ASK-class op is only meaningful when a human 
 
 | File | Change |
 |------|--------|
-| `cmd/vet/internal/gcl/run/run.go` | `scoreDecision` (exists), `policyInputs` (exists), gate logic in `Run()` (added), `Options.Confirmed` field |
-| `cmd/vet/internal/gcl/trace/trace.go` | `Iteration.PolicyDecision` field |
-| `cmd/vet/gcl.go` | `--confirmed` flag → `Options.Confirmed` |
+| `cmd/vet/internal/gcl/run/run.go` | `scoreDecision` (exists), `policyInputs` (exists), gate logic in `Run()` (added), `Options.Confirmed` + `Options.ConfirmedBy` fields; authorized ASK stamps `ConfirmedBy` into trace |
+| `cmd/vet/internal/gcl/trace/trace.go` | `Iteration.PolicyDecision` + `Iteration.ConfirmedBy` fields |
+| `cmd/vet/gcl.go` | `--confirmed` flag → `Options.Confirmed`; `--confirmed-by` flag → `Options.ConfirmedBy` |
 | `docs/gcl-spec.md` | §4 Loop Flow step `[0.5] Execution-Risk Gate`; §5 Termination + exit-code table; §6 trace example |
-| `incident-loop-agent/SKILL.md` | Step 5 note: non-interactive ASK w/o `--confirmed` → REFUSE (exit 4) |
+| `incident-loop-agent/SKILL.md` | Step 5: non-interactive ASK w/o `--confirmed` → REFUSE (exit 4); `--confirmed` only after explicit `{{user.confirm}}`, paired with `--confirmed-by`; bare `--confirmed` = audit violation |
 
 ---
 
@@ -146,6 +149,8 @@ A `--confirmed` that authorizes an ASK-class op is only meaningful when a human 
 - `read_only` + high confidence auto-executes with zero prompts (L3 happy path).
 - `Safety = 0` always REFUSE, never bypassed by `--confirmed`.
 - `policy_decision` recorded in trace for every iteration.
+- ASK-class op authorized via `--confirmed` persists `confirmed_by` provenance in trace.
+- `--confirmed` requires explicit upstream `{{user.confirm}}`; bare `--confirmed` (no provenance) treated as audit violation.
 - `go build ./...` + `go vet ./...` + `go test ./...` clean in `cmd/vet`.
 - `policyguard` invariants (1/2/3) hold; `destructive → never AUTO` enforced.
 - `docs/gcl-spec.md` documents the gate + exit code 4.
@@ -157,8 +162,9 @@ A `--confirmed` that authorizes an ASK-class op is only meaningful when a human 
 | Risk | Mitigation |
 |------|------------|
 | `--confirmed` silently authorizes destructive ops | By design destructive→ASK (not REFUSE); `--confirmed` honors ASK. If stricter zero-auto-destructive is later required, change `scoreDecision` to return REFUSE for destructive — single-line change, spec+code update together. |
+| `--confirmed` abused with no provenance (who authorized?) | `--confirmed` MUST be paired with `--confirmed-by <ticket|handle>`; the value is persisted in `Iteration.ConfirmedBy`. `incident-loop-agent/SKILL.md` Step 5 forbids bare `--confirmed` without an upstream `{{user.confirm}}`; treated as an audit violation. |
 | Gate runs before generator → no Critic evidence on iter 1 | `policyInputs` fail-safe gives read-only→AUTO, others→low→ASK/REFUSE. Conservative by default. |
-| Trace drift | `PolicyDecision` field added to `Iteration`; `vet gcl trace` already validates schema. |
+| Trace drift | `PolicyDecision` + `ConfirmedBy` fields added to `Iteration`; `vet gcl trace` already validates schema. |
 
 ---
 
