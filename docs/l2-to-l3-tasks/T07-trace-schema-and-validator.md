@@ -3,7 +3,7 @@
 > 任务来源：[`../l2-to-l3-plan.md`](../l2-to-l3-plan.md) §4 (P5)
 > 依赖：T06
 > 预计工作量：1 天
-> 状态：🟡 TODO
+> 状态：✅ DONE（2026-07-13 核心交付；2026-07-17 扩展运行时轨迹，见 §8）
 
 ## 1. 目标
 
@@ -128,3 +128,18 @@ rm -rf /tmp/trace-test
 | schema 太严 → 旧 trace 不通过 | schema 加 `additionalProperties: false`；旧 trace 不在本仓库 |
 | 校验器开销大 | 校验器跑在 PR 阶段，单文件 < 10ms；不影响 runtime |
 | 回滚 | `git checkout cmd/vet/ incident-loop-agent/assets/trace.schema.json` |
+
+## 8. 扩展：运行时轨迹采集 + 双 schema 校验（2026-07-17, commit 4831b5d）
+
+原 T07 只覆盖 **incident-trace**（`check/trace` 包，schema 含 `ticket_id`）。
+但 `vet gcl run` 实际产出的是 **gcl-trace-*.json**（runtime 形状，由 `gcl/trace.PersistTrace` 写入，含 `trace_schema_version`/`skill`/`operation_intent`，**无 `ticket_id`**），且此前**从不解析 `ve` 返回的 `{"Response":{"RequestId":"..."}}`**，导致 P5 的"每次 `ve` 调用都记录 RequestId"并未真正满足。
+
+本次扩展（对齐 `l2-to-l3-plan.md` §6 P5 ✅）：
+
+- `cmd/vet/internal/gcl/trace/trace.go`：`Iteration` 新增 `request_id` 字段；**新增 `gcl/trace.Check`**——只校验 runtime 轨迹（`trace_schema_version != ""`），要求 `redaction_pass == true` 且实际跑过 `ve` 调用的迭代 `request_id` 非空（`POLICY_BLOCK` 迭代豁免，因其未执行命令）。
+- `cmd/vet/internal/gcl/run/run.go`：`Run()` 在 `runCommand` 后解析 `Response.RequestId` 写入 `Iteration.request_id`。
+- `cmd/vet/check.go` `traceCheck`：去掉只扫 `incident-trace-` 的过滤，改为 `gcl-trace-*`（runtime，走 `gcl/trace.Check`）+ `incident-trace-*`（agent，走 `check/trace.Check`）双前缀扫描。
+- `cmd/vet/internal/gcl/trace/trace_test.go`：新增 3 个 test（缺 request_id 失败 / 正常通过 / POLICY_BLOCK 豁免）。
+- `validate.yml`：已含 `vet check trace` + `vet check policyguard`（P5/P7 e2e）。
+
+> 关键边界：`check/trace`（incident 形状）与 `gcl/trace`（runtime 形状）是**两个独立包**，本次未改动 incident 校验逻辑，仅新增 runtime 校验器，二者正交。

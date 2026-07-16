@@ -80,3 +80,13 @@
 - cmd/vet/check.go 注册 trace 子命令；traceCheck 只检查 incident-trace-*.json（跳过 legacy gcl-trace-*.json）
 - go build/vet/test 全绿；vet check trace 全绿（6 条 incident-trace 通过）
 - gcl-spec.md §9 / §12 / workflow 无需修改（schema 由 T06 DoD #9 覆盖）
+
+## P5/P7 运行时扩展 2026-07-17 — done (commit 4831b5d)
+
+- 动机：T07 原只覆盖 incident-trace；runtime gcl-trace-*.json 从未解析 ve 的 RequestId，P5 "每次 ve 调用记录 RequestId" 未真正满足。
+- gcl/trace.Iteration 新增 request_id；新增 gcl/trace.Check（runtime 形状：trace_schema_version 存在即校验，要求 redaction_pass + 实际跑过 ve 的迭代 request_id 非空，POLICY_BLOCK 豁免）。
+- run.go Run() 解析 Response.RequestId 写入 trace（实测 iterations[0].request_id = 've-req-...'）。
+- check.go traceCheck 双前缀扫描：gcl-trace-*（gcl/trace.Check）+ incident-trace-*（check/trace.Check）。
+- gcl/trace/trace_test.go 新增 3 test；go build/vet/test 全绿。
+- validate.yml 含 vet check trace + vet check policyguard（P5/P7 e2e）。
+- l2-to-l3-plan.md §6 P5/P7 标记 ✅；L3 出口已达成。

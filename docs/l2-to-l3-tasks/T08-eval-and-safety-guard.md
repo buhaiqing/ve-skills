@@ -3,7 +3,7 @@
 > 任务来源：[`../l2-to-l3-plan.md`](../l2-to-l3-plan.md) §4 (P6, P7) + §5 Safety floor
 > 依赖：T01, T05
 > 预计工作量：1 天
-> 状态：🟡 TODO
+> 状态：✅ DONE（2026-07-13 核心交付；2026-07-17 P7 e2e 接入 CI，见 §9）
 
 ## 1. 目标
 
@@ -140,3 +140,12 @@ go build -o /tmp/vet .
 ```
 
 全部绿 + 8 项 DoD 勾选 → L3 已达成。可进入 M2（自愈 L1→L3）。
+
+## 9. 扩展：P7 Safety 不变量 CI e2e 接线（2026-07-17, commit 4831b5d）
+
+本卡核心交付（2026-07-13）已完成 `policyguard` 校验器 + 单测 + `vet check policyguard` 子命令，但当时 `validate.yml` 尚不存在，DoD #9（"CI 已含 policyguard，缺此步骤视为未完成 L3 出口"）未满足。
+
+2026-07-17 补完：
+- `.github/workflows/validate.yml` 已含两步：`vet check trace --root .`（P5）与 `vet check policyguard --root .`（P7），置于 `vet gcl gate` 之后。
+- 至此 P7 的"Safety=0 → 永不 AUTO/执行"由 CI 端到端守护，`l2-to-l3-plan.md` §6 P7 标记 ✅。
+- 验证：本地 `vet check policyguard --root .` 对干净仓库 OK（exit 0）；故意破坏 fixture 会让 CI 变红。
