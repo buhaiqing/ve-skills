@@ -1,6 +1,7 @@
 package run
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -215,5 +216,34 @@ func TestRun_PolicyAskNeedsConfirm(t *testing.T) {
 	})
 	if confirmed.ExitCode == 4 {
 		t.Fatalf("ASK with --confirmed should execute, got POLICY_BLOCK (exit 4)")
+	}
+	// Authorized ASK must persist confirmation provenance in the trace so the
+	// audit trail answers "who authorized this op".
+	root := t.TempDir()
+	auth := Run(Options{
+		Root: root, Skill: "ve-unknown-ops", Request: "ask-with-confirm-provenance",
+		Command: cmd, MaxIter: 1, Timeout: 10, StructuralOnly: true,
+		Confirmed: true, ConfirmedBy: "DOPS-12345",
+	})
+	if auth.ExitCode == 4 {
+		t.Fatalf("authorized ASK should execute, got POLICY_BLOCK (exit 4)")
+	}
+	// Re-read the persisted trace and assert confirmed_by is recorded.
+	matches, _ := filepath.Glob(filepath.Join(root, "audit-results", "gcl-trace-*.json"))
+	if len(matches) == 0 {
+		t.Fatalf("expected a persisted trace under %s/audit-results", root)
+	}
+	tr := trace.ParseTrace(matches[0])
+	if tr == nil {
+		t.Fatalf("persisted trace %s failed to parse", matches[0])
+	}
+	var found bool
+	for _, it := range tr.Iterations {
+		if it.PolicyDecision == "ASK" && it.ConfirmedBy == "DOPS-12345" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("authorized ASK iteration must record confirmed_by=DOPS-12345; trace=%s", matches[0])
 	}
 }

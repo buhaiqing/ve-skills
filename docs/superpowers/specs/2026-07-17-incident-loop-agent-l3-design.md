@@ -111,6 +111,15 @@ if policy != OpAuto && !(policy == OpAsk && opts.Confirmed) {
 
 `vet gcl run --confirmed` sets `Options.Confirmed`. It is the runtime's external "human vouches for this ASK-class op" signal. Honors ASK → execute. Does **not** override REFUSE (Safety=0 or destructive-with-no-confidence still refuses unless separately authorized upstream). This is spec-compliant: ASK honors confirmation; REFUSE is the floor.
 
+### Audit-chain hardening (confirmation provenance)
+
+A `--confirmed` that authorizes an ASK-class op is only meaningful when a human actually confirmed it at Step 5. To make the audit trail answer "who authorized this op":
+
+- `vet gcl run --confirmed-by <ticket_id|human_handle>` supplies provenance; stored in `Options.ConfirmedBy`.
+- When an ASK op is authorized to execute, `Run` stamps `ConfirmedBy` into the trace `Iteration.ConfirmedBy` (and `gen.Args["confirmed_by"]`).
+- `incident-loop-agent/SKILL.md` Step 5 requires `{{user.confirm}}` to be collected **before** `--confirmed` is passed, and `--confirmed` MUST be paired with `--confirmed-by`. Bare `--confirmed` with no provenance is treated as an audit violation.
+- `Safety=0` REFUSE is never reachable via `--confirmed` (the gate checks `safety==0 → REFUSE` before the confirmation branch).
+
 ---
 
 ## Component 4 — Trace schema addition

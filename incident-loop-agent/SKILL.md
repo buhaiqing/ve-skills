@@ -152,7 +152,7 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 ### Step 5 — Confirm (user gate, ASK-class only)
 
 - Read `{{policy.decision}}` for each operation (computed by T06 scorer before this step).
-- If `{{policy.decision}} == ASK`: collect `{{user.confirm}}` verbatim; trace it. **Note**: in the non-interactive `vet gcl run` runtime an ASK without an external `--confirmed` signal degrades to `REFUSE` (no human to ask) and the operation is blocked (exit 4, `POLICY_BLOCK`).
+- If `{{policy.decision}} == ASK`: collect `{{user.confirm}}` verbatim; trace it. **Note**: in the non-interactive `vet gcl run` runtime an ASK without an external `--confirmed` signal degrades to `REFUSE` (no human to ask) and the operation is blocked (exit 4, `POLICY_BLOCK`). **Authorization rule**: a destructive or otherwise ASK-class op is authorized to execute **only after** an explicit `{{user.confirm}}` is collected at this step; the runtime flag `--confirmed` carries that authorization and MUST be paired with `--confirmed-by <ticket_id|human_handle>` so the trace records *who* authorized the op. Never pass `--confirmed` without a human confirmation captured here — bare `--confirmed` with no provenance is treated as an audit violation.
 - If `{{policy.decision}} == AUTO`: proceed directly to Step 6 (no prompt).
 - If `{{policy.decision}} == REFUSE`: skip to Step 7 with `failure_pattern = "policy_refused"`; do NOT execute the operation.
 - **No silent default** — every REFUSE is explicit from the policy scorer.

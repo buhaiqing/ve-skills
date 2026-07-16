@@ -153,6 +153,32 @@ Full Round 1 (C1–C17) structural/spec-compliance table and Round 2 (F1–F13) 
 
 4. **例外（须显式记录）**：< 5 行的 typo/注释/格式化改动可不走此流程，但功能型改动一律无例外。
 
+## MANDATORY: 决策建议须带倾向与理由
+
+> **铁律 — 不可打破。** 每当需要用户从**多条候选方案**中做选择（如 code review 给出 A/B/C 优化建议、修复路径取舍、设计选型），**必须同时给出我自己的推荐方案 + 推荐理由**，供用户参考，不得只罗列选项让用户自行判断。
+
+**Why**: 用户明确要求——列一堆方案却不给立场，等于把判断成本转嫁给用户；Agent 应基于已掌握的事实主动给出专业倾向，用户再据此拍板或反驳。
+
+**How to apply:**
+
+1. 任何"请选择 A/B/C"式的提问，必须附带一行：`推荐：<方案 X> — <理由>`。
+2. 理由须基于**可验证事实**（测试结果、spec 条款、风险权衡），而非"感觉更好"。
+3. 若确实无法倾向（信息不足），须显式说"信息不足，无法推荐，需你补充：<缺什么>"，而不是假装中立。
+4. 此规则覆盖所有交互场景（code review、方案选型、修复建议、配置决策），无例外。
+
+## MANDATORY: 审计链前置（破坏性/ASK 授权须留痕）
+
+> **铁律 — 不可打破。** 任何会执行破坏性操作或升级为 ASK 类的授权，**必须先有显式人工确认，并把"谁、何时授权"写入可追溯记录（trace / 日志）**，禁止无 provenance 的裸授权开关。
+
+**Why**: 用户确认保持 `destructive → ASK`（非 REFUSE）的设计，但要求对"谁授权了这次破坏性操作"留审计链——避免 `--confirmed` 类开关被无差别滥用而无从追责。
+
+**How to apply:**
+
+1. 破坏性 / ASK 类操作的执行授权，必须由上游人工确认闸门（如 `incident-loop-agent` Step 5 收集 `{{user.confirm}}`）显式产生，不得由 `--confirmed` 等开关凭空放行。
+2. 授权信号须携带 provenance（`ticket_id` / `human_handle`），并持久化到 trace（如 `Iteration.ConfirmedBy`）；无 provenance 的裸授权视为审计违规。
+3. `Safety = 0` 的 REFUSE 是硬地板，任何授权开关均不得绕过。
+4. 此规则与 "Spec + Plan First" 铁律协同：授权/审计行为也须在 spec/plan 中声明，code review 时一并校验三方一致。
+
 ## File Layout Anchors (do not relocate without reason)
 
 完整目录树见 [docs/README.md](docs/README.md)。核心结构：

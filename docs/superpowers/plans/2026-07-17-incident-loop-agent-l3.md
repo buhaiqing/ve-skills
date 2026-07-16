@@ -27,11 +27,13 @@ Wire the L3 execution-risk policy (`AUTO/ASK/REFUSE`) into `vet gcl run` so the 
 - On block: append `Iteration{Decision: "POLICY_BLOCK", PolicyDecision: blocked}`, set `Final{Status: "POLICY_BLOCK"}`, `PersistTrace` + `writebackFailurePattern`, return `ExitCode: 4`.
 - Degrade unconfirmed ASK → REFUSE for the recorded decision (non-interactive runtime has no human to ask).
 
-### M2 — `--confirmed` flag (P9)
-**File:** `cmd/vet/gcl.go`
+### M2 — `--confirmed` flag + audit provenance (P9 + hardening)
+**Files:** `cmd/vet/gcl.go`, `cmd/vet/internal/gcl/run/run.go`, `cmd/vet/internal/gcl/trace/trace.go`
 
-- Add `--confirmed` bool flag → `Options.Confirmed`.
+- `--confirmed` bool flag → `Options.Confirmed`.
+- `--confirmed-by <ticket_id|human_handle>` → `Options.ConfirmedBy`; persisted in `Iteration.ConfirmedBy` when an ASK op is authorized.
 - No change to REFUSE path (Safety=0 / destructive-floor still refuse).
+- SKILL.md Step 5: `--confirmed` only after explicit `{{user.confirm}}` collected; `--confirmed-by` mandatory; bare `--confirmed` = audit violation.
 
 ### M3 — Trace schema field
 **File:** `cmd/vet/internal/gcl/trace/trace.go`
@@ -72,6 +74,8 @@ T06 DoD listed 5 functions (`scoreDecision`, `enforceMaxIter`, `withBackoff`, `d
 ✅ 4. Safety=0 → REFUSE, never bypassed by --confirmed
 ✅ 5. destructive → ASK (honors --confirmed); spec-compliant
 ✅ 6. `Options.Confirmed` wired from --confirmed flag
+✅ 7. `--confirmed-by` provenance persisted in trace Iteration.ConfirmedBy for authorized ASK ops
+✅ 8. SKILL.md Step 5 requires explicit {{user.confirm}} before --confirmed; bare --confirmed = audit violation
 ✅ 7. trace.Iteration.PolicyDecision field added + persisted
 ✅ 8. cmd/vet go build + go vet + go test clean
 ✅ 9. gcl-spec.md documents gate + exit code 4

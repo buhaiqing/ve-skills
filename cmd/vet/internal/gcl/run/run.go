@@ -124,6 +124,10 @@ type Options struct {
 	// (e.g. a human gate upstream). In the non-interactive `vet gcl run`
 	// runtime ASK is otherwise treated as REFUSE (no human to ask).
 	Confirmed bool
+	// ConfirmedBy records the provenance of that vouch (ticket id, human
+	// handle, or upstream loop id from the Step 5 {{user.confirm}} gate) so
+	// the trace can answer "who authorized this ASK-class op".
+	ConfirmedBy string
 }
 
 // deriveOperationIntent mirrors gcl_runner.derive_operation_intent.
@@ -461,7 +465,18 @@ func Run(opts Options) Result {
 			"GCL_CRITIC_FEEDBACK":        criticFeedback,
 			"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
 		})
-		gen.Args = map[string]any{"iter": iter, "critic_feedback": orEmpty(criticFeedback), "policy_decision": "AUTO"}
+		// When this iteration runs an ASK-class op that was authorized by an
+		// external confirmation, stamp the confirmation provenance into the
+		// trace so the audit trail answers "who authorized this op". AUTO ops
+		// need no confirmation; REFUSE never reaches here.
+		confirmedBy := ""
+		if policy == OpAsk && opts.Confirmed {
+			confirmedBy = opts.ConfirmedBy
+		}
+		gen.Args = map[string]any{"iter": iter, "critic_feedback": orEmpty(criticFeedback), "policy_decision": policy.String()}
+		if confirmedBy != "" {
+			gen.Args["confirmed_by"] = confirmedBy
+		}
 		lastGen = gen
 
 		var c *critic.CriticResult
@@ -518,7 +533,8 @@ func Run(opts Options) Result {
 			Generator: gen,
 			Critic:    trace.CriticRecord{Scores: c.Scores, Suggestions: c.Suggestions, Blocking: c.Blocking},
 			Decision:       decision,
-			PolicyDecision: "AUTO",
+			PolicyDecision: policy.String(),
+			ConfirmedBy:    confirmedBy,
 		})
 
 		if decision == "SAFETY_FAIL" {

@@ -45,6 +45,11 @@ type Iteration struct {
 	// from scoreDecision, applied before the generator command runs. Empty
 	// for pre-policy traces.
 	PolicyDecision string `json:"policy_decision,omitempty"`
+	// ConfirmedBy records the provenance of an external confirmation that
+	// authorized an ASK-class op to execute (e.g. ticket id / human handle
+	// from the Step 5 {{user.confirm}} gate). Empty when no confirmation was
+	// supplied. Provides the audit trail for "who authorized this op".
+	ConfirmedBy string `json:"confirmed_by,omitempty"`
 }
 
 // FailurePattern mirrors the Reflexion failure-pattern schema.

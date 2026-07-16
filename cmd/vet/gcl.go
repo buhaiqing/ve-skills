@@ -46,6 +46,7 @@ func runGCLRun(args []string) {
 	criticStdin := fs.Bool("critic-stdin", false, "read Critic JSON from stdin")
 	criticCmd := fs.String("critic-command", "", "isolated Critic command (separate process)")
 	confirmed := fs.Bool("confirmed", false, "vouch for ASK-class operations (otherwise treated as blocked in non-interactive mode)")
+	confirmedBy := fs.String("confirmed-by", "", "provenance of --confirmed (ticket id / human handle from the Step 5 {{user.confirm}} gate); recorded in trace for audit")
 	fs.Parse(args)
 
 	if *skill == "" || *request == "" || *command == "" {
@@ -64,6 +65,7 @@ func runGCLRun(args []string) {
 		CriticStdin:    *criticStdin,
 		CriticCommand:  *criticCmd,
 		Confirmed:      *confirmed,
+		ConfirmedBy:    *confirmedBy,
 	}).ExitCode
 	os.Exit(code)
 }
