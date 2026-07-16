@@ -42,10 +42,10 @@
 | 函数 | 行为 |
 |------|------|
 | `scoreDecision(op)` | **核心 9 格评分器（此前无卡片显式归属）**：读 op 的 `(safety_class, blast_radius, confidence, safety)` + T03 allowlist 成员资格 → 查 T02 schema / T01 §3.2 矩阵 → 输出 `AUTO/ASK/REFUSE`；缺 metadata → ASK（fail-safe）；safety=0 → REFUSE（覆盖一切） |
-| `enforceMaxIter(plan, opSafety)` | 读 plan，destructive op → max_iter=2，其余 max_iter=3；超限 → 报错 |
-| `withBackoff(call, maxRetry=2)` | retry 2 次，指数退避 200ms/1s |
-| `detectPartialRollback(trace)` | 对比 pre/post snapshot，标记 diff 项 |
-| `validatePolicyDecision(plan, decision)` | 复核 `scoreDecision` 输出：safety=0 → REFUSE 必生效 |
+| `policyInputs(skill, intent, scores)` | 由 operation intent + 可选 Critic 分数派生 scoreDecision 入参；无分数时 read-only→high conf（AUTO 快路径），其余→low（保守 ASK/REFUSE） |
+| `Run(opts) Result` | 入口（非 `RunLoop`）；在每个 iteration 顶部调用 policyInputs+scoreDecision 做执行门，非 AUTO 且无 `--confirmed` 则 POLICY_BLOCK（exit 4） |
+
+> **⚠️ 实现偏差（与 Superpowers plan `2026-07-17-incident-loop-agent-l3.md` §2 对齐）**：原卡片列 5 个函数，实际 ships 时 `enforceMaxIter`/`withBackoff`/`detectPartialRollback`/`validatePolicyDecision` 已**合并进 `Run` 或推迟到 L4**（backoff→T09、partial-rollback→T10），未单列函数。行为（门先于执行、destructive→ASK、safety=0→REFUSE、max_iter 强制）均已落地。以 Superpowers plan §2 映射表为权威。
 
 ### 3.3 新增 2 — incident-loop-agent 专用 entry
 

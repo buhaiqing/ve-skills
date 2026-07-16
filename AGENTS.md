@@ -129,6 +129,30 @@ Full Round 1 (C1–C17) structural/spec-compliance table and Round 2 (F1–F13) 
 - **Prefer editing existing skills over creating new files.** No tutorial-style `.md` at the repo root.
 - **Orchestration / loop-agent skills are exempt from the `ve-*` prefix and `cli_applicability` rule.** Skills whose `metadata.type ∈ {orchestration-skill, loop-agent, meta-skill}` (e.g. `incident-loop-agent`) need not follow the `ve-<product>-ops` naming or carry a mandatory `cli_applicability` field. They MUST still live under their own `<name>/` directory with a `SKILL.md` + `references/`, and MUST be added to the GCL conformance allowlist (`ORCHESTRATION_TYPES`, defined in `cmd/vet/internal/check/frontmatter/frontmatter.go`). The single-product rule does not apply to them (they coordinate, not own, a product). The `ORCHESTRATION_TYPES` allowlist is defined in `cmd/vet/internal/check/frontmatter/frontmatter.go`.
 
+## MANDATORY: Spec + Plan First, Then Code (Superpowers Three-Way Consistency)
+
+> **铁律 — 不可打破。** 任何功能性开发（新增功能 / 新模块 / 行为变更 / 破坏性修复）**必须先有 Superpowers SDD 规格（spec）与执行计划（plan），再写代码**。spec 与 plan 是开发的先决条件，不是事后补录。
+
+**Why**: 用户明确要求——code review 时必须对「spec / plan / code」三者做一致性匹配校验，确保功能需求不漂移。没有上游 spec/plan 的代码等于无锚点的实现，review 无从校验意图，需求易偏离。
+
+**How to apply:**
+
+1. **开工前必须有 spec + plan**（放在 `docs/superpowers/`）：
+   - 规格：`docs/superpowers/specs/<date>-<feature>-design.md`（SDD：功能描述、状态机/契约、异常边界、验收标准）。
+   - 计划：`docs/superpowers/plans/<date>-<feature>.md`（里程碑拆分、依赖图、DoD、验证命令）。
+   - 格式对齐既有样例：`docs/superpowers/specs/2026-05-26-high-issues-fix-design.md`、`docs/superpowers/plans/golang-migration/2026-07-12-vet-m3-gcl.md`。
+   - 既有的 `docs/l2-to-l3-tasks/*` / `docs/l3-to-l4-tasks/*` 任务卡**不替代** superpowers spec/plan——任务卡是执行分解，spec/plan 是意图与契约的单一事实源。
+
+2. **代码必须 trace 回 spec/plan**：每个功能点都能在 spec/plan 中找到对应条目；函数名/接口契约与 plan 声明的签名一致。
+
+3. **Code Review 强制做三者一致性校验**（不可跳过）：
+   - **Spec ↔ Plan**：plan 的 DoD / 接口契约与 spec 的验收标准对齐，无矛盾。
+   - **Plan ↔ Code**：plan 声明的函数 / 文件 / 行为，代码中真实存在且签名一致；不存在的须显式标注「已合并/inline/未实现」并说明原因，禁止静默缺失。
+   - **Spec ↔ Code**：代码行为（尤其安全门、决策矩阵、错误码）与 spec 描述一致；发现偏离必须作为 `[BLOCKER]`/`[MAJOR]` 报出。
+   - 校验结论写进 review 报告；发现三者漂移即阻断合并，先 reconcile spec/plan 再合代码。
+
+4. **例外（须显式记录）**：< 5 行的 typo/注释/格式化改动可不走此流程，但功能型改动一律无例外。
+
 ## File Layout Anchors (do not relocate without reason)
 
 完整目录树见 [docs/README.md](docs/README.md)。核心结构：
