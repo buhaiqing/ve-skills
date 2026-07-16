@@ -75,9 +75,9 @@
     "skill": "ve-vke-ops",
     "confidence": "high",
     "rationale": "matches VKE operational scope",
-    "operations": [
-      "ModifyCluster"
-    ]
+      "operations": [
+        "UpdateClusterConfig"
+      ]
   },
   {
     "query": "火山引擎容器服务集群管理",

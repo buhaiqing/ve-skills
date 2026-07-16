@@ -41,6 +41,20 @@ server_groups:
       unhealthy_threshold: 3
       healthy_http_code: "200"
 
+  - name: sg-web-servers
+    type: instance
+    description: Web app backend servers
+    health_check:
+      enabled: true
+      protocol: HTTP
+      method: GET
+      uri: /health
+      timeout: 3
+      interval: 5
+      healthy_threshold: 3
+      unhealthy_threshold: 3
+      healthy_http_code: "200"
+
 # Backend Servers (ECS instances)
 backend_servers:
   - server_id: i-xxxxxxxxx

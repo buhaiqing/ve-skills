@@ -61,23 +61,17 @@
   },
   {
     "query": "ALB 流量镜像",
-    "should_trigger": true,
+    "should_trigger": false,
     "skill": "ve-alb-ops",
-    "confidence": "high",
-    "rationale": "matches ALB operational scope",
-    "operations": [
-      "CreateTrafficMirror"
-    ]
+    "confidence": "low",
+    "rationale": "traffic mirroring is not a documented ALB operation in this skill; out of scope"
   },
   {
     "query": "ALB traffic mirroring",
-    "should_trigger": true,
+    "should_trigger": false,
     "skill": "ve-alb-ops",
-    "confidence": "high",
-    "rationale": "matches ALB operational scope",
-    "operations": [
-      "CreateTrafficMirror"
-    ]
+    "confidence": "low",
+    "rationale": "traffic mirroring is not a documented ALB operation in this skill; out of scope"
   },
   {
     "query": "ALB 熔断配置",
@@ -85,9 +79,9 @@
     "skill": "ve-alb-ops",
     "confidence": "high",
     "rationale": "matches ALB operational scope",
-    "operations": [
-      "ModifyServerGroupAttribute"
-    ]
+      "operations": [
+        "ModifyServerGroupAttributes"
+      ]
   },
   {
     "query": "ALB circuit breaker configuration",
@@ -95,9 +89,9 @@
     "skill": "ve-alb-ops",
     "confidence": "high",
     "rationale": "matches ALB operational scope",
-    "operations": [
-      "ModifyServerGroupAttribute"
-    ]
+      "operations": [
+        "ModifyServerGroupAttributes"
+      ]
   },
   {
     "query": "删除 ALB",

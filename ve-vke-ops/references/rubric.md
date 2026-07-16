@@ -5,7 +5,7 @@ description: >-
   on a 5-dimension scale (Correctness / Safety / Idempotency / Traceability /
   Spec Compliance). Safety must equal 1 for any destructive operation
   or GCL aborts. See repo-level AGENTS.md §3 for the meta-rubric.
-  Destructive: DeleteCluster, DeleteNodePool; State-changing: UpdateCluster, UpdateNodePool; Mutating: CreateCluster, CreateNodePool; Read-only: ListClusters, DescribeCluster, ListNodePools, DescribeNodePool
+  Destructive: DeleteCluster, DeleteNodePool; State-changing: UpdateClusterConfig, UpdateNodePool; Mutating: CreateCluster, CreateNodePool; Read-only: ListClusters, DescribeCluster, ListNodePools, DescribeNodePool
 license: MIT
 metadata:
   author: volcengine
@@ -27,7 +27,7 @@ metadata:
 | Tier | Operations in `ve-vke-ops` | `max_iter` | Safety floor |
 |---|---|---|---|
 | **Destructive** | `DeleteCluster, DeleteNodePool` | 3 | 1.0 (mandatory) |
-| **State-changing** | `UpdateCluster, UpdateNodePool` | 3 | 1.0 (mandatory) |
+| **State-changing** | `UpdateClusterConfig, UpdateNodePool` | 3 | 1.0 (mandatory) |
 | **Mutating** | `CreateCluster, CreateNodePool` | 3 | >= 0.5 |
 | **Read-only** | `ListClusters, DescribeCluster, ListNodePools, DescribeNodePool` | 3 | >= 0 |
 

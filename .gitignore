@@ -61,3 +61,4 @@ dist/
 
 # vet CLI build output
 cmd/bin/
+cmd/vet/

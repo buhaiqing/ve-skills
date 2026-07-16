@@ -359,7 +359,7 @@ ve alb DescribeLoadBalancers --Region "{{user.region}}" --LoadBalancerIds "[\"$A
 ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}"
 
 # Filter by ID
-ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerIds "[\"{{user.alb_id}}\"]"
+ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerIds '["{{user.alb_id}}"]'
 
 # Filter by name
 ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerName "{{user.alb_name}}"
@@ -393,6 +393,17 @@ ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}" --Type "public
 1. **MUST** obtain explicit user confirmation: irreversible delete of `{{user.alb_name}}` (`{{user.alb_id}}`)
 2. **MUST NOT** proceed without clear user assent
 3. **WARN** about downstream impact: all listeners, rules, and server groups will be affected
+4. **Confirmation pattern:** present a block and require the user to type the ALB name to confirm:
+
+   ```
+   ⚠️ DESTRUCTIVE ACTION — IRREVERSIBLE
+   You are about to DELETE ALB:
+   - Name: {{user.alb_name}}
+   - ID:   {{user.alb_id}}
+   - Region: {{user.region}}
+   All listeners, rules, and server groups will be permanently removed.
+   Type the ALB name "{{user.alb_name}}" to confirm: _
+   ```
 4. Verify no active listeners:
 
 ```bash
@@ -406,7 +417,7 @@ for listener_id in $(ve alb DescribeListeners --Region "{{user.region}}" --LoadB
 done
 
 # For public ALB, check EIP association
-ve alb DescribeLoadBalancers --Region "{{user.region}}" --LoadBalancerIds "[\"{{user.alb_id}}\"]" | jq '.Result.LoadBalancers[0].EipAddress'
+ve alb DescribeLoadBalancers --Region "{{user.region}}" --LoadBalancerIds '["{{user.alb_id}}"]' | jq '.Result.LoadBalancers[0].EipAddress'
 ```
 
 #### Execution — CLI (`ve`)
@@ -420,7 +431,7 @@ ve alb DeleteLoadBalancer --Region "{{user.region}}" --LoadBalancerId "{{user.al
 ```bash
 # Poll until ALB is deleted (NotFound)
 for i in $(seq 1 60); do
-  if ve alb DescribeLoadBalancers --Region "{{user.region}}" --LoadBalancerIds "[\"{{user.alb_id}}\"]" 2>&1 | grep -q "NotFound"; then
+  if ve alb DescribeLoadBalancers --Region "{{user.region}}" --LoadBalancerIds '["{{user.alb_id}}"]' 2>&1 | grep -q "NotFound"; then
     echo "ALB deleted successfully"
     break
   fi
@@ -742,6 +753,7 @@ ve alb ModifyLoadBalancerAttributes \
 
 - **MUST** obtain confirmation before deleting a listener
 - **MUST** check for attached rules and warn user
+- **Confirmation pattern:** require the user to type the listener ID `{{user.listener_id}}` to confirm deletion
 
 ```bash
 # Check for attached rules
@@ -760,7 +772,7 @@ ve alb DeleteListener --Region "{{user.region}}" --ListenerId "{{user.listener_i
 
 #### Pre-flight (Safety Gate)
 
-- **MUST** obtain explicit confirmation: delete rule `{{user.rule_id}}`
+- **MUST** obtain explicit confirmation: delete rule `{{user.rule_id}}`; require the user to type the rule ID to confirm
 
 #### Execution
 
@@ -885,6 +897,7 @@ ve alb DescribeListeners --Region "{{env.VOLCENGINE_REGION}}" --LoadBalancerId "
 - **MUST** obtain explicit confirmation before deleting a server group
 - **MUST** warn about traffic interruption if the server group is associated with active listeners
 - **MUST** check if any listeners reference this server group
+- **Confirmation pattern:** require the user to type the server group ID `{{user.server_group_id}}` to confirm deletion
 
 ```bash
 # Check which listeners reference this server group
@@ -915,6 +928,8 @@ ve alb DescribeServerGroups --Region "{{env.VOLCENGINE_REGION}}" --ServerGroupId
 ---
 
 ### FinOps Operation: DescribeIdleLoadBalancers — Find Idle ALBs
+
+> **UX caveat:** This heuristic flags ALBs with **no listeners** as idle. It does NOT account for server groups still attached, reserved capacity, or billing commitments. Before deletion, confirm the ALB truly has no traffic and no attached server groups — never delete solely on this signal.
 
 #### Execution
 
@@ -994,6 +1009,8 @@ ve alb DeleteListener --Region "{{user.region}}" --ListenerId "{{user.listener_i
 | `Throttling` | Backoff 1s/2s/4s; retry (3x) | `WARNING Rate limit reached. Retrying...` |
 | `InternalError` | Backoff 2s/4s/8s; retry (3x) | `[ERROR] InternalError: Server-side error occurred. Retrying...` |
 | `InsufficientBalance` | HALT; recharge account | `[ERROR] Insufficient balance. Recharge your account.` |
+| `HealthCheckFailed` | Retry 3x/10s; check backend | `[ERROR] Backend health check failed. Verify backend process and security group rules.` |
+| `BackendUnavailable` | Retry 3x/5s; verify backend | `[ERROR] Backend server not ready. Verify backend instance state.` |
 
 ## Prerequisites
 
@@ -1019,23 +1036,6 @@ ve alb DeleteListener --Region "{{user.region}}" --ListenerId "{{user.listener_i
    ```bash
    ve alb DescribeLoadBalancers --Region "{{env.VOLCENGINE_REGION}}"
    ```
-
-## Error Taxonomy
-
-| Error Code | Meaning | Resolution |
-|------------|---------|-----------|
-| `InvalidLoadBalancerId` | Load balancer ID does not exist | 0 retries; **HALT** — verify LB ID |
-| `IncorrectLBState` | LB status not valid for operation | 0 retries; **HALT** — check LB current status |
-| `QuotaExceeded.Listener` | Listener quota reached | 0 retries; **HALT** — request quota increase |
-| `InvalidListenerId` | Listener ID does not exist | 0 retries; **HALT** — verify listener ID |
-| `InvalidServerGroupId` | Server group ID does not exist | 0 retries; **HALT** — verify server group ID |
-| `InvalidCertificateId` | Certificate ID does not exist | 0 retries; **HALT** — verify certificate ID |
-| `QuotaExceeded.Rule` | Forwarding rule quota reached | 0 retries; **HALT** — request quota increase |
-| `InvalidRuleId` | Rule ID does not exist | 0 retries; **HALT** — verify rule ID |
-| `HealthCheckFailed` | Backend health check failure | 3 retries/10s; **RETRY** — check backend status |
-| `BackendUnavailable` | Backend server not ready | 3 retries/5s; **RETRY** — verify backend state |
-| `Throttling` | Rate limit exceeded | 3 retries/exponential; **RETRY** — Back off and retry |
-| `InternalError` | Server-side error | 3 retries/2s/4s/8s; **RETRY** — Retry, escalate with RequestId |
 
 ## Reference Directory
 
