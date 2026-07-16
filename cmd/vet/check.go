@@ -17,6 +17,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/links"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/policyguard"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/trace"
+	gcltrace "github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 )
 
 // checkReport is the machine-readable shape emitted with --json.
@@ -228,18 +229,24 @@ func traceCheck(root string, jsonOut bool) {
 		}
 		os.Exit(1)
 	}
-	var failCount, checked int
+	var failCount int
 	for _, entry := range entries {
 		if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
 			continue
 		}
-		// Only check incident-trace-*.json (new schema)
-		if !strings.HasPrefix(entry.Name(), "incident-trace-") {
+		path := filepath.Join(auditDir, entry.Name())
+		var err error
+		switch {
+		case strings.HasPrefix(entry.Name(), "gcl-trace-"):
+			// Runtime GCL trace (written by `vet gcl run`).
+			err = gcltrace.Check(path)
+		case strings.HasPrefix(entry.Name(), "incident-trace-"):
+			// Agent incident trace (written by incident-loop-agent).
+			err = trace.Check(path)
+		default:
 			continue
 		}
-		checked++
-		path := filepath.Join(auditDir, entry.Name())
-		if err := trace.Check(path); err != nil {
+		if err != nil {
 			failCount++
 			if !jsonOut {
 				fmt.Printf("FAIL %s: %v\n", entry.Name(), err)

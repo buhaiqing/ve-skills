@@ -47,3 +47,9 @@ jobs:
 
       - name: GCL structural CI gate
         run: cmd/bin/vet gcl gate --root . --skip-incident-loop
+
+      - name: Check GCL trace request_id enforcement (P5)
+        run: cmd/bin/vet check trace --root .
+
+      - name: Check policy safety invariant (P7)
+        run: cmd/bin/vet check policyguard --root .

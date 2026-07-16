@@ -1,7 +1,10 @@
 package trace
 
 import (
+	"encoding/json"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -62,5 +65,68 @@ func writeTrace(t *testing.T, p string) {
 	t.Helper()
 	if err := writeFile(p, "{\"skill\":\"ve-ecs-ops\",\"final\":{\"status\":\"PASS\"}}"); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// writeRuntimeTrace serializes a runtime Trace (gcl-trace-*.json shape) to a
+// temp file for Check tests.
+func writeRuntimeTrace(t *testing.T, dir string, tr *Trace) string {
+	t.Helper()
+	b, err := json.MarshalIndent(tr, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(dir, "gcl-trace-"+strconv.Itoa(len(t.Name()))+".json")
+	if err := writeFile(p, string(b)); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// A runtime trace that actually ran a `ve` call but forgot request_id.
+func TestCheck_RuntimeMissingRequestID(t *testing.T) {
+	dir := t.TempDir()
+	tr := sampleTrace("ve-ecs-ops", "PASS", map[string]float64{"correctness": 1, "safety": 1})
+	tr.Iterations[0].RequestID = "" // ve call ran, but no RequestId recorded
+	p := writeRuntimeTrace(t, dir, tr)
+	if err := Check(p); err == nil {
+		t.Fatal("expected missing request_id to fail, got nil")
+	} else if !strings.Contains(err.Error(), "request_id") {
+		t.Errorf("expected error about request_id, got: %v", err)
+	}
+}
+
+// A runtime trace with request_id populated + redaction_pass passes.
+func TestCheck_RuntimeValid(t *testing.T) {
+	dir := t.TempDir()
+	tr := sampleTrace("ve-ecs-ops", "PASS", map[string]float64{"correctness": 1, "safety": 1})
+	tr.Iterations[0].RequestID = "req-abc-123"
+	p := writeRuntimeTrace(t, dir, tr)
+	if err := Check(p); err != nil {
+		t.Fatalf("valid runtime trace should pass, got: %v", err)
+	}
+}
+
+// A POLICY_BLOCK first iteration never ran a `ve` call -> empty request_id is OK.
+func TestCheck_RuntimePolicyBlockSkipsRequestID(t *testing.T) {
+	dir := t.TempDir()
+	tr := sampleTrace("ve-ecs-ops", "POLICY_BLOCK", map[string]float64{"correctness": 1, "safety": 1})
+	tr.Iterations[0].Decision = "POLICY_BLOCK"
+	tr.Iterations[0].RequestID = "" // no ve call ran
+	p := writeRuntimeTrace(t, dir, tr)
+	if err := Check(p); err != nil {
+		t.Fatalf("POLICY_BLOCK iteration needs no request_id, got: %v", err)
+	}
+}
+
+// A file without trace_schema_version is not a runtime trace -> skipped (nil).
+func TestCheck_RuntimeSkipsNonRuntimeTrace(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "incident-trace-X.json")
+	if err := writeFile(p, `{"ticket_id":"T1","started_at":"s","finished_at":"f","policy_decision":"AUTO","iterations":[],"redaction_pass":true}`); err != nil {
+		t.Fatal(err)
+	}
+	if err := Check(p); err != nil {
+		t.Fatalf("non-runtime trace should be skipped, got: %v", err)
 	}
 }

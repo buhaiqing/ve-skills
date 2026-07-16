@@ -4,7 +4,7 @@
 >
 > **This document = the detailed expansion of milestone M1** in [`docs/autonomous-ops-roadmap.md`](./autonomous-ops-roadmap.md). It scopes **L2 → L3 only**. L3 → L4 (M2–M4) is intentionally out of scope here.
 >
-> **Status**: REVISED + P8/P9 SHIPPED (2026-07-16). Runtime execution-risk gate now wired into `vet gcl run`; remaining items P5/P7 CI enforcement + doc sync.
+> **Status**: ✅ L3 COMPLETE (2026-07-17). Runtime execution-risk gate wired into `vet gcl run` (P8/P9); P5 runtime-trace `request_id` collection + dual-schema `vet check trace` CI enforcement shipped; P7 `policyguard` CI enforcement shipped.
 > **Last updated**: 2026-07-16
 > **Scope**: `incident-loop-agent` orchestration + the 8 leaf skills it coordinates + `vet` validation + Reflexion memory.
 
@@ -114,8 +114,8 @@ Legend: ✅ Done (on disk) · ⚠️ Partial · ⛔ Blocked · 🆕 New in this 
 | **P6** | Eval coverage for 3 classes | AUTO/ASK/REFUSE eval cases in `eval_queries.json` | eval exercises all 3 paths | `assets/eval_queries.json` (23 refs) | ✅ | P1 |
 | **P8** 🆕 | **Wire `scoreDecision` into `Run()` execution gate** | In `Run()`, before `runCommand`, compute `OpDecision` per op; `REFUSE`→skip+record, `ASK`→require confirm, `AUTO`→execute; persist decision into `trace.Iteration` | A non-destructive high-confidence single-resource op runs with **0 human prompts**; a destructive/Safety=0 op is **never** auto-run | `run.go` `Run()` loop (gate added) | ✅ | P1,P3,P4 |
 | **P9** 🆕 | **Supply `scoreDecision` inputs from runtime** | Derive `confidence` (from Critic), `safety` (Critic `safety`), `metadataOK` (leaf metadata parse) inside `Run()`; pass to `scoreDecision` | `scoreDecision` receives real (not zero-value) inputs; unit test for input mapping | `policyInputs` helper in `run.go` | ✅ | P8 |
-| **P5** | Full-chain observability enforcement | `vet gcl trace` validates `request_id` non-empty per `ve` call; CI fails on missing | every iteration trace has RequestIds; CI red on gap | `trace.schema.json:41-43`; `vet gcl trace` (`check.go:74`) | ⚠️ schema present, CI enforcement unconfirmed | P4 |
-| **P7** | Safety-regression guard (end-to-end) | CI integration assert: any op with Safety=0 in a `dispatch_plan` yields no AUTO path + no execution | guard red if policy ever returns AUTO for Safety=0 across a plan | `autonomous-ops-roadmap.md §3`; `policyguard` | ⚠️ unit-tested, CI-e2e unconfirmed | P1,P6,P8 |
+| **P5** | Full-chain observability enforcement | runtime `gcl-trace-*.json` collects `request_id` from each `ve` call; `vet check trace` (dual-schema) fails on missing; CI red on gap | every runtime iteration trace has RequestIds; CI red on gap | `gcl/trace.Check` (`trace.go`); `vet check trace` (`check.go:74`) | ✅ done | P4 |
+| **P7** | Safety-regression guard (end-to-end) | CI integration assert: any op with Safety=0 in a `dispatch_plan` yields no AUTO path + no execution | guard red if policy ever returns AUTO for Safety=0 across a plan | `autonomous-ops-roadmap.md §3`; `policyguard` + `validate.yml` | ✅ done | P1,P6,P8 |
 | **P10** 🆕 | **Reconcile plan doc with reality** | Mark P1–P4,P6 Done; remove "skeleton/not yet on disk" claims; align with roadmap | doc matches disk; no stale DRAFT claims | this file | ⛔ (doc debt) | — |
 
 ### On P8 (the real blocker — important)
@@ -191,8 +191,8 @@ vet gcl trace --root .            # must fail if any iteration lacks request_id
 □ P6 eval covers AUTO/ASK/REFUSE                                     [✅ done]
 □ P8 scoreDecision invoked inside Run() to gate execution           [✅ done]
 □ P9 Run() supplies confidence/safety/metadataOK to scoreDecision   [✅ done]
-□ P5 every iteration trace has RequestIds, enforced by vet in CI     [⚠️ partial]
-□ P7 safety-invariant guard fails CI on any AUTO-with-Safety=0       [⚠️ partial]
+□ P5 every iteration trace has RequestIds, enforced by vet in CI     [✅ done]
+□ P7 safety-invariant guard fails CI on any AUTO-with-Safety=0       [✅ done]
 □ P10 plan doc reconciled with disk state                            [✅ done]
 □ Go build + vet + test clean; validate.yml green
 ```

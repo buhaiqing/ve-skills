@@ -246,6 +246,31 @@ func runCommand(command string, timeout int, extraEnv map[string]string) trace.G
 	}
 }
 
+// parseRequestID extracts the cloud API RequestId from `ve` CLI JSON output
+// ({"Response":{"RequestId":"..."}}). Returns "" if absent or unparseable —
+// the runtime can still emit a trace, it just won't be request_id-traceable.
+func parseRequestID(output string) string {
+	idx := strings.Index(output, "\"RequestId\"")
+	if idx < 0 {
+		return ""
+	}
+	rest := output[idx+len("\"RequestId\""):]
+	// Find the first quoted value after the key.
+	start := strings.Index(rest, "\"")
+	if start < 0 {
+		return ""
+	}
+	end := strings.Index(rest[start+1:], "\"")
+	if end < 0 {
+		return ""
+	}
+	id := rest[start+1 : start+1+end]
+	if strings.TrimSpace(id) == "" {
+		return ""
+	}
+	return id
+}
+
 // loadCritic mirrors gcl_runner.load_critic (--critic-json / --critic-stdin).
 func loadCritic(path string, stdin bool) (*critic.CriticResult, error) {
 	var raw []byte
@@ -528,6 +553,9 @@ func Run(opts Options) Result {
 		}
 
 		decision := critic.Decide(c.Scores)
+		// Capture the cloud API RequestId from this iteration's `ve` call so
+		// the runtime trace is end-to-end traceable (P5).
+		requestID := parseRequestID(gen.ResultExcerpt)
 		tr.Iterations = append(tr.Iterations, trace.Iteration{
 			Iter:      iter,
 			Generator: gen,
@@ -535,6 +563,7 @@ func Run(opts Options) Result {
 			Decision:       decision,
 			PolicyDecision: policy.String(),
 			ConfirmedBy:    confirmedBy,
+			RequestID:      requestID,
 		})
 
 		if decision == "SAFETY_FAIL" {

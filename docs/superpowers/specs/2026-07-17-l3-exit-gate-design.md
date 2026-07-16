@@ -13,7 +13,7 @@
 
 The L3 execution-risk gate (P8/P9) is implemented and unit-tested, but two L3 DoD items remain **partial** per `docs/l2-to-l3-plan.md`:
 
-- **P5 (full-chain observability):** `vet gcl trace` validates `request_id` non-empty, but **CI does not run it**, and the runtime persists traces as `gcl-trace-*.json` while `vet check trace` only scans `incident-trace-*.json` — so real runtime traces are **never actually checked**.
+- **P5 (full-chain observability):** `vet check trace` validates `request_id`, but only against `incident-trace-*.json`. The runtime `vet gcl run` persists traces as `gcl-trace-*.json` with a **different schema** (`trace_schema_version`/`skill`/`operation_intent`; per-iteration `generator`/`decision`/`policy_decision`) that has **no `request_id` field at all** — the runtime never parses the `ve` CLI's `{"Response":{"RequestId":"..."}}` return. So (a) real runtime traces are never checked, and (b) P5's intent ("every `ve` call's RequestId recorded + validated") is not yet met because the runtime emits no RequestId.
 - **P7 (safety-regression guard):** `policyguard` unit-tests pass, and `vet check policyguard` exists, but **CI does not run it**; the end-to-end guarantee "Safety=0 → never AUTO/executed" is not enforced in the pipeline.
 
 Without these, `l2-to-l3-plan.md` §6 L3 DoD cannot be marked complete, and a future regression (e.g. a trace missing `request_id`, or `scoreDecision` accidentally returning AUTO for safety=0) would pass CI silently.
@@ -31,13 +31,36 @@ No new scorer logic. The invariants already exist (`policyguard` invariants 1/2/
 
 ---
 
-## Component 1 — Trace glob fix (`cmd/vet/check.go` `traceCheck`)
+## Component 1 — Runtime RequestId collection + dual-schema trace validation
 
-**Current behavior (bug):** `traceCheck` skips any file not prefixed `incident-trace-`. `Run()` writes `gcl-trace-<ts>.json` (see `trace.PersistTrace`), so the files CI should validate are excluded.
+**Two sub-changes (both required for P5):**
 
-**Fix:** scan `audit-results/` for `gcl-trace-*.json` (the runtime output) **and** `incident-trace-*.json` (the agent-produced wrapper). Both carry the same schema (`request_id` required per ve_call). Drop the `incident-trace-` only filter; instead match `*-trace-*.json` or explicitly both prefixes.
+### 1a — Collect RequestId at runtime (`cmd/vet/internal/gcl/run/run.go`)
 
-**Verification:** a `gcl-trace-*.json` with a missing `request_id` must cause `vet check trace` to exit 1.
+`ve` CLI returns JSON `{"Response":{"RequestId":"<id>"}}`. `Run()` currently discards it. Add `RequestID string` to `trace.Iteration` and populate it from each `runCommand` result: parse `Response.RequestId` out of the (masked) generator output. On the first iteration the generator has not run yet (gate may block), so `RequestID` is empty there — that is expected and valid.
+
+### 1b — Runtime-trace validation (`cmd/vet/internal/gcl/trace/trace.go`)
+
+> **Package boundary (important):** the existing `cmd/vet/internal/check/trace/trace.go`
+> validates the **incident-trace** schema (`ticket_id`/`ve_calls[].request_id`), written by
+> `incident-loop-agent`. The runtime `gcl-trace-*.json` is a **different** schema, written by
+> `gcl/trace.PersistTrace`. The two are intentionally separate packages. We add a **new**
+> `gcl/trace.Check` that validates the runtime shape — we do NOT mutate `check/trace.Check`.
+
+`gcl/trace.Check(path)` validates the runtime trace:
+
+- Detect runtime shape by presence of `trace_schema_version` (always `"v1"` for `PersistTrace` output).
+- Validate: every `iterations[].request_id` non-empty **where the iteration actually ran a `ve` call** (i.e. `generator.command` is non-empty AND `decision != "POLICY_BLOCK"`); `redaction_pass == true`.
+- Top-level `ticket_id`/`started_at`/`finished_at`/`policy_decision` are **not** required (they belong to the incident-trace schema).
+- A file lacking `trace_schema_version` is treated as an incident/unknown trace and skipped by this checker (so the two checkers stay orthogonal).
+
+The existing `check/trace.Check` keeps validating `incident-trace-*.json` exactly as before — no change to its schema or error messages.
+
+### 1c — `traceCheck` glob (`cmd/vet/check.go`)
+
+Scan both `gcl-trace-*.json` (runtime) and `incident-trace-*.json` (agent). Drop the `incident-trace-` only filter.
+
+**Verification:** a `gcl-trace-*.json` with an empty `iterations[].request_id` must cause `vet check trace` to exit 1; a valid runtime trace (with RequestId) passes.
 
 ---
 
@@ -61,15 +84,18 @@ Both already implemented in `cmd/vet/check.go` (`traceCheck`, `policyguard` case
 
 | File | Change |
 |------|--------|
-| `cmd/vet/check.go` | `traceCheck`: widen glob to include `gcl-trace-*.json` |
+| `cmd/vet/internal/gcl/trace/trace.go` | `Iteration.RequestID` field (JSON `request_id`); **new** `Check(path)` validates runtime trace (dual-shape aware: runtime vs incident) |
+| `cmd/vet/internal/gcl/run/run.go` | `runCommand`/`Run` parse `Response.RequestId` from generator output → store in `Iteration.RequestID` |
+| `cmd/vet/check.go` | `traceCheck`: scan `gcl-trace-*` (runtime, via `gcl/trace.Check`) + `incident-trace-*` (via `check/trace.Check`) |
+| `cmd/vet/internal/gcl/trace/trace_test.go` | add tests: runtime `gcl-trace-*.json` with missing/empty `request_id` fails; valid runtime trace passes |
 | `.github/workflows/validate.yml` | add `vet check trace` + `vet check policyguard` steps |
-| `cmd/vet/internal/check/trace/trace_test.go` | add a test: a `gcl-trace-*.json` with missing `request_id` fails `Check` (covers the runtime-naming path) |
 
 ---
 
 ## Success Criteria
 
-- `vet check trace --root .` fails (exit 1) if any `gcl-trace-*.json` in `audit-results/` has a ve_call without `request_id`.
+- `vet gcl run` records the `ve` call `RequestId` into each `Iteration.request_id` of the persisted `gcl-trace-*.json`.
+- `vet check trace --root .` fails (exit 1) if any `gcl-trace-*.json` in `audit-results/` has an empty `iterations[].request_id` (where an iteration actually ran a command), or if `redaction_pass` is false.
 - `vet check policyguard --root .` fails if any fixture/plan violates invariants (safety=0→REFUSE, destructive→never AUTO, missing metadata→never AUTO).
 - `.github/workflows/validate.yml` runs both checks; a forced regression makes the CI job red.
 - `go build` + `go vet` + `go test ./...` clean in `cmd/vet`.

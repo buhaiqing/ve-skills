@@ -5,9 +5,11 @@ package trace
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -50,6 +52,12 @@ type Iteration struct {
 	// from the Step 5 {{user.confirm}} gate). Empty when no confirmation was
 	// supplied. Provides the audit trail for "who authorized this op".
 	ConfirmedBy string `json:"confirmed_by,omitempty"`
+	// RequestID is the cloud API request id returned by the `ve` CLI for the
+	// generator command run in this iteration ({"Response":{"RequestId":"..."}}).
+	// Empty on the first iteration when the execution-risk gate blocks before
+	// any `ve` call runs, or when the command produced no RequestId. Used by
+	// P5 to prove every runtime `ve` call is traceable end-to-end.
+	RequestID string `json:"request_id,omitempty"`
 }
 
 // FailurePattern mirrors the Reflexion failure-pattern schema.
@@ -108,6 +116,48 @@ func (t *Trace) LastScores() map[string]float64 {
 		return map[string]float64{}
 	}
 	return t.Iterations[len(t.Iterations)-1].Critic.Scores
+}
+
+// Check validates a runtime GCL trace file (written by PersistTrace as
+// gcl-trace-*.json). It enforces the P5 invariants:
+//   - redaction_pass must be true (credentials masked)
+//   - every iteration that actually ran a `ve` call must carry a non-empty
+//     request_id (the cloud API RequestId), so the call is traceable end-to-end
+//
+// The runtime trace and the incident trace (incident-trace-*.json, validated by
+// the check/trace package) use different schemas. This Check only handles the
+// runtime shape, identified by a non-empty trace_schema_version. Files without
+// that field are not runtime traces and are skipped (returning nil) so the two
+// checkers stay orthogonal.
+func Check(path string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("trace check: read %s: %w", path, err)
+	}
+	var t Trace
+	if err := json.Unmarshal(data, &t); err != nil {
+		return fmt.Errorf("trace check: parse %s: %w", path, err)
+	}
+	// Not a runtime trace (no trace_schema_version) → leave to the incident checker.
+	if t.TraceSchemaVersion == "" {
+		return nil
+	}
+	if !t.RedactionPass {
+		return fmt.Errorf("trace check: redaction_pass must be true (credentials must be masked)")
+	}
+	for i, iter := range t.Iterations {
+		// POLICY_BLOCK iterations never ran a `ve` call → no RequestId expected.
+		if iter.Decision == "POLICY_BLOCK" {
+			continue
+		}
+		if strings.TrimSpace(iter.Generator.Command) == "" {
+			continue
+		}
+		if strings.TrimSpace(iter.RequestID) == "" {
+			return fmt.Errorf("trace check: iterations[%d].request_id is required (ve call not traceable)", i)
+		}
+	}
+	return nil
 }
 
 // PersistTrace writes the trace to audit-results/gcl-trace-YYYYMMDD-HHMMSS.json
