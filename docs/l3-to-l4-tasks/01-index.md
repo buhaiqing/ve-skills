@@ -11,8 +11,8 @@
 | T10 | [T10-multi-path-healing.md](./T10-multi-path-healing.md) | L3 多路径自愈：auto-select best | 1 Go 包 + 2+ 路径表 | T09 | 1.5d | ✅ DONE |
 | T11 | [T11-self-healing-telemetry.md](./T11-self-healing-telemetry.md) | 自愈遥测 + 日志 | 1 Go 指标包 + 1 日志 schema | T09, T10 | 1d | ✅ DONE |
 | T12 | [T12-predictive-trigger.md](./T12-predictive-trigger.md) | 预测式触发源 | 1 Go 触发器 + 1 路由扩展 | T06 | 2d | ✅ DONE |
-| T13 | [T13-pattern-to-policy.md](./T13-pattern-to-policy.md) | Pattern→Policy 转译器 | 1 Go 转译器 + 1 护栏 schema | T11, T14 | 1.5d | 🟡 TODO |
-| T14 | [T14-reflexion-promotion.md](./T14-reflexion-promotion.md) | Reflexion HINT→Constraint 升级 | 1 Go 升级机制 | T11 | 1d | 🟡 TODO |
+| T13 | [T13-pattern-to-policy.md](./T13-pattern-to-policy.md) | Pattern→Policy 转译器 | 1 Go 转译器 + 1 护栏 schema | T11, T14 | 1.5d | ✅ DONE |
+| T14 | [T14-reflexion-promotion.md](./T14-reflexion-promotion.md) | Reflexion HINT→Constraint 升级 | 1 Go 升级机制 | T11 | 1d | ✅ DONE |
 | T15 | [T15-versioned-policy-lib.md](./T15-versioned-policy-lib.md) | 版本化 policy library | 1 Go loader + 目录结构 | T13, T14 | 1d | 🟡 TODO |
 | T16 | [T16-l4-slo-envelope-dashboard.md](./T16-l4-slo-envelope-dashboard.md) | SLO 目标 + 自治域 + goals dashboard | 1 Go SLO 引擎 + 1 dashboard | T10, T12, T15 | 3d | 🟡 TODO |
 

@@ -64,3 +64,14 @@
 - 8 项 L4 DoD 全部勾选
 - envelope 内 N 次 incident 全闭环、0 per-op prompt
 - SLO maintained / 自动回滚可用 / 预测触发先于告警
+
+## T13 2026-07-17 — done
+- T13: cmd/vet/internal/reflexion/transpile/ 转译器
+- guardrails.schema.json
+- vet reflexion transpile 子命令
+- 升级门槛：count≥10
+
+## T14 2026-07-17 — done
+- T14: cmd/vet/internal/reflexion/promote/ 4级 Level + Enforce
+- vet reflexion promote/check 子命令
+- 硬约束：count<10 不升级；Hard 级别 ABORT

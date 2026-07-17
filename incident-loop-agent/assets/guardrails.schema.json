@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ve-skills/guardrails.schema.json",
+  "title": "Guardrails Schema",
+  "description": "Schema for auto-generated guardrail YAML rules from failure patterns.",
+  "type": "object",
+  "required": ["guardrails"],
+  "properties": {
+    "guardrails": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "skill", "trigger", "action", "severity", "source_count"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable ID computed from hash(skill+pattern)"
+          },
+          "skill": {
+            "type": "string",
+            "description": "Skill or scenario this guardrail applies to"
+          },
+          "trigger": {
+            "type": "string",
+            "description": "The failure pattern trigger condition"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["auto-ASK", "auto-REFUSE", "auto-INFO"],
+            "description": "Enforcement action when guardrail triggers"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Guardrail severity level"
+          },
+          "source_count": {
+            "type": "integer",
+            "minimum": 10,
+            "description": "The failure pattern count at time of upgrade (must be >= 10)"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when guardrail was created"
+          }
+        }
+      }
+    }
+  }
+}

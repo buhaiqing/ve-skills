@@ -40,6 +40,8 @@ func main() {
 		runValidate(args)
 	case "gcl":
 		runGCL(args)
+	case "reflexion":
+		runReflexion(args)
 	default:
 		fmt.Fprintf(os.Stderr, "vet: unknown command %q\n", cmd)
 		usage()
@@ -55,6 +57,7 @@ Usage:
   vet check <frontmatter|aiops|assessment|gcl|links|eval> [flags]
   vet validate [flags]
   vet gcl <run|gate|trace> [flags]
+  vet reflexion <promote|check|transpile> [flags]
 
 Use "vet <command> -h" for more information.`)
 }
