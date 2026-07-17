@@ -5,6 +5,7 @@ package heal
 
 import (
 	"os"
+	"path/filepath"
 )
 
 // Target thresholds for the L4 self-healing SLOs (framework §6.1).
@@ -120,6 +121,11 @@ func (m *Metrics) FallbackRate() float64 {
 // `heal-stats` can re-aggregate it later via ParseFile. Append-only so
 // concurrent runs accumulate rather than overwrite.
 func (m *Metrics) Persist(path string, e HealEvent) error {
+	// OpenFile won't create the parent dir; do it here so a fresh repo root
+	// (audit-results/ does not yet exist) does not make every heal fail.
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
 		return err

@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
 )
 
 // Summary is the aggregated quality summary (mirrors gcl_trace_aggregate.aggregate).
@@ -17,6 +19,18 @@ type Summary struct {
 	FailurePatterns  []map[string]any         `json:"failure_patterns"`
 	BySkill          map[string]map[string]any `json:"by_skill"`
 	TraceFiles       []string                  `json:"trace_files"`
+	Heal             *HealSummary              `json:"heal,omitempty"`
+}
+
+// HealSummary surfaces L4 self-healing telemetry in the quality report. nil
+// (omitted via omitempty) when no heal log exists, so legacy summaries are
+// unchanged.
+type HealSummary struct {
+	SuccessRate         float64 `json:"success_rate"`
+	AvgDurationMs       float64 `json:"avg_duration_ms"`
+	UserInterventionRate float64 `json:"user_intervention_rate"`
+	FallbackRate        float64 `json:"fallback_rate"`
+	TotalEvents         int64  `json:"total_events"`
 }
 
 // Aggregate computes the quality summary from a set of parsed traces.
@@ -80,7 +94,11 @@ func Aggregate(root string, traces []*Trace) *Summary {
 			avgScores[d] = nil
 		}
 	}
-	_ = root
+	// Fold L4 self-healing telemetry into the report when the heal log exists.
+	// heal.HealSummary is nil when the file is absent or holds no parseable
+	// events, leaving all other summary fields untouched (backward compat).
+	healSummary := aggregateHeal(root)
+
 	return &Summary{
 		Version:         "1.1",
 		GeneratedAt:     time.Now().UTC().Format(time.RFC3339),
@@ -91,6 +109,36 @@ func Aggregate(root string, traces []*Trace) *Summary {
 		FailurePatterns: failurePatterns,
 		BySkill:         bySkill,
 		TraceFiles:      traceFiles,
+		Heal:            healSummary,
+	}
+}
+
+// aggregateHeal reads audit-results/ve-self-healing.log (relative to root) and
+// rolls its events into a HealSummary. Returns nil when the file is missing or
+// yields no parseable events, so existing summaries are unaffected.
+func aggregateHeal(root string) *HealSummary {
+	path := filepath.Join(root, "audit-results", "ve-self-healing.log")
+	events, _, err := heal.ParseFile(path, time.Time{})
+	if err != nil || len(events) == 0 {
+		return nil
+	}
+	var m heal.Metrics
+	for _, e := range events {
+		m.Record(heal.HealEvent{
+			ISO:        e.ISO,
+			EventType:  e.EventType,
+			ErrorCode:  e.ErrorCode,
+			Action:     e.Action,
+			Result:     e.Result,
+			DurationMs: e.DurationMs,
+		})
+	}
+	return &HealSummary{
+		SuccessRate:          m.SuccessRate(),
+		AvgDurationMs:        m.AvgDurationMs(),
+		UserInterventionRate: m.UserInterventionRate(),
+		FallbackRate:         m.FallbackRate(),
+		TotalEvents:          m.TotalCount,
 	}
 }
 
