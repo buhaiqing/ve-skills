@@ -64,6 +64,21 @@ type Iteration struct {
 	// (legacy fixed-count loop). Consumed by the L4 telemetry layer (T11)
 	// and the audit trail.
 	HealClass string `json:"heal_class,omitempty"`
+	// SelfHealing records the multi-path healing outcome (T10) for this
+	// iteration when `--heal=smart` is active and the generator command was
+	// retried. Empty otherwise. Compatible with the T07 trace schema via
+	// omitempty.
+	SelfHealing *SelfHealingRecord `json:"self_healing,omitempty"`
+}
+
+// SelfHealingRecord captures one multi-path self-healing attempt (T10): which
+// path was selected, its cost, and whether the op eventually succeeded.
+type SelfHealingRecord struct {
+	Class      string `json:"class"`
+	PathName   string `json:"path_name"`
+	Cost       int    `json:"cost"`
+	Result     string `json:"result"` // "ok" | "fail"
+	DurationMs int64  `json:"duration_ms"`
 }
 
 // FailurePattern mirrors the Reflexion failure-pattern schema.

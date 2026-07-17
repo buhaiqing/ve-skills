@@ -28,22 +28,60 @@ type HealEvent struct {
 
 // Metrics accumulates self-healing outcomes across a run (or process lifetime).
 // UserInterventions / FallbackUsed are populated from signals available today;
-// FallbackUsed stays 0 until T10 (multi-path healing) lands — see spec §2.2.
+// FallbackUsed counts multi-path fallbacks (T10): when the best path fails and
+// a secondary path is tried.
 type Metrics struct {
 	SuccessCount      int64 `json:"success_count"`
 	TotalCount        int64 `json:"total_count"`
 	DurationSumMs     int64 `json:"duration_sum_ms"`
 	UserInterventions int64 `json:"user_interventions"`
 	FallbackUsed      int64 `json:"fallback_used"`
+	// PerPath holds per-(class/name) success counters so SelectBest can prefer
+	// the historically reliable path. Key format: "<class>/<path>".
+	PerPath map[string]*PathStat `json:"per_path,omitempty"`
+}
+
+// PathStat is the per-path success tally backing the History interface.
+type PathStat struct {
+	Success int64 `json:"success"`
+	Total   int64 `json:"total"`
 }
 
 // Record folds one HealEvent into the aggregate. ok increments SuccessCount.
+// It also accumulates the per-path counter keyed by ErrorCode(class)/Action(path).
 func (m *Metrics) Record(e HealEvent) {
 	m.TotalCount++
 	if e.Result == "ok" {
 		m.SuccessCount++
 	}
 	m.DurationSumMs += e.DurationMs
+	key := e.ErrorCode + "/" + e.Action
+	if m.PerPath == nil {
+		m.PerPath = map[string]*PathStat{}
+	}
+	ps := m.PerPath[key]
+	if ps == nil {
+		ps = &PathStat{}
+		m.PerPath[key] = ps
+	}
+	ps.Total++
+	if e.Result == "ok" {
+		ps.Success++
+	}
+}
+
+// PathSuccessRate implements History: returns 0.0..1.0 for class+name, or 0.0
+// when no data (no division by zero). Distinct from the no-arg SuccessRate()
+// aggregate used by heal-stats (T11).
+func (m *Metrics) PathSuccessRate(class, name string) float64 {
+	if m.PerPath == nil {
+		return 0.0
+	}
+	ps := m.PerPath[class+"/"+name]
+	if ps == nil || ps.Total == 0 {
+		return 0.0
+	}
+	return float64(ps.Success) / float64(ps.Total)
 }
 
 // SuccessRate returns 0.0..1.0; 0.0 when no events recorded (no division by zero).

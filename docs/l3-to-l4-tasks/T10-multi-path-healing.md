@@ -3,7 +3,7 @@
 > 任务来源：[`../autonomous-ops-roadmap.md`](../autonomous-ops-roadmap.md) §M2 (M2-2)
 > 依赖：T09
 > 预计工作量：1.5 天
-> 状态：🟡 TODO
+> 状态：✅ DONE（实现 2026-07-17；策略包装器语义，spec+plan 已锚定）
 
 ## 1. 目标
 
@@ -104,3 +104,17 @@ go test ./...
 | 路径副作用（如 prompt-sudo 卡住） | 每条路径设 timeout（默认 30s）；超时 → 下一条 |
 | SelectBest 选择退化 | 历史数据为空时退到 Cost 最低；T11 指标累积后切换 |
 | 回滚 | `git checkout cmd/vet/internal/gcl/heal/` |
+
+---
+
+## 完成报告（2026-07-17）
+
+- **语义偏差（重要）**：源卡 §2.1 的 NET_TIMEOUT/PERM_*/GO_*/RES_* 是 framework 安装码，本实现**不采用**。与 T09/T11 一致，本包只有 4 个真实 `ErrorClass`（`retryable`/`rate_limit`/`fatal`/`unknown`）。`Path.Execute` 采用用户确认的**策略包装器**语义（2026-07-17）：包本身不执行任何基础设施动作（换镜像/提权/重启），只决定 `op`（generator 命令）如何重试；具体 env 注入由调用方完成。`vet gcl run` 是 GCL 编排器，不具备越权自愈能力。
+- **交付**：
+  - `heal/paths.go`：注册表 4 类 × 2 路径 = 8 条 `Path`；`SelectBest(class, hist)` 按 (Cost↑, PathSuccessRate↓) 加权；空历史退 Cost 最低；无路径→nil。
+  - `heal/runner.go`：`Run(ctx, class, op, hist)` 闭环，fatal 类不重试直接 escalate，全失败返回末错+`result=fail`；`PathResult` 带 `Fallback` 标记。
+  - `metrics.go`：`Metrics.PerPath map[string]*PathStat`（key=`class/name`）+ `PathSuccessRate`；`Record` 累加 per-path；`FallbackUsed` 由 run.go 在回退时递增。
+  - `trace.go`：`Iteration.SelfHealing *SelfHealingRecord`（omitempty，兼容 T07）。
+  - `run.go`：`runGeneratorWithHeal` 改用 `heal.Run`（smart 时），填 `Metrics.PerPath`+§6.2 log+`SelfHealingRecord`。
+- **验证**：`go build`+`go vet`+`go test ./...` 全绿（paths_test/runner_test 覆盖每类选最优、全失败降级、fatal 不重试、nil 退化、per-path 成功率）；`vet gcl run --heal smart` 实测 trace 含 `self_healing` 段、log 写入 `backoff-retry|fail`。
+- **偏离 plan 一处**：`History` 接口方法名为 `PathSuccessRate(class,name)` 而非 `SuccessRate(class,name)`——因 `Metrics` 已存在无参 `SuccessRate()`（T11 heal-stats 使用），Go 不允许方法重载；功能等价，未破坏 T11。

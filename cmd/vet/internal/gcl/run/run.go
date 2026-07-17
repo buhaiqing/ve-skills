@@ -252,63 +252,70 @@ func runCommand(command string, timeout int, extraEnv map[string]string) trace.G
 	}
 }
 
-// runGeneratorWithHeal runs the generator command, applying the L4 smart-retry
-// policy (heal.SmartRetry) when opts.Heal == "smart". Under "none" it falls
-// back to a single call (legacy fixed-count loop — the outer MaxIter bounds
-// critic-driven retries). The last error class is returned so the caller can
-// stamp it into the trace iteration for audit/telemetry (T11).
+// runGeneratorWithHeal runs the generator command, applying the L4 multi-path
+// self-healing policy (heal.Run) when opts.Heal == "smart". Under "none" it
+// falls back to a single call (legacy fixed-count loop — the outer MaxIter
+// bounds critic-driven retries). The chosen error class and the self-healing
+// result are returned so the caller can stamp them into the trace iteration
+// for audit/telemetry (T10 + T11).
 //
-// metrics (may be nil) accumulates each retry decision for the self-healing
+// metrics (may be nil) accumulates each healing attempt for the self-healing
 // telemetry; logPath ("" = no logging) appends a framework §6.2 row per
-// decision so T11's `vet gcl heal-stats` can aggregate offline.
-func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string, metrics *heal.Metrics, logPath string) (trace.GeneratorResult, string) {
+// attempt so T11's `vet gcl heal-stats` can aggregate offline.
+func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string, metrics *heal.Metrics, logPath string) (trace.GeneratorResult, string, *trace.SelfHealingRecord) {
 	env := map[string]string{
 		"GCL_CRITIC_FEEDBACK":        criticFeedback,
 		"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
 	}
 	if opts.Heal != "smart" {
-		return runCommand(opts.Command, opts.Timeout, env), ""
+		return runCommand(opts.Command, opts.Timeout, env), "", nil
 	}
-	pol := heal.DefaultRetryPolicy()
-	var healClass string
+	// First attempt: observe the outcome so we can classify the error and
+	// select the best healing path (Classify → Select → Execute, per T10).
+	first := runCommand(opts.Command, opts.Timeout, env)
+	if first.ExitCode == 0 {
+		// Succeeded on first try — no healing needed.
+		return first, "", nil
+	}
 	var last trace.GeneratorResult
-	start := time.Now()
-	_ = heal.SmartRetry(context.Background(), func() error {
+	op := func() error {
 		last = runCommand(opts.Command, opts.Timeout, env)
 		if last.ExitCode != 0 {
 			return &generatorError{exit: last.ExitCode, excerpt: last.ResultExcerpt}
 		}
 		return nil
-	}, pol, func(s string) heal.ErrorClass { return heal.Classify(s) }, func(m heal.MetricRecord) {
-		healClass = m.Class.String()
-		recordHealDecision(metrics, logPath, m, start)
-	})
-	return last, healClass
+	}
+	class := heal.Classify(first.ResultExcerpt)
+	start := time.Now()
+	res, _ := heal.Run(context.Background(), class, op, metrics)
+	if metrics != nil && res.Fallback {
+		metrics.FallbackUsed++
+	}
+	recordHealPath(metrics, logPath, res, start)
+	shr := &trace.SelfHealingRecord{
+		Class:      res.Class,
+		PathName:   res.Name,
+		Cost:       res.Cost,
+		Result:     res.Result,
+		DurationMs: res.DurationMs,
+	}
+	return last, res.Class, shr
 }
 
-// recordHealDecision folds one MetricRecord into the telemetry sink. A
-// terminal outcome (success/give_up/fatal/cancel) closes the event with the
-// elapsed duration; intermediate "attempt"/"retry" outcomes are not persisted
-// as standalone events (the terminal row carries the full attempt count).
-func recordHealDecision(metrics *heal.Metrics, logPath string, m heal.MetricRecord, start time.Time) {
+// recordHealPath folds one heal.Run PathResult into the telemetry sink
+// (Metrics.PerPath) and the §6.2 log so T11's `vet gcl heal-stats` can
+// re-aggregate offline.
+func recordHealPath(metrics *heal.Metrics, logPath string, res heal.PathResult, start time.Time) {
 	if metrics == nil && logPath == "" {
 		return
-	}
-	terminal := m.Outcome == "success" || m.Outcome == "give_up" || m.Outcome == "fatal" || m.Outcome == "cancel"
-	if !terminal {
-		return
-	}
-	result := "fail"
-	if m.Outcome == "success" {
-		result = "ok"
 	}
 	durationMs := time.Since(start).Milliseconds()
 	ev := heal.HealEvent{
 		ISO:        time.Now().UTC().Format(time.RFC3339),
-		EventType:  "retry",
-		ErrorCode:  m.Class.String(),
-		Action:     m.Class.String() + "-retry",
-		Result:     result,
+		EventType:  "multi-path",
+		ErrorCode:  res.Class,
+		Action:     res.Name,
+		Result:     res.Result,
 		DurationMs: durationMs,
 	}
 	if metrics != nil {
@@ -321,21 +328,16 @@ func recordHealDecision(metrics *heal.Metrics, logPath string, m heal.MetricReco
 			return
 		}
 		defer f.Close()
-		if err := heal.AppendEvent(f, healEventToLog(ev)); err != nil {
+		if err := heal.AppendEvent(f, heal.Event{
+			ISO:        ev.ISO,
+			EventType:  ev.EventType,
+			ErrorCode:  ev.ErrorCode,
+			Action:     ev.Action,
+			Result:     ev.Result,
+			DurationMs: ev.DurationMs,
+		}); err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: heal log write skipped: %v\n", err)
 		}
-	}
-}
-
-// healEventToLog converts the persisted HealEvent into the §6.2 log Event.
-func healEventToLog(e heal.HealEvent) heal.Event {
-	return heal.Event{
-		ISO:        e.ISO,
-		EventType:  e.EventType,
-		ErrorCode:  e.ErrorCode,
-		Action:     e.Action,
-		Result:     e.Result,
-		DurationMs: e.DurationMs,
 	}
 }
 
@@ -554,8 +556,8 @@ func Run(opts Options) Result {
 	knownPatterns := loadKnownFailurePatterns(opts.Root, opts.Skill, 10)
 
 	// L4 self-healing telemetry (T11): accumulate retry outcomes when smart
-	// heal is active. FallbackUsed stays 0 until T10 (multi-path healing)
-	// lands — see spec §2.2.
+	// heal is active. FallbackUsed is incremented by runGeneratorWithHeal
+	// when a secondary path is tried (T10 multi-path healing).
 	var healMetrics *heal.Metrics
 	healLogPath := ""
 	if opts.Heal == "smart" {
@@ -610,7 +612,7 @@ func Run(opts Options) Result {
 			return Result{ExitCode: 4, TraceLine: "blocked:" + blocked.String(), StderrLine: "blocked:" + blocked.String()}
 		}
 
-		gen, healClass := runGeneratorWithHeal(opts, criticFeedback, knownPatterns, healMetrics, healLogPath)
+		gen, healClass, selfHeal := runGeneratorWithHeal(opts, criticFeedback, knownPatterns, healMetrics, healLogPath)
 		// When this iteration runs an ASK-class op that was authorized by an
 		// external confirmation, stamp the confirmation provenance into the
 		// trace so the audit trail answers "who authorized this op". AUTO ops
@@ -686,6 +688,7 @@ func Run(opts Options) Result {
 			ConfirmedBy:    confirmedBy,
 			RequestID:      requestID,
 			HealClass:      healClass,
+			SelfHealing:    selfHeal,
 		})
 
 		if decision == "SAFETY_FAIL" {
