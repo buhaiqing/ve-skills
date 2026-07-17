@@ -265,7 +265,7 @@ func runCommand(command string, timeout int, extraEnv map[string]string) trace.G
 // metrics (may be nil) accumulates each healing attempt for the self-healing
 // telemetry; logPath ("" = no logging) appends a framework §6.2 row per
 // attempt so T11's `vet gcl heal-stats` can aggregate offline.
-func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string, metrics *heal.Metrics, logPath string) (trace.GeneratorResult, string, *trace.SelfHealingRecord) {
+func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string, metrics *heal.Metrics, logPath string, runID string) (trace.GeneratorResult, string, *trace.SelfHealingRecord) {
 	env := map[string]string{
 		"GCL_CRITIC_FEEDBACK":        criticFeedback,
 		"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
@@ -294,7 +294,7 @@ func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string, me
 	if metrics != nil && res.Fallback {
 		metrics.FallbackUsed++
 	}
-	recordHealPath(metrics, logPath, res, start)
+	recordHealPath(metrics, logPath, res, start, runID)
 	shr := &trace.SelfHealingRecord{
 		Class:      res.Class,
 		PathName:   res.Name,
@@ -308,7 +308,7 @@ func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string, me
 // recordHealPath folds one heal.Run PathResult into the telemetry sink
 // (Metrics.PerPath) and the §6.2 log so T11's `vet gcl heal-stats` can
 // re-aggregate offline.
-func recordHealPath(metrics *heal.Metrics, logPath string, res heal.PathResult, start time.Time) {
+func recordHealPath(metrics *heal.Metrics, logPath string, res heal.PathResult, start time.Time, runID string) {
 	if metrics == nil && logPath == "" {
 		return
 	}
@@ -327,7 +327,7 @@ func recordHealPath(metrics *heal.Metrics, logPath string, res heal.PathResult, 
 	if logPath != "" {
 		f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "WARN: heal log unavailable (%s): %v\n", logPath, err)
+			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.heal | heal log unavailable | path=%s err=%v\n", runID, logPath, err)
 			return
 		}
 		defer f.Close()
@@ -339,7 +339,7 @@ func recordHealPath(metrics *heal.Metrics, logPath string, res heal.PathResult, 
 			Result:     ev.Result,
 			DurationMs: ev.DurationMs,
 		}); err != nil {
-			fmt.Fprintf(os.Stderr, "WARN: heal log write skipped: %v\n", err)
+			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.heal | heal log write skipped | %v\n", runID, err)
 		}
 	}
 }
@@ -423,7 +423,7 @@ func loadCritic(path string, stdin bool) (*critic.CriticResult, error) {
 
 // runIsolatedCritic mirrors gcl_runner.run_isolated_critic — separate process,
 // never sees the raw request.
-func runIsolatedCritic(opts Options, operationIntent map[string]any, gen trace.GeneratorResult, iterations []trace.Iteration) (*critic.CriticResult, error) {
+func runIsolatedCritic(opts Options, operationIntent map[string]any, gen trace.GeneratorResult, iterations []trace.Iteration, runID string) (*critic.CriticResult, error) {
 	rubricPath := "AGENTS.md"
 	rp := joinPath(opts.Root, opts.Skill, "references", "rubric.md")
 	if fileExists(rp) {
@@ -449,15 +449,16 @@ func runIsolatedCritic(opts Options, operationIntent map[string]any, gen trace.G
 	cmd.Stderr = &errBuf
 	if err := cmd.Run(); err != nil {
 		if ee, ok := err.(*exec.ExitError); ok {
-			fmt.Fprintf(os.Stderr, "ERROR: Critic command failed (%d): %s\n", ee.ExitCode(), firstLine(errBuf.String()))
+			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | critic command failed | exit=%d stderr=%s\n",
+				runID, ee.ExitCode(), firstLine(errBuf.String()))
 		} else {
-			fmt.Fprintf(os.Stderr, "ERROR: Critic command error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | critic command error | %v\n", runID, err)
 		}
 		return nil, err
 	}
 	var c critic.CriticResult
 	if err := json.Unmarshal([]byte(out.String()), &c); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Critic output is not valid JSON: %v\n", err)
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | critic JSON parse failed | %v\n", runID, err)
 		return nil, err
 	}
 	return &c, nil
@@ -501,10 +502,17 @@ func extractFailurePattern(skill, command string, gen trace.GeneratorResult, c *
 
 // loadKnownFailurePatterns loads failure patterns from the structured JSON store
 // and formats them as HINT lines for injection into the Generator context.
+// Distinguishes "file not found" (first run, silent fallback) from
+// "JSON corrupted" (diagnostic issue, ERROR log).
 func loadKnownFailurePatterns(root, skill string, limit int) string {
 	entries, err := memory.GetPatternsBySkill(root, skill, limit)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "WARN: gcl.run | failure-patterns.json load failed, falling back to markdown: %v\n", err)
+		if os.IsNotExist(err) {
+			// First run — JSON store doesn't exist yet, fallback to markdown silently
+			return loadKnownFailurePatternsFromMarkdown(root, skill, limit)
+		}
+		// JSON store exists but is corrupted or unreadable — log ERROR
+		fmt.Fprintf(os.Stderr, "ERROR: gcl.run | failure-patterns.json corrupted, falling back to markdown | %v\n", err)
 		return loadKnownFailurePatternsFromMarkdown(root, skill, limit)
 	}
 	if len(entries) == 0 {
@@ -757,7 +765,7 @@ func Run(opts Options) Result {
 		}
 
 		iterStart := time.Now()
-		gen, healClass, selfHeal := runGeneratorWithHeal(opts, criticFeedback, knownPatterns, healMetrics, healLogPath)
+		gen, healClass, selfHeal := runGeneratorWithHeal(opts, criticFeedback, knownPatterns, healMetrics, healLogPath, runID)
 		iterDurationMs := time.Since(iterStart).Milliseconds()
 		// When this iteration runs an ASK-class op that was authorized by an
 		// external confirmation, stamp the confirmation provenance into the
@@ -802,12 +810,12 @@ func Run(opts Options) Result {
 			}
 		loaded, err := loadCritic(opts.CriticJSON, opts.CriticStdin)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "ERROR: invalid critic JSON: %v\n", err)
+			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | invalid critic JSON | %v\n", runID, err)
 			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic JSON: "+err.Error(), runID)
 			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 		}
 		if loaded == nil && opts.CriticCommand != "" {
-			loaded2, err := runIsolatedCritic(opts, operationIntent, gen, tr.Iterations)
+			loaded2, err := runIsolatedCritic(opts, operationIntent, gen, tr.Iterations, runID)
 			if err != nil {
 				persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "critic command failed: "+err.Error(), runID)
 				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
@@ -815,12 +823,12 @@ func Run(opts Options) Result {
 			loaded = loaded2
 		}
 		if loaded == nil {
-			fmt.Fprintln(os.Stderr, "ERROR: No Critic payload. Pass --critic-json, pipe JSON to stdin, --critic-command <cmd>, or use --structural-critic-only for rule-based audit.")
+			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | no critic payload | Pass --critic-json, pipe JSON to stdin, --critic-command <cmd>, or use --structural-critic-only\n", runID)
 			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "no critic payload", runID)
 			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 		}
 		if errs := critic.ValidatePayload(*loaded); len(errs) > 0 {
-			fmt.Fprintf(os.Stderr, "ERROR: Invalid critic JSON: %s\n", strings.Join(errs, "; "))
+			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | invalid critic payload | %s\n", runID, strings.Join(errs, "; "))
 			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic payload: "+strings.Join(errs, "; "), runID)
 			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
