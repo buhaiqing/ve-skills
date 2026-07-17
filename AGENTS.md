@@ -630,3 +630,6 @@ type LogRotation struct {
 | `ve-skill-generator/references/user-experience-spec.md` | UX requirements every generated skill must follow |
 | Each skill's `references/rubric.md` | The rubric instance |
 | Each skill's `references/prompt-templates.md` | G/C/O prompt skeletons |
+| `docs/templates/agent-template.md` | **Agent 开发模板** — 开发流程、GCL配置、代码组织、复用清单、日志模板、状态持久化、CLI集成、安全清单、Spec/Plan模板、8个实战代码骨架 |
+| `docs/vet-agent-evolution-architecture.md` | **Agent 演进架构** — 从 CLI 工具到自主 Agent 引擎的三 Phase 路线图 |
+| `docs/reflexion-learning-architecture.md` | **运行轨迹自动学习体系** — 完整数据流、文件角色、升级路径 |
