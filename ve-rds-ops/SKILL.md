@@ -169,35 +169,36 @@ ve rds_mysql DescribeDBInstances --Region {{env.VOLCENGINE_REGION}}
 
 ## Capabilities at a Glance
 
-| Operation | Description | Complexity | Risk Level |
-|-----------|-------------|------------|------------|
-| CreateDBInstance | Create RDS MySQL instance | High | 🟢 Low |
-| DescribeDBInstances | Query instance list | Low | ✅ None |
-| DeleteDBInstance | Delete instance | Low | 🔴 **High** — irreversible |
-| RestartDBInstance | Restart instance | Low | 🟡 Medium — service interruption |
-| ModifyDBInstanceSpec | Change instance spec | Medium | 🟡 Medium — restart required |
-| CreateDB | Create database | Low | 🟢 Low |
-| DescribeDatabases | List databases | Low | ✅ None |
-| DeleteDB | Delete database | Low | 🔴 **High** |
-| CreateAccount | Create database account | Low | 🟢 Low |
-| DescribeAccounts | List accounts | Low | ✅ None |
-| DeleteAccount | Delete account | Low | 🟡 Medium |
-| ResetAccountPassword | Reset account password | Low | 🟡 Medium |
-| GrantAccountPrivileges | Grant DB privileges to account | Low | 🟡 Medium |
-| DescribeDBInstanceParameters | Query parameters | Low | ✅ None |
-| ModifyDBInstanceParameters | Modify parameters | Medium | 🟡 Medium — some require restart |
-| CreateBackup | Create backup | Low | 🟢 Low |
-| DescribeBackups | List backups | Low | ✅ None |
-| DeleteBackup | Delete backup | Low | 🟡 Medium |
-| RestoreDBInstance | Restore from backup | High | 🟡 Medium |
-| DescribeAllowLists | Query IP allow lists | Low | ✅ None |
-| ModifyAllowList | Modify IP allow list | Low | 🟡 Medium |
+| Operation | Description | Complexity | Risk Level | | safety_class | blast_radius |
+|-----------|-------------|------------|------------||---|---|
+| CreateDBInstance | Create RDS MySQL instance | High | 🟢 Low | | state-changing | single |
+| DescribeDBInstances | Query instance list | Low | ✅ None | | read-only | single |
+| DeleteDBInstance | Delete instance | Low | 🔴 **High** — irreversible | | destructive | single |
+| RestartDBInstance | Restart instance | Low | 🟡 Medium — service interruption | | state-changing | single |
+| ModifyDBInstanceSpec | Change instance spec | Medium | 🟡 Medium — restart required | | state-changing | single |
+| CreateDB | Create database | Low | 🟢 Low | | state-changing | single |
+| DescribeDatabases | List databases | Low | ✅ None | | read-only | single |
+| DeleteDB | Delete database | Low | 🔴 **High** | | destructive | single |
+| CreateAccount | Create database account | Low | 🟢 Low | | state-changing | single |
+| DescribeAccounts | List accounts | Low | ✅ None | | read-only | single |
+| DeleteAccount | Delete account | Low | 🟡 Medium | | destructive | single |
+| ResetAccountPassword | Reset account password | Low | 🟡 Medium | | state-changing | single |
+| GrantAccountPrivileges | Grant DB privileges to account | Low | 🟡 Medium | | state-changing | single |
+| DescribeDBInstanceParameters | Query parameters | Low | ✅ None | | read-only | single |
+| ModifyDBInstanceParameters | Modify parameters | Medium | 🟡 Medium — some require restart | | state-changing | single |
+| CreateBackup | Create backup | Low | 🟢 Low | | state-changing | single |
+| DescribeBackups | List backups | Low | ✅ None | | read-only | single |
+| DeleteBackup | Delete backup | Low | 🟡 Medium | | destructive | single |
+| RestoreDBInstance | Restore from backup | High | 🟡 Medium | | state-changing | single |
+| DescribeAllowLists | Query IP allow lists | Low | ✅ None | | read-only | single |
+| ModifyAllowList | Modify IP allow list | Low | 🟡 Medium | | state-changing | single |
 
 ## Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-25 | Initial release with instance lifecycle, databases, accounts, parameters, backups |
+| 1.2.0 | 2026-07-17 | T04: annotate operation table with safety_class + blast_radius leaf-op metadata columns (L3 policy inputs); see ve-skill-generator/references/leaf-op-metadata-spec.md |
 | 1.1.0 | 2026-06-04 | GCL rollout: added ## Quality Gate (GCL), references/rubric.md, references/prompt-templates.md |
 
 ## Quality Gate (GCL)

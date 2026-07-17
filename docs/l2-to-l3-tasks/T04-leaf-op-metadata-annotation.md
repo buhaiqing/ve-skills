@@ -4,7 +4,7 @@
 > 依赖：无（可与 T01 并行启动）
 > 可并行：T01, T02, T03
 > 预计工作量：1 天
-> 状态：🟡 TODO
+> 状态：✅ DONE（本会话补全 rds 缺失列；7 个 skill 已于 2026-07-13 完成，rds 于 2026-07-17 补全）
 
 ## 1. 目标（关键卡）
 
@@ -127,3 +127,16 @@ go build -o /tmp/vet cmd/vet/  # 或 make build
 | 8 个 skill 改太多行触发大 PR | 每个 skill 一次 commit，4 个 batch × 2 skill |
 | vet 检查变红 | 操作表**只新增列**，不破坏 frontmatter；改完跑 vet 必检 |
 | 回滚 | 单个 SKILL.md `git checkout` 即回滚；标注规范文档独立回滚 |
+
+---
+
+## 完成报告（2026-07-17）
+
+- **真实缺口**：2026-07-13 完成 7 个 leaf skill 的列标注，但 **`ve-rds-ops/SKILL.md` 操作表漏标**（15 行操作，0 行列）。本会话补全。
+- **补全内容**：rds `Capabilities at a Glance` 操作表（15 行）统一追加 `| | safety_class | blast_radius` 两列，按 `leaf-op-metadata-spec.md` 规则分类：
+  - `read-only`：DescribeDBInstances / DescribeDatabases / DescribeAccounts / DescribeDBInstanceParameters / DescribeBackups / DescribeAllowLists
+  - `destructive`：DeleteDBInstance / DeleteDB / DeleteAccount / DeleteBackup
+  - `state-changing`：其余 create/restart/modify/restore/grant
+  - `blast_radius` 全部 `single`（无 batch/account 级操作）
+- **Changelog**：rds SKILL.md 追加 1.2.0 条目（T04 标注）。
+- **验证**：`go build ./...` + `go vet ./...` 干净；`vet validate` 仅余预存 `scripts/` 坏链（与本卡片无关）；8/8 leaf skill 现已含 `blast_radius` 列。
