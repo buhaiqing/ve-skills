@@ -185,13 +185,19 @@ audit-results/           →  .runtime/memory/           →  incident-loop-agen
 | Policy Library | ✅ | `vet policy load/diff/check-changelog` |
 | Policy Evaluation | ✅ | incident-loop-agent Step 5a |
 
-### 待实现 (当前 task)
+### 已实现 (2026-07-17)
 
 | 组件 | 状态 | 说明 |
 |------|------|------|
-| JSON 结构化写回 | 🔧 进行中 | `memory.AppendFailurePattern()` → `.runtime/memory/failure-patterns.json` |
-| JSON 读取 (pre-flight) | 🔧 进行中 | `loadKnownFailurePatterns()` 改为从 JSON 加载 |
-| count 递增 | 🔧 进行中 | 去重 + count++ 替代覆盖 |
-| 自动触发 T13 | 🔧 进行中 | count ≥ 10 时自动 transpile |
+| JSON 结构化写回 | ✅ | `memory.AppendFailurePattern()` → `.runtime/memory/failure-patterns.json` |
+| JSON 读取 (pre-flight) | ✅ | `loadKnownFailurePatterns()` 从 JSON 加载（fallback markdown） |
+| count 递增 | ✅ | 去重 + count++ 替代覆盖 |
+| 自动触发 T13 | ✅ | count ≥ 10 时 in-process transpile → guardrails.yaml |
+| 原子写入 | ✅ | `writeStore` 使用 temp file + rename 防止崩溃损坏 |
+
+### 待实现
+
+| 组件 | 状态 | 说明 |
+|------|------|------|
 | Decision Audit Trail | 🟡 TODO | Step 5a 决策时写入 `policy-decisions.jsonl` |
 | Execution Stats | 🟡 TODO | 每次 GCL 执行后更新统计 |

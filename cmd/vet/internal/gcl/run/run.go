@@ -22,6 +22,8 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/secret"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/memory"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/reflexion/transpile"
+	"gopkg.in/yaml.v3"
 )
 
 // SkillMaxIter mirrors gcl_runner.SKILL_MAX_ITER.
@@ -545,7 +547,7 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 	if fp == nil {
 		return
 	}
-	// 1. Write to markdown (legacy, keep compatibility)
+	// 1. Write to markdown (legacy, keep compatibility — best-effort, non-blocking)
 	summary := trace.Summary{
 		FailurePatterns: []map[string]any{
 			{
@@ -561,6 +563,7 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 	}
 
 	// 2. Write to structured JSON store (count++ on dedup)
+	//    This is the authoritative store — if it fails, skip transpile check.
 	entry := memory.FailurePatternEntry{
 		Skill:    skill,
 		Pattern:  fp.Error,
@@ -571,12 +574,13 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 	}
 	if err := memory.AppendFailurePattern(root, entry); err != nil {
 		fmt.Fprintf(os.Stderr, "WARN: Reflexion JSON write-back skipped: %v\n", err)
-		return
+		return // JSON is authoritative; if it fails, skip transpile
 	}
 
-	// 3. Check if count reached threshold → auto-transpile
+	// 3. Check if count reached threshold → auto-transpile (in-process)
 	entries, err := memory.GetPatternsBySkill(root, skill, 0) // 0 = all
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: Reflexion count check failed: %v\n", err)
 		return
 	}
 	for _, e := range entries {
@@ -588,20 +592,50 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 	}
 }
 
-// triggerTranspile calls vet reflexion transpile to regenerate guardrails.yaml
-// when a failure pattern reaches the count >= 10 threshold.
+// triggerTranspile regenerates guardrails.yaml in-process from the JSON memory
+// store when a failure pattern reaches the count >= 10 threshold.
+// This avoids shelling out to `vet` (fragile PATH dependency) and uses the
+// authoritative JSON store (which has count data) instead of the markdown file
+// (which lacks count).
 func triggerTranspile(root string) {
-	patternsPath := joinPath(root, "docs", "failure-patterns.md")
-	outPath := joinPath(root, "incident-loop-agent", "references", "policies", "guardrails.yaml")
-	cmd := exec.Command("vet", "reflexion", "transpile",
-		"--patterns", patternsPath,
-		"--out", outPath)
-	cmd.Dir = root
-	if out, err := cmd.CombinedOutput(); err != nil {
-		fmt.Fprintf(os.Stderr, "WARN: auto-transpile failed: %v\n%s\n", err, string(out))
-	} else {
-		fmt.Fprintf(os.Stderr, "INFO: auto-transpile complete: %s\n", strings.TrimSpace(string(out)))
+	entries, err := memory.LoadFailurePatterns(root)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: auto-transpile: load patterns failed: %v\n", err)
+		return
 	}
+
+	// Convert memory entries to transpile.FailurePattern and filter count >= 10
+	var guardrails []transpile.Guardrail
+	for _, e := range entries {
+		fp := transpile.FailurePattern{
+			Skill:   e.Skill,
+			Pattern: e.Pattern,
+			Fix:     e.Fix,
+			Count:   e.Count,
+		}
+		if g, ok := transpile.Transpile(fp); ok {
+			guardrails = append(guardrails, g)
+		}
+	}
+
+	if len(guardrails) == 0 {
+		return
+	}
+
+	outPath := joinPath(root, "incident-loop-agent", "references", "policies", "guardrails.yaml")
+	doc := struct {
+		Guardrails []transpile.Guardrail `yaml:"guardrails"`
+	}{Guardrails: guardrails}
+	data, err := yaml.Marshal(doc)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: auto-transpile: marshal failed: %v\n", err)
+		return
+	}
+	if err := os.WriteFile(outPath, data, 0o644); err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: auto-transpile: write failed: %v\n", err)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "INFO: auto-transpile: %d guardrails written to %s\n", len(guardrails), outPath)
 }
 
 // Result is the outcome of a Run, carrying the process exit code plus the

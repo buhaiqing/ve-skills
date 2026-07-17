@@ -2,6 +2,7 @@ package memory
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -59,13 +60,18 @@ func AppendFailurePattern(root string, entry FailurePatternEntry) error {
 }
 
 // LoadFailurePatterns loads all failure patterns from disk.
+// Returns (nil, nil) if the store file does not exist (first run).
+// Returns (nil, error) if the store exists but cannot be read or parsed.
 func LoadFailurePatterns(root string) ([]FailurePatternEntry, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	store, err := loadStore(root)
 	if err != nil {
-		return nil, nil
+		if os.IsNotExist(err) {
+			return nil, nil // first run, no store yet
+		}
+		return nil, fmt.Errorf("loading failure patterns: %w", err)
 	}
 	return store.Patterns, nil
 }
@@ -119,5 +125,11 @@ func writeStore(root string, store *FailurePatternStore) error {
 		return err
 	}
 
-	return os.WriteFile(storePath(root), data, 0o644)
+	// Atomic write: write to temp file, then rename.
+	// Prevents partial file corruption on crash/disk-full.
+	tmpPath := storePath(root) + ".tmp"
+	if err := os.WriteFile(tmpPath, data, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, storePath(root))
 }
