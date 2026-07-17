@@ -59,6 +59,14 @@ dist/
 # CodeGraph local index — never commit
 .codegraph/
 
+# Runtime state (agent memory, sessions, etc.) — project-local
+# README.md and MEMORY.md are structural docs, committed
+.runtime/*
+!.runtime/memory/
+.runtime/memory/*
+!.runtime/memory/README.md
+!.runtime/memory/MEMORY.md
+
 # vet CLI build output (binaries only — source under cmd/vet/ is tracked)
 cmd/bin/
 cmd/vet/bin/

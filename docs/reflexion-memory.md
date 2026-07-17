@@ -57,14 +57,15 @@ Each pattern in `docs/failure-patterns.md` follows this structure:
 
 | Rule | Description |
 |------|-------------|
-| **Token budget** | `docs/failure-patterns.md` <= 200 lines. When exceeded, prune patterns with `count < 3` |
+| **Token budget** | `docs/failure-patterns.md` <= 200 lines (design doc). Runtime data lives in `.runtime/memory/failure-patterns.json` (unbounded, structured). |
 | **Dedup** | Before adding, check if pattern exists (match by `(skill, pattern)`). If exists, increment `count`. Aligns with `vet gcl trace` `update_failure_patterns_file` and the `incident-loop-agent` rubric. |
-| **Source** | Patterns come from: (1) GCL trace `failure_pattern` field, (2) lessons learned captured after Self-Review Round 1/2 findings |
-| **Review** | Patterns are reviewed monthly. Patterns with `count >= 10` are candidates for promotion to Anti-Patterns sections |
+| **Source** | Patterns come from: (1) GCL trace `failure_pattern` field → `.runtime/memory/failure-patterns.json`, (2) lessons learned captured after Self-Review Round 1/2 findings |
+| **Review** | Patterns are reviewed monthly. Patterns with `count >= 10` are candidates for promotion to Anti-Patterns sections (T13 transpile → guardrails.yaml) |
+| **Storage** | Runtime memory lives in `.runtime/memory/` (gitignored). Design docs / seed data in `docs/failure-patterns.md`. |
 
 ## 5. Pre-flight Retrieval (Optional)
 
-During GCL Pre-flight (see `docs/gcl-spec.md` §4 step [0]), the Orchestrator MAY load `docs/failure-patterns.md` (lazy-load, ~130 lines), filter by current skill name, and inject top-3 relevant patterns into Generator context as prevention hints:
+During GCL Pre-flight (see `docs/gcl-spec.md` §4 step [0]), the Orchestrator MAY load `.runtime/memory/failure-patterns.json`, filter by current skill name, and inject top-3 relevant patterns into Generator context as prevention hints:
 
 ```text
 Known failure patterns for this skill:
