@@ -219,18 +219,34 @@ func CollectPaths(root string, inputs []string, sinceHours *int) []string {
 	if sinceHours == nil {
 		return filterFiles(paths)
 	}
-	cutoff := time.Now().UTC().Add(-time.Duration(*sinceHours) * time.Hour)
-	var filtered []string
+	return filterFiles(collectSince(paths, *sinceHours))
+}
+
+// collectSince filters trace paths to those whose filename-embedded timestamp
+// falls inside the time window. Trace files are named gcl-trace-YYYYMMDD-HHMMSS.json
+// (PersistTrace), so the timestamp lives in the filename and survives copy/move
+// and clock changes far better than filesystem ModTime. Paths whose timestamp
+// cannot be parsed (legacy format, no timestamp) are skipped; when sinceHours is
+// set we warn, since the user explicitly asked for a window and silent drops are
+// confusing. Full-scan callers pass 0 and accept the drop silently.
+func collectSince(paths []string, sinceHours int) []string {
+	cutoff := time.Now().UTC().Add(-time.Duration(sinceHours) * time.Hour)
+	var out []string
 	for _, p := range paths {
-		info, err := os.Stat(p)
+		name := filepath.Base(p)
+		ts := strings.TrimSuffix(strings.TrimPrefix(name, "gcl-trace-"), ".json")
+		parsed, err := time.Parse("20060102-150405", ts)
 		if err != nil {
+			if sinceHours > 0 {
+				fmt.Fprintf(stderr, "WARN: skip %s (no parseable timestamp)\n", p)
+			}
 			continue
 		}
-		if info.ModTime().UTC().After(cutoff) {
-			filtered = append(filtered, p)
+		if parsed.UTC().After(cutoff) {
+			out = append(out, p)
 		}
 	}
-	return filterFiles(filtered)
+	return out
 }
 
 func filterFiles(paths []string) []string {

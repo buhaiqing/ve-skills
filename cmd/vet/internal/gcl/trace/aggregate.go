@@ -12,7 +12,7 @@ import (
 type Summary struct {
 	Version          string                    `json:"version"`
 	GeneratedAt      string                    `json:"generated_at"`
-	Window           map[string]int           `json:"window"`
+	Window           Window                   `json:"window"`
 	Totals           map[string]int           `json:"totals"`
 	PassRate         float64                   `json:"pass_rate"`
 	AvgRubricScores  map[string]any           `json:"avg_rubric_scores"`
@@ -33,8 +33,19 @@ type HealSummary struct {
 	TotalEvents         int64  `json:"total_events"`
 }
 
+// Window describes the real time range the aggregated traces cover. Until is
+// always the aggregation moment; Since is non-nil only when a --since window
+// was requested, in which case it is the window's lower bound.
+type Window struct {
+	Since      *string `json:"since"`
+	Until      string  `json:"until"`
+	TraceCount int     `json:"trace_count"`
+}
+
 // Aggregate computes the quality summary from a set of parsed traces.
-func Aggregate(root string, traces []*Trace) *Summary {
+// sinceHours is the --since window in hours (nil for full scan); it is used to
+// populate the real Window range rather than the legacy trace-count total.
+func Aggregate(root string, traces []*Trace, sinceHours *int) *Summary {
 	totals := map[string]int{"PASS": 0, "SAFETY_FAIL": 0, "MAX_ITER": 0, "total_runs": len(traces)}
 	scoreSums := map[string]float64{}
 	scoreCount := 0
@@ -99,10 +110,16 @@ func Aggregate(root string, traces []*Trace) *Summary {
 	// events, leaving all other summary fields untouched (backward compat).
 	healSummary := aggregateHeal(root)
 
+	win := Window{TraceCount: totals["total_runs"], Until: time.Now().UTC().Format(time.RFC3339)}
+	if sinceHours != nil {
+		cutoff := time.Now().UTC().Add(-time.Duration(*sinceHours) * time.Hour)
+		s := cutoff.Format(time.RFC3339)
+		win.Since = &s
+	}
 	return &Summary{
 		Version:         "1.1",
 		GeneratedAt:     time.Now().UTC().Format(time.RFC3339),
-		Window:          map[string]int{"trace_count": totals["total_runs"]},
+		Window:          win,
 		Totals:          totals,
 		PassRate:        round4(passRate),
 		AvgRubricScores: avgScores,
