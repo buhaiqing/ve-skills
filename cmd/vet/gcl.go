@@ -47,6 +47,7 @@ func runGCLRun(args []string) {
 	criticCmd := fs.String("critic-command", "", "isolated Critic command (separate process)")
 	confirmed := fs.Bool("confirmed", false, "vouch for ASK-class operations (otherwise treated as blocked in non-interactive mode)")
 	confirmedBy := fs.String("confirmed-by", "", "provenance of --confirmed (ticket id / human handle from the Step 5 {{user.confirm}} gate); recorded in trace for audit")
+	heal := fs.String("heal", "smart", "retry strategy: 'smart' (error-classification-driven L4 retry) or 'none' (legacy fixed-count loop)")
 	fs.Parse(args)
 
 	if *skill == "" || *request == "" || *command == "" {
@@ -66,6 +67,7 @@ func runGCLRun(args []string) {
 		CriticCommand:  *criticCmd,
 		Confirmed:      *confirmed,
 		ConfirmedBy:    *confirmedBy,
+		Heal:           *heal,
 	}).ExitCode
 	os.Exit(code)
 }

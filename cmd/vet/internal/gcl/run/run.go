@@ -8,6 +8,7 @@
 package run
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/critic"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/secret"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 )
@@ -110,16 +112,16 @@ func scoreDecision(skill, safetyClass, blastRadius, confidence string, safety fl
 
 // Options is the resolved configuration for a run.
 type Options struct {
-	Root              string
-	Skill             string
-	Request           string
-	Command           string
-	MaxIter           int
-	Timeout           int
-	StructuralOnly    bool
-	CriticJSON        string
-	CriticStdin       bool
-	CriticCommand     string
+	Root           string
+	Skill          string
+	Request        string
+	Command        string
+	MaxIter        int
+	Timeout        int
+	StructuralOnly bool
+	CriticJSON     string
+	CriticStdin    bool
+	CriticCommand  string
 	// Confirmed lets an external caller vouch for ASK-class operations
 	// (e.g. a human gate upstream). In the non-interactive `vet gcl run`
 	// runtime ASK is otherwise treated as REFUSE (no human to ask).
@@ -128,6 +130,10 @@ type Options struct {
 	// handle, or upstream loop id from the Step 5 {{user.confirm}} gate) so
 	// the trace can answer "who authorized this ASK-class op".
 	ConfirmedBy string
+	// Heal selects the retry strategy for the generator command:
+	//   "smart" (default) — error-classification-driven retry (L4/T09)
+	//   "none"           — legacy fixed-count loop (no smart retry)
+	Heal string
 }
 
 // deriveOperationIntent mirrors gcl_runner.derive_operation_intent.
@@ -246,6 +252,50 @@ func runCommand(command string, timeout int, extraEnv map[string]string) trace.G
 	}
 }
 
+// runGeneratorWithHeal runs the generator command, applying the L4 smart-retry
+// policy (heal.SmartRetry) when opts.Heal == "smart". Under "none" it falls
+// back to a single call (legacy fixed-count loop — the outer MaxIter bounds
+// critic-driven retries). The last error class is returned so the caller can
+// stamp it into the trace iteration for audit/telemetry (T11).
+func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string) (trace.GeneratorResult, string) {
+	env := map[string]string{
+		"GCL_CRITIC_FEEDBACK":        criticFeedback,
+		"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
+	}
+	if opts.Heal != "smart" {
+		return runCommand(opts.Command, opts.Timeout, env), ""
+	}
+	pol := heal.DefaultRetryPolicy()
+	var healClass string
+	var last trace.GeneratorResult
+	_ = heal.SmartRetry(context.Background(), func() error {
+		last = runCommand(opts.Command, opts.Timeout, env)
+		if last.ExitCode != 0 {
+			return &generatorError{exit: last.ExitCode, excerpt: last.ResultExcerpt}
+		}
+		return nil
+	}, pol, func(s string) heal.ErrorClass { return heal.Classify(s) }, func(m heal.MetricRecord) {
+		healClass = m.Class.String()
+	})
+	return last, healClass
+}
+
+// generatorError is the synthetic failure returned by the SmartRetry op when
+// the generator command exits non-zero or times out. Its Error() message is
+// the ResultExcerpt verbatim, so the error-class signal is preserved for
+// heal.Classify.
+type generatorError struct {
+	exit    int
+	excerpt string
+}
+
+func (e *generatorError) Error() string {
+	if e.excerpt != "" {
+		return e.excerpt
+	}
+	return fmt.Sprintf("generator exit %d", e.exit)
+}
+
 // parseRequestID extracts the cloud API RequestId from `ve` CLI JSON output
 // ({"Response":{"RequestId":"..."}}). Returns "" if absent or unparseable —
 // the runtime can still emit a trace, it just won't be request_id-traceable.
@@ -305,7 +355,7 @@ func runIsolatedCritic(opts Options, operationIntent map[string]any, gen trace.G
 		rubricPath = rel
 	}
 	input := map[string]any{
-		"skill":           opts.Skill,
+		"skill":            opts.Skill,
 		"operation_intent": operationIntent,
 		"generator_output": map[string]any{
 			"command":        gen.Command,
@@ -470,9 +520,9 @@ func Run(opts Options) Result {
 				blocked = OpRefuse
 			}
 			tr.Iterations = append(tr.Iterations, trace.Iteration{
-				Iter:    iter,
-				Generator: trace.GeneratorResult{Command: secret.MaskSecrets(opts.Command)},
-				Decision: "POLICY_BLOCK",
+				Iter:           iter,
+				Generator:      trace.GeneratorResult{Command: secret.MaskSecrets(opts.Command)},
+				Decision:       "POLICY_BLOCK",
 				PolicyDecision: blocked.String(),
 			})
 			tr.Final = trace.Final{Status: "POLICY_BLOCK", Iter: iter, Output: nil,
@@ -486,10 +536,7 @@ func Run(opts Options) Result {
 			return Result{ExitCode: 4, TraceLine: "blocked:" + blocked.String(), StderrLine: "blocked:" + blocked.String()}
 		}
 
-		gen := runCommand(opts.Command, opts.Timeout, map[string]string{
-			"GCL_CRITIC_FEEDBACK":        criticFeedback,
-			"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
-		})
+		gen, healClass := runGeneratorWithHeal(opts, criticFeedback, knownPatterns)
 		// When this iteration runs an ASK-class op that was authorized by an
 		// external confirmation, stamp the confirmation provenance into the
 		// trace so the audit trail answers "who authorized this op". AUTO ops
@@ -511,17 +558,17 @@ func Run(opts Options) Result {
 			c = &res
 		} else {
 			if secret.HasCredentialLeak(gen.ResultExcerpt) {
-			tr.Iterations = append(tr.Iterations, trace.Iteration{
-				Iter:      iter,
-				Generator: gen,
-				Critic: trace.CriticRecord{
-					Scores:      map[string]float64{"correctness": 0, "safety": 0, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0.5},
-					Suggestions: []string{"Credential leak in generator output — mask secrets and re-run"},
-					Blocking:    true,
-				},
-				Decision:       "SAFETY_FAIL",
-				PolicyDecision: "AUTO",
-			})
+				tr.Iterations = append(tr.Iterations, trace.Iteration{
+					Iter:      iter,
+					Generator: gen,
+					Critic: trace.CriticRecord{
+						Scores:      map[string]float64{"correctness": 0, "safety": 0, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0.5},
+						Suggestions: []string{"Credential leak in generator output — mask secrets and re-run"},
+						Blocking:    true,
+					},
+					Decision:       "SAFETY_FAIL",
+					PolicyDecision: "AUTO",
+				})
 				fp := extractFailurePattern(opts.Skill, opts.Command, gen, nil)
 				tr.Final = trace.Final{Status: "SAFETY_FAIL", Iter: iter, Output: nil, FailurePattern: fp}
 				path, _ := trace.PersistTrace(opts.Root, "", tr)
@@ -557,13 +604,14 @@ func Run(opts Options) Result {
 		// the runtime trace is end-to-end traceable (P5).
 		requestID := parseRequestID(gen.ResultExcerpt)
 		tr.Iterations = append(tr.Iterations, trace.Iteration{
-			Iter:      iter,
-			Generator: gen,
-			Critic:    trace.CriticRecord{Scores: c.Scores, Suggestions: c.Suggestions, Blocking: c.Blocking},
+			Iter:           iter,
+			Generator:      gen,
+			Critic:         trace.CriticRecord{Scores: c.Scores, Suggestions: c.Suggestions, Blocking: c.Blocking},
 			Decision:       decision,
 			PolicyDecision: policy.String(),
 			ConfirmedBy:    confirmedBy,
 			RequestID:      requestID,
+			HealClass:      healClass,
 		})
 
 		if decision == "SAFETY_FAIL" {

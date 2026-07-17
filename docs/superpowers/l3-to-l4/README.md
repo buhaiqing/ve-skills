@@ -6,7 +6,7 @@
 
 | 任务 | 主题 | Spec | Plan | 状态 |
 |------|------|------|------|------|
-| T09 | 智能重试（错误分级驱动） | [specs/2026-07-17-l4-t09-smart-retry-design.md](specs/2026-07-17-l4-t09-smart-retry-design.md) | [plans/2026-07-17-l4-t09-smart-retry.md](plans/2026-07-17-l4-t09-smart-retry.md) | 🟡 TODO |
+| T09 | 智能重试（错误分级驱动） | [specs/2026-07-17-l4-t09-smart-retry-design.md](specs/2026-07-17-l4-t09-smart-retry-design.md) | [plans/2026-07-17-l4-t09-smart-retry.md](plans/2026-07-17-l4-t09-smart-retry.md) | ✅ DONE |
 
 ## 关联
 

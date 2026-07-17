@@ -21,12 +21,12 @@ var FinalStatuses = []string{"PASS", "SAFETY_FAIL", "MAX_ITER"}
 
 // GeneratorResult is the per-iteration generator record (masked).
 type GeneratorResult struct {
-	Command       string `json:"command"`
-	ExitCode      int    `json:"exit_code"`
-	ResultExcerpt string `json:"result_excerpt"`
-	StdoutLen     int    `json:"stdout_len"`
-	StderrLen     int    `json:"stderr_len"`
-	StderrExcerpt string `json:"stderr_excerpt,omitempty"`
+	Command       string         `json:"command"`
+	ExitCode      int            `json:"exit_code"`
+	ResultExcerpt string         `json:"result_excerpt"`
+	StdoutLen     int            `json:"stdout_len"`
+	StderrLen     int            `json:"stderr_len"`
+	StderrExcerpt string         `json:"stderr_excerpt,omitempty"`
 	Args          map[string]any `json:"args,omitempty"`
 }
 
@@ -39,10 +39,10 @@ type CriticRecord struct {
 
 // Iteration is one GCL loop iteration.
 type Iteration struct {
-	Iter    int             `json:"iter"`
+	Iter      int             `json:"iter"`
 	Generator GeneratorResult `json:"generator"`
-	Critic  CriticRecord    `json:"critic"`
-	Decision string         `json:"decision"`
+	Critic    CriticRecord    `json:"critic"`
+	Decision  string          `json:"decision"`
 	// PolicyDecision records the execution-risk verdict (AUTO/ASK/REFUSE)
 	// from scoreDecision, applied before the generator command runs. Empty
 	// for pre-policy traces.
@@ -58,6 +58,12 @@ type Iteration struct {
 	// any `ve` call runs, or when the command produced no RequestId. Used by
 	// P5 to prove every runtime `ve` call is traceable end-to-end.
 	RequestID string `json:"request_id,omitempty"`
+	// HealClass records the error-classification verdict (retryable /
+	// rate_limit / fatal / unknown) that drove the retry decision on this
+	// iteration, when `--heal=smart` is active. Empty under `--heal=none`
+	// (legacy fixed-count loop). Consumed by the L4 telemetry layer (T11)
+	// and the audit trail.
+	HealClass string `json:"heal_class,omitempty"`
 }
 
 // FailurePattern mirrors the Reflexion failure-pattern schema.
@@ -73,25 +79,25 @@ type FailurePattern struct {
 
 // Final is the trace's terminal record.
 type Final struct {
-	Status        string         `json:"status"`
-	Iter          int            `json:"iter"`
-	Output        *string        `json:"output,omitempty"`
-	Unresolved    []string       `json:"unresolved,omitempty"`
+	Status         string          `json:"status"`
+	Iter           int             `json:"iter"`
+	Output         *string         `json:"output,omitempty"`
+	Unresolved     []string        `json:"unresolved,omitempty"`
 	FailurePattern *FailurePattern `json:"failure_pattern,omitempty"`
 }
 
 // Trace is the top-level GCL trace document.
 type Trace struct {
 	TraceSchemaVersion string         `json:"trace_schema_version"`
-	Skill             string         `json:"skill"`
-	Request           string         `json:"request"`
-	RubricVersion     string         `json:"rubric_version"`
-	OperationIntent   map[string]any `json:"operation_intent"`
-	MaskedFields      []string       `json:"masked_fields"`
-	RedactionPass     bool           `json:"redaction_pass"`
-	Iterations        []Iteration    `json:"iterations"`
-	Final             Final          `json:"final"`
-	SourcePath        string         `json:"_source_path,omitempty"`
+	Skill              string         `json:"skill"`
+	Request            string         `json:"request"`
+	RubricVersion      string         `json:"rubric_version"`
+	OperationIntent    map[string]any `json:"operation_intent"`
+	MaskedFields       []string       `json:"masked_fields"`
+	RedactionPass      bool           `json:"redaction_pass"`
+	Iterations         []Iteration    `json:"iterations"`
+	Final              Final          `json:"final"`
+	SourcePath         string         `json:"_source_path,omitempty"`
 }
 
 // ParseTrace reads and validates a trace file. Returns nil on parse error.

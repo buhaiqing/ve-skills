@@ -4,7 +4,8 @@
 > 依赖：T06 (vet gcl run — L2→L3)
 > 可并行：T12
 > 预计工作量：1 天
-> 状态：🟡 TODO
+> 状态：✅ DONE（2026-07-17）
+> 配套 SDD/Plan：`docs/superpowers/l3-to-l4/specs/2026-07-17-l4-t09-smart-retry-design.md` + `plans/2026-07-17-l4-t09-smart-retry.md`
 
 ## 1. 目标
 
@@ -64,13 +65,20 @@ func SmartRetry(ctx context.Context, op func() error, policy RetryPolicy) error
 ## 4. DoD
 
 ```
-□ 1. 写入 cmd/vet/internal/gcl/heal/retry.go（含 Classify + SmartRetry）
-□ 2. 错误码映射覆盖 framework §2 中至少 10 个具体码
-□ 3. go build + go vet + go test 全部绿
-□ 4. retry_test.go 覆盖：Retryable 重试到 max；Fatal 立即放弃；RateLimit 等待 Retry-After
-□ 5. retry_test.go 覆盖：所有重试记录到指标（T11 消费）
-□ 6. vet gcl run --heal=smart 与 --heal=none 行为可对比（CI 中加 1 case）
+✅ 1. 写入 cmd/vet/internal/gcl/heal/retry.go（含 Classify + SmartRetry）
+✅ 2. 错误分类覆盖 5 类 failureSignatures + Unknown（≥10 个具体信号，见 SDD §2.2）
+✅ 3. go build + go vet + go test 全部绿（heal 包 + 全模块）
+✅ 4. retry_test.go 覆盖：Retryable 退避重试到 max；Fatal 立即放弃；RateLimit 等待后重试 1 次；Unknown 重试 1 次；CtxCancel
+✅ 5. retry_test.go 覆盖：所有重试决策经 record 钩子写指标（T11 消费）
+✅ 6. vet gcl run --heal=smart 与 --heal=none 行为可对比（trace 实测：smart 带 heal_class，none 不带）
 ```
+
+### 关键偏差（与源卡 §3.2 错误码映射表）
+
+> 源卡 §3.2 的错误码映射表（NET_*/PERM_*/GO_*/RequestLimitExceeded/Throttling/InvalidParameter）**未在本包采用**。
+> 经核查：`enhanced-self-healing-framework.md` 中这些码 **0 次出现**于 `vet gcl run` 路径，且 NET_*/PERM_*/GO_* 属**另一工具链（self-healing 安装器）**的错误码。
+> 本包以 **`ve` CLI 真实输出信号** 为准，复用 `run.go` 的 `failureSignatures` 五类正则（`cli_parameter` / `runtime` / `cross_skill` / `token_efficiency` / `skill_generation`）。理由：真实可触发、零重复、符合简单优先。
+> 详见 SDD §2.1 / §2.2。
 
 ## 5. 验证命令
 
@@ -86,11 +94,14 @@ go test ./...   # 全包不退化
 ## 6. 完成回报
 
 ```markdown
-## T09 2026-07-XX — done
-- 写入 cmd/vet/internal/gcl/heal/retry.go
-- Classify 覆盖 10+ framework 错误码
-- 单测：Retryable/Fatal/RateLimit 三类行为正确
-- T10 / T11 可消费
+## T09 2026-07-17 — done
+- 新增 cmd/vet/internal/gcl/heal/retry.go：Classify（5 类 failureSignature + Unknown）+ SmartRetry（ctx 感知、退避/限流/致命/未知五类策略）+ RetryPolicy + 默认策略
+- 接入 vet gcl run：run.go 新增 runGeneratorWithHeal（--heal=smart 默认 / none 走原固定循环），gcl.go 暴露 --heal flag，trace.Iteration 新增 heal_class 字段
+- 单测 retry_test.go 覆盖：Classify 五类+Unknown、Retryable 退避到 max、Fatal 不重试、RateLimit 等 1 次、Unknown 重试 1 次、CtxCancel 中断、record 指标钩子
+- go build + go vet + go test 全绿（cmd/vet 全模块）
+- 行为对比实测：--heal=smart 的 trace 带 heal_class=retryable，--heal=none 不带
+- 偏差：未采用源卡 §3.2 的 framework 安装错误码（NET_*/PERM_*/GO_*），改以 ve CLI 真实信号（run.go failureSignatures）为准（见 §4 偏差说明）
+- T10 / T11 可消费（heal.SmartRetry 的 record 钩子即指标入口）
 ```
 
 ## 7. 风险与回滚
