@@ -44,25 +44,22 @@ func runPolicyLoad(args []string) {
 		fmt.Fprintf(os.Stderr, "policy load: %v\n", err)
 		os.Exit(1)
 	}
-	data, _ := json.MarshalIndent(ps, "", "  ")
+	data, err := json.MarshalIndent(ps, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "policy load: marshal JSON: %v\n", err)
+		os.Exit(1)
+	}
 	fmt.Println(string(data))
 }
 
 func runPolicyDiff(args []string) {
 	fs := flag.NewFlagSet("policy diff", flag.ExitOnError)
-	_ = fs.String("old", "HEAD~1", "old git ref")
-	_ = fs.String("new", "HEAD", "new git ref")
 	root := fs.String("root", "", "repo root path")
 	fs.Parse(args)
 	if *root == "" {
 		fmt.Fprintln(os.Stderr, "policy diff: --root is required")
 		os.Exit(2)
 	}
-
-	// Simple approach: just load current and report
-	// For a full diff between commits, we'd need to checkout old version
-	// Instead, we compare current against empty for now
-	// TODO: full git-based diff in future
 
 	ps, err := policy.Load(*root)
 	if err != nil {
@@ -98,10 +95,9 @@ func runPolicyCheckChangelog(args []string) {
 	cmd.Dir = *root
 	out, err := cmd.Output()
 	if err != nil {
-		// git diff may fail if there's no previous commit (initial commit)
-		// In that case, treat as no changes
-		fmt.Println("policy check-changelog: git diff failed, skipping check")
-		return
+		// git diff failed — cannot verify changelog, refuse to pass
+		fmt.Fprintf(os.Stderr, "policy check-changelog: git diff failed: %v\n", err)
+		os.Exit(1)
 	}
 
 	policyChanged := false

@@ -164,8 +164,8 @@ func loadExecutionRisk(path string) (*ExecutionRiskPolicy, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Detect decision matrix section header
-		if strings.Contains(line, "## 2. Decision matrix") {
+		// Detect decision matrix section header (case-insensitive, tolerates formatting variants)
+		if strings.HasPrefix(line, "##") && strings.Contains(strings.ToLower(line), "decision matrix") {
 			inDecisionMatrix = true
 			continue
 		}
@@ -305,8 +305,10 @@ func loadGuardrails(path string) ([]GuardrailEntry, error) {
 	return gf.Guardrails, nil
 }
 
+// parseTableRow splits a pipe-delimited markdown table row into trimmed columns.
+// Known limitation: cells containing literal '|' characters will be split incorrectly.
+// Current policy tables do not contain '|' in cell values.
 func parseTableRow(line string) []string {
-	// Split by |, trim each cell, remove leading/trailing empty strings
 	parts := strings.Split(line, "|")
 	var result []string
 	for _, p := range parts {
