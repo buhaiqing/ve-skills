@@ -50,6 +50,10 @@ jobs:
       - name: Check policy safety invariant (P7)
         run: cmd/bin/vet check policyguard --root .
 
+      # ——— P8 红线：策略变更必须带 CHANGELOG ———
+      - name: Check policy changelog (P8)
+        run: cmd/bin/vet policy check-changelog --root .
+
       # ——— 评估回归 ———
       - name: Check eval regression (absolute + git-diff)
         run: cmd/bin/vet check eval --root . --git-diff origin/main

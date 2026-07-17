@@ -75,3 +75,9 @@
 - T14: cmd/vet/internal/reflexion/promote/ 4级 Level + Enforce
 - vet reflexion promote/check 子命令
 - 硬约束：count<10 不升级；Hard 级别 ABORT
+
+## T15 2026-07-17 — done
+- T15: incident-loop-agent/references/policies/ 目录 + README + CHANGELOG
+- cmd/vet/internal/policy/ loader + diff
+- vet policy {load,diff,check-changelog} 子命令
+- CI: vet policy check-changelog 加入 hard-gates
