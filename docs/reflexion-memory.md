@@ -101,6 +101,50 @@ failures when one leaf skill internally calls another. See
 - X **Subjective pattern extraction** — Patterns must come from structured GCL traces or Self-Review records, not ad-hoc observations
 - X **Pattern hoarding** — If a pattern is promoted to Anti-Patterns sections, remove from `docs/failure-patterns.md` to avoid duplication
 
-## 8. Changelog
+## 8. Write-back Chain (Implementation Detail)
 
-Reflexion changes are tracked in the unified runtime-quality changelog in `docs/gcl-spec.md` §12.
+The complete write-back pipeline after a GCL execution failure:
+
+```
+GCL run fails (SAFETY_FAIL / MAX_ITER / POLICY_BLOCK)
+    │
+    ├── writebackFailurePattern() in cmd/vet/internal/gcl/run/run.go
+    │       │
+    │       ├── trace.UpdateFailurePatternsFile() → docs/failure-patterns.md
+    │       │       └── Appends to "## Extracted from GCL Traces" markdown table
+    │       │
+    │       └── memory.AppendFailurePattern() → .runtime/memory/failure-patterns.json
+    │               ├── Dedup by (skill, pattern)
+    │               ├── count++ (not overwrite)
+    │               └── If count >= 10 → triggerTranspile() → guardrails.yaml
+    │
+    └── Pre-flight: loadKnownFailurePatterns()
+            ├── Primary: memory.GetPatternsBySkill() → JSON store (structured)
+            └── Fallback: loadKnownFailurePatternsFromMarkdown() → docs/failure-patterns.md
+```
+
+### Key files involved
+
+| File | Role |
+|------|------|
+| `cmd/vet/internal/gcl/run/run.go` | writebackFailurePattern() + loadKnownFailurePatterns() |
+| `cmd/vet/internal/gcl/trace/aggregate.go` | UpdateFailurePatternsFile() — markdown write-back |
+| `cmd/vet/internal/memory/store.go` | AppendFailurePattern() + GetPatternsBySkill() — JSON store |
+| `.runtime/memory/failure-patterns.json` | Structured runtime memory (gitignored) |
+| `docs/failure-patterns.md` | Seed patterns + auto-generated block (git tracked) |
+| `incident-loop-agent/references/policies/guardrails.yaml` | Auto-transpiled guardrails (git tracked) |
+
+### Count thresholds
+
+| Count | Level | Action |
+|-------|-------|--------|
+| < 3 | Pruned | Removed from memory |
+| 3-9 | Hint | Injected as context only (not enforced) |
+| 10-29 | Constraint | Transpiled to guardrails.yaml (enforced as ASK) |
+| ≥ 30 | Hard | ABORT on hit, forced human review |
+
+## 9. Architecture Reference
+
+For the complete learning architecture design including data flow diagrams,
+file lifecycle, and integration with incident-loop-agent, see:
+**[docs/reflexion-learning-architecture.md](./reflexion-learning-architecture.md)**

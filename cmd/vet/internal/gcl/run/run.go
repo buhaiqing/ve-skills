@@ -21,6 +21,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/secret"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/memory"
 )
 
 // SkillMaxIter mirrors gcl_runner.SKILL_MAX_ITER.
@@ -496,8 +497,24 @@ func extractFailurePattern(skill, command string, gen trace.GeneratorResult, c *
 	return nil
 }
 
-// loadKnownFailurePatterns mirrors gcl_runner.load_known_failure_patterns.
+// loadKnownFailurePatterns loads failure patterns from the structured JSON store
+// and formats them as HINT lines for injection into the Generator context.
 func loadKnownFailurePatterns(root, skill string, limit int) string {
+	entries, err := memory.GetPatternsBySkill(root, skill, limit)
+	if err != nil || len(entries) == 0 {
+		// Fallback: try reading from docs/failure-patterns.md
+		return loadKnownFailurePatternsFromMarkdown(root, skill, limit)
+	}
+	var out []string
+	for _, e := range entries {
+		out = append(out, fmt.Sprintf("- %s (count=%d): %s → %s", e.Category, e.Count, e.Pattern, e.Fix))
+	}
+	return strings.Join(out, "\n")
+}
+
+// loadKnownFailurePatternsFromMarkdown is the legacy fallback that reads
+// docs/failure-patterns.md line-by-line. Used when the JSON store is empty.
+func loadKnownFailurePatternsFromMarkdown(root, skill string, limit int) string {
 	fp := joinPath(root, "docs", "failure-patterns.md")
 	if !fileExists(fp) {
 		return ""
@@ -520,11 +537,15 @@ func loadKnownFailurePatterns(root, skill string, limit int) string {
 	return strings.Join(out, "\n")
 }
 
-// writebackFailurePattern mirrors gcl_runner._writeback_failure_pattern.
+// writebackFailurePattern persists a failure pattern to both the legacy
+// markdown store (docs/failure-patterns.md) and the structured JSON store
+// (.runtime/memory/failure-patterns.json). If the pattern's count reaches
+// the threshold (>= 10), it triggers auto-transpile to guardrails.yaml.
 func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 	if fp == nil {
 		return
 	}
+	// 1. Write to markdown (legacy, keep compatibility)
 	summary := trace.Summary{
 		FailurePatterns: []map[string]any{
 			{
@@ -536,7 +557,50 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 		},
 	}
 	if _, err := trace.UpdateFailurePatternsFile(root, &summary); err != nil {
-		fmt.Fprintf(os.Stderr, "WARN: Reflexion write-back skipped: %v\n", err)
+		fmt.Fprintf(os.Stderr, "WARN: Reflexion markdown write-back skipped: %v\n", err)
+	}
+
+	// 2. Write to structured JSON store (count++ on dedup)
+	entry := memory.FailurePatternEntry{
+		Skill:    skill,
+		Pattern:  fp.Error,
+		Category: fp.Category,
+		Fix:      fp.Fix,
+		Source:   orString(fp.Command, "gcl-runner"),
+		Count:    1, // AppendFailurePattern will increment if exists
+	}
+	if err := memory.AppendFailurePattern(root, entry); err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: Reflexion JSON write-back skipped: %v\n", err)
+		return
+	}
+
+	// 3. Check if count reached threshold → auto-transpile
+	entries, err := memory.GetPatternsBySkill(root, skill, 0) // 0 = all
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		if e.Pattern == fp.Error && e.Count >= 10 {
+			fmt.Fprintf(os.Stderr, "INFO: pattern count=%d reached threshold, triggering auto-transpile\n", e.Count)
+			triggerTranspile(root)
+			break
+		}
+	}
+}
+
+// triggerTranspile calls vet reflexion transpile to regenerate guardrails.yaml
+// when a failure pattern reaches the count >= 10 threshold.
+func triggerTranspile(root string) {
+	patternsPath := joinPath(root, "docs", "failure-patterns.md")
+	outPath := joinPath(root, "incident-loop-agent", "references", "policies", "guardrails.yaml")
+	cmd := exec.Command("vet", "reflexion", "transpile",
+		"--patterns", patternsPath,
+		"--out", outPath)
+	cmd.Dir = root
+	if out, err := cmd.CombinedOutput(); err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: auto-transpile failed: %v\n%s\n", err, string(out))
+	} else {
+		fmt.Fprintf(os.Stderr, "INFO: auto-transpile complete: %s\n", strings.TrimSpace(string(out)))
 	}
 }
 
