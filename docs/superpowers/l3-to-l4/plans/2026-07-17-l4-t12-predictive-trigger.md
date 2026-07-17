@@ -3,7 +3,7 @@
 > **源任务卡:** `docs/l3-to-l4-tasks/T12-predictive-trigger.md`
 > **Parent spec:** `docs/superpowers/l3-to-l4/specs/2026-07-17-l4-t12-predictive-trigger-design.md`
 > **专题:** `docs/superpowers/l3-to-l4/`
-> **Status:** ready to implement (spec approved).
+> **Status:** ✅ DONE (2026-07-17) — 实现完成，go build/vet/test 全绿，vet check routing 通过。
 
 ---
 

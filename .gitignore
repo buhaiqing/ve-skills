@@ -59,6 +59,7 @@ dist/
 # CodeGraph local index — never commit
 .codegraph/
 
-# vet CLI build output
+# vet CLI build output (binaries only — source under cmd/vet/ is tracked)
 cmd/bin/
-cmd/vet/
+cmd/vet/bin/
+cmd/vet/vet-bin

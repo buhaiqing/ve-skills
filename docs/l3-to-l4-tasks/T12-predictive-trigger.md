@@ -4,7 +4,7 @@
 > 依赖：T06 (vet gcl run)
 > 可并行：T09
 > 预计工作量：2 天
-> 状态：🟡 TODO
+> 状态：✅ DONE (2026-07-17)
 
 ## 1. 目标
 
@@ -122,3 +122,21 @@ echo '{"skill":"ve-redis-ops","name":"slow_commands_per_sec","current":150,"hist
 | 预测误报导致 loop 抖动 | 触发后 Step 1 仍先做 triage，不是直接执行；并入 T11 误报率指标 |
 | 历史数据不足 | 显式 `History 长度 < N → RiskLow`，不触发 |
 | 回滚 | `git checkout cmd/vet/internal/gcl/predict/ docs/skill-routing-graph.md` |
+
+## 8. 实现偏差记录（vs 源卡片 §3.1）
+
+源卡片 §3.1 的 `Predictor` 接口签名为 `Evaluate(...) (Risk, bool)`（返回裸 `Risk` 字符串）。
+实际实现（spec `2026-07-17-l4-t12-predictive-trigger-design.md` §3 已声明）返回**结构化 `Evaluation`**：
+
+```go
+type Evaluation struct {
+    Predictor string    // 产生本次评估的预测器名
+    Risk      RiskLevel // low / medium / high
+    Trigger   bool      // RiskHigh 时为 true（是否触发 loop）
+    Detail    string    // 人类可读推理
+}
+```
+
+理由：`Trigger` 与 `Risk` 解耦（medium = HINT 不触发、high = 触发），并携带 `Detail` 供审计/trace。
+Registry.Evaluate 统一返回 `Evaluation`，调用方（T16 / incident-loop-agent）直接读 `Trigger` 字段。
+无行为回归——源卡片的 `RiskLow/Medium/High` 语义完整保留。

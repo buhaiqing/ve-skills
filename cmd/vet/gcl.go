@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/gate"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/predict"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/run"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 )
@@ -32,8 +35,10 @@ func runGCL(args []string) {
 		runGCLTrace(rest)
 	case "heal-stats":
 		runGCLHealStats(rest)
+	case "predict":
+		runGCLPredict(rest)
 	default:
-		fmt.Fprintf(os.Stderr, "vet gcl %s: unknown subcommand (run|gate|trace|heal-stats)\n", sub)
+		fmt.Fprintf(os.Stderr, "vet gcl %s: unknown subcommand (run|gate|trace|heal-stats|predict)\n", sub)
 		os.Exit(3)
 	}
 }
@@ -126,6 +131,57 @@ func runGCLTrace(args []string) {
 	}
 	code := trace.CmdAggregate(*root, inputs, hours)
 	os.Exit(code)
+}
+
+func runGCLPredict(args []string) {
+	fs := flag.NewFlagSet("gcl predict", flag.ExitOnError)
+	input := fs.String("input", "", "path to a Metric JSON file, or '-' to read from stdin")
+	skill := fs.String("skill", "", "metric source skill, e.g. ve-redis-ops")
+	metric := fs.String("metric", "", "metric name, e.g. slow_commands_per_sec")
+	current := fs.Float64("current", 0, "current metric value")
+	history := fs.String("history", "", "comma-separated history values (ascending by time)")
+	jsonOut := fs.Bool("json", false, "machine-readable JSON output")
+	fs.Parse(args)
+
+	var m predict.Metric
+	switch {
+	case *input != "":
+		raw, err := readInput(*input)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "vet gcl predict: %v\n", err)
+			os.Exit(2)
+		}
+		if err := json.Unmarshal(raw, &m); err != nil {
+			fmt.Fprintf(os.Stderr, "vet gcl predict: invalid Metric JSON: %v\n", err)
+			os.Exit(2)
+		}
+	case *skill != "" && *metric != "":
+		m = predict.Metric{
+			Skill:   *skill,
+			Name:    *metric,
+			Current: *current,
+			History: parseFloats(*history),
+		}
+	default:
+		fmt.Fprintln(os.Stderr, "vet gcl predict: need --input <file|-> or --skill --metric [--current --history]")
+		os.Exit(2)
+	}
+
+	eval := predict.NewRegistry().Evaluate(context.Background(), m)
+	if *jsonOut {
+		b, _ := json.MarshalIndent(eval, "", "  ")
+		fmt.Println(string(b))
+		return
+	}
+	mark := "✅"
+	if eval.Trigger {
+		mark = "🚨"
+	}
+	fmt.Printf("%s risk=%s trigger=%v predictor=%s\n", mark, eval.Risk, eval.Trigger, eval.Predictor)
+	fmt.Printf("  detail: %s\n", eval.Detail)
+	if eval.Trigger {
+		os.Exit(0)
+	}
 }
 
 func runGCLHealStats(args []string) {
@@ -223,6 +279,30 @@ func splitComma(s string) []string {
 	for _, p := range strings.Split(s, ",") {
 		if p = strings.TrimSpace(p); p != "" {
 			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// readInput reads a file path, or "-" to read from stdin.
+func readInput(path string) ([]byte, error) {
+	if path == "-" {
+		return io.ReadAll(os.Stdin)
+	}
+	return os.ReadFile(path)
+}
+
+// parseFloats parses a comma-separated list of floats; invalid tokens are
+// skipped so a partial history still evaluates.
+func parseFloats(s string) []float64 {
+	var out []float64
+	for _, p := range strings.Split(s, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		if v, err := strconv.ParseFloat(p, 64); err == nil {
+			out = append(out, v)
 		}
 	}
 	return out

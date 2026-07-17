@@ -110,6 +110,19 @@ Symptom doesn't match any rule above
 
 ---
 
+## §4 Predictive Triggers (pre-alert)
+
+> 预测式触发源（T12）：在告警发生**之前**根据指标趋势触发 loop，而非等 CMS alarm / JIRA / chat 驱动。
+> 每行必含 `symptom` / `primary` / `secondary` / `action` / `source=predictive`（由 `docs/skill-routing-graph.schema.json` 约束，`vet check routing` 校验）。
+
+| Symptom | Primary Skill | Secondary Skills | Action | Source |
+|---------|--------------|-----------------|--------|--------|
+| Redis 慢查询 5min 内上升 ≥50% 且超阈值 | `ve-redis-ops` | `ve-cms-ops` | Pre-emptive MONITOR + 索引建议 | predictive |
+| RDS 磁盘 24h 内线性外推将达 90% | `ve-rds-mysql-ops` | `ve-billing-ops` | Pre-emptive 扩容评估 | predictive |
+| ECS CPU 1h 趋势均值 >70% 且斜率为正 | `ve-ecs-ops` | `ve-vke-ops` | Pre-emptive HPA 评估 | predictive |
+
+---
+
 ## Implementation Notes
 
 - **TE-6**: Cross-skill delegation rules live here; individual `aiops.md` files link here.

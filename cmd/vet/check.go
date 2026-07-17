@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -74,6 +75,8 @@ func runCheck(args []string) {
 		pgCheck(*root, *jsonOut)
 		case "trace":
 			traceCheck(*root, *jsonOut)
+	case "routing":
+		runCheckRouting(*root, *jsonOut)
 	default:
 		fmt.Fprintf(os.Stderr, "vet check %s: not implemented yet\n", name)
 		os.Exit(3)
@@ -262,6 +265,108 @@ func traceCheck(root string, jsonOut bool) {
 		os.Exit(1)
 	}
 	fmt.Printf("OK: %d trace file(s) passed\n", len(entries))
+}
+
+// routingSkillPattern matches a valid skill id used as primary/secondary.
+var routingSkillPattern = regexp.MustCompile(`^ve-[a-z0-9-]+-ops$|^incident-loop-agent$`)
+
+// runCheckRouting validates the skill routing graph (docs/skill-routing-graph.md).
+// It parses markdown table rows and validates rows whose last cell is a known
+// source enum (predictive|reactive) against the routing schema shape:
+// symptom / primary / secondary / action / source, with primary & each
+// secondary matching a skill id pattern and source ∈ {predictive, reactive}.
+func runCheckRouting(root string, jsonOut bool) {
+	path := filepath.Join(root, "docs", "skill-routing-graph.md")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		if jsonOut {
+			fmt.Println(`{"ok":false,"error":"` + err.Error() + `"}`)
+		} else {
+			fmt.Printf("FAIL: read %s: %v\n", path, err)
+		}
+		os.Exit(1)
+	}
+
+	var errors []string
+	checked := 0
+	for i, line := range strings.Split(string(raw), "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "|") {
+			continue
+		}
+		cells := splitTableRow(line)
+		// A trigger row ends with a source enum cell.
+		if len(cells) < 5 {
+			continue
+		}
+		source := strings.TrimSpace(cells[len(cells)-1])
+		if source != "predictive" && source != "reactive" {
+			continue
+		}
+		checked++
+		symptom := strings.TrimSpace(cells[0])
+		primary := stripCodeSpan(cells[1])
+		secondary := stripCodeSpan(cells[2])
+		action := strings.TrimSpace(cells[len(cells)-2])
+		if symptom == "" {
+			errors = append(errors, fmt.Sprintf("line %d: empty symptom", i+1))
+		}
+		if !routingSkillPattern.MatchString(primary) {
+			errors = append(errors, fmt.Sprintf("line %d: invalid primary skill %q", i+1, primary))
+		}
+		if secondary != "" {
+			for _, s := range strings.Split(secondary, ",") {
+				if s = strings.TrimSpace(s); s != "" && !routingSkillPattern.MatchString(s) {
+					errors = append(errors, fmt.Sprintf("line %d: invalid secondary skill %q", i+1, s))
+				}
+			}
+		}
+		if action == "" {
+			errors = append(errors, fmt.Sprintf("line %d: empty action", i+1))
+		}
+		if source != "predictive" && source != "reactive" {
+			errors = append(errors, fmt.Sprintf("line %d: invalid source %q", i+1, source))
+		}
+	}
+
+	if jsonOut {
+		b, _ := json.MarshalIndent(map[string]any{
+			"ok":      len(errors) == 0,
+			"checked": checked,
+			"errors":  errors,
+		}, "", "  ")
+		fmt.Println(string(b))
+		return
+	}
+	if len(errors) > 0 {
+		fmt.Printf("FAIL: %d routing row(s) invalid (%d checked)\n", len(errors), checked)
+		for _, e := range errors {
+			fmt.Printf("  - %s\n", e)
+		}
+		os.Exit(1)
+	}
+	fmt.Printf("OK: %d routing trigger row(s) valid\n", checked)
+}
+
+// splitTableRow splits a markdown table row into trimmed cell strings,
+// dropping the leading/trailing pipe.
+func splitTableRow(line string) []string {
+	line = strings.TrimSpace(line)
+	line = strings.TrimPrefix(line, "|")
+	line = strings.TrimSuffix(line, "|")
+	parts := strings.Split(line, "|")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		out = append(out, strings.TrimSpace(p))
+	}
+	return out
+}
+
+// stripCodeSpan removes markdown code-span backticks so skill ids written as
+// `ve-foo-ops` in the routing table validate against the bare id pattern.
+func stripCodeSpan(s string) string {
+	s = strings.TrimSpace(s)
+	return strings.Trim(s, "`")
 }
 
 func emitCheck(name string, summary checkSummary, jsonOut bool) {

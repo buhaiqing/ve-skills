@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Skill Routing Graph Trigger Row",
+  "description": "Schema for a single trigger row in docs/skill-routing-graph.md. Used by `vet check routing` to validate each table row. The markdown table is the source of truth; this schema constrains its columns.",
+  "type": "object",
+  "required": ["symptom", "primary", "secondary", "action", "source"],
+  "properties": {
+    "symptom": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Predictive or reactive symptom description, e.g. 'Redis slow query 5min +50%'."
+    },
+    "primary": {
+      "type": "string",
+      "pattern": "^ve-[a-z0-9-]+-ops$|^incident-loop-agent$",
+      "description": "Primary skill that owns the diagnosis, e.g. ve-redis-ops."
+    },
+    "secondary": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^ve-[a-z0-9-]+-ops$|^incident-loop-agent$"
+      },
+      "description": "Secondary skills to delegate to. May be empty."
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Action taken after trigger, e.g. 'Pre-emptive MONITOR + index suggestion'."
+    },
+    "source": {
+      "type": "string",
+      "enum": ["predictive", "reactive"],
+      "description": "predictive = triggered before alarm fires; reactive = triggered by alarm/ticket."
+    }
+  },
+  "additionalProperties": false
+}
