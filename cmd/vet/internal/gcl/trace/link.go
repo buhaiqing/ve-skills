@@ -15,7 +15,8 @@ import (
 // internal/check/trace package to avoid coupling the two schemas; this struct
 // only captures the fields needed to build the request_id index.
 type incidentTraceLocal struct {
-	TicketID   string `json:"ticket_id"`
+	TicketID       string `json:"ticket_id"`
+	PolicyDecision string `json:"policy_decision"` // AUTO/ASK/REFUSE — needed for ticket-level aggregation
 	Iterations []struct {
 		VeCalls []struct {
 			RequestID string `json:"request_id"`
