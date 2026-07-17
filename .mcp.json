@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "codegraph": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": ["serve", "--mcp"],
+      "description": "CodeGraph — AST-based code intelligence: explore symbols, call paths, blast radius, and read source with line numbers. Zero-config, auto-indexed from .codegraph/.",
+      "disabled": false
+    }
+  }
+}
