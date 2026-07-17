@@ -25,6 +25,7 @@ go run . <子命令> --root <仓库根>
 | `eval` | 校验 `eval_queries.json` 意图分类用例充足（可加 `--git-diff origin/main` 仅查改动技能） | 用例不足 |
 | `policyguard` | 校验 dispatch 计划满足安全不变量（Safety=0→不 AUTO、破坏性→不 AUTO、缺元数据→不 AUTO） | 安全策略将被破坏 |
 | `trace` | **双 schema 校验**：`gcl-trace-*.json`（运行时轨迹，要求 `request_id` 非空且脱敏）与 `incident-trace-*.json`（事故轨迹，要求 `ticket_id`/`request_id` 等齐全） | 轨迹不可追溯或脱敏失败 |
+| `routing` | 校验 `docs/skill-routing-graph.md` 中 predictive/reactive 路由行的结构完整性（symptom / primary / secondary / action / source） | 路由行结构不完整 |
 
 示例：
 
@@ -109,7 +110,49 @@ vet gcl trace --root . --input audit-results/gcl-trace-20260717-*.json
 
 ---
 
-## 四、版本
+## 六、预测式触发：`vet gcl predict`
+
+在告警发生**之前**，根据指标时间序列趋势评估是否需要触发 GCL 循环。内置 3 个预测器：
+
+| 预测器 | 指标 | 触发条件 |
+|--------|------|---------|
+| `redis-slow-query-degrade` | `slow_commands_per_sec` | 最近 5 样本上升 ≥50% 且当前值 >100 |
+| `rds-capacity-waterline` | `disk_usage_percent` | 线性外推 24h 内磁盘使用率将达 ≥90% |
+| `ecs-cpu-trend` | `cpu_usage_percent` | 1h 均值 >70% 且趋势斜率为正 |
+
+使用方式：
+
+```bash
+# 从 JSON 文件或 stdin 读取指标
+echo '{"skill":"ve-redis-ops","name":"slow_commands_per_sec","current":150,"history":[60,70,80,90,110]}' \
+  | vet gcl predict --input -
+
+# 从命令行参数指定
+vet gcl predict \
+  --skill ve-redis-ops \
+  --metric slow_commands_per_sec \
+  --current 150 \
+  --history 60,70,80,90,110
+
+# JSON 输出
+vet gcl predict --input metrics.json --json
+```
+
+输出示例：
+```
+🚨 risk=high trigger=true predictor=redis-slow-query-degrade
+  detail: slow_commands_per_sec up >=50% over last 5 samples and exceeds threshold 100
+```
+
+- `risk=low`：继续监控，不触发
+- `risk=medium`：记录 HINT（供 Reflexion 消费，T14），不触发
+- `risk=high`：触发 loop，`trigger=true`
+
+> 预测器只消费喂入的 `Metric`，不自己拉取云监控数据。真实数据采集由 incident-loop-agent（T16）负责。
+
+---
+
+## 七、版本
 
 ```bash
 vet version
@@ -117,7 +160,7 @@ vet version
 
 ---
 
-## 五、典型工作流
+## 八、典型工作流
 
 ```bash
 # 1) 开发/改完技能后，本地跑质量门禁

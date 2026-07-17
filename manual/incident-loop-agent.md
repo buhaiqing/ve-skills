@@ -18,6 +18,7 @@ incident-loop-agent 就是干这件事的"总指挥"。
 **用 incident-loop-agent：**
 - 入站 CMS 告警、JIRA DOPS 工单、客户带具体症状的反馈、或定时 SRE 巡逻。
 - 故障疑似跨产品（如"网站打不开"可能涉及 ECS + VPC + CLB + CDN）。
+- **预测式触发**：指标趋势评估（Redis 慢查询上升、RDS 磁盘将满、ECS CPU 持续升高）在告警前触发 loop——通过 `vet gcl predict` 评估，详见 `docs/skill-routing-graph.md` §4 Predictive Triggers。
 
 **不要用它：**
 - 只是想跑一条确定的 `ve` 命令（如查某实例状态）→ 直接用对应 `ve-*-ops` 技能。
@@ -33,7 +34,7 @@ alert → triage → diagnose → propose → confirm → execute → validate �
 
 | 步骤 | 做什么 |
 |------|--------|
-| alert | 接入告警/工单/客户反馈 |
+| alert | 接入告警/工单/客户反馈，或预测式触发（指标趋势在告警前触发） |
 | triage | 分诊：判断影响面、紧急度、涉及哪些产品 |
 | diagnose | 跨产品诊断：调用相关 `ve-*-ops` 技能读取状态、查日志、定位根因 |
 | propose | 给出修复方案（含预期状态、回滚路径） |
@@ -76,7 +77,7 @@ alert → triage → diagnose → propose → confirm → execute → validate �
 
 - 仓库 checkout 含全部 `ve-*-ops` 技能目录。
 - `ve` CLI 已安装并认证（`VOLCENGINE_ACCESS_KEY` / `VOLCENGINE_SECRET_KEY`）。
-- 可达 `docs/skill-routing-graph.md`（跨产品路由）与 `docs/failure-patterns.md`（复盘写入）。
+- 可达 `docs/skill-routing-graph.md`（跨产品路由，含 §4 Predictive Triggers 预测触发规则）与 `docs/failure-patterns.md`（复盘写入）。
 - GCL runner（`vet gcl run`）可用。
 
 ---

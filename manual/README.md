@@ -10,7 +10,7 @@ ve-skills 是一组面向**火山引擎 (Volcengine) 云运维**的 Agent Skills
 
 - **`ve-*-ops` 技能（28 个）**：每个技能对应一个火山引擎产品（ECS、RDS、VPC、Redis、CDN …），告诉 Agent 如何通过官方 `ve` CLI 安全地查询与变更该产品。
 - **`incident-loop-agent`（编排技能）**：不操作单一产品，而是**协调**上述 28 个技能，跑一个完整的事故闭环：告警 → 分诊 → 诊断 → 方案 → 确认 → 执行 → 验证 → 复盘。
-- **`vet` 工具**：给技能仓库做质量门禁（校验 frontmatter / 链接 / GCL 一致性 / 安全策略 / trace 完整性），并提供 `vet gcl run` 真实运行 GCL 编排循环、`vet gcl gate` 做 CI 结构冒烟、`vet gcl trace` 聚合审计 trace。
+- **`vet` 工具**：给技能仓库做质量门禁（校验 frontmatter / 链接 / GCL 一致性 / 安全策略 / trace 完整性），并提供 `vet gcl run` 真实运行 GCL 编排循环、`vet gcl predict` 预测式触发（先于告警评估指标趋势）、`vet gcl gate` 做 CI 结构冒烟、`vet gcl trace` 聚合审计 trace。
 
 ## 从哪开始
 
@@ -20,6 +20,7 @@ ve-skills 是一组面向**火山引擎 (Volcengine) 云运维**的 Agent Skills
 | 我收到告警/工单，想用 Agent 排障 | [incident-loop-agent.md](incident-loop-agent.md) |
 | 我只想跑一条 `ve` 命令（如查实例） | 直接用对应 `ve-*-ops` 技能（见其 `SKILL.md`），不走 incident-loop-agent |
 | 我想给仓库做提交前的质量检查 | `vet validate --root .` 或 `vet check <子项>` |
+| 我想做预测式触发（指标趋势评估） | `vet gcl predict`（见 [vet-cli.md](vet-cli.md) §六） |
 
 ## 关键概念速览
 
