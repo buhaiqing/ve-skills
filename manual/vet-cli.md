@@ -1,6 +1,18 @@
 # `vet` 命令行手册
 
-`vet` 是 ve-skills 仓库的 Go 工具，提供**质量检查**与 **GCL 编排**两类能力。从仓库内构建：
+`vet` 是 ve-skills 仓库的 Go 工具，提供以下能力：
+
+| 类别 | 命令 | 用途 |
+|------|------|------|
+| **质量检查** | `vet check <子项>` | 提交前校验 frontmatter / 链接 / GCL / 安全策略 / trace |
+| | `vet validate --root .` | 一次性跑完所有检查（等价 CI） |
+| **GCL 编排** | `vet gcl run` | 运行 GCL 循环：Generator 执行 → Critic 审计 → 重试 |
+| | `vet gcl gate` | CI 结构冒烟：确认所有技能的 GCL 装配完好 |
+| | `vet gcl trace` | 聚合 audit-results/ 下的轨迹 JSON 成质量概览 |
+| **自愈** | `vet gcl heal-stats` | 查看自愈引擎指标：成功率、耗时、干预率 |
+| **预测触发** | `vet gcl predict` | 指标趋势评估：在告警发生前触发 loop |
+
+从仓库内构建：
 
 ```bash
 cd cmd/vet
@@ -51,7 +63,7 @@ vet validate --root . --list-only
 
 ---
 
-## 三、GCL 编排：`vet gcl <run|gate|trace>`
+## 三、GCL 编排：`vet gcl <run|gate|trace|predict|heal-stats>`
 
 ### `vet gcl run` — 真实运行一次 GCL 循环
 
@@ -81,6 +93,7 @@ vet gcl run \
 | `--critic-command <cmd>` | 独立进程运行的隔离 Critic 命令 |
 | `--confirmed` | 为 `ASK` 类操作背书（见下方安全说明） |
 | `--confirmed-by <id>` | 背书的来源（工单号/人工 handle），写入 trace 留痕 |
+| `--heal` | 自愈策略：`smart`（默认，错误分类重试 + 多路径自愈）、`none`（固定循环重试） |
 
 **安全说明（重要）**：
 - 非交互运行时，`ASK` 类操作若没有 `--confirmed` 会被当作 `REFUSE`（没人可问），并记录 `POLICY_BLOCK`。
@@ -110,7 +123,39 @@ vet gcl trace --root . --input audit-results/gcl-trace-20260717-*.json
 
 ---
 
-## 六、预测式触发：`vet gcl predict`
+## 四、自愈遥测：`vet gcl heal-stats`
+
+查看自愈引擎的运行指标（成功率、平均耗时、人工干预率、降级率），支持 `--since 7d / 1w / 24h` 时间窗口过滤。
+
+```bash
+vet gcl heal-stats --since 7d
+vet gcl heal-stats --since 7d --json
+```
+
+输出示例：
+```
+Self-healing stats (since 7d, events=42, skipped=3):
+Success rate            94.3% (target: >= 90.0%) ✅
+Avg duration             2.1s (target: <=  5.0s) ✅
+User intervention        5.7% (target: <= 10.0%) ✅
+```
+
+**自愈引擎工作原理（T09–T10）：**
+
+| 组件 | 文件 | 作用 |
+|------|------|------|
+| 错误分类 | `heal/retry.go` | 根据 `ve` CLI 真实输出信号将错误分为 `retryable`/`rate_limit`/`fatal`/`unknown` 四类 |
+| 多路径自愈 | `heal/paths.go` + `heal/runner.go` | 每类错误 ≥2 条互不重叠的自愈路径，按 (Cost↑, 历史成功率↓) 自动选最优 |
+| 指标收集 | `heal/metrics.go` | 按 per-path 粒度记录成功/失败/降级，累积历史供 SelectBest 消费 |
+
+- `fatal` 类错误（权限/参数问题）不重试，直接上报
+- `rate_limit` 类等令牌后重试 1 次
+- 所有路径都失败时降级（fallback），记录 `result=fail`
+- trace 中 `self_healing` 段记录每次自愈的 path_name / cost / result / duration
+
+---
+
+## 五、预测式触发：`vet gcl predict`
 
 在告警发生**之前**，根据指标时间序列趋势评估是否需要触发 GCL 循环。内置 3 个预测器：
 
@@ -152,7 +197,7 @@ vet gcl predict --input metrics.json --json
 
 ---
 
-## 七、版本
+## 六、版本
 
 ```bash
 vet version
@@ -160,19 +205,55 @@ vet version
 
 ---
 
-## 八、典型工作流
+## 七、典型工作流
+
+### 场景 A：提交前质量门禁
 
 ```bash
-# 1) 开发/改完技能后，本地跑质量门禁
+# 1) 本地跑全量门禁（等价 CI 会跑的）
 vet validate --root .
 
-# 2) 演练某技能的一次 GCL 运行（不真实变更）
-vet gcl run --skill ve-ecs-ops --request "演练" \
-  --command "ve ecs DescribeInstances" --structural-critic-only
-
-# 3) 提交前，确认 CI 会跑的检查都绿
-vet check trace --root .
-vet check policyguard --root .
+# 2) 只看关键安全红线
+vet check trace --root .          # trace 脱敏 + RequestId 完整性
+vet check policyguard --root .    # Safety=0 硬地板
+vet check routing --root .        # 路由图结构
 ```
 
-> CI（`.github/workflows/validate.yml`）已自动执行：`vet check trace`、`vet check policyguard`、`vet gcl gate` 等。本地结果与 CI 一致。
+### 场景 B：演练 GCL 循环（不真实变更）
+
+```bash
+# 不带自愈的纯 GCL 演练
+vet gcl run \
+  --skill ve-ecs-ops \
+  --request "演练：查询实例" \
+  --command "ve ecs DescribeInstances" \
+  --structural-critic-only
+
+# 带智能自愈的演练（观察错误分类与路径选择）
+vet gcl run \
+  --skill ve-redis-ops \
+  --request "演练：慢查询检测" \
+  --command "ve redis DescribeSlowLogRecords --InstanceId xxxxx" \
+  --heal smart \
+  --structural-critic-only
+
+# 查看自愈引擎近期指标
+vet gcl heal-stats --since 7d
+```
+
+### 场景 C：预测式触发检查（先于告警）
+
+```bash
+# 检查 Redis 慢查询趋势
+echo '{"skill":"ve-redis-ops","name":"slow_commands_per_sec","current":150,"history":[60,70,80,90,110]}' \
+  | vet gcl predict --input -
+
+# 检查 RDS 磁盘水位
+vet gcl predict \
+  --skill ve-rds-mysql-ops \
+  --metric disk_usage_percent \
+  --current 78 \
+  --history 75,76,76,77,78,78
+
+# 如果 risk=high 且 trigger=true，应启动 incident-loop-agent
+```

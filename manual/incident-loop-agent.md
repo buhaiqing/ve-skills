@@ -26,6 +26,27 @@ incident-loop-agent 就是干这件事的"总指挥"。
 
 ---
 
+## 怎么运行
+
+incident-loop-agent 是一个 Agent Skill（不是 CLI 二进制），你需要在 AI Agent 对话中引用它。典型交互：
+
+```
+@incident-loop-agent 处理这个告警：
+CMS 告警：Redis 实例 crs-xxxx 慢查询率飙升，5 分钟内上升 60%
+工单号：DOPS-12345
+```
+
+Agent 会自动走七步闭环：分诊 → 诊断 → 方案 → 确认 → 执行 → 验证 → 复盘。
+
+**预测式触发（无告警先跑）：**
+```
+@incident-loop-agent 评估指标趋势：
+Redis 慢查询 5 分钟窗口上升 ≥50% 且当前值 >100
+（等价于：vet gcl predict --skill ve-redis-ops --metric slow_commands_per_sec ...）
+```
+
+---
+
 ## 七步闭环
 
 ```
@@ -42,6 +63,25 @@ alert → triage → diagnose → propose → confirm → execute → validate �
 | execute | 安全执行变更（走目标 `ve-*-ops` 技能，不自己写批量数据） |
 | validate | 验证结果是否达成预期状态 |
 | reflexion | 把失败模式写入 `docs/failure-patterns.md`，下次同症状更快 |
+
+### 自愈引擎在 execute/validate 阶段的作用
+
+当 `vet gcl run --heal smart`（默认）时，execute 阶段会自动激活智能自愈：
+
+| 能力 | 机制 | 说明 |
+|------|------|------|
+| **错误分类重试** | `heal.Classify` + `heal.SmartRetry` | 根据 `ve` CLI 真实错误信号自动分类：网络类退避重试、限流类等令牌重试、权限/参数类不重试直接上报 |
+| **多路径自愈** | `heal.Paths` + `heal.Run` | 每类错误 ≥2 条互不重叠的路径，引擎按 (成本↑, 历史成功率↓) 自动选最优；全失败时降级 |
+| **遥测** | `heal.Metrics` + `vet gcl heal-stats` | 按 per-path 粒度累积成功率/耗时/干预率指标，驱动下次 SelectBest |
+
+```bash
+# 查看自愈引擎近期指标
+vet gcl heal-stats --since 7d
+# 演练时用 none 禁用自愈，对比行为
+vet gcl run --heal none --skill ve-ecs-ops ...
+```
+
+> 详见 [vet-cli.md](vet-cli.md) §三（--heal flag）与 §四（heal-stats）。
 
 ---
 
