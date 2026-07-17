@@ -259,3 +259,213 @@ vet <feature> <run|status|resume> [flags]
 
 ## 验证命令
 ```
+
+---
+
+## 10. 实战产物：可复用的代码骨架
+
+### 10.1 7 步编排引擎骨架
+
+从 `cmd/vet/internal/agent/engine.go` 提炼：
+
+```go
+// Run executes a multi-step loop with checkpoint at each step.
+// Adapt this pattern for any state-machine-based feature.
+func Run(root string, input *InputPayload, runID string) *RunResult {
+    state := &RunState{RunID: runID, CurrentStep: Step1, Payload: *input}
+
+    logStep(runID, "STEP1", "start", "...")
+    result1, err := doStep1(input)
+    if err != nil {
+        logError(runID, "STEP1", "failed: %v", err)
+        return &RunResult{Success: false, Error: err.Error()}
+    }
+    state.Result1 = result1
+    if err := SaveState(root, state); err != nil {
+        logError(runID, "STEP1", "save failed: %v", err)
+        return &RunResult{Success: false, Error: err.Error()}
+    }
+    logStep(runID, "STEP1", "done", "...")
+
+    // ... repeat for each step ...
+
+    logStep(runID, "COMPLETE", "done", "success=true")
+    return &RunResult{Success: true}
+}
+```
+
+### 10.2 自然语言输入解析器
+
+从 `cmd/vet/internal/agent/ingest.go` 提炼：
+
+```go
+// Keyword-to-output mapping with deterministic iteration.
+var keywordMap = map[string]string{
+    "keyword1": "output1",
+    "关键词2":  "output2",
+}
+
+// sortedKeywords ensures deterministic iteration order.
+// Longer keywords match first; alphabetical tiebreaker for same length.
+func sortedKeywords() []struct{ key, value string } {
+    var entries []struct{ key, value string }
+    for k, v := range keywordMap {
+        entries = append(entries, struct{ key, value string }{k, v})
+    }
+    sort.Slice(entries, func(i, j int) bool {
+        if len(entries[i].key) != len(entries[j].key) {
+            return len(entries[i].key) > len(entries[j].key)
+        }
+        return entries[i].key < entries[j].key
+    })
+    return entries
+}
+
+// Parse extracts structured output from free-text input.
+func Parse(input string) (*Output, error) {
+    lower := strings.ToLower(strings.TrimSpace(input))
+    if lower == "" {
+        return nil, fmt.Errorf("input is empty")
+    }
+    for _, entry := range sortedKeywords() {
+        if strings.Contains(lower, strings.ToLower(entry.key)) {
+            return &Output{Hint: entry.value}, nil
+        }
+    }
+    return nil, fmt.Errorf("no matching keyword found")
+}
+```
+
+### 10.3 双 Generator 并行 Prompt 模板
+
+```markdown
+## Generator A Prompt 结构
+- 明确指定要写的文件和模块路径
+- 列出共享类型（types.go）作为对齐点
+- 给出完整的函数签名和 import 路径
+- 标注复用点（"CRITICAL — do NOT reimplement these"）
+- 明确依赖边界（"Do NOT modify any files outside <dir>"）
+- 结尾：`go build ./...` 必须通过
+
+## Generator B Prompt 结构
+- 引用 Generator A 已写的文件（"Generator A has already written types.go..."）
+- 给出需要导入的包的完整路径
+- 给出函数签名 + 复用点
+- 同样约束修改边界
+```
+
+### 10.4 Critic 审计 Prompt 模板
+
+```markdown
+## Critic Audit Prompt 结构
+- 列出所有待审查文件
+- 定义评分维度（Correctness/Safety/Idempotency/Traceability/Spec Compliance）
+- 逐个检查点（Specific checks 列表）
+- 要求输出分级（CRITICAL/WARNING/SUGGESTION）
+- 要求每个 finding 附带：文件 + 行号 + 问题描述 + 修复建议
+- 结尾要求 `go build/vet/test` 验证
+```
+
+### 10.5 测试模板
+
+从 `cmd/vet/internal/agent/agent_test.go` 提炼：
+
+```go
+func TestParse_ValidInput(t *testing.T) {
+    result, err := Parse("valid input")
+    if err != nil {
+        t.Fatalf("Parse failed: %v", err)
+    }
+    if result.Field != "expected" {
+        t.Errorf("expected %q, got %q", "expected", result.Field)
+    }
+}
+
+func TestParse_InvalidInput(t *testing.T) {
+    _, err := Parse("")
+    if err == nil {
+        t.Error("expected error for empty input, got nil")
+    }
+}
+
+func TestParse_DeterministicOutput(t *testing.T) {
+    // Run N times to verify deterministic behavior
+    for i := 0; i < 100; i++ {
+        result, err := Parse("ambiguous input")
+        if err != nil {
+            t.Fatalf("iteration %d failed: %v", i, err)
+        }
+        if result.Field != "expected" {
+            t.Errorf("iteration %d: expected %q, got %q", i, "expected", result.Field)
+        }
+    }
+}
+
+func TestStateMachine_StepOrder(t *testing.T) {
+    // Verify steps execute in correct order
+    // Verify checkpoint at each step
+    // Verify error propagation
+}
+```
+
+### 10.6 Dry-run 模式
+
+从 `cmd/vet/agent.go:runAgentRun` 提炼：
+
+```go
+func runFeatureRun(args []string) {
+    // ... flag parsing ...
+    if *dryRun {
+        // Run all non-destructive steps, log results, skip actual execution
+        fmt.Fprintf(os.Stderr, "[%s] [INFO] feature.run | dry-run mode\n", runID)
+        step1 := doStep1(input)
+        fmt.Fprintf(os.Stderr, "[%s] [INFO] feature.run | step1 | result=%v\n", runID, step1)
+        // ... all steps ...
+        fmt.Fprintf(os.Stderr, "[%s] [INFO] feature.run | dry-run complete\n", runID)
+        return
+    }
+    // Real execution path
+}
+```
+
+### 10.7 错误处理模式
+
+```go
+// Pattern 1: Return error immediately, log to caller
+func doStep(input *Input) (*Output, error) {
+    result, err := externalCall(input)
+    if err != nil {
+        return nil, fmt.Errorf("step failed: %w", err)
+    }
+    return result, nil
+}
+
+// Pattern 2: Log warning but continue (best-effort)
+func optionalWriteback(data *Data) {
+    if err := store.Write(data); err != nil {
+        logError(runID, "WRITEBACK", "failed: %v", err)
+        // Continue — this is best-effort
+    }
+}
+
+// Pattern 3: Fail-safe default
+func evaluate(policy *Policy) Decision {
+    if policy == nil {
+        // Missing policy → fail-safe (most restrictive)
+        return DecisionDeny
+    }
+    return policy.Decide()
+}
+```
+
+### 10.8 runID 生成
+
+```go
+import "time"
+
+// Generate a short hex run ID from the current nanosecond timestamp.
+// 8 hex chars = enough to distinguish concurrent runs.
+func newRunID() string {
+    return fmt.Sprintf("%08x", time.Now().UnixNano()%0x100000000)
+}
+```
