@@ -55,6 +55,7 @@ Verification for skill edits = re-reading the file plus walking the P0/P1 checkl
 - **Background 子代理派发在本环境不可用**：`task(subagent_type="executor"/"build", run_in_background=true)` 会静默超时（"Task timed out after 30 minutes of inactivity" / "Task delegation failed"），代理实际从未运行；前台 `task()` 也须用 `category` 参数，不能直接传 `subagent_type="Sisyphus-Junior"`（报 "Cannot use subagent_type directly"）。→ **多文件机械性改动直接在主代理内完成**，勿派发子代理。
 - **机械性批量改写**（如给 N 个 SKILL.md 操作表统一加列）：用一次性 `/tmp/*.py` 脚本（不入库、非仓库工具，符合"仓库内不新增 Python 工具"约束）最可靠；改完用 grep 验证每行生效。
 - `vet validate --root .` 的链接检查有**预存坏链**（`enhanced-self-healing-framework.md` / `AGENTS.md` / `ve-ecs-ops/SKILL.md` / `reflexion-memory.md` 的 `./` 链接，早于本任务、非本任务引入），与卡片范围无关；卡片 DoD 门禁 `vet check frontmatter/aiops/assessment` 保持绿即可，勿被预存链接失败阻塞。
+- **编辑既有文件前必须先 Read 确认内容，禁止凭 Glob 缺失就 `Write` 覆盖**：子 Agent 在 worktree 内曾因 Glob 未命中既有 `run_test.go`，误判文件不存在并用 `Write` 整体覆盖，误删 249 行既有测试。规则：改任何既有文件前，**先 Read 该文件**（或用 `grep`/`git show` 确认内容），确认存在且了解现状后再 Edit；绝不用 `Write` 创建式覆盖去"改"一个可能已存在的文件。改完用 `grep "^func Test"` 之类的手段核验既有测试/符号未被静默删除。
 
 ## MANDATORY: Two-Round Self-Review After Every Skill Update
 
@@ -152,6 +153,8 @@ Full Round 1 (C1–C17) structural/spec-compliance table and Round 2 (F1–F13) 
    - 校验结论写进 review 报告；发现三者漂移即阻断合并，先 reconcile spec/plan 再合代码。
 
 4. **例外（须显式记录）**：< 5 行的 typo/注释/格式化改动可不走此流程，但功能型改动一律无例外。
+
+5. **Spec 引用函数签名/字段前必须 grep 核对当前实现**：写 spec 时若声称「某函数已接收某参数」「某字段已存在」，须先 `grep` 确认磁盘上的真实签名/字段，不得凭记忆或上游任务印象填写。曾发生 spec 误称 `Aggregate(root, traces)` 已接收 `sinceHours`（实际只传到 `CollectPaths`），导致 plan 与代码签名不一致、开发期才返工。这条与全局 fact-check 门禁（命令/路径须有证据）同源，扩展到"spec 内的代码事实声明"。
 
 ## MANDATORY: 决策建议须带倾向与理由
 
