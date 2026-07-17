@@ -4,7 +4,7 @@
 > 依赖：无
 > 可并行：T03, T04
 > 预计工作量：0.5 天
-> 状态：🟡 TODO
+> 状态：✅ DONE（artifact 2026-07-13 落盘；本会话 Spec+Plan 锚定 + self-review 确认 DoD 满足，无新增内容）
 
 ## 1. 目标（Goal）
 
@@ -92,3 +92,15 @@ cd cmd/vet && go build ./... && go vet ./...
 ```
 
 并在 [01-index.md](./01-index.md) 把 T01 状态改成 `✅ DONE`。
+
+---
+
+## 完成报告（2026-07-17）
+
+- **交付物已存在**：`incident-loop-agent/references/policies/execution-risk.md`（68 行），authored 2026-07-13（ledger `## T01 2026-07-13 — done`）。
+- **本会话动作**：仅做 Spec→Plan 锚定 + 2-round self-review，确认满足卡 DoD §4 全部 12 项；**无新增内容、无行为变更**。
+- **DoD 核对**：§0 Purpose(L7) / §1 三维(L11-15) / §2 9 cells(L21-32) / §3 Safety=0 floor(L38) / §5 pseudocode(L47-54) / §6 failure modes×3(L58-62) / 行数 68≤100 / TE-3·6·8 通过 / SKILL.md References+Changelog v0.2.0 已就位。
+- **三方一致**：Spec↔Plan↔Code（prose）全 ✅；运行时代码 `scoreDecision`（T06 run.go）语义与本策略一致。
+- **锚定文件**：
+  - `docs/superpowers/l2-to-l3/specs/2026-07-17-l2-l3-t01-execution-risk-policy-design.md`
+  - `docs/superpowers/l2-to-l3/plans/2026-07-17-l2-l3-t01-execution-risk-policy.md`
