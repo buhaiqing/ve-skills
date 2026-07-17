@@ -201,7 +201,7 @@ incident-loop-agent/    orchestration skill (exempt from ve-* naming rule)
 |---|---|---|
 | `ve-*-ops/assets/` | `eval_queries.json`, `example-config.yaml`, `*.schema.json` | Cross-skill executables |
 | `ve-*-ops/references/` | Runbooks, output contracts in Markdown | JSON schemas (→ `assets/`) |
-| `scripts/` (repo root) | **已删除** — 已迁移到 `cmd/vet/` | ~~Deprecated~~ |
+| scripts/ (repo root) | **已删除** — 已迁移到 `cmd/vet/` | ~~Deprecated~~ |
 
 **Owner skill rule**: the skill that defines and consumes a contract owns it. Create `ve-<owner>-ops/assets/<name>.schema.json`; secondary skills link via relative path. Anti-pattern: `assets/` at repo root — contracts belong to owning skill, not shared at root.
 
@@ -285,7 +285,7 @@ GCL runs MUST use externally supplied isolated Critic scores in production. Manu
 
 ## Files that DO NOT exist
 
-<!-- `scripts/` 已删除 — 已迁移到 cmd/vet/ Go 工具 -->
+<!-- scripts/ 已删除 — 已迁移到 cmd/vet/ Go 工具 -->
 - **No `package.json`, `CI configs`, `build scripts`, `typechecker`, or non-stdlib test runner** at repo root *for the Markdown specs*.
 - **Go tool modules (`cmd/*`) legitimately own their own `Makefile`, `go.mod`, `go.sum`, CI, and release targets** — these are required by the MANDATORY "All Tools MUST Be Written in Go" rule above, not banned.
 - **No `CLAUDE.md` at repo root** — this file (`AGENTS.md`) is the agent guidance entry point, imported via `@CLAUDE.md`.
