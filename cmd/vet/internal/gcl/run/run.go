@@ -642,6 +642,28 @@ func triggerTranspile(root string) {
 	fmt.Fprintf(os.Stderr, "INFO: auto-transpile: %d guardrails written to %s\n", len(guardrails), outPath)
 }
 
+// persistCriticFailureTrace writes a stub trace when the critic infrastructure
+// fails (exit code 2), ensuring every failure has a trace record for analysis.
+func persistCriticFailureTrace(root string, tr *trace.Trace, skill, command, reason, runID string) {
+	tr.Final = trace.Final{
+		Status: "CRITIC_FAILURE",
+		FailurePattern: &trace.FailurePattern{
+			Category: "critic_infrastructure",
+			Skill:    skill,
+			Command:  command,
+			Error:    reason,
+			Fix:      "Check critic configuration: --critic-json, --critic-stdin, --critic-command, or --structural-critic-only",
+		},
+	}
+	path, err := trace.PersistTrace(root, "", tr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | CRITIC_FAILURE trace persist failed: %v\n", runID, err)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | CRITIC_FAILURE | skill=%s reason=%s trace=%s\n",
+		runID, skill, reason, path)
+}
+
 // Result is the outcome of a Run, carrying the process exit code plus the
 // timing/error signals needed by upstream reporters (vet gcl gate).
 type Result struct {
@@ -778,25 +800,29 @@ func Run(opts Options) Result {
 				runID, opts.Skill, iter, path)
 				return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
-			loaded, err := loadCritic(opts.CriticJSON, opts.CriticStdin)
+		loaded, err := loadCritic(opts.CriticJSON, opts.CriticStdin)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: invalid critic JSON: %v\n", err)
+			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic JSON: "+err.Error(), runID)
+			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
+		}
+		if loaded == nil && opts.CriticCommand != "" {
+			loaded2, err := runIsolatedCritic(opts, operationIntent, gen, tr.Iterations)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "ERROR: invalid critic JSON: %v\n", err)
+				persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "critic command failed: "+err.Error(), runID)
 				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
-			if loaded == nil && opts.CriticCommand != "" {
-				loaded2, err := runIsolatedCritic(opts, operationIntent, gen, tr.Iterations)
-				if err != nil {
-					return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
-				}
-				loaded = loaded2
-			}
-			if loaded == nil {
-				fmt.Fprintln(os.Stderr, "ERROR: No Critic payload. Pass --critic-json, pipe JSON to stdin, --critic-command <cmd>, or use --structural-critic-only for rule-based audit.")
-				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
-			}
-			if errs := critic.ValidatePayload(*loaded); len(errs) > 0 {
-				fmt.Fprintf(os.Stderr, "ERROR: Invalid critic JSON: %s\n", strings.Join(errs, "; "))
-				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
+			loaded = loaded2
+		}
+		if loaded == nil {
+			fmt.Fprintln(os.Stderr, "ERROR: No Critic payload. Pass --critic-json, pipe JSON to stdin, --critic-command <cmd>, or use --structural-critic-only for rule-based audit.")
+			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "no critic payload", runID)
+			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
+		}
+		if errs := critic.ValidatePayload(*loaded); len(errs) > 0 {
+			fmt.Fprintf(os.Stderr, "ERROR: Invalid critic JSON: %s\n", strings.Join(errs, "; "))
+			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic payload: "+strings.Join(errs, "; "), runID)
+			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
 			c = loaded
 		}
