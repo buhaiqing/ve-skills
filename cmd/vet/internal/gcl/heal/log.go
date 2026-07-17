@@ -10,8 +10,10 @@ import (
 )
 
 // DefaultLogPath is where self-healing events are appended (framework §6.2).
-// Kept at /tmp per the task card; overridable via `vet gcl heal-stats --log`.
-const DefaultLogPath = "/tmp/ve-self-healing.log"
+// Relative to the repo root (the cwd when `vet` runs) so the telemetry lands
+// under audit-results/ and shows up in the GCL quality aggregate. Overridable
+// via `vet gcl heal-stats --log`.
+const DefaultLogPath = "audit-results/ve-self-healing.log"
 
 // Event is the framework §6.2 log row:
 //

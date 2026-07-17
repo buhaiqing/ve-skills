@@ -3,6 +3,7 @@ package heal
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -70,6 +71,33 @@ func TestMetrics_PersistRoundTrip(t *testing.T) {
 	if err := m.Persist(path, HealEvent{ISO: "2026-07-17T00:00:00Z", EventType: "retry", ErrorCode: "retryable", Action: "retryable-retry", Result: "ok", DurationMs: 1200}); err != nil {
 		t.Fatalf("Persist: %v", err)
 	}
+	events, skipped, err := ParseFile(path, mustParseTime("2026-07-01T00:00:00Z"))
+	if err != nil {
+		t.Fatalf("ParseFile: %v", err)
+	}
+	if skipped != 0 {
+		t.Errorf("skipped = %d, want 0", skipped)
+	}
+	if len(events) != 1 || events[0].Result != "ok" || events[0].DurationMs != 1200 {
+		t.Errorf("unexpected parsed events: %+v", events)
+	}
+}
+
+func TestMetrics_PersistCreatesParentDirAndReadsBack(t *testing.T) {
+	// Persist to a nested audit-results/ path that does not exist yet, mirroring
+	// the DefaultLogPath move. Persist must MkdirAll the parent (T2).
+	root := t.TempDir()
+	path := filepath.Join(root, "audit-results", "ve-self-healing.log")
+
+	m := &Metrics{}
+	ev := HealEvent{ISO: "2026-07-17T00:00:00Z", EventType: "retry", ErrorCode: "retryable", Action: "retryable-retry", Result: "ok", DurationMs: 1200}
+	if err := m.Persist(path, ev); err != nil {
+		t.Fatalf("Persist to nested path: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "audit-results")); err != nil {
+		t.Fatalf("parent dir not created: %v", err)
+	}
+	// Read back via ParseFile (same code path as LoadEvents/heal-stats).
 	events, skipped, err := ParseFile(path, mustParseTime("2026-07-01T00:00:00Z"))
 	if err != nil {
 		t.Fatalf("ParseFile: %v", err)
