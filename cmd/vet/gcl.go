@@ -100,7 +100,13 @@ func runGCLTrace(args []string) {
 	root := fs.String("root", repoRoot(), "repo root")
 	input := fs.String("input", "", "comma-separated trace file(s)/glob (default: audit-results/gcl-trace-*.json)")
 	sinceHours := fs.String("since-hours", "", "only traces modified within N hours")
+	link := fs.Bool("link", false, "correlate gcl-trace and incident-trace by request_id")
 	fs.Parse(args)
+
+	if *link {
+		code := trace.CmdLink(*root)
+		os.Exit(code)
+	}
 
 	var inputs []string
 	if *input != "" {
