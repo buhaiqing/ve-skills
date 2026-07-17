@@ -40,6 +40,8 @@ type CriticRecord struct {
 // Iteration is one GCL loop iteration.
 type Iteration struct {
 	Iter      int             `json:"iter"`
+	Timestamp string          `json:"timestamp"`           // ISO 8601, iteration start time
+	DurationMs int64          `json:"duration_ms"`         // generator command wall-clock duration
 	Generator GeneratorResult `json:"generator"`
 	Critic    CriticRecord    `json:"critic"`
 	Decision  string          `json:"decision"`
@@ -104,6 +106,7 @@ type Final struct {
 // Trace is the top-level GCL trace document.
 type Trace struct {
 	TraceSchemaVersion string         `json:"trace_schema_version"`
+	RunID              string         `json:"run_id"`               // UUID, correlates log output with trace file
 	Skill              string         `json:"skill"`
 	Request            string         `json:"request"`
 	RubricVersion      string         `json:"rubric_version"`

@@ -398,6 +398,206 @@ chmod +x .git/hooks/post-commit
 
 ---
 
+## MANDATORY: 结构化日志与诊断能力（Iron Law）
+
+> **铁律 — 不可打破。** 所有 Go 工具（`cmd/vet/` 下的任何 CLI 和内部包）**必须**遵循以下日志规范，确保运行时可追溯、可诊断、可快速根因定位。
+
+**Why**: 当前系统日志是 ad-hoc `fmt.Fprintf`，无 run ID、无时间戳、无结构化格式，多进程并发运行时无法区分日志来源，故障时只能靠 trace JSON 文件事后分析——根因定位效率极低。规范化后，`grep <run_id> *.log` 即可重建完整执行过程。
+
+### 规则 1: Run ID（强制）
+
+每个 GCL 执行 / CLI 子命令启动时，**必须**生成一个 UUID 作为 run ID，并贯穿所有日志输出。
+
+```go
+runID := uuid.New().String()[:8]  // 短 ID，8 位足够区分
+fmt.Fprintf(os.Stderr, "[%s] [INFO] GCL run start: skill=%s max_iter=%d\n", runID, skill, maxIter)
+```
+
+- 所有后续日志必须带 `[<run_id>]` 前缀
+- Trace JSON 中新增 `run_id` 字段
+- 并发执行时，`grep <run_id>` 可精确过滤
+
+### 规则 2: 日志格式（强制）
+
+**采用管道分隔的键值对格式**（参考 heal log 的 §6.2 格式，已验证有效）：
+
+```
+<ISO_8601_ts> | [<run_id>] | <level> | <component> | <message> | <key=value>...
+```
+
+示例：
+```
+2026-07-17T14:30:01Z | [a1b2c3d4] | INFO | gcl.run | GCL run start | skill=ve-ecs-ops max_iter=3 heal=smart
+2026-07-17T14:30:15Z | [a1b2c3d4] | WARN | gcl.heal | retry attempt | class=retryable path=backoff-retry attempt=2
+2026-07-17T14:30:22Z | [a1b2c3d4] | ERROR | gcl.run | SAFETY_FAIL | iter=3 trace=audit-results/gcl-trace-20260717-143022.json
+```
+
+- `level`: `DEBUG` | `INFO` | `WARN` | `ERROR` | `FATAL`
+- `component`: 包名简写（`gcl.run`, `gcl.heal`, `memory.store`, `reflexion.transpile`）
+- 所有诊断输出到 `stderr`；`stdout` 仅用于机器可读的 JSON 输出
+
+### 规则 3: 关键日志点（强制）
+
+以下生命周期节点**必须**输出日志：
+
+| 时机 | 级别 | 内容 |
+|------|------|------|
+| 启动 | INFO | run_id, skill, max_iter, heal mode, command（脱敏） |
+| 每轮迭代开始 | INFO | iter=N, 本轮的 generator command（脱敏） |
+| 每轮迭代结束 | INFO | iter=N, status, critic scores, policy_decision |
+| 自愈触发 | WARN | error_class, selected_path, attempt |
+| 自愈结果 | INFO | path_name, result, duration_ms |
+| Reflexion writeback | INFO | pattern count written, store path |
+| 终止 | INFO | final_status, total_iters, total_duration_ms, trace_path |
+| JSON store 损坏 | ERROR | 损坏详情，是否降级到 fallback |
+
+### 规则 4: Trace 结构体（强制）
+
+`Iteration` 结构体**必须**包含：
+
+```go
+type Iteration struct {
+    Timestamp   string  // ISO 8601，迭代开始时间
+    DurationMs  int64   // generator 命令执行耗时
+    // ... 现有字段
+}
+```
+
+`Trace` 结构体**必须**包含 `RunID string`。
+
+### 规则 5: 日志滚动（强制）
+
+所有持续写入的日志文件**必须**支持滚动更新，防止磁盘写满：
+
+```go
+// 日志滚动策略
+type LogRotation struct {
+    MaxSize    int64  // 单文件最大字节数（默认 10MB）
+    MaxBackups int    // 保留的旧文件数（默认 5）
+    MaxAge     int    // 保留天数（默认 30）
+}
+```
+
+**实现方式**：写入日志时检查文件大小，超过 `MaxSize` 则：
+1. 当前文件重命名为 `<name>.1`
+2. 已有备份递增（`.1` → `.2`，`.2` → `.3`...）
+3. 超过 `MaxBackups` 的最旧文件删除
+4. 创建新的空日志文件
+
+```go
+func WriteLog(path string, line string, rotation LogRotation) error {
+    // 检查文件大小
+    // 超过 MaxSize → rotate
+    // 追加写入
+}
+```
+
+适用于：`audit-results/ve-self-healing.log`、`.runtime/memory/` 下的 JSONL 文件、未来新增的运行时日志。
+
+### 规则 6: 审计要求
+
+- 所有 `ERROR` 和 `FATAL` 日志**必须**包含足够的上下文用于根因定位（至少：run_id, skill, 失败原因，trace 文件路径）
+- 日志**禁止**包含明文凭据（SecretKey、AccessToken 等），脱敏后再输出
+- 日志文件写入使用**原子追加**模式（先写 temp，再 rename，与 `memory/store.go` 的 `writeStore` 一致）
+
+---
+
+## MANDATORY: 结构化日志与诊断能力（Iron Law）
+
+> **铁律 — 不可打破。** 所有 Go 工具（`cmd/vet/` 下的任何 CLI 和内部包）**必须**遵循以下日志规范，确保运行时可追溯、可诊断、可快速根因定位。
+
+**Why**: 当前系统日志是 ad-hoc `fmt.Fprintf`，无 run ID、无时间戳、无结构化格式，多进程并发运行时无法区分日志来源，故障时只能靠 trace JSON 文件事后分析——根因定位效率极低。规范化后，`grep <run_id> *.log` 即可重建完整执行过程。
+
+### 规则 1: Run ID（强制）
+
+每个 GCL 执行 / CLI 子命令启动时，**必须**生成一个 UUID 作为 run ID，并贯穿所有日志输出。
+
+```go
+runID := uuid.New().String()[:8]  // 短 ID，8 位足够区分
+fmt.Fprintf(os.Stderr, "[%s] [INFO] GCL run start: skill=%s max_iter=%d\n", runID, skill, maxIter)
+```
+
+- 所有后续日志必须带 `[<run_id>]` 前缀
+- Trace JSON 中新增 `run_id` 字段
+- 并发执行时，`grep <run_id>` 可精确过滤
+
+### 规则 2: 日志格式（强制）
+
+**采用管道分隔的键值对格式**（参考 heal log 的 §6.2 格式，已验证有效）：
+
+```
+<ISO_8601_ts> | [<run_id>] | <level> | <component> | <message> | <key=value>...
+```
+
+示例：
+```
+2026-07-17T14:30:01Z | [a1b2c3d4] | INFO | gcl.run | GCL run start | skill=ve-ecs-ops max_iter=3 heal=smart
+2026-07-17T14:30:15Z | [a1b2c3d4] | WARN | gcl.heal | retry attempt | class=retryable path=backoff-retry attempt=2
+2026-07-17T14:30:22Z | [a1b2c3d4] | ERROR | gcl.run | SAFETY_FAIL | iter=3 trace=audit-results/gcl-trace-20260717-143022.json
+```
+
+- `level`: `DEBUG` | `INFO` | `WARN` | `ERROR` | `FATAL`
+- `component`: 包名简写（`gcl.run`, `gcl.heal`, `memory.store`, `reflexion.transpile`）
+- 所有诊断输出到 `stderr`；`stdout` 仅用于机器可读的 JSON 输出
+
+### 规则 3: 关键日志点（强制）
+
+以下生命周期节点**必须**输出日志：
+
+| 时机 | 级别 | 内容 |
+|------|------|------|
+| 启动 | INFO | run_id, skill, max_iter, heal mode, command（脱敏） |
+| 每轮迭代开始 | INFO | iter=N, 本轮的 generator command（脱敏） |
+| 每轮迭代结束 | INFO | iter=N, status, critic scores, policy_decision |
+| 自愈触发 | WARN | error_class, selected_path, attempt |
+| 自愈结果 | INFO | path_name, result, duration_ms |
+| Reflexion writeback | INFO | pattern count written, store path |
+| 终止 | INFO | final_status, total_iters, total_duration_ms, trace_path |
+| JSON store 损坏 | ERROR | 损坏详情，是否降级到 fallback |
+
+### 规则 4: Trace 结构体（强制）
+
+`Iteration` 结构体**必须**包含：
+
+```go
+type Iteration struct {
+    Timestamp   string  // ISO 8601，迭代开始时间
+    DurationMs  int64   // generator 命令执行耗时
+    // ... 现有字段
+}
+```
+
+`Trace` 结构体**必须**包含 `RunID string`。
+
+### 规则 5: 日志滚动（强制）
+
+所有持续写入的日志文件**必须**支持滚动更新，防止磁盘写满：
+
+```go
+// 日志滚动策略
+type LogRotation struct {
+    MaxSize    int64  // 单文件最大字节数（默认 10MB）
+    MaxBackups int    // 保留的旧文件数（默认 5）
+    MaxAge     int    // 保留天数（默认 30）
+}
+```
+
+**实现方式**：写入日志时检查文件大小，超过 `MaxSize` 则：
+1. 当前文件重命名为 `<name>.1`
+2. 已有备份递增（`.1` → `.2`，`.2` → `.3`...）
+3. 超过 `MaxBackups` 的最旧文件删除
+4. 创建新的空日志文件
+
+适用于：`audit-results/ve-self-healing.log`、`.runtime/memory/` 下的 JSONL 文件、未来新增的运行时日志。
+
+### 规则 6: 审计要求
+
+- 所有 `ERROR` 和 `FATAL` 日志**必须**包含足够的上下文用于根因定位（至少：run_id, skill, 失败原因，trace 文件路径）
+- 日志**禁止**包含明文凭据（SecretKey、AccessToken 等），脱敏后再输出
+- 日志文件写入使用**原子追加**模式（先写 temp，再 rename，与 `memory/store.go` 的 `writeStore` 一致）
+
+---
+
 ## Communication (Language)
 
 - **默认使用中文回复**。除非用户明确要求使用英文，否则所有回复、总结、报告均使用中文。

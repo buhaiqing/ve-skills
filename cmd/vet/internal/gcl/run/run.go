@@ -503,8 +503,12 @@ func extractFailurePattern(skill, command string, gen trace.GeneratorResult, c *
 // and formats them as HINT lines for injection into the Generator context.
 func loadKnownFailurePatterns(root, skill string, limit int) string {
 	entries, err := memory.GetPatternsBySkill(root, skill, limit)
-	if err != nil || len(entries) == 0 {
-		// Fallback: try reading from docs/failure-patterns.md
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: gcl.run | failure-patterns.json load failed, falling back to markdown: %v\n", err)
+		return loadKnownFailurePatternsFromMarkdown(root, skill, limit)
+	}
+	if len(entries) == 0 {
+		// No patterns in JSON store yet — try markdown fallback
 		return loadKnownFailurePatternsFromMarkdown(root, skill, limit)
 	}
 	var out []string
@@ -661,6 +665,11 @@ func Run(opts Options) Result {
 		opts.Timeout = 120
 	}
 
+	runID := fmt.Sprintf("%08x", time.Now().UnixNano()%0x100000000) // 8-char hex run ID
+	startTime := time.Now()
+	fmt.Fprintf(os.Stderr, "[%s] [INFO] gcl.run | GCL run start | skill=%s max_iter=%d heal=%s\n",
+		runID, opts.Skill, opts.MaxIter, opts.Heal)
+
 	operationIntent := deriveOperationIntent(opts.Skill, opts.Command)
 	maskedFields := secret.DetectCredentialFields(opts.Command)
 	knownPatterns := loadKnownFailurePatterns(opts.Root, opts.Skill, 10)
@@ -677,6 +686,7 @@ func Run(opts Options) Result {
 
 	tr := &trace.Trace{
 		TraceSchemaVersion: "v1",
+		RunID:              runID,
 		Skill:              opts.Skill,
 		Request:            opts.Request,
 		RubricVersion:      "v1",
@@ -702,6 +712,7 @@ func Run(opts Options) Result {
 			}
 			tr.Iterations = append(tr.Iterations, trace.Iteration{
 				Iter:           iter,
+				Timestamp:      time.Now().UTC().Format(time.RFC3339),
 				Generator:      trace.GeneratorResult{Command: secret.MaskSecrets(opts.Command)},
 				Decision:       "POLICY_BLOCK",
 				PolicyDecision: blocked.String(),
@@ -718,11 +729,14 @@ func Run(opts Options) Result {
 				}}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
 			writebackFailurePattern(opts.Root, opts.Skill, tr.Final.FailurePattern)
-			fmt.Fprintf(os.Stderr, "POLICY_BLOCK (%s) — trace: %s\n", blocked.String(), path)
+			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | POLICY_BLOCK | skill=%s decision=%s trace=%s\n",
+				runID, opts.Skill, blocked.String(), path)
 			return Result{ExitCode: 4, TraceLine: "blocked:" + blocked.String(), StderrLine: "blocked:" + blocked.String()}
 		}
 
+		iterStart := time.Now()
 		gen, healClass, selfHeal := runGeneratorWithHeal(opts, criticFeedback, knownPatterns, healMetrics, healLogPath)
+		iterDurationMs := time.Since(iterStart).Milliseconds()
 		// When this iteration runs an ASK-class op that was authorized by an
 		// external confirmation, stamp the confirmation provenance into the
 		// trace so the audit trail answers "who authorized this op". AUTO ops
@@ -746,6 +760,7 @@ func Run(opts Options) Result {
 			if secret.HasCredentialLeak(gen.ResultExcerpt) {
 				tr.Iterations = append(tr.Iterations, trace.Iteration{
 					Iter:      iter,
+					Timestamp: time.Now().UTC().Format(time.RFC3339),
 					Generator: gen,
 					Critic: trace.CriticRecord{
 						Scores:      map[string]float64{"correctness": 0, "safety": 0, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0.5},
@@ -759,7 +774,8 @@ func Run(opts Options) Result {
 				tr.Final = trace.Final{Status: "SAFETY_FAIL", Iter: iter, Output: nil, FailurePattern: fp}
 				path, _ := trace.PersistTrace(opts.Root, "", tr)
 				writebackFailurePattern(opts.Root, opts.Skill, fp)
-				fmt.Fprintf(os.Stderr, "SAFETY_FAIL — credential leak detected — trace: %s\n", path)
+				fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | SAFETY_FAIL | credential_leak skill=%s iter=%d trace=%s\n",
+				runID, opts.Skill, iter, path)
 				return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
 			loaded, err := loadCritic(opts.CriticJSON, opts.CriticStdin)
@@ -791,6 +807,8 @@ func Run(opts Options) Result {
 		requestID := parseRequestID(gen.ResultExcerpt)
 		tr.Iterations = append(tr.Iterations, trace.Iteration{
 			Iter:           iter,
+			Timestamp:      iterStart.UTC().Format(time.RFC3339),
+			DurationMs:     iterDurationMs,
 			Generator:      gen,
 			Critic:         trace.CriticRecord{Scores: c.Scores, Suggestions: c.Suggestions, Blocking: c.Blocking},
 			Decision:       decision,
@@ -806,14 +824,16 @@ func Run(opts Options) Result {
 			tr.Final = trace.Final{Status: "SAFETY_FAIL", Iter: iter, Output: nil, FailurePattern: fp}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
 			writebackFailurePattern(opts.Root, opts.Skill, fp)
-			fmt.Fprintf(os.Stderr, "SAFETY_FAIL — trace: %s\n", path)
+			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | SAFETY_FAIL | skill=%s iter=%d trace=%s\n",
+				runID, opts.Skill, iter, path)
 			return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 		}
 		if decision == "PASS" {
 			out := gen.ResultExcerpt
 			tr.Final = trace.Final{Status: "PASS", Iter: iter, Output: &out}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
-			fmt.Printf("PASS (iter %d) — trace: %s\n", iter, path)
+			fmt.Fprintf(os.Stderr, "[%s] [INFO] gcl.run | PASS | skill=%s iter=%d total_duration_ms=%d trace=%s\n",
+				runID, opts.Skill, iter, time.Since(startTime).Milliseconds(), path)
 			return Result{ExitCode: 0, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 		}
 		criticFeedback = strings.Join(firstN(c.Suggestions, 3), "; ")
@@ -831,7 +851,8 @@ func Run(opts Options) Result {
 	tr.Final = trace.Final{Status: "MAX_ITER", Iter: opts.MaxIter, Output: &out, Unresolved: unresolved, FailurePattern: fp}
 	path, _ := trace.PersistTrace(opts.Root, "", tr)
 	writebackFailurePattern(opts.Root, opts.Skill, fp)
-	fmt.Fprintf(os.Stderr, "MAX_ITER — trace: %s\n", path)
+	fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | MAX_ITER | skill=%s iter=%d total_duration_ms=%d trace=%s\n",
+		runID, opts.Skill, opts.MaxIter, time.Since(startTime).Milliseconds(), path)
 	return Result{
 		ExitCode:   1,
 		TimedOut:   strings.HasPrefix(lastGen.ResultExcerpt, "TIMEOUT"),
