@@ -66,6 +66,8 @@ dist/
 .runtime/memory/*
 !.runtime/memory/README.md
 !.runtime/memory/MEMORY.md
+# Runtime failure-pattern counter store — regenerated every GCL run, not source
+**/.runtime/memory/failure-patterns.json
 
 # vet CLI build output (binaries only — source under cmd/vet/ is tracked)
 cmd/bin/

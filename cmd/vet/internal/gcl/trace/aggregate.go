@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
@@ -12,27 +13,27 @@ import (
 
 // Summary is the aggregated quality summary (mirrors gcl_trace_aggregate.aggregate).
 type Summary struct {
-	Version          string                    `json:"version"`
-	GeneratedAt      string                    `json:"generated_at"`
-	Window           Window                   `json:"window"`
-	Totals           map[string]int           `json:"totals"`
-	PassRate         float64                   `json:"pass_rate"`
-	AvgRubricScores  map[string]any           `json:"avg_rubric_scores"`
-	FailurePatterns  []map[string]any         `json:"failure_patterns"`
-	BySkill          map[string]map[string]any `json:"by_skill"`
-	TraceFiles       []string                  `json:"trace_files"`
-	Heal             *HealSummary              `json:"heal,omitempty"`
+	Version         string                    `json:"version"`
+	GeneratedAt     string                    `json:"generated_at"`
+	Window          Window                    `json:"window"`
+	Totals          map[string]int            `json:"totals"`
+	PassRate        float64                   `json:"pass_rate"`
+	AvgRubricScores map[string]any            `json:"avg_rubric_scores"`
+	FailurePatterns []map[string]any          `json:"failure_patterns"`
+	BySkill         map[string]map[string]any `json:"by_skill"`
+	TraceFiles      []string                  `json:"trace_files"`
+	Heal            *HealSummary              `json:"heal,omitempty"`
 }
 
 // HealSummary surfaces L4 self-healing telemetry in the quality report. nil
 // (omitted via omitempty) when no heal log exists, so legacy summaries are
 // unchanged.
 type HealSummary struct {
-	SuccessRate         float64 `json:"success_rate"`
-	AvgDurationMs       float64 `json:"avg_duration_ms"`
+	SuccessRate          float64 `json:"success_rate"`
+	AvgDurationMs        float64 `json:"avg_duration_ms"`
 	UserInterventionRate float64 `json:"user_intervention_rate"`
-	FallbackRate        float64 `json:"fallback_rate"`
-	TotalEvents         int64  `json:"total_events"`
+	FallbackRate         float64 `json:"fallback_rate"`
+	TotalEvents          int64   `json:"total_events"`
 }
 
 // Window describes the real time range the aggregated traces cover. Until is
@@ -173,7 +174,7 @@ func UpdateFailurePatternsFile(root string, sum *Summary) (string, error) {
 	if len(patterns) == 0 {
 		return "", nil
 	}
-	lines := []string{"", "---", "", "## Extracted from GCL Traces (auto-generated)", "",
+	lines := []string{"## Extracted from GCL Traces (auto-generated)", "",
 		"| Skill | Pattern | Category | Source |", "|-------|---------|----------|--------|"}
 	seen := map[string]bool{}
 	for _, p := range patterns {
@@ -194,7 +195,7 @@ func UpdateFailurePatternsFile(root string, sum *Summary) (string, error) {
 	if contains(existing, marker) {
 		existing = replaceBlock(existing, marker, table)
 	} else {
-		existing += table + "\n"
+		existing = strings.TrimRight(existing, "\n") + "\n\n---\n\n" + table + "\n"
 	}
 	if err := writeFile(fpPath, existing); err != nil {
 		return "", err

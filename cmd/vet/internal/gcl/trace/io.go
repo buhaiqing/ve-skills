@@ -59,7 +59,14 @@ func replaceBlock(existing, marker, newContent string) string {
 		before = existing[:idx]
 		after = existing[end:]
 	}
-	return before + newContent + after
+	// Self-heal accumulated stray "---" separators: trim trailing blank lines
+	// and orphan "---" blocks left by prior runs, then emit exactly one
+	// separator so re-running never accumulates empty dividers.
+	before = strings.TrimRight(before, "\n")
+	for strings.HasSuffix(before, "---") {
+		before = strings.TrimRight(before[:len(before)-3], "\n ")
+	}
+	return before + "\n\n---\n\n" + strings.TrimPrefix(newContent, "\n") + after
 }
 
 func toString(v any) string {
