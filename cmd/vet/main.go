@@ -44,6 +44,8 @@ func main() {
 		runReflexion(args)
 	case "policy":
 		runPolicy(args)
+	case "agent":
+		runAgent(args)
 	default:
 		fmt.Fprintf(os.Stderr, "vet: unknown command %q\n", cmd)
 		usage()
@@ -61,6 +63,7 @@ Usage:
   vet gcl <run|gate|trace> [flags]
   vet reflexion <promote|check|transpile> [flags]
   vet policy <load|diff|check-changelog> [flags]
+  vet agent <run|resume|status> [flags]
 
 Use "vet <command> -h" for more information.`)
 }
