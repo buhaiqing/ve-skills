@@ -45,6 +45,8 @@ func CmdAggregate(root string, inputs []string, sinceHours *int) int {
 	fpOut, err := UpdateFailurePatternsFile(root, summary)
 	if err != nil {
 		fmt.Fprintf(stderr, "WARN: failure-patterns update skipped: %v\n", err)
+	} else if fpOut != "" {
+		fmt.Fprintf(stderr, "INFO: failure-patterns updated: %d patterns written to %s\n", len(summary.FailurePatterns), fpOut)
 	}
 	result := map[string]any{
 		"summary_path":                 out,

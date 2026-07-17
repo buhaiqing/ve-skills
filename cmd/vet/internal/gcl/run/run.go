@@ -21,6 +21,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/secret"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
+	vlog "github.com/buhaiqing/ve-skills/cmd/vet/internal/log"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/memory"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/reflexion/transpile"
 	"gopkg.in/yaml.v3"
@@ -325,20 +326,14 @@ func recordHealPath(metrics *heal.Metrics, logPath string, res heal.PathResult, 
 		metrics.Record(ev)
 	}
 	if logPath != "" {
-		f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.heal | heal log unavailable | path=%s err=%v\n", runID, logPath, err)
-			return
-		}
-		defer f.Close()
-		if err := heal.AppendEvent(f, heal.Event{
-			ISO:        ev.ISO,
-			EventType:  ev.EventType,
-			ErrorCode:  ev.ErrorCode,
-			Action:     ev.Action,
-			Result:     ev.Result,
-			DurationMs: ev.DurationMs,
-		}); err != nil {
+		// Use structured log package for rotation-aware heal event logging
+		if err := vlog.Append(logPath, runID, vlog.INFO, "gcl.heal", "multi-path",
+			vlog.KV("event_type", ev.EventType),
+			vlog.KV("error_code", ev.ErrorCode),
+			vlog.KV("action", ev.Action),
+			vlog.KV("result", ev.Result),
+			vlog.KV("duration_ms", fmt.Sprintf("%d", ev.DurationMs)),
+		); err != nil {
 			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.heal | heal log write skipped | %v\n", runID, err)
 		}
 	}

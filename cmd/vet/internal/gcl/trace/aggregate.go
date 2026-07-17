@@ -1,6 +1,8 @@
 package trace
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"time"
@@ -54,6 +56,11 @@ func Aggregate(root string, traces []*Trace, sinceHours *int) *Summary {
 	var traceFiles []string
 
 	for _, t := range traces {
+		// Warn on suspicious data that may skew aggregate metrics
+		if len(t.Iterations) == 0 {
+			fmt.Fprintf(os.Stderr, "WARN: trace %s has 0 iterations, skipping\n", t.SourcePath)
+			continue
+		}
 		status := t.Final.Status
 		if _, ok := totals[status]; ok {
 			totals[status]++

@@ -64,6 +64,7 @@ func runGCLRun(args []string) {
 		fmt.Fprintln(os.Stderr, "vet gcl run: --skill, --request, --command are required")
 		os.Exit(2)
 	}
+	fmt.Fprintf(os.Stderr, "gcl.cli | run start | skill=%s heal=%s\n", *skill, *heal)
 	code := run.Run(run.Options{
 		Root:           *root,
 		Skill:          *skill,
@@ -79,6 +80,7 @@ func runGCLRun(args []string) {
 		ConfirmedBy:    *confirmedBy,
 		Heal:           *heal,
 	}).ExitCode
+	fmt.Fprintf(os.Stderr, "gcl.cli | run end | skill=%s exit=%d\n", *skill, code)
 	os.Exit(code)
 }
 
