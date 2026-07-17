@@ -7,13 +7,16 @@ on:
     branches: [main]
 
 jobs:
-  validate:
+  # ─────────────────────────────────────────────────────────────────
+  # Job 1: Hard Gates — 阻塞 CI，任一失败即拒绝合并
+  # ─────────────────────────────────────────────────────────────────
+  hard-gates:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for git merge-base (eval --git-diff)
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -24,49 +27,75 @@ jobs:
         working-directory: cmd/vet
         run: go build -ldflags "-X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo '0.0.0-dev') -X main.commit=$(git rev-parse --short HEAD 2>/dev/null || echo '')" -o ../bin/vet .
 
-      - name: Check skill frontmatter
+      - name: go vet (static analysis)
+        working-directory: cmd/vet
+        run: go vet ./...
+
+      - name: go test (unit tests)
+        working-directory: cmd/vet
+        run: go test ./...
+
+      # ——— P0 红线：核心元数据 ———
+      - name: Check skill frontmatter (P0)
         run: cmd/bin/vet check frontmatter --root .
 
-      - name: Check markdown links
-        # Note: 4 pre-existing bad links (reflexion-memory.md line refs) are known
-        # and tracked separately; || true prevents them from blocking CI.
-        run: cmd/bin/vet check links --root . || true
-
-      - name: Check GCL conformance
+      - name: Check GCL conformance (P0)
         run: cmd/bin/vet check gcl --root .
 
-      - name: Check AIOps/FinOps/SecurityOps coverage
-        run: cmd/bin/vet check aiops --root .
-
-      - name: Check product assessment
-        run: cmd/bin/vet check assessment --root .
-
-      - name: Check eval regression (absolute + git-diff)
-        run: cmd/bin/vet check eval --root . --git-diff origin/main
-
-      - name: Run local validation suite
-        # Note: pre-existing bad links (reflexion-memory.md, enhanced-self-healing-framework.md)
-        # cause validate to exit 1; || true keeps them warn-only while blocking is handled by
-        # individual vet check steps above.
-        run: cmd/bin/vet validate --root . || true
-
-      - name: GCL structural CI gate
-        # Note: CI runner environment (network, env vars) can cause individual
-        # skill smoke tests to fail with POLICY_BLOCK (exit 4); || true prevents
-        # spurious CI failure while individual vet check steps remain blocking.
-        run: cmd/bin/vet gcl gate --root . --skip-incident-loop || true
-
-      - name: Check GCL trace request_id enforcement (P5)
+      # ——— P5 红线：trace 完整性与脱敏 ———
+      - name: Check GCL trace enforcement (P5)
         run: cmd/bin/vet check trace --root .
 
+      # ——— P7 红线：安全策略不变量 ———
       - name: Check policy safety invariant (P7)
         run: cmd/bin/vet check policyguard --root .
 
-      - name: Check skill routing graph (T12, warning only)
-        # Non-blocking: validates docs/skill-routing-graph.md predictive/reactive
-        # rows against the routing schema shape; never fails the build.
+      # ——— 评估回归 ———
+      - name: Check eval regression (absolute + git-diff)
+        run: cmd/bin/vet check eval --root . --git-diff origin/main
+
+      # ——— AIOps 覆盖 ———
+      - name: Check AIOps/FinOps/SecurityOps coverage
+        run: cmd/bin/vet check aiops --root .
+
+      # ——— 示例完整性 ———
+      - name: Check product assessment
+        run: cmd/bin/vet check assessment --root .
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 2: Quality Checks — 质量报告，不阻塞 CI
+  # ─────────────────────────────────────────────────────────────────
+  quality-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: cmd/vet/go.mod
+
+      - name: Build vet
+        working-directory: cmd/vet
+        run: go build -o ../bin/vet .
+
+      # ——— 文档链接（预存坏链已知，不阻塞） ———
+      - name: Check markdown links
+        run: cmd/bin/vet check links --root . || true
+
+      # ——— 路由图结构 ———
+      - name: Check skill routing graph
         run: cmd/bin/vet check routing --root . || true
 
-      - name: Self-healing telemetry report (T11, warning only)
-        # Non-blocking: reports L4 self-healing SLOs; never fails the build.
+      # ——— 自愈遥测 ———
+      - name: Self-healing telemetry report
         run: cmd/bin/vet gcl heal-stats --since 7d || true
+
+      # ——— GCL 结构冒烟（依赖 CI runner 环境，本地 29/29 全过） ———
+      - name: GCL structural CI gate
+        run: cmd/bin/vet gcl gate --root . --skip-incident-loop || true
+
+      # ——— 全量校验汇总 ———
+      - name: Run local validation suite
+        run: cmd/bin/vet validate --root . || true
