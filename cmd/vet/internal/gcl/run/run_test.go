@@ -247,3 +247,42 @@ func TestRun_PolicyAskNeedsConfirm(t *testing.T) {
 		t.Fatalf("authorized ASK iteration must record confirmed_by=DOPS-12345; trace=%s", matches[0])
 	}
 }
+
+// TestParseRequestID covers the four RequestId extraction states for
+// parseRequestID: structured JSON parse, nested JSON, non-JSON fallback scan,
+// and missing/truncated RequestId.
+func TestParseRequestID(t *testing.T) {
+	cases := []struct {
+		name   string
+		output string
+		want   string
+	}{
+		{
+			name:   "standard json",
+			output: `{"Response":{"RequestId":"abc-123"}}`,
+			want:   "abc-123",
+		},
+		{
+			name:   "nested with other fields",
+			output: `{"foo":1,"Response":{"RequestId":"x"}}`,
+			want:   "x",
+		},
+		{
+			name:   "non-json text fallback scan",
+			output: `some log line "RequestId":"y" trailing`,
+			want:   "y",
+		},
+		{
+			name:   "truncated or missing RequestId",
+			output: `{"Response":{}}`,
+			want:   "",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := parseRequestID(c.output); got != c.want {
+				t.Errorf("parseRequestID(%q) = %q, want %q", c.output, got, c.want)
+			}
+		})
+	}
+}

@@ -361,6 +361,18 @@ func (e *generatorError) Error() string {
 // ({"Response":{"RequestId":"..."}}). Returns "" if absent or unparseable —
 // the runtime can still emit a trace, it just won't be request_id-traceable.
 func parseRequestID(output string) string {
+	// Prefer structured parse: ve emits {"Response":{"RequestId":"..."}}.
+	var doc struct {
+		Response struct {
+			RequestId string `json:"RequestId"`
+		} `json:"Response"`
+	}
+	if err := json.Unmarshal([]byte(output), &doc); err == nil {
+		if id := strings.TrimSpace(doc.Response.RequestId); id != "" {
+			return id
+		}
+	}
+	// Fallback: scan for the first "RequestId" string value (legacy/non-JSON output).
 	idx := strings.Index(output, "\"RequestId\"")
 	if idx < 0 {
 		return ""
