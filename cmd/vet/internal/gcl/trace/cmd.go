@@ -36,7 +36,7 @@ func CmdAggregate(root string, inputs []string, sinceHours *int) int {
 		return 1
 	}
 	sortBySkill(traces)
-	summary := Aggregate(root, traces)
+	summary := Aggregate(root, traces, sinceHours)
 	out, err := PersistSummary(root, summary)
 	if err != nil {
 		fmt.Fprintf(stderr, "ERROR: persist summary: %v\n", err)

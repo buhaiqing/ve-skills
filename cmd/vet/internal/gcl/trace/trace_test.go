@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func sampleTrace(skill, status string, scores map[string]float64) *Trace {
@@ -37,7 +38,7 @@ func TestAggregate(t *testing.T) {
 		sampleTrace("ve-ecs-ops", "PASS", map[string]float64{"correctness": 1, "safety": 1, "idempotency": 0.5, "traceability": 1, "spec_compliance": 1}),
 		sampleTrace("ve-redis-ops", "SAFETY_FAIL", map[string]float64{"correctness": 1, "safety": 0, "idempotency": 0.5, "traceability": 1, "spec_compliance": 1}),
 	}
-	sum := Aggregate("/tmp", traces)
+	sum := Aggregate("/tmp", traces, nil)
 	if sum.Totals["total_runs"] != 3 {
 		t.Errorf("total_runs want 3 got %d", sum.Totals["total_runs"])
 	}
@@ -49,6 +50,53 @@ func TestAggregate(t *testing.T) {
 	}
 	if sum.PassRate < 0.6666 || sum.PassRate > 0.6668 {
 		t.Errorf("pass_rate want ~%v got %v", 2.0/3.0, sum.PassRate)
+	}
+}
+
+func TestAggregateWindow(t *testing.T) {
+	traces := []*Trace{
+		sampleTrace("ve-ecs-ops", "PASS", map[string]float64{"correctness": 1, "safety": 1, "idempotency": 0.5, "traceability": 1, "spec_compliance": 1}),
+	}
+	// Full scan: Window.Since must be nil, Until is RFC3339, TraceCount set.
+	full := Aggregate("/tmp", traces, nil)
+	if full.Window.Since != nil {
+		t.Errorf("full scan: Since want nil got %v", *full.Window.Since)
+	}
+	if full.Window.TraceCount != 1 {
+		t.Errorf("full scan: TraceCount want 1 got %d", full.Window.TraceCount)
+	}
+	if _, err := time.Parse(time.RFC3339, full.Window.Until); err != nil {
+		t.Errorf("full scan: Until not RFC3339: %q", full.Window.Until)
+	}
+	// Windowed: Since must be non-nil RFC3339 and earlier than Until.
+	h := 24
+	win := Aggregate("/tmp", traces, &h)
+	if win.Window.Since == nil {
+		t.Fatal("windowed: Since want non-nil")
+	}
+	if _, err := time.Parse(time.RFC3339, *win.Window.Since); err != nil {
+		t.Errorf("windowed: Since not RFC3339: %q", *win.Window.Since)
+	}
+	if win.Window.TraceCount != 1 {
+		t.Errorf("windowed: TraceCount want 1 got %d", win.Window.TraceCount)
+	}
+}
+
+func TestCollectSince(t *testing.T) {
+	old := "/repo/audit-results/gcl-trace-20200101-000000.json" // far in the past
+	recent := "/repo/audit-results/gcl-trace-20990101-000000.json" // far in the future
+	legacy := "/repo/audit-results/gcl-trace-legacy.json"         // no parseable timestamp
+
+	// 24h window: recent kept, old dropped, legacy dropped.
+	got := collectSince([]string{old, recent, legacy}, 24)
+	if len(got) != 1 || got[0] != recent {
+		t.Errorf("24h window: want [%s], got %v", recent, got)
+	}
+	// 0h window: cutoff == now, so only the future timestamp is kept and the
+	// legacy file (unparseable) is still dropped without warning.
+	got0 := collectSince([]string{old, recent, legacy}, 0)
+	if len(got0) != 1 || got0[0] != recent {
+		t.Errorf("0h window: want [%s], got %v", recent, got0)
 	}
 }
 
