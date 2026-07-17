@@ -152,11 +152,11 @@ func (redisSlowQueryDegrade) Evaluate(ctx context.Context, m Metric) (Evaluation
 		return Evaluation{}, false
 	}
 	if !finite(m.Current) {
-		return low("current is non-finite"), true
+		return low("redis-slow-query-degrade", "current is non-finite"), true
 	}
 	for _, h := range m.History {
 		if !finite(h) {
-			return low("history contains non-finite value"), true
+			return low("redis-slow-query-degrade", "history contains non-finite value"), true
 		}
 	}
 	const threshold = 100.0
@@ -177,7 +177,7 @@ func (redisSlowQueryDegrade) Evaluate(ctx context.Context, m Metric) (Evaluation
 			Detail:    "slow_commands_per_sec up >=50% but below threshold 100 (record HINT)",
 		}, true
 	default:
-		return low("history < 5 samples or rise < 50%"), true
+		return low("redis-slow-query-degrade", "history < 5 samples or rise < 50%"), true
 	}
 }
 
@@ -194,11 +194,11 @@ func (rdsCapacityWaterline) Evaluate(ctx context.Context, m Metric) (Evaluation,
 		return Evaluation{}, false
 	}
 	if !finite(m.Current) {
-		return low("current is non-finite"), true
+		return low("rds-capacity-waterline", "current is non-finite"), true
 	}
 	for _, h := range m.History {
 		if !finite(h) {
-			return low("history contains non-finite value"), true
+			return low("rds-capacity-waterline", "history contains non-finite value"), true
 		}
 	}
 	// Linear extrapolation: Current + slope * (samples in 24h).
@@ -223,7 +223,7 @@ func (rdsCapacityWaterline) Evaluate(ctx context.Context, m Metric) (Evaluation,
 			Detail:    "disk_usage_percent projected >=80% within 24h (record HINT)",
 		}, true
 	default:
-		return low("disk_usage_percent projection < 80% within 24h"), true
+		return low("rds-capacity-waterline", "disk_usage_percent projection < 80% within 24h"), true
 	}
 }
 
@@ -240,11 +240,11 @@ func (ecsCPUTrend) Evaluate(ctx context.Context, m Metric) (Evaluation, bool) {
 		return Evaluation{}, false
 	}
 	if !finite(m.Current) {
-		return low("current is non-finite"), true
+		return low("ecs-cpu-trend", "current is non-finite"), true
 	}
 	for _, h := range m.History {
 		if !finite(h) {
-			return low("history contains non-finite value"), true
+			return low("ecs-cpu-trend", "history contains non-finite value"), true
 		}
 	}
 	avg := mean(m.History)
@@ -265,10 +265,10 @@ func (ecsCPUTrend) Evaluate(ctx context.Context, m Metric) (Evaluation, bool) {
 			Detail:    "cpu_usage_percent 1h mean > 70% (record HINT)",
 		}, true
 	default:
-		return low("history < 5 samples or 1h mean <= 70%"), true
+		return low("ecs-cpu-trend", "history < 5 samples or 1h mean <= 70%"), true
 	}
 }
 
-func low(detail string) Evaluation {
-	return Evaluation{Predictor: "none", Risk: RiskLow, Trigger: false, Detail: detail}
+func low(name, detail string) Evaluation {
+	return Evaluation{Predictor: name, Risk: RiskLow, Trigger: false, Detail: detail}
 }

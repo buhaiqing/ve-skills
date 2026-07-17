@@ -280,7 +280,8 @@ func runCheckRouting(root string, jsonOut bool) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		if jsonOut {
-			fmt.Println(`{"ok":false,"error":"` + err.Error() + `"}`)
+			b, _ := json.Marshal(map[string]any{"ok": false, "error": err.Error()})
+			fmt.Println(string(b))
 		} else {
 			fmt.Printf("FAIL: read %s: %v\n", path, err)
 		}
@@ -297,6 +298,15 @@ func runCheckRouting(root string, jsonOut bool) {
 		cells := splitTableRow(line)
 		// A trigger row ends with a source enum cell.
 		if len(cells) < 5 {
+			// Check whether this short row has a source cell matching
+			// predictive/reactive — if so it's structurally broken.
+			if len(cells) > 0 {
+				last := strings.TrimSpace(cells[len(cells)-1])
+				if last == "predictive" || last == "reactive" {
+					checked++
+					errors = append(errors, fmt.Sprintf("line %d: trigger row has %d cells, need 5", i+1, len(cells)))
+				}
+			}
 			continue
 		}
 		source := strings.TrimSpace(cells[len(cells)-1])
@@ -323,9 +333,6 @@ func runCheckRouting(root string, jsonOut bool) {
 		}
 		if action == "" {
 			errors = append(errors, fmt.Sprintf("line %d: empty action", i+1))
-		}
-		if source != "predictive" && source != "reactive" {
-			errors = append(errors, fmt.Sprintf("line %d: invalid source %q", i+1, source))
 		}
 	}
 
