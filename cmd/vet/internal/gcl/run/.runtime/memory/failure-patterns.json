@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "patterns": [
+    {
+      "skill": "ve-skill-generator",
+      "pattern": "operation blocked by execution-risk policy: REFUSE",
+      "category": "execution_risk",
+      "fix": "escalate to human or supply --confirmed for ASK class",
+      "source": "echo {\"Response\":{\"RequestId\":\"ut\"}}",
+      "count": 4
+    }
+  ]
+}
