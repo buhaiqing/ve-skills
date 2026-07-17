@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -91,14 +92,12 @@ func ParseNaturalLanguage(input string) (*IncidentPayload, error) {
 
 	lower := strings.ToLower(input)
 
-	// Product hint via keyword matching (longest match first).
+	// Product hint via keyword matching (sorted by length desc → deterministic).
 	var productHint string
-	for keyword, product := range productKeywords {
-		if strings.Contains(lower, strings.ToLower(keyword)) {
-			// Prefer longer keyword match (more specific).
-			if len(keyword) > len(productHint) || productHint == "" {
-				productHint = product
-			}
+	for _, entry := range sortedKeywords() {
+		if strings.Contains(lower, strings.ToLower(entry.key)) {
+			productHint = entry.product
+			break // first match wins, longer keywords come first
 		}
 	}
 
@@ -129,4 +128,22 @@ func ParseNaturalLanguage(input string) (*IncidentPayload, error) {
 		RawInput:    input,
 		Source:      "natural_language",
 	}, nil
+}
+
+// sortedKeywords returns productKeywords entries sorted by key length descending,
+// then alphabetically for deterministic iteration order.
+// This prevents non-deterministic map iteration from producing different results
+// when two keywords have the same length.
+func sortedKeywords() []struct{ key, product string } {
+	var entries []struct{ key, product string }
+	for k, v := range productKeywords {
+		entries = append(entries, struct{ key, product string }{k, v})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		if len(entries[i].key) != len(entries[j].key) {
+			return len(entries[i].key) > len(entries[j].key) // longer first
+		}
+		return entries[i].key < entries[j].key // alphabetical tiebreaker
+	})
+	return entries
 }
