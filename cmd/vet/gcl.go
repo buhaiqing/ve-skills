@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/gate"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/run"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 )
@@ -27,8 +30,10 @@ func runGCL(args []string) {
 		runGCLGate(rest)
 	case "trace":
 		runGCLTrace(rest)
+	case "heal-stats":
+		runGCLHealStats(rest)
 	default:
-		fmt.Fprintf(os.Stderr, "vet gcl %s: unknown subcommand (run|gate|trace)\n", sub)
+		fmt.Fprintf(os.Stderr, "vet gcl %s: unknown subcommand (run|gate|trace|heal-stats)\n", sub)
 		os.Exit(3)
 	}
 }
@@ -109,6 +114,96 @@ func runGCLTrace(args []string) {
 	}
 	code := trace.CmdAggregate(*root, inputs, hours)
 	os.Exit(code)
+}
+
+func runGCLHealStats(args []string) {
+	fs := flag.NewFlagSet("gcl heal-stats", flag.ExitOnError)
+	since := fs.String("since", "7d", "lookback window: Nd / Nw / Nm (days/weeks/months)")
+	logPath := fs.String("log", heal.DefaultLogPath, "self-healing log path (§6.2 format)")
+	jsonOut := fs.Bool("json", false, "machine-readable JSON")
+	fs.Parse(args)
+
+	sinceDur, err := parseSince(*since)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "vet gcl heal-stats: %v\n", err)
+		os.Exit(2)
+	}
+	events, skipped, err := heal.ParseFile(*logPath, time.Now().Add(-sinceDur))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "vet gcl heal-stats: failed to read %s: %v\n", *logPath, err)
+		os.Exit(1)
+	}
+	var m heal.Metrics
+	for _, e := range events {
+		m.Record(heal.HealEvent{
+			ISO: e.ISO, EventType: e.EventType, ErrorCode: e.ErrorCode,
+			Action: e.Action, Result: e.Result, DurationMs: e.DurationMs,
+		})
+	}
+	if *jsonOut {
+		b, _ := json.MarshalIndent(map[string]any{
+			"total": m.TotalCount, "success": m.SuccessCount,
+			"success_rate": m.SuccessRate(), "avg_duration_ms": m.AvgDurationMs(),
+			"user_intervention_rate": m.UserInterventionRate(), "fallback_rate": m.FallbackRate(),
+			"skipped": skipped,
+		}, "", "  ")
+		fmt.Println(string(b))
+		return
+	}
+	printSLO := func(label string, value float64, target float64, lowerBetter bool) {
+		pass := value >= target
+		if lowerBetter {
+			pass = value <= target
+		}
+		mark := "✅"
+		if !pass {
+			mark = "❌"
+		}
+		fmt.Printf("%-22s %.1f%% (target: %s %.0f%%) %s\n",
+			label, value*100, cmpWord(lowerBetter), target*100, mark)
+	}
+	printDuration := func(label string, valueMs float64, targetMs float64) {
+		pass := valueMs <= targetMs
+		mark := "✅"
+		if !pass {
+			mark = "❌"
+		}
+		fmt.Printf("%-22s %.1fs (target: %s %.0fs) %s\n",
+			label, valueMs/1000.0, cmpWord(true), targetMs/1000.0, mark)
+	}
+	fmt.Printf("Self-healing stats (since %s, events=%d, skipped=%d):\n", *since, m.TotalCount, skipped)
+	printSLO("Success rate", m.SuccessRate(), heal.TargetSuccessRate, false)
+	printDuration("Avg duration", m.AvgDurationMs(), heal.TargetAvgDurationMs)
+	printSLO("User intervention", m.UserInterventionRate(), heal.TargetUserIntervention, true)
+	printSLO("Fallback usage", m.FallbackRate(), heal.TargetFallback, true)
+}
+
+// parseSince parses Nd / Nw / Nm into a duration.
+func parseSince(s string) (time.Duration, error) {
+	if len(s) < 2 {
+		return 0, fmt.Errorf("invalid --since %q (want e.g. 7d)", s)
+	}
+	n, err := strconv.Atoi(s[:len(s)-1])
+	if err != nil {
+		return 0, fmt.Errorf("invalid --since %q: %v", s, err)
+	}
+	switch s[len(s)-1] {
+	case 'd':
+		return time.Duration(n) * 24 * time.Hour, nil
+	case 'w':
+		return time.Duration(n) * 7 * 24 * time.Hour, nil
+	case 'm':
+		return time.Duration(n) * 30 * 24 * time.Hour, nil
+	default:
+		return 0, fmt.Errorf("invalid --since %q: unit must be d/w/m", s)
+	}
+}
+
+func cmpWord(lowerBetter bool) string {
+	if lowerBetter {
+		return "<"
+	}
+	return ">"
 }
 
 func splitComma(s string) []string {

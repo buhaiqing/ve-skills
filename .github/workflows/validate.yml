@@ -53,3 +53,7 @@ jobs:
 
       - name: Check policy safety invariant (P7)
         run: cmd/bin/vet check policyguard --root .
+
+      - name: Self-healing telemetry report (T11, warning only)
+        # Non-blocking: reports L4 self-healing SLOs; never fails the build.
+        run: cmd/bin/vet gcl heal-stats --since 7d || true
