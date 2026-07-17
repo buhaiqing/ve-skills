@@ -9,6 +9,7 @@
 | T09 | 智能重试（错误分级驱动） | [specs/2026-07-17-l4-t09-smart-retry-design.md](specs/2026-07-17-l4-t09-smart-retry-design.md) | [plans/2026-07-17-l4-t09-smart-retry.md](plans/2026-07-17-l4-t09-smart-retry.md) | ✅ DONE |
 | T10 | 多路径自愈（auto-select best） | [specs/2026-07-17-l4-t10-multi-path-healing-design.md](specs/2026-07-17-l4-t10-multi-path-healing-design.md) | [plans/2026-07-17-l4-t10-multi-path-healing.md](plans/2026-07-17-l4-t10-multi-path-healing.md) | ✅ DONE |
 | T11 | 自愈遥测 + 日志 | [specs/2026-07-17-l4-t11-self-healing-telemetry-design.md](specs/2026-07-17-l4-t11-self-healing-telemetry-design.md) | [plans/2026-07-17-l4-t11-self-healing-telemetry.md](plans/2026-07-17-l4-t11-self-healing-telemetry.md) | ✅ DONE |
+| T12 | 预测式触发源（先于告警） | [specs/2026-07-17-l4-t12-predictive-trigger-design.md](specs/2026-07-17-l4-t12-predictive-trigger-design.md) | [plans/2026-07-17-l4-t12-predictive-trigger.md](plans/2026-07-17-l4-t12-predictive-trigger.md) | 🔧 spec+plan ready（待实现） |
 
 ## 关联
 
