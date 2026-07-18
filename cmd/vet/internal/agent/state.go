@@ -8,15 +8,15 @@ import (
 
 // RunState is persisted to .runtime/agent/runs/<runID>/state.json for checkpoint/resume.
 type RunState struct {
-	RunID       string              `json:"run_id"`
-	CurrentStep Step                `json:"current_step"`
-	Payload     IncidentPayload     `json:"payload"`
-	Triage      *TriageResult       `json:"triage,omitempty"`
-	Evidence    *DiagnosisEvidence  `json:"evidence,omitempty"`
-	Plan        *DispatchPlan       `json:"plan,omitempty"`
-	Confirm     *ConfirmResult      `json:"confirm,omitempty"`
-	Result      *ExecuteResult      `json:"result,omitempty"`
-	Error       string              `json:"error,omitempty"`
+	RunID       string             `json:"run_id"`
+	CurrentStep Step               `json:"current_step"`
+	Payload     IncidentPayload    `json:"payload"`
+	Triage      *TriageResult      `json:"triage,omitempty"`
+	Evidence    *DiagnosisEvidence `json:"evidence,omitempty"`
+	Plan        *DispatchPlan      `json:"plan,omitempty"`
+	Confirm     *ConfirmResult     `json:"confirm,omitempty"`
+	Result      *ExecuteResult     `json:"result,omitempty"`
+	Error       string             `json:"error,omitempty"`
 }
 
 func runDir(root, runID string) string {

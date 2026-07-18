@@ -33,6 +33,7 @@ func runAgentRun(args []string) {
 	fs := flag.NewFlagSet("agent run", flag.ExitOnError)
 	root := fs.String("root", repoRoot(), "repo root")
 	payloadJSON := fs.String("payload", "", "incident payload as JSON string")
+	region := fs.String("region", "", "region override (default: cn-beijing)")
 	dryRun := fs.Bool("dry-run", false, "dry run: execute all steps except actual GCL execution")
 	fs.Parse(args)
 
@@ -43,7 +44,6 @@ func runAgentRun(args []string) {
 
 	payload, err := agent.ParseJSON([]byte(*payloadJSON))
 	if err != nil {
-		// Try natural language parsing as fallback
 		payload, err = agent.ParseNaturalLanguage(*payloadJSON)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "agent run: parse payload failed: %v\n", err)
@@ -51,31 +51,19 @@ func runAgentRun(args []string) {
 		}
 	}
 
-	runID := fmt.Sprintf("%08x", time.Now().UnixNano()%0x100000000)
+	if *region != "" {
+		payload.Region = *region
+	}
+
+	runID := fmt.Sprintf("%d", time.Now().UnixNano())
 
 	if *dryRun {
-		fmt.Fprintf(os.Stderr, "[%s] [INFO] agent.run | dry-run mode | product=%s symptom=%s\n",
-			runID, payload.ProductHint, payload.Symptom)
-
-		// Run all steps except EXECUTE
-		triage := agent.Triage(payload)
-		fmt.Fprintf(os.Stderr, "[%s] [INFO] agent.run | triage | primary=%s confidence=%s\n",
-			runID, triage.PrimarySkill, triage.Confidence)
-
-		evidence := agent.Diagnose(*root, triage.PrimarySkill, payload)
-		fmt.Fprintf(os.Stderr, "[%s] [INFO] agent.run | diagnose | findings=%d partial=%v\n",
-			runID, len(evidence.Findings), evidence.Partial)
-
-		plan := agent.ProposeFix(evidence, payload)
-		fmt.Fprintf(os.Stderr, "[%s] [INFO] agent.run | propose | ops=%d\n",
-			runID, len(plan.Operations))
-
-		confirm := agent.Confirm(*root, plan)
-		fmt.Fprintf(os.Stderr, "[%s] [INFO] agent.run | confirm | decision=%s reason=%s\n",
-			runID, confirm.Decision, confirm.Reason)
-
-		fmt.Fprintf(os.Stderr, "[%s] [INFO] agent.run | dry-run complete | would execute %d ops\n",
-			runID, len(plan.Operations))
+		dryRunResult := agent.RunDry(*root, payload, runID)
+		if !dryRunResult.Success {
+			fmt.Fprintf(os.Stderr, "[%s] [ERROR] agent.run | dry-run failed | step=%s error=%s\n",
+				runID, dryRunResult.FinalStep.String(), dryRunResult.Error)
+			os.Exit(1)
+		}
 		return
 	}
 

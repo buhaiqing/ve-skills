@@ -170,7 +170,7 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 ### Step 6 — Execute (delegated, not direct)
 
 - Hand `dispatch_plan` to the matched `ve-*-ops` skill; it runs the actual `ve <svc> <Action>` calls.
-- This skill monitors, retries with backoff (max 2), and detects partial rollback scenarios.
+- This skill monitors, on validation failure auto-applies `rollback_plan` (T16), verifies pre-state restoration; only escalates if rollback itself fails.
 - Re-emit trace on every retry.
 
 ### Step 7 — Reflexion (automatic write-back)

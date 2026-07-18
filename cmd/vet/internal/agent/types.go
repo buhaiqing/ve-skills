@@ -41,6 +41,7 @@ type IncidentPayload struct {
 	Symptom     string   `json:"symptom"`
 	TicketID    string   `json:"ticket_id,omitempty"`
 	Severity    string   `json:"severity,omitempty"`
+	Region      string   `json:"region,omitempty"`
 	ResourceIDs []string `json:"resource_ids,omitempty"`
 	RawInput    string   `json:"raw_input"`
 	Source      string   `json:"source"`

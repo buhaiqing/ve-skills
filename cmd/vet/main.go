@@ -46,6 +46,10 @@ func main() {
 		runPolicy(args)
 	case "agent":
 		runAgent(args)
+	case "agentd":
+		runAgentd(args)
+	case "autonomy":
+		runAutonomy(args)
 	default:
 		fmt.Fprintf(os.Stderr, "vet: unknown command %q\n", cmd)
 		usage()
@@ -64,6 +68,8 @@ Usage:
   vet reflexion <promote|check|transpile> [flags]
   vet policy <load|diff|check-changelog> [flags]
   vet agent <run|resume|status> [flags]
+  vet agentd <serve> [flags]
+  vet autonomy <test> [flags]
 
 Use "vet <command> -h" for more information.`)
 }

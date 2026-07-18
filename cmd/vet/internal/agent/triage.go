@@ -1,29 +1,25 @@
 package agent
 
-import (
-	"fmt"
-)
-
 var skillMap = map[string]string{
-	"ecs":            "ve-ecs-ops",
-	"redis":          "ve-redis-ops",
-	"vpc":            "ve-vpc-ops",
-	"rds-mysql":      "ve-rds-mysql-ops",
-	"kafka":          "ve-kafka-ops",
-	"cdn":            "ve-cdn-ops",
-	"iam":            "ve-iam-ops",
-	"kms":            "ve-kms-ops",
-	"billing":        "ve-billing-ops",
-	"cms":            "ve-cms-ops",
-	"eip":            "ve-eip-ops",
-	"clb":            "ve-clb-ops",
-	"nat":            "ve-nat-ops",
-	"vpn":            "ve-vpn-ops",
-	"dns":            "ve-dns-ops",
-	"tos":            "ve-tos-ops",
-	"mongodb":        "ve-mongodb-ops",
-	"elasticsearch":  "ve-elasticsearch-ops",
-	"vke":            "ve-vke-ops",
+	"ecs":           "ve-ecs-ops",
+	"redis":         "ve-redis-ops",
+	"vpc":           "ve-vpc-ops",
+	"rds-mysql":     "ve-rds-mysql-ops",
+	"kafka":         "ve-kafka-ops",
+	"cdn":           "ve-cdn-ops",
+	"iam":           "ve-iam-ops",
+	"kms":           "ve-kms-ops",
+	"billing":       "ve-billing-ops",
+	"cms":           "ve-cms-ops",
+	"eip":           "ve-eip-ops",
+	"clb":           "ve-clb-ops",
+	"nat":           "ve-nat-ops",
+	"vpn":           "ve-vpn-ops",
+	"dns":           "ve-dns-ops",
+	"tos":           "ve-tos-ops",
+	"mongodb":       "ve-mongodb-ops",
+	"elasticsearch": "ve-elasticsearch-ops",
+	"vke":           "ve-vke-ops",
 }
 
 // Triage maps an IncidentPayload's ProductHint to the corresponding ve-*-ops skill.
@@ -47,11 +43,35 @@ func confidenceFromSkill(_ string, found bool) string {
 	return "low"
 }
 
-// BuildDiagnoseCommand returns a ve CLI command string for diagnosing the given skill.
-func BuildDiagnoseCommand(skill string, payload *IncidentPayload) string {
+// BuildDiagnoseArgs returns the argument list for a ve CLI diagnose command.
+// The caller should execute: exec.CommandContext(ctx, "ve", args...)
+func BuildDiagnoseArgs(skill string, payload *IncidentPayload) []string {
 	action := diagnoseActionForSkill(skill)
-	region := "cn-beijing"
-	return fmt.Sprintf("ve %s %s --Region %s", skillToService(skill), action, region)
+	region := payload.Region
+	if region == "" {
+		region = "cn-beijing"
+	}
+	args := []string{skillToService(skill), action, "--Region", region}
+	if len(payload.ResourceIDs) > 0 {
+		param := resourceIDParam(skill)
+		args = append(args, "--"+param, payload.ResourceIDs[0])
+	}
+	return args
+}
+
+func resourceIDParam(skill string) string {
+	switch skill {
+	case "ve-ecs-ops":
+		return "InstanceIds.1"
+	case "ve-redis-ops":
+		return "InstanceId"
+	case "ve-rds-mysql-ops":
+		return "DBInstanceId"
+	case "ve-vke-ops":
+		return "ClusterIds.1"
+	default:
+		return "InstanceIds.1"
+	}
 }
 
 // skillToService strips the "ve-" prefix and "-ops" suffix to get the service name.

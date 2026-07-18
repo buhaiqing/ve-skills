@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -107,8 +108,8 @@ func TestParseNaturalLanguage_ResourceIDs(t *testing.T) {
 
 func TestParseNaturalLanguage_SymptomExtraction(t *testing.T) {
 	tests := []struct {
-		input   string
-		want    string
+		input string
+		want  string
 	}{
 		{"ecs CPU 高 使用率 100%", "cpu_high"},
 		{"redis 内存 使用 high", "mem_high"},
@@ -165,15 +166,15 @@ func TestTriage_UnknownSkill(t *testing.T) {
 	}
 }
 
-func TestBuildDiagnoseCommand(t *testing.T) {
+func TestBuildDiagnoseArgs(t *testing.T) {
 	payload := &IncidentPayload{ProductHint: "ecs"}
-	cmd := BuildDiagnoseCommand("ve-ecs-ops", payload)
-	if cmd == "" {
-		t.Error("expected non-empty command")
+	args := BuildDiagnoseArgs("ve-ecs-ops", payload)
+	if len(args) == 0 {
+		t.Error("expected non-empty args")
 	}
-	// Should contain service name and Describe action
-	if !contains(cmd, "ecs") || !contains(cmd, "Describe") {
-		t.Errorf("expected command to contain 'ecs' and 'Describe', got: %s", cmd)
+	joined := strings.Join(args, " ")
+	if !strings.Contains(joined, "ecs") || !strings.Contains(joined, "Describe") {
+		t.Errorf("expected args to contain 'ecs' and 'Describe', got: %v", args)
 	}
 }
 
@@ -190,17 +191,4 @@ func TestStepString(t *testing.T) {
 	if StepDone.String() != "DONE" {
 		t.Errorf("expected DONE, got %s", StepDone.String())
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && len(s) >= len(substr) && searchSubstring(s, substr)
-}
-
-func searchSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

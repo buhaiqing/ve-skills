@@ -209,10 +209,7 @@ incident-loop-agent/    orchestration skill (exempt from ve-* naming rule)
 
 ## Generator-Critic-Loop (GCL) — Adversarial Quality Gate
 
-> Full specification: [docs/gcl-spec.md](docs/gcl-spec.md) — purpose, roles, rubric, loop flow,
-> termination, trace schema, prompt templates, and changelog.
-
-### Summary
+> Full spec: [docs/gcl-spec.md](docs/gcl-spec.md)（roles, rubric, loop flow, termination, trace, prompt templates, per-skill defaults, changelog）。
 
 | Role | Job | Forbidden |
 |------|-----|-----------|
@@ -222,49 +219,19 @@ incident-loop-agent/    orchestration skill (exempt from ve-* naming rule)
 
 **Hard constraint:** G and C MUST live in **isolated prompt contexts**. Shared context is banned.
 
-### Rubric (5 dimensions) & Termination
+**Rubric**: 5 dimensions (Correctness/Safety/Idempotency/Traceability/Spec Compliance). SAFETY_FAIL always ABORTs; Safety must equal 1. Per-skill `max_iter` override in `SKILL.md` (`## Quality Gate (GCL)`).
 
-Full rubric (Correctness/Safety/Idempotency/Traceability/Spec Compliance) + thresholds and PASS/MAX_ITER/SAFETY_FAIL termination semantics: **[docs/gcl-spec.md](docs/gcl-spec.md)** §Rubric + §Termination. SAFETY_FAIL always ABORTs; Safety must equal 1.
+**Banned anti-patterns**: Shared G+C context · Safety=0 must ABORT · Trace must persist · Credential leakage in trace · No unbounded loops. Full list: [docs/gcl-spec.md §9](docs/gcl-spec.md#9-anti-patterns-banned).
 
-### Per-Skill Defaults
+**Cross-skill delegation**: Orchestrator MUST delegate, not absorb. Routing rules: [docs/skill-routing-graph.md](docs/skill-routing-graph.md). Critic MUST NOT call any skill — only emits suggestions.
 
-Full tier/default mapping: [docs/gcl-spec.md §8](docs/gcl-spec.md#8-per-skill-defaults).
-Each skill may override `max_iter` in its own `SKILL.md` (`## Quality Gate (GCL)`).
-
-### Anti-Patterns (banned)
-
-> Full list: [docs/gcl-spec.md](docs/gcl-spec.md) §9.
-> **Key**: Shared G+C context banned · Safety=0 must ABORT · Trace must persist · Credential leakage in trace · No unbounded loops.
-
-### Cross-Skill Delegation
-
-When GCL identifies cross-product gaps, the Orchestrator MUST delegate, not absorb.
-Full alarm-pattern → skill routing rules in [docs/skill-routing-graph.md](docs/skill-routing-graph.md).
-The Critic itself MUST NOT call any skill — it only emits suggestions.
-
-### GCL Rollout Complete — All 29 Skills Equipped
-
-All 13 `required`-tier, 10 `recommended`-tier, and 6 `optional`-tier skills have GCL rubric + prompt templates.
-See [docs/gcl-spec.md](docs/gcl-spec.md) §11 for the full rollout changelog.
-
-> Additionally, 1 **orchestration skill** `incident-loop-agent` (`metadata.type=orchestration-skill`) is equipped with GCL rubric + prompt templates. It is exempt from the `ve-*` prefix and `cli_applicability` mandate per the Skill Authoring Guardrails exception clause.
+All 29 skills (13 required + 10 recommended + 6 optional) have GCL rubric + prompt templates. 1 orchestration skill (`incident-loop-agent`) also equipped; exempt from `ve-*` prefix per Skill Authoring Guardrails.
 
 ## Evaluation
 
-`assets/eval_queries.json` per skill holds intent-classification test cases (`should_trigger: true/false`). These are consumed by external evaluation harnesses, not by an in-repo test runner. When adding capability, add eval cases in the same change.
+`assets/eval_queries.json` per skill holds intent-classification test cases (`should_trigger: true/false`). When adding capability, add eval cases in the same change.
 
-### Build-time regression
-
-The `vet` CLI (from `cmd/vet/`) is the primary validation tool for pre-commit checks. After changing any skill, run `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`), then manually verify against the P0/P1 checklist in `ve-skill-generator/SKILL.md` and the 2-round self-review above.
-
-### Runtime GCL
-
-`vet gcl run` implements the GCL Orchestrator (Phase 2). Use it for automated GCL loops:
-- External Critic via `--critic-json` or stdin (production mode)
-- `--structural-critic-only` for CI/local structural smoke tests only (NOT for production mutations)
-- `vet gcl gate` runs the structural CI gate across all skills; `vet gcl trace` aggregates `audit-results/gcl-trace-*.json` into a quality summary.
-
-GCL runs MUST use externally supplied isolated Critic scores in production. Manual execution following `docs/gcl-spec.md` is also acceptable.
+**Build-time**: `vet validate --root .` (or `vet check frontmatter|links|gcl|eval|aiops|assessment`) + P0/P1 checklist + 2-round self-review. **Runtime**: `vet gcl run` — External Critic via `--critic-json`/stdin; `--structural-critic-only` for CI smoke tests; `vet gcl gate` for structural CI gate; `vet gcl trace` aggregates traces. GCL runs MUST use externally supplied isolated Critic scores in production.
 
 ---
 
@@ -307,94 +274,37 @@ GCL runs MUST use externally supplied isolated Critic scores in production. Manu
 
 ## CodeGraph Integration — 代码变动即时同步
 
-CodeGraph (`codegraph` CLI, v1.1.6, `~/.local/bin/codegraph`) 维护仓库知识图谱，使 AI 能检索符号、调用链与影响面。
-
-### MCP 配置（项目级，已配置）
-
-本仓库已配置 CodeGraph MCP Server（`.mcp.json`），Agent 启动时自动获得 `codegraph_explore` 工具：
-
-```json
-// .mcp.json
-{
-  "mcpServers": {
-    "codegraph": {
-      "type": "stdio",
-      "command": "codegraph",
-      "args": ["serve", "--mcp"],
-      "description": "CodeGraph — AST-based code intelligence"
-    }
-  }
-}
-```
-
-**Agent 使用方式**：直接调用 `codegraph_explore` MCP 工具（一个调用即可获取符号定义 + 调用链 + 影响面 + 源文件内容，等效于多次 grep/read）。CLI 等价命令：`codegraph explore <symbol>`。
+CodeGraph (`codegraph` CLI, `~/.local/bin/codegraph`) 维护仓库知识图谱。本仓库已配置 MCP Server（`.mcp.json`），Agent 启动时自动获得 `codegraph_explore` 工具。
 
 ### MANDATORY: 每次代码变更后必须 sync
 
-> **铁律 — 不可打破。** 每次 Go 代码变更（新增/修改/删除文件）提交前，**必须**执行 `codegraph sync --quiet` 确保索引最新。Agent 修改代码后自动执行，不得跳过。
+> **铁律 — 不可打破。** 每次 Go 代码变更提交前，**必须**执行 `codegraph sync --quiet` 确保索引最新。
 
-**Why**: 过期的 CodeGraph 索引会导致 `codegraph_explore` 返回错误结果或遗漏新增符号，进而引发错误的调用链分析和影响面判断。不 sync = 索引不可信 = 后续所有 CodeGraph 查询结果无效。
-
-**强制执行**：
-```bash
-# 每次代码变更后、提交前（Agent 自动执行）
-cd <repo-root> && codegraph sync --quiet
-```
-
-**验证**：
-```bash
-# 确认索引最新
-codegraph status | grep -q "up to date" || { echo "INDEX STALE"; codegraph sync --quiet; }
-```
+**Why**: 过期索引导致调用链分析和影响面判断错误。不 sync = 索引不可信 = 后续所有查询无效。
 
 ### MANDATORY: CodeGraph MCP 优先于 grep/read
 
-> **强规则：所有代码理解任务（符号查找、调用链追溯、影响面分析）必须先用 `codegraph explore <symbol>`，再用 grep/read 补充。**
+> **强规则：所有代码理解任务必须先用 `codegraph explore <symbol>`，再用 grep/read 补充。**
 
-**为什么**：CodeGraph 的 AST + 调用图覆盖了 grep 无法到达的跳转表（接口实现、动态派送、跨包调用）。纯文本搜索会漏掉真实调用者。
+CodeGraph 的 AST + 调用图覆盖了 grep 无法到达的跳转表（接口实现、动态派送、跨包调用）。
 
-**强制执行顺序**：
-1. `codegraph explore <symbol>` → 获取符号定义 + 调用者 + 影响面 + 源文件内容（带行号）
-2. 仅在 CodeGraph 索引缺失或不确定时用 grep/read 交叉验证
-3. 修改代码前必须用 CodeGraph 确认所有调用方都已知
+**执行顺序**：`codegraph explore <symbol>` → grep/read 交叉验证 → 修改代码前确认所有调用方已知
 
-**禁用**：用 grep 替代 CodeGraph 做调用链分析；用 read 替代 codegraph explore 做符号定位（CodeGraph 更快更准，且返回带行号的真实磁盘内容）。
+**例外**：纯文本内容搜索（日志关键字、文档内容）除外。
 
-**例外**：纯文本内容搜索（如日志关键字、文档内容）除外。
+### 常用命令
 
-### CodeGraph 常见场景命令模板
+| 场景 | 命令 |
+|------|------|
+| 查符号定义+调用者 | `codegraph explore <pkg.Symbol>` |
+| 查影响面 | `codegraph impact <pkg.Symbol>` |
+| 查调用链（被调方） | `codegraph callees <pkg.Symbol>` |
+| 索引状态 | `codegraph status` |
+| 同步索引 | `codegraph sync --quiet` |
 
-| 场景 | 命令 | 说明 |
-|------|------|------|
-| **查符号定义+调用者** | `codegraph explore <pkg.Symbol>` | 返回定义、调用者、影响面、源文件 |
-| **查影响面** | `codegraph impact <pkg.Symbol>` | 仅返回被哪些符号依赖 |
-| **查调用链（被调方）** | `codegraph callees <pkg.Symbol>` | 返回该符号调用了哪些函数 |
-| **索引状态** | `codegraph status` | 确认索引是否最新 |
-| **全量重索引** | `codegraph sync --quiet` | 增量同步变更文件 |
-| **初始化** | `codegraph init` | 首次使用（`.codegraph/` 已 gitignored） |
+**Agent 自动执行**（每次编码任务结束时）：sync → explore 核心符号 → 检查 blast radius
 
-### CodeGraph 开发工作流集成
-
-```
-代码变更 → codegraph sync --quiet → codegraph explore <变更符号> 验证 → 提交
-    │                                                      │
-    └── 确认影响面（所有调用方已评估）←──────────────────────┘
-```
-
-**Agent 自动执行**（每次编码任务结束时）：
-1. `codegraph sync --quiet` — 同步索引
-2. 对本轮新增/修改的核心符号执行 `codegraph explore <symbol>` — 验证可达性
-3. 检查 blast radius 中的调用方是否都已评估
-
-**用户可选**（本地开发环境）：
-```bash
-# 安装 git post-commit hook（一次性设置）
-cat > .git/hooks/post-commit <<'HOOK'
-#!/bin/bash
-codegraph sync --quiet 2>/dev/null
-HOOK
-chmod +x .git/hooks/post-commit
-```
+> 完整配置、MCP 设置、工作流集成见 [docs/codegraph-integration.md](docs/codegraph-integration.md)。
 
 ---
 
@@ -404,197 +314,18 @@ chmod +x .git/hooks/post-commit
 
 **Why**: 当前系统日志是 ad-hoc `fmt.Fprintf`，无 run ID、无时间戳、无结构化格式，多进程并发运行时无法区分日志来源，故障时只能靠 trace JSON 文件事后分析——根因定位效率极低。规范化后，`grep <run_id> *.log` 即可重建完整执行过程。
 
-### 规则 1: Run ID（强制）
+### 核心规则
 
-每个 GCL 执行 / CLI 子命令启动时，**必须**生成一个 UUID 作为 run ID，并贯穿所有日志输出。
+| 规则 | 要求 |
+|------|------|
+| **Run ID** | 每个 GCL 执行 / CLI 子命令启动时生成 UUID 作为 run ID，贯穿所有日志输出 |
+| **日志格式** | `<ISO_8601_ts> \| [<run_id>] \| <level> \| <component> \| <message> \| <key=value>...` |
+| **关键日志点** | 启动、每轮迭代开始/结束、自愈触发/结果、Reflexion writeback、终止、JSON store 损坏 |
+| **Trace 结构体** | `Trace` 必须包含 `RunID string`；`Iteration` 必须包含 `Timestamp string` 和 `DurationMs int64` |
+| **日志滚动** | `MaxSize=10MB`, `MaxBackups=5`, `MaxAge=30d` |
+| **审计要求** | ERROR/FATAL 日志须包含足够上下文；禁止明文凭据；原子追加写入 |
 
-```go
-runID := uuid.New().String()[:8]  // 短 ID，8 位足够区分
-fmt.Fprintf(os.Stderr, "[%s] [INFO] GCL run start: skill=%s max_iter=%d\n", runID, skill, maxIter)
-```
-
-- 所有后续日志必须带 `[<run_id>]` 前缀
-- Trace JSON 中新增 `run_id` 字段
-- 并发执行时，`grep <run_id>` 可精确过滤
-
-### 规则 2: 日志格式（强制）
-
-**采用管道分隔的键值对格式**（参考 heal log 的 §6.2 格式，已验证有效）：
-
-```
-<ISO_8601_ts> | [<run_id>] | <level> | <component> | <message> | <key=value>...
-```
-
-示例：
-```
-2026-07-17T14:30:01Z | [a1b2c3d4] | INFO | gcl.run | GCL run start | skill=ve-ecs-ops max_iter=3 heal=smart
-2026-07-17T14:30:15Z | [a1b2c3d4] | WARN | gcl.heal | retry attempt | class=retryable path=backoff-retry attempt=2
-2026-07-17T14:30:22Z | [a1b2c3d4] | ERROR | gcl.run | SAFETY_FAIL | iter=3 trace=audit-results/gcl-trace-20260717-143022.json
-```
-
-- `level`: `DEBUG` | `INFO` | `WARN` | `ERROR` | `FATAL`
-- `component`: 包名简写（`gcl.run`, `gcl.heal`, `memory.store`, `reflexion.transpile`）
-- 所有诊断输出到 `stderr`；`stdout` 仅用于机器可读的 JSON 输出
-
-### 规则 3: 关键日志点（强制）
-
-以下生命周期节点**必须**输出日志：
-
-| 时机 | 级别 | 内容 |
-|------|------|------|
-| 启动 | INFO | run_id, skill, max_iter, heal mode, command（脱敏） |
-| 每轮迭代开始 | INFO | iter=N, 本轮的 generator command（脱敏） |
-| 每轮迭代结束 | INFO | iter=N, status, critic scores, policy_decision |
-| 自愈触发 | WARN | error_class, selected_path, attempt |
-| 自愈结果 | INFO | path_name, result, duration_ms |
-| Reflexion writeback | INFO | pattern count written, store path |
-| 终止 | INFO | final_status, total_iters, total_duration_ms, trace_path |
-| JSON store 损坏 | ERROR | 损坏详情，是否降级到 fallback |
-
-### 规则 4: Trace 结构体（强制）
-
-`Iteration` 结构体**必须**包含：
-
-```go
-type Iteration struct {
-    Timestamp   string  // ISO 8601，迭代开始时间
-    DurationMs  int64   // generator 命令执行耗时
-    // ... 现有字段
-}
-```
-
-`Trace` 结构体**必须**包含 `RunID string`。
-
-### 规则 5: 日志滚动（强制）
-
-所有持续写入的日志文件**必须**支持滚动更新，防止磁盘写满：
-
-```go
-// 日志滚动策略
-type LogRotation struct {
-    MaxSize    int64  // 单文件最大字节数（默认 10MB）
-    MaxBackups int    // 保留的旧文件数（默认 5）
-    MaxAge     int    // 保留天数（默认 30）
-}
-```
-
-**实现方式**：写入日志时检查文件大小，超过 `MaxSize` 则：
-1. 当前文件重命名为 `<name>.1`
-2. 已有备份递增（`.1` → `.2`，`.2` → `.3`...）
-3. 超过 `MaxBackups` 的最旧文件删除
-4. 创建新的空日志文件
-
-```go
-func WriteLog(path string, line string, rotation LogRotation) error {
-    // 检查文件大小
-    // 超过 MaxSize → rotate
-    // 追加写入
-}
-```
-
-适用于：`audit-results/ve-self-healing.log`、`.runtime/memory/` 下的 JSONL 文件、未来新增的运行时日志。
-
-### 规则 6: 审计要求
-
-- 所有 `ERROR` 和 `FATAL` 日志**必须**包含足够的上下文用于根因定位（至少：run_id, skill, 失败原因，trace 文件路径）
-- 日志**禁止**包含明文凭据（SecretKey、AccessToken 等），脱敏后再输出
-- 日志文件写入使用**原子追加**模式（先写 temp，再 rename，与 `memory/store.go` 的 `writeStore` 一致）
-
----
-
-## MANDATORY: 结构化日志与诊断能力（Iron Law）
-
-> **铁律 — 不可打破。** 所有 Go 工具（`cmd/vet/` 下的任何 CLI 和内部包）**必须**遵循以下日志规范，确保运行时可追溯、可诊断、可快速根因定位。
-
-**Why**: 当前系统日志是 ad-hoc `fmt.Fprintf`，无 run ID、无时间戳、无结构化格式，多进程并发运行时无法区分日志来源，故障时只能靠 trace JSON 文件事后分析——根因定位效率极低。规范化后，`grep <run_id> *.log` 即可重建完整执行过程。
-
-### 规则 1: Run ID（强制）
-
-每个 GCL 执行 / CLI 子命令启动时，**必须**生成一个 UUID 作为 run ID，并贯穿所有日志输出。
-
-```go
-runID := uuid.New().String()[:8]  // 短 ID，8 位足够区分
-fmt.Fprintf(os.Stderr, "[%s] [INFO] GCL run start: skill=%s max_iter=%d\n", runID, skill, maxIter)
-```
-
-- 所有后续日志必须带 `[<run_id>]` 前缀
-- Trace JSON 中新增 `run_id` 字段
-- 并发执行时，`grep <run_id>` 可精确过滤
-
-### 规则 2: 日志格式（强制）
-
-**采用管道分隔的键值对格式**（参考 heal log 的 §6.2 格式，已验证有效）：
-
-```
-<ISO_8601_ts> | [<run_id>] | <level> | <component> | <message> | <key=value>...
-```
-
-示例：
-```
-2026-07-17T14:30:01Z | [a1b2c3d4] | INFO | gcl.run | GCL run start | skill=ve-ecs-ops max_iter=3 heal=smart
-2026-07-17T14:30:15Z | [a1b2c3d4] | WARN | gcl.heal | retry attempt | class=retryable path=backoff-retry attempt=2
-2026-07-17T14:30:22Z | [a1b2c3d4] | ERROR | gcl.run | SAFETY_FAIL | iter=3 trace=audit-results/gcl-trace-20260717-143022.json
-```
-
-- `level`: `DEBUG` | `INFO` | `WARN` | `ERROR` | `FATAL`
-- `component`: 包名简写（`gcl.run`, `gcl.heal`, `memory.store`, `reflexion.transpile`）
-- 所有诊断输出到 `stderr`；`stdout` 仅用于机器可读的 JSON 输出
-
-### 规则 3: 关键日志点（强制）
-
-以下生命周期节点**必须**输出日志：
-
-| 时机 | 级别 | 内容 |
-|------|------|------|
-| 启动 | INFO | run_id, skill, max_iter, heal mode, command（脱敏） |
-| 每轮迭代开始 | INFO | iter=N, 本轮的 generator command（脱敏） |
-| 每轮迭代结束 | INFO | iter=N, status, critic scores, policy_decision |
-| 自愈触发 | WARN | error_class, selected_path, attempt |
-| 自愈结果 | INFO | path_name, result, duration_ms |
-| Reflexion writeback | INFO | pattern count written, store path |
-| 终止 | INFO | final_status, total_iters, total_duration_ms, trace_path |
-| JSON store 损坏 | ERROR | 损坏详情，是否降级到 fallback |
-
-### 规则 4: Trace 结构体（强制）
-
-`Iteration` 结构体**必须**包含：
-
-```go
-type Iteration struct {
-    Timestamp   string  // ISO 8601，迭代开始时间
-    DurationMs  int64   // generator 命令执行耗时
-    // ... 现有字段
-}
-```
-
-`Trace` 结构体**必须**包含 `RunID string`。
-
-### 规则 5: 日志滚动（强制）
-
-所有持续写入的日志文件**必须**支持滚动更新，防止磁盘写满：
-
-```go
-// 日志滚动策略
-type LogRotation struct {
-    MaxSize    int64  // 单文件最大字节数（默认 10MB）
-    MaxBackups int    // 保留的旧文件数（默认 5）
-    MaxAge     int    // 保留天数（默认 30）
-}
-```
-
-**实现方式**：写入日志时检查文件大小，超过 `MaxSize` 则：
-1. 当前文件重命名为 `<name>.1`
-2. 已有备份递增（`.1` → `.2`，`.2` → `.3`...）
-3. 超过 `MaxBackups` 的最旧文件删除
-4. 创建新的空日志文件
-
-适用于：`audit-results/ve-self-healing.log`、`.runtime/memory/` 下的 JSONL 文件、未来新增的运行时日志。
-
-### 规则 6: 审计要求
-
-- 所有 `ERROR` 和 `FATAL` 日志**必须**包含足够的上下文用于根因定位（至少：run_id, skill, 失败原因，trace 文件路径）
-- 日志**禁止**包含明文凭据（SecretKey、AccessToken 等），脱敏后再输出
-- 日志文件写入使用**原子追加**模式（先写 temp，再 rename，与 `memory/store.go` 的 `writeStore` 一致）
+> 完整代码示例、日志点表格见 [docs/agent-runtime-patterns.md](docs/agent-runtime-patterns.md)。
 
 ---
 
@@ -605,31 +336,26 @@ type LogRotation struct {
 
 ---
 
+## Agent Runtime Patterns（Phase 1 Code Review 沉淀）
+
+> 从 Phase 1 Agent Runtime 开发 + Code Review 中提炼的高阶模式，适用于所有 Go Agent 开发。完整规则与代码示例见 [docs/agent-runtime-patterns.md](docs/agent-runtime-patterns.md)。
+
+### 规则摘要
+
+| 规则 | 一句话 |
+|------|--------|
+| P1 Shell 安全 | 禁止 `sh -c`，直接传参无 shell 解析 |
+| P2 Checkpoint/Resume | 有状态引擎必须支持断点续跑，用 `<=` 判断跳过已完成步骤 |
+| P3 DRY Dry-Run | Dry-run 和正常执行必须走同一条引擎路径 |
+| P4 提取即使用 | 从输入提取的数据必须在下游使用 |
+| P5 委托超时 | 调用外部 runner 必须传 timeout |
+| P6 RunID 唯一性 | 完整纳秒时间戳，不截断 |
+| P7 配置化 | 硬编码值必须通过参数/环境变量暴露 |
+| P8 FlagSet 解析 | 先提取子命令，再 parse 剩余 args（flag.Parse 遇非 flag 停止） |
+| P9 Range 未使用 | `for i, step := range` step 未使用 → 用 `for i := range` |
+
+---
+
 ## Key References
 
-| Document | Description |
-|----------|-------------|
-| `docs/gcl-spec.md` | **Runtime GCL spec** — purpose, roles, loop flow, trace, prompt templates, per-skill defaults, changelog |
-| `docs/token-efficiency.md` | Detailed TE rules with code examples (TE-1 through TE-9) |
-| `docs/reflexion-memory.md` | **Reflexion rules** — lightweight cross-session failure-pattern memory governance |
-| `docs/failure-patterns.md` | **Reflexion memory store** — bounded structured failure patterns for cross-session learning |
-| `docs/skill-harness-review-checklist.md` | **Skill harness review checklist** — reusable P0-P3 review template for all ve-*-ops skills |
-| `docs/self-review-checklist.md` | **Two-round self-review checklist** — Round 1 (C1–C17) + Round 2 (F1–F13) + validation matrix |
-| `docs/execution-strategy.md` | **Execution strategy** — E1–E4 parallel/adaptive/reflection rules + retro checklist |
-| `docs/l2-to-l3-plan.md` | **L2→L3 plan** — conditional-autonomy execution plan (M1): execution-risk policy + P1–P7 tasks + L3 DoD |
-| `docs/l2-to-l3-tasks/AGENTS.md` | **L2→L3 task AGENTS.md** — AI entry rules (Karpathy + TDD + GCL + 文档更新 + 12 节工程化规则) |
-| `docs/l3-to-l4-tasks/AGENTS.md` | **L3→L4 task AGENTS.md** — AI entry rules (Karpathy + L4 envelope / SLO / 自愈 / Reflexion 4 级 + 13 节工程化规则) |
-| `docs/codegraph-integration.md` | **CodeGraph integration** — two-tier sync rules for knowledge-graph maintenance |
-| `docs/inline-script-pattern.md` | **Inline script pattern** — `_inline_script()` implementation constraints for validation scripts |
-| `docs/superpowers/plans/golang-migration/2026-07-12-python-to-go-cli.md` | **Python→Go (`vet`) + CodeGraph 计划** — 里程碑、子任务拆分、并行策略 |
-| `ve-skill-generator/SKILL.md` | Meta-skill generator — full workflow, P0/P1 checklist, Token Efficiency rules |
-| `ve-skill-generator/references/ve-skill-template.md` | Canonical SKILL.md template with GCL block |
-| `ve-skill-generator/references/governance-and-adversarial-review.md` | Governance & adversarial review — R1-R4 pre-merge security/resilience/UX scenarios |
-| `ve-skill-generator/references/cli-behavior.md` | Verified `ve` CLI conventions |
-| `ve-skill-generator/references/execution-environment.md` | CLI + Go SDK setup details |
-| `ve-skill-generator/references/user-experience-spec.md` | UX requirements every generated skill must follow |
-| Each skill's `references/rubric.md` | The rubric instance |
-| Each skill's `references/prompt-templates.md` | G/C/O prompt skeletons |
-| `docs/templates/agent-template.md` | **Agent 开发模板** — 开发流程、GCL配置、代码组织、复用清单、日志模板、状态持久化、CLI集成、安全清单、Spec/Plan模板、8个实战代码骨架 |
-| `docs/vet-agent-evolution-architecture.md` | **Agent 演进架构** — 从 CLI 工具到自主 Agent 引擎的三 Phase 路线图 |
-| `docs/reflexion-learning-architecture.md` | **运行轨迹自动学习体系** — 完整数据流、文件角色、升级路径 |
+完整索引见 [docs/README.md](docs/README.md)（按角色分组：使用者 / 开发者 / 审查者）。核心文档：

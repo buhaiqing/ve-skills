@@ -1,0 +1,21 @@
+# Goals Configuration
+# Defines SLO targets and envelope references for autonomous domains.
+
+goals:
+  - name: keep-redis-p99-100ms
+    slo:
+      skill: ve-redis-ops
+      metric: p99_latency_ms
+      target: 100
+      window: 5m
+      burn_rate: 2.0
+    envelope: autonomy-envelope.md#redis-slow-commands
+
+  - name: cut-idle-ecs-cost
+    slo:
+      skill: ve-ecs-ops
+      metric: idle_cost_per_day
+      target: 50
+      window: 24h
+      burn_rate: 1.5
+    envelope: autonomy-envelope.md#ecs-idle-cleanup

@@ -1,3 +1,7 @@
+
+
+---
+
 ## Extracted from GCL Traces (auto-generated)
 
 | Skill | Pattern | Category | Source |

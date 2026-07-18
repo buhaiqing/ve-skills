@@ -54,6 +54,7 @@
 | [skill-routing-graph.md](./skill-routing-graph.md) | 跨 skill 告警路由规则 |
 | [inline-script-pattern.md](./inline-script-pattern.md) | `_inline_script()` 实现约束（验证脚本） |
 | [codegraph-integration.md](./codegraph-integration.md) | CodeGraph 两层同步规则（知识图谱） |
+| [agent-runtime-patterns.md](./agent-runtime-patterns.md) | Agent Runtime Patterns（P1–P9 高阶模式 + 代码示例） |
 
 ---
 

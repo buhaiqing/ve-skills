@@ -2,9 +2,9 @@ package agent
 
 import (
 	"context"
-	"fmt"
 	"os/exec"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -15,31 +15,29 @@ const maxOutputLen = 2000
 // shellMetacharacters detects dangerous shell injection patterns.
 var shellMetacharacters = regexp.MustCompile(`[$` + "`" + `;|&(){}\[\]<>!\\]`)
 
-// Diagnose runs a single ve CLI command for the given skill and returns evidence.
-// The command is built from the skill and payload, executed with a 30s timeout.
-// Safety: rejects commands containing shell metacharacters to prevent injection.
 func Diagnose(root, primarySkill string, payload *IncidentPayload) *DiagnosisEvidence {
-	cmdStr := BuildDiagnoseCommand(primarySkill, payload)
+	args := BuildDiagnoseArgs(primarySkill, payload)
 
-	// Safety gate: reject commands with shell metacharacters
-	if shellMetacharacters.MatchString(cmdStr) {
-		return &DiagnosisEvidence{
-			Skill: primarySkill,
-			Findings: []DiagnosisFinding{{
-				Skill:    primarySkill,
-				Command:  cmdStr,
-				Output:   fmt.Sprintf("diagnose rejected: command contains shell metacharacters"),
-				ExitCode: -1,
-			}},
-			Partial: true,
+	// Safety gate: reject args containing shell metacharacters
+	for _, arg := range args {
+		if shellMetacharacters.MatchString(arg) {
+			return &DiagnosisEvidence{
+				Skill: primarySkill,
+				Findings: []DiagnosisFinding{{
+					Skill:    primarySkill,
+					Command:  "ve " + strings.Join(args, " "),
+					Output:   "diagnose rejected: argument contains shell metacharacters",
+					ExitCode: -1,
+				}},
+				Partial: true,
+			}
 		}
 	}
 
-	// Use exec.Command with explicit args (not shell) to avoid injection
 	ctx, cancel := context.WithTimeout(context.Background(), diagnoseTimeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "sh", "-c", cmdStr)
+	cmd := exec.CommandContext(ctx, "ve", args...)
 
 	output, err := cmd.CombinedOutput()
 	exitCode := 0
@@ -61,7 +59,7 @@ func Diagnose(root, primarySkill string, payload *IncidentPayload) *DiagnosisEvi
 		Findings: []DiagnosisFinding{
 			{
 				Skill:    primarySkill,
-				Command:  cmdStr,
+				Command:  "ve " + strings.Join(args, " "),
 				Output:   outputStr,
 				ExitCode: exitCode,
 			},
