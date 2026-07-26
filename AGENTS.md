@@ -353,7 +353,48 @@ CodeGraph 的 AST + 调用图覆盖了 grep 无法到达的跳转表（接口实
 | P7 配置化 | 硬编码值必须通过参数/环境变量暴露 |
 | P8 FlagSet 解析 | 先提取子命令，再 parse 剩余 args（flag.Parse 遇非 flag 停止） |
 | P9 Range 未使用 | `for i, step := range` step 未使用 → 用 `for i := range` |
+| P10 CodeGraph First | 理解代码先用 `codegraph explore`，再用 `grep`/`read` 补充；修改前确认所有调用方 |
 
+## CodeGraph 优先级原则
+
+> **铁律 — 不可打破。** 所有代码理解任务必须先用 `codegraph explore`，再用 `grep`/`read` 补充。
+
+### 核心原则
+
+| 优先级 | 工具 | 适用场景 | Fallback |
+|---|---|---|---|
+| **Primary** | `codegraph explore` | 理解符号定义/调用链/影响面 | — |
+| **Secondary** | `grep` / `read` | 纯文本搜索、配置文件 | `grep` 等原生工具 |
+| **Tertiary** | LSP (`lsp`) | 符号重命名、引用查找、类型推断 | `grep` |
+
+### 执行顺序
+
+1. **理解阶段**：先用 `codegraph explore <symbol>` 获取 AST + 调用图
+2. **交叉验证**：用 `grep`/`read` 确认细节（字段名、行号等）
+3. **修改前**：再次 `codegraph explore` 确认 blast radius，scope 所有调用方
+4. **修改后**：执行 `codegraph sync --quiet` 同步索引
+
+### Fallback 规则
+
+当 CodeGraph 不可用或索引过期时，按以下顺序降级：
+1. `grep` — 纯文本模式/关键字搜索
+2. `glob` + `read` — 文件存在性 + 内容确认
+3. `lsp` — 符号级操作（definition/references/rename）
+
+### 触发条件
+
+以下场景**必须**使用 CodeGraph：
+- 理解某个函数/方法的实现逻辑
+- 查找某个符号的所有调用方（影响面分析）
+- 追踪跨包的接口实现或动态派送
+- 修改导出符号前的调用方确认
+- 代码重构前的结构分析
+
+### 禁止事项
+
+- ❌ 在 CodeGraph 可用时直接用 `grep` 做代码理解（跳过语义层）
+- ❌ 修改前不确认 blast radius 就直接编辑
+- ❌ 修改 Go 代码后不执行 `codegraph sync --quiet`
 ---
 
 ## Key References
