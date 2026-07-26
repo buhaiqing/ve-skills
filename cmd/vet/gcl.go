@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/costgate"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/gate"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/predict"
@@ -35,10 +36,13 @@ func runGCL(args []string) {
 		runGCLTrace(rest)
 	case "heal-stats":
 		runGCLHealStats(rest)
+	case "cost-gate":
+		code := costgate.RunCostGateCmd(rest)
+		os.Exit(code)
 	case "predict":
 		runGCLPredict(rest)
 	default:
-		fmt.Fprintf(os.Stderr, "vet gcl %s: unknown subcommand (run|gate|trace|heal-stats|predict)\n", sub)
+		fmt.Fprintf(os.Stderr, "vet gcl %s: unknown subcommand (run|gate|trace|heal-stats|predict|cost-gate)\n", sub)
 		os.Exit(3)
 	}
 }

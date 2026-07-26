@@ -23,6 +23,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 	vlog "github.com/buhaiqing/ve-skills/cmd/vet/internal/log"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/memory"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/costgate"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/reflexion/transpile"
 	"gopkg.in/yaml.v3"
 )
@@ -699,6 +700,15 @@ func Run(opts Options) Result {
 	maskedFields := secret.DetectCredentialFields(opts.Command)
 	knownPatterns := loadKnownFailurePatterns(opts.Root, opts.Skill, 10)
 
+	// P0-3: Pre-flight Cost Gate (advisory — logs warning, never blocks)
+	costImpact := costgate.EstimateCostImpact(opts.Skill, opts.Command)
+	if costImpact != nil {
+		fmt.Fprintf(os.Stderr, "[%s] [INFO] gcl.run | cost_gate | operation=%s billing_model=%s est_monthly=%.2f refund=%.2f delta=%.2f warning=%q\n",
+			runID, costImpact.Operation, costImpact.BillingModel,
+			costImpact.EstMonthlyCost, costImpact.RefundOnDelete,
+			costImpact.NetMonthlyDelta, costImpact.Warning)
+	}
+
 	// L4 self-healing telemetry (T11): accumulate retry outcomes when smart
 	// heal is active. FallbackUsed is incremented by runGeneratorWithHeal
 	// when a secondary path is tried (T10 multi-path healing).
@@ -846,6 +856,19 @@ func Run(opts Options) Result {
 			RequestID:      requestID,
 			HealClass:      healClass,
 			SelfHealing:    selfHeal,
+			CostImpact: func() *trace.CostImpactRecord {
+				if costImpact == nil {
+					return nil
+				}
+				return &trace.CostImpactRecord{
+					Operation:       costImpact.Operation,
+					BillingModel:    costImpact.BillingModel,
+					EstMonthlyCost:  costImpact.EstMonthlyCost,
+					RefundOnDelete:  costImpact.RefundOnDelete,
+					NetMonthlyDelta: costImpact.NetMonthlyDelta,
+					Warning:         costImpact.Warning,
+				}
+			}(),
 		})
 
 		if decision == "SAFETY_FAIL" {

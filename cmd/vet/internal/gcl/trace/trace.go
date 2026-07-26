@@ -71,6 +71,8 @@ type Iteration struct {
 	// retried. Empty otherwise. Compatible with the T07 trace schema via
 	// omitempty.
 	SelfHealing *SelfHealingRecord `json:"self_healing,omitempty"`
+	// P0-3: CostImpact records billing impact estimates (advisory, never blocks).
+	CostImpact *CostImpactRecord `json:"cost_impact,omitempty"`
 }
 
 // SelfHealingRecord captures one multi-path self-healing attempt (T10): which
@@ -81,6 +83,16 @@ type SelfHealingRecord struct {
 	Cost       int    `json:"cost"`
 	Result     string `json:"result"` // "ok" | "fail"
 	DurationMs int64  `json:"duration_ms"`
+}
+
+// P0-3: CostImpactRecord carries billing impact estimates into the GCL trace.
+type CostImpactRecord struct {
+	Operation        string  `json:"operation"`
+	BillingModel    string  `json:"billing_model"`
+	EstMonthlyCost  float64 `json:"est_monthly_cost_cny"`
+	RefundOnDelete  float64 `json:"refund_on_delete_cny"`
+	NetMonthlyDelta float64 `json:"net_monthly_delta_cny"`
+	Warning         string  `json:"warning,omitempty"`
 }
 
 // FailurePattern mirrors the Reflexion failure-pattern schema.
