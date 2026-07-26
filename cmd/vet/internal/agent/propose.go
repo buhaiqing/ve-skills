@@ -1,6 +1,11 @@
 package agent
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/strategy"
+)
 
 // DispatchOp is a single operation in the dispatch plan.
 type DispatchOp struct {
@@ -22,6 +27,24 @@ type DispatchPlan struct {
 // ProposeFix builds a dispatch plan from diagnosis evidence and the original payload.
 // Uses the diagnosed skill to build product-specific commands.
 func ProposeFix(evidence *DiagnosisEvidence, payload *IncidentPayload) *DispatchPlan {
+	kb := strategy.NewKnowledgeBase()
+	if pattern := kb.Query(payload.Symptom); pattern != nil {
+		return &DispatchPlan{
+			Operations: []DispatchOp{
+				{
+					Skill:       pattern.Skill,
+					Command:     pattern.Solution,
+					SafetyClass: "read_only",
+					BlastRadius: "single",
+					Confidence:  fmt.Sprintf("%.0f%%", pattern.Confidence*100),
+					Safety:      1.0,
+				},
+			},
+			BlastRadius:  "single",
+			RollbackPlan: "no rollback needed (diagnostic only)",
+		}
+	}
+
 	symptom := strings.ToLower(payload.Symptom)
 	skill := evidence.Skill
 	service := skillToService(skill) // e.g., ve-ecs-ops → ecs

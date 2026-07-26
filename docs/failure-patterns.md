@@ -190,14 +190,6 @@
 
 ## Extracted from GCL Traces (auto-generated)
 
-> This block is **auto-generated** by the GCL write-back pipeline at MAX_ITER / SAFETY_FAIL.
-> Patterns are persisted to `.runtime/memory/failure-patterns.json` (structured JSON, dedup by `(skill, pattern)`, count++).
-> This markdown block is a compatibility snapshot — the JSON store is the authoritative source.
-> See `docs/reflexion-learning-architecture.md` for the complete write-back chain.
->
-> **Do not edit this block manually.**
-
-| Skill | Pattern | Category | Fix | Count |
-|-------|---------|----------|-----|-------|
-| `ve-ecs-ops` | `max_iter` | `orchestration` | execution failed with error class: max_iter | 1 |
-| `ve-skill-generator` | `operation blocked by execution-risk policy: REFUSE` | `execution_risk` | escalate to human or supply `--confirmed` for ASK class | 8 |
+| Skill | Pattern | Category | Source |
+|-------|---------|----------|--------|
+| `ve-skill-generator` | `operation blocked by execution-risk policy: REFUSE` | execution_risk | `echo {"Response":{"RequestId":"ci-smoke"}}` |

@@ -4,6 +4,18 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/observability"
+)
+
+// Comparator defines how to compare an observed value against the SLO target.
+type Comparator int
+
+const (
+	// CompareGreaterThan means the SLO is violated when actual > target (e.g. latency).
+	CompareGreaterThan Comparator = iota
+	// CompareLessThan means the SLO is violated when actual < target (e.g. availability).
+	CompareLessThan
 )
 
 // SLOStatus represents the current state of an SLO.
@@ -38,12 +50,13 @@ func (s SLOStatus) String() string {
 
 // SLO defines a Service Level Objective.
 type SLO struct {
-	Name     string        // "redis-p99-latency"
-	Skill    string        // "ve-redis-ops"
-	Metric   string        // "p99_latency_ms"
-	Target   float64       // 100 (ms)
-	Window   time.Duration // 5m
-	BurnRate float64       // 2.0 (alert threshold)
+	Name       string        // "redis-p99-latency"
+	Skill      string        // "ve-redis-ops"
+	Metric     string        // "p99_latency_ms"
+	Target     float64       // 100 (ms)
+	Window     time.Duration // 5m
+	BurnRate   float64       // 2.0 (alert threshold)
+	Comparator Comparator    // how to compare actual against target
 }
 
 // Metric represents an observed metric value.
@@ -73,6 +86,7 @@ type sloState struct {
 	status      SLOStatus
 	lastObserve time.Time
 	burnRate    float64
+	budgetGrade string
 	violatedAt  time.Time // when the SLO first entered Violated state
 }
 
@@ -99,16 +113,18 @@ func NewEngine(slos []SLO) *Engine {
 
 // Observe feeds a metric value into the engine and returns the current SLO status.
 func (e *Engine) Observe(metric Metric) (SLOStatus, error) {
+	rootTrace := observability.NewRootTrace("slo", "observe")
+	span := observability.StartSpan(rootTrace, "slo", "observe_metric")
+	defer span.End(nil)
+
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	// Find the SLO for this metric
 	for _, slo := range e.slos {
 		if slo.Metric == metric.Name {
 			state := e.states[slo.Name]
 			state.lastObserve = metric.Time
 
-			// Calculate status based on metric value vs target
 			ratio := metric.Value / slo.Target
 			var newStatus SLOStatus
 
@@ -123,30 +139,29 @@ func (e *Engine) Observe(metric Metric) (SLOStatus, error) {
 				newStatus = StatusViolated
 			}
 
-			// Track when we first entered Violated state
 			if newStatus == StatusViolated {
 				if state.violatedAt.IsZero() {
 					state.violatedAt = metric.Time
 				}
-				// Check if we've been violated for the full window
 				if slo.Window > 0 && metric.Time.Sub(state.violatedAt) >= slo.Window {
 					// Already violated for full window, stay violated
 				} else if slo.Window > 0 && metric.Time.Sub(state.violatedAt) < slo.Window {
-					// Not yet violated for full window, treat as Critical
 					newStatus = StatusCritical
 				}
 			} else {
 				state.violatedAt = time.Time{}
 			}
 
-			// Calculate burn rate
-			state.burnRate = ratio
+			budget := CalculateBudget(slo, metric.Value, metric.Time, slo.Window)
+			state.budgetGrade = budget.Grade
+			state.burnRate = budget.BurnRate
 			state.status = newStatus
 
 			return newStatus, nil
 		}
 	}
 
+	span.End(fmt.Errorf("unknown metric: %s", metric.Name))
 	return StatusHealthy, fmt.Errorf("unknown metric: %s", metric.Name)
 }
 

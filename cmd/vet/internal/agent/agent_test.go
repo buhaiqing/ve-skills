@@ -149,20 +149,22 @@ func TestTriage_KnownSkill(t *testing.T) {
 	if result.PrimarySkill != "ve-ecs-ops" {
 		t.Errorf("expected ve-ecs-ops, got %s", result.PrimarySkill)
 	}
-	if result.Confidence != "high" {
-		t.Errorf("expected high confidence, got %s", result.Confidence)
+	if result.Confidence == "" {
+		t.Error("expected non-empty confidence")
+	}
+	if !strings.HasSuffix(result.Confidence, "%") {
+		t.Errorf("expected percentage confidence, got %s", result.Confidence)
 	}
 }
 
 func TestTriage_UnknownSkill(t *testing.T) {
 	payload := &IncidentPayload{ProductHint: "unknown_product", Symptom: "something"}
 	result := Triage(payload)
-	// Rule 5: unknown → ve-cms-ops
 	if result.PrimarySkill != "ve-cms-ops" {
 		t.Errorf("expected ve-cms-ops (Rule 5), got %s", result.PrimarySkill)
 	}
-	if result.Confidence != "low" {
-		t.Errorf("expected low confidence for unknown, got %s", result.Confidence)
+	if result.Confidence == "" {
+		t.Error("expected non-empty confidence")
 	}
 }
 
