@@ -118,7 +118,38 @@ Specific checks:
 - [ ] No direct `ve <service> <Action>` was issued by this skill.
 - [ ] Trace path matches `./audit-results/incident-trace-<ticket_id>-<ISO>.json`.
 
-## 6. Reflexion Integration (0 / 0.5 / 1) — orchestration-specific
+## 6. Cost Efficiency (0 / 1 / 2)
+
+Does the fix proposal include cost estimation and optimization?
+
+| Score | Criteria |
+|---|---|
+| **2** | Cost estimate generated (`ve billing DescribeBillDetail`) AND alternative cheaper fix considered |
+| **1** | Cost known but no cheaper alternative evaluated |
+| **0** | No cost assessment in the proposal |
+
+Specific checks:
+
+- [ ] `ve billing DescribeBillDetail --BillingCycle $(date +%Y-%m) --InstanceId $resource_id` called before propose
+- [ ] If multiple fix strategies exist, cost comparison included in the output
+
+## 7. Compliance (0 / 1 / 2)
+
+Does the proposed operation meet baseline compliance requirements?
+
+| Score | Criteria |
+|---|---|
+| **2** | Resource has cost tags (`--Tags`), encryption enabled, security group properly restricted |
+| **1** | Partial compliance (tags present but no encryption, or vice versa) |
+| **0** | No compliance check performed |
+
+Specific checks:
+
+- [ ] `--Tags` parameter included in every `Create*` / `RunInstances` command
+- [ ] Encryption settings verified for data-at-rest resources (RDS, Redis, EBS)
+- [ ] Security group inbound rules not set to 0.0.0.0/0 without justification
+
+## 8. Reflexion Integration (0 / 0.5 / 1) — orchestration-specific
 
 Did the loop **write** what it learned?
 
@@ -137,7 +168,7 @@ Specific checks:
 - [ ] Count field starts at 1 if new
 - [ ] Line budget ≤ 200 respected (the auto-generated block is pruned by `gcl_trace_aggregate`)
 
-## 7. Cross-Skill Delegation (0 / 0.5 / 1) — orchestration-specific
+## 9. Cross-Skill Delegation (0 / 0.5 / 1) — orchestration-specific
 
 Did the loop delegate instead of absorb?
 

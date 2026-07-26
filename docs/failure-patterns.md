@@ -129,6 +129,9 @@
 | `orchestration` | `cross_skill_timeout` | Cross-skill delegation timed out | Increase delegation timeout or simplify | 0 |
 | `gcl` | `critic_error` | Critic returned invalid score | Validate critic prompt and rubric | 0 |
 | `gcl` | `trace_write` | Failed to write GCL trace to disk | Check disk space and permissions | 0 |
+| `orchestration` | `budget_overrun` | Fix cost exceeds budget without warning | Include cost estimate in propose step before execution | 0 |
+| `orchestration` | `wrong_billing_model` | PostPaid→PrePaid migration missed | Add billing model check in diagnose step | 0 |
+| `gcl` | `missing_cost_dimension` | Critic accepted fix without cost assessment | Validate Cost Efficiency dimension score > 0 | 0 |
 
 ---
 

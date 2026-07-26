@@ -1,5 +1,11 @@
 package agent
 
+import (
+	"fmt"
+
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/triage"
+)
+
 var skillMap = map[string]string{
 	"ecs":           "ve-ecs-ops",
 	"redis":         "ve-redis-ops",
@@ -22,14 +28,29 @@ var skillMap = map[string]string{
 	"vke":           "ve-vke-ops",
 }
 
-// Triage maps an IncidentPayload's ProductHint to the corresponding ve-*-ops skill.
-// Unknown products default to ve-cms-ops (Rule 5).
 func Triage(payload *IncidentPayload) *TriageResult {
+	classifier := triage.DefaultClassifier()
+	input := payload.Symptom + " " + payload.ProductHint
+	results := classifier.Classify(input, 3)
+
+	if len(results) > 0 && results[0].Confidence >= 0.4 {
+		primarySkill := results[0].Skill
+		secondarySkills := []string{}
+		for i := 1; i < len(results); i++ {
+			secondarySkills = append(secondarySkills, results[i].Skill)
+		}
+		return &TriageResult{
+			PrimarySkill:    primarySkill,
+			SecondarySkills: secondarySkills,
+			Confidence:      fmt.Sprintf("%.0f%%", results[0].Confidence*100),
+		}
+	}
+
+	// Fallback to legacy mapping
 	skill, ok := skillMap[payload.ProductHint]
 	if !ok {
 		skill = "ve-cms-ops"
 	}
-
 	return &TriageResult{
 		PrimarySkill: skill,
 		Confidence:   confidenceFromSkill(skill, ok),

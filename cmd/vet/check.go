@@ -13,7 +13,9 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/aiops"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/assessment"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/eval"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/finopsquality"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/tags"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/gcl"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/links"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/policyguard"
@@ -36,7 +38,7 @@ type checkSummary struct {
 
 func runCheck(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard|trace)")
+		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard|trace|routing|finops|tags)")
 		os.Exit(2)
 	}
 	name := args[0]
@@ -75,8 +77,12 @@ func runCheck(args []string) {
 		pgCheck(*root, *jsonOut)
 		case "trace":
 			traceCheck(*root, *jsonOut)
-	case "routing":
-		runCheckRouting(*root, *jsonOut)
+case "routing":
+			runCheckRouting(*root, *jsonOut)
+		case "finops":
+			finopsQualityCheck(*root, *jsonOut)
+		case "tags":
+			tagsCheck(*root, *jsonOut)
 	default:
 		fmt.Fprintf(os.Stderr, "vet check %s: not implemented yet\n", name)
 		os.Exit(3)
@@ -160,6 +166,58 @@ func aiopsCheck(root string, jsonOut bool) {
 	if !rep.OK {
 		os.Exit(1)
 	}
+}
+
+func finopsQualityCheck(root string, jsonOut bool) {
+	rep := finopsquality.CheckDir(root)
+	if jsonOut {
+		b, _ := json.MarshalIndent(rep, "", "  ")
+		fmt.Println(string(b))
+		return
+	}
+	fmt.Println("FinOps Quality Report")
+	fmt.Println("==================================================")
+	fmt.Printf("Total skills: %d\n", rep.TotalSkills)
+	fmt.Printf("Passing: %d/%d\n", rep.Passing, rep.TotalSkills)
+	for _, q := range rep.Quality {
+		status := "PASS"
+		if !q.OK {
+			status = "FAIL"
+		}
+		fmt.Printf("  %s %s (lines=%d, pricing=%v, optims=%v)\n", status, q.Skill, q.LineCount, q.HasPricing != "", q.HasOptimizations)
+	}
+	fmt.Println("")
+	if !rep.OK {
+		fmt.Printf("FAIL: %d skill(s) with low-quality finops.md\n", rep.Failing)
+		os.Exit(1)
+	}
+	fmt.Println("OK: all skills have quality finops.md")
+}
+
+func tagsCheck(root string, jsonOut bool) {
+	rep := tags.CheckDir(root)
+	if jsonOut {
+		b, _ := json.MarshalIndent(rep, "", "  ")
+		fmt.Println(string(b))
+		return
+	}
+	fmt.Println("Tags Compliance Report")
+	fmt.Println("==================================================")
+	fmt.Printf("Total skills: %d\n", rep.TotalSkills)
+	fmt.Printf("Passing: %d/%d\n", rep.Passing, rep.TotalSkills)
+	for _, q := range rep.Quality {
+		status := "PASS"
+		if !q.OK {
+			status = "FAIL"
+		}
+		fmt.Printf("  %s %s (has_tags=%v)\n", status, q.Skill, q.HasTags)
+	}
+	fmt.Println("")
+	if !rep.OK {
+		fmt.Printf("FAIL: %d skill(s) with missing --Tags in Create commands\n", rep.Failing)
+		os.Exit(1)
+	}
+	fmt.Println("OK: all skills have --Tags in Create commands")
 }
 
 func assessmentCheck(root string, jsonOut bool) {

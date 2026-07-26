@@ -141,6 +141,7 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 - Cap at `min(15, alarm_count × 3)` read calls; log skipped calls.
 - Emit `{{output.diagnosis_evidence}}` = raw observation snippets.
 - Hit `cross_skill` boundary → delegate (do not absorb).
+- **Billing data integration** — query affected resource's monthly cost via `ve billing DescribeBillDetail --BillingCycle $(date +%Y-%m) --InstanceId $resource_id`. Flag cost anomalies (spike > 50% vs prior month). If `ve-billing-ops` unavailable, omit cost data but flag in trace.
 
 ### Step 4 — Propose fix + GCL loop
 
@@ -148,6 +149,7 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 - Run GCL via `vet gcl run` with this skill's `references/rubric.md`.
 - Safety must equal 1.0 on every destructive operation.
 - `max_iter = 3` for repair loop; `max_iter = 2` for any destructive.
+- **Cost assessment** — for each proposed fix, generate cost estimate via `ve billing DescribeBillDetail`. Compare alternative strategies (e.g., scale up vs add replica). Surface cost difference: "方案 A = ¥500/mo | 方案 B = ¥300/mo". Include cost in `dispatch_plan`.
 
 ### Step 5 — Confirm (user gate, ASK-class only)
 
@@ -183,7 +185,7 @@ The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits
 
 ## Quality Gate (GCL)
 
-This skill runs the standard 5-dimension rubric (defined in `references/rubric.md`) plus 2 orchestration-specific dimensions (Reflexion integration + Cross-skill delegation). `max_iter = 3` for read-only paths, `max_iter = 2` for any iteration that touches a destructive leaf skill.
+This skill runs the standard 7-dimension rubric (defined in `references/rubric.md`) plus 2 orchestration-specific dimensions, totaling 9 dimensions (Reflexion integration + Cross-skill delegation). `max_iter = 3` for read-only paths, `max_iter = 2` for any iteration that touches a destructive leaf skill.
 
 - Safety = 0 → ABORT immediately; never return partial.
 - Spec Compliance requires the loop to actually read `docs/skill-routing-graph.md` (not skipped).
@@ -198,6 +200,16 @@ See `references/rubric.md` for the per-dimension rules.
 - **No autopilot for non-AUTO class** — only operations with `{{policy.decision}} == AUTO` auto-execute; ASK requires `{{user.confirm}}`; REFUSE is blocked outright.
 - **No credential in trace** — `<masked>` only, `redaction_pass: true`.
 - **First incident is the slowest** — expect the GCL loop to fail once before the rubric converges. The second incident on the same symptom should be faster if Reflexion worked.
+
+### Periodic Cost Patrol Mode
+
+A scheduled (weekly) variant of the loop that proactively finds cost waste:
+
+1. **Scan** — iterate over all 28 product skills; for each, call read-only `Describe*` / `List*` to enumerate resources.
+2. **Classify** — flag candidates for: unattached EIP (`Status=Available`), idle ECS (check CPU/network metrics via `ve cms`), oversized RDS (low connection count), expired PrePaid instances.
+3. **Report** — aggregate findings into `audit-results/cost-patrol-<ISO>.json` with estimated monthly savings.
+4. **Act** — `AUTO` for safe reclamation (release unattached EIP); `ASK` for destructive (terminate instance). Policy classification reuses the same `execution-risk.md` matrix.
+5. **Learn** — recurring idle patterns are persisted via Reflexion as cost-related failure patterns. The next patrol on the same skill is faster.
 
 ## Cross-Skill Delegation (extends `docs/skill-routing-graph.md`)
 
@@ -227,7 +239,7 @@ This skill never reimplements routing. It loads the routing table, matches, and 
 
 ## Next Steps
 
-- Read `references/rubric.md` — the 7-dimension GCL rubric for this skill
+- Read `references/rubric.md` — the 9-dimension GCL rubric for this skill
 - Read `references/prompt-templates.md` — Generator / Critic / Safety / Trace / Cross-skill prompt skeletons
 - Read `docs/skill-routing-graph.md` — the routing table this skill consumes
 - Read `docs/failure-patterns.md` `## Extracted from GCL Traces` (auto-generated) and `## 6. Incident Response Failures` (seeded) — where this skill's learning lives

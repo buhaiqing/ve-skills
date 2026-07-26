@@ -39,6 +39,8 @@ Each `SKILL.md` MUST declare its skill-specific rubric. Minimum 5 dimensions:
 | **Idempotency** | Retrying the same call will not cause duplicate side-effects | 0 / 0.5 / 1 | ≥ 0.5 |
 | **Traceability** | Output is auditable: command, params, raw response, errors all captured | 0 / 0.5 / 1 | ≥ 0.5 |
 | **Spec Compliance** | Conforms to the skill's `references/core-concepts.md` and the **Five Core Standards** (boundaries, I/O, steps, failures, single responsibility) | 0 / 0.5 / 1 | ≥ 0.5 |
+| **Cost Efficiency** | Estimate + optimization included in the fix proposal | 0 / 1 / 2 | ≥ 1 |
+| **Compliance** | Resource meets baseline: cost tags, encryption, security group | 0 / 1 / 2 | ≥ 1 |
 
 **Safety = 0 → ABORT immediately, regardless of total score.**
 

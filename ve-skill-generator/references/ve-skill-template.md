@@ -55,7 +55,7 @@ Every generated skill MUST satisfy these five standards. Use them as a design ch
 | 1 | ✅ **Clear Boundaries** | SHOULD/SHOULD NOT Use conditions with precise triggers and delegation rules | ≥ 3 SHOULD entries with specific triggers; ≥ 3 SHOULD NOT entries with named delegation targets |
 | 2 | ✅ **Structured I/O** | Placeholder conventions (`{{env.*}}`, `{{user.*}}`, `{{output.*}}`) with type and source documented | Zero bare variable names; every input uses a typed placeholder; every output maps to a JSON path |
 | 3 | ✅ **Explicit Actionable Steps** | Every operation: Pre-flight → Execute → Validate → Recover, with numbered imperative steps | ≥ 1 operation with all 4 phases present; all steps numbered and imperative (not descriptive) |
-| 4 | ✅ **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type; GCL rubric with Safety = 0 → ABORT | Error table has ≥ 10 rows; each row has: code, max retries, backoff, agent action, UX template; `references/rubric.md` exists with the 5-dimension GCL rubric |
+| 4 | ✅ **Complete Failure Strategies** | Error taxonomy table with ≥ 10 product-specific codes; HALT vs retry per error type; GCL rubric with Safety = 0 → ABORT | Error table has ≥ 10 rows; each row has: code, max retries, backoff, agent action, UX template; `references/rubric.md` exists with the 7-dimension GCL rubric |
 | 5 | ✅ **Absolute Single Responsibility** | One product, one primary resource model; cross-product delegation to other skills | SKILL.md covers exactly 1 product; cross-product ops delegate (not duplicate); naming follows `ve-[product]-ops` |
 
 Refer to the [meta-skill](../SKILL.md#five-core-standards-quality-gates) for detailed descriptions of each standard.
@@ -230,7 +230,7 @@ A generated skill is **incomplete** if it does NOT ship all three:
 | Deliverable | Path | Required content |
 |---|---|---|
 | **GCL chapter** | `SKILL.md` section `## Quality Gate (GCL)` | 4-tier table; loop contract (4 steps); cross-skill delegation table; trace spec; explicit pointer to the rubric and prompt templates below |
-| **Rubric** | `references/rubric.md` | 5-dimension scoring (Correctness / Safety / Idempotency / Traceability / Spec Compliance); product-specific safety rules; product-specific correctness checks; ≥ 10 product-specific error codes mapped to HALT vs retry; **Safety = 0 → ABORT** rule |
+| **Rubric** | `references/rubric.md` | 7-dimension scoring (Correctness / Safety / Idempotency / Traceability / Spec Compliance / Cost Efficiency / Compliance); product-specific safety rules; product-specific correctness checks; ≥ 10 product-specific error codes mapped to HALT vs retry; **Safety = 0 → ABORT** rule |
 | **Prompt templates** | `references/prompt-templates.md` | Generator prompt (with `{{env.*}}` / `{{user.*}}` / `{{output.*}}` placeholders); Critic prompt (Critic MUST NOT see the raw user request); Orchestrator prompt; ≥ 1 verbatim safety prompt per Destructive / State-changing op |
 
 ### Safety prompts (mandatory for Destructive / State-changing ops)
@@ -617,7 +617,7 @@ Poll describe (or head/get) until **404**, **NotFound**, or status indicates del
 ## Command map
 | Goal | Example `ve` invocation | Notes |
 |------|--------------------------|-------|
-| Create | `ve [product] Create[Resource] --Region cn-beijing` | JSON output by default |
+| Create | `ve [product] Create[Resource] --Region cn-beijing --Tags "[{\"Key\":\"cost-center\",\"Value\":\"engineering\"}]"` | JSON output by default; --Tags required for FinOps cost attribution |
 | Describe | `ve [product] Describe[Resource] --Region cn-beijing` | JSON output by default |
 ```
 
@@ -750,8 +750,8 @@ func main() {
 name: ve-[product-name]-ops-rubric
 description: >-
   GCL rubric instance for ve-[product-name]-ops. Use to score Generator outputs
-  on a 5-dimension scale (Correctness / Safety / Idempotency / Traceability /
-  Spec Compliance). Safety must equal 1 for any destructive operation or
+  on a 7-dimension scale (Correctness / Safety / Idempotency / Traceability /
+  Spec Compliance / Cost Efficiency / Compliance). Safety must equal 1 for any destructive operation or
   GCL aborts. See repo-level AGENTS.md §3 for the meta-rubric.
 license: MIT
 metadata:
