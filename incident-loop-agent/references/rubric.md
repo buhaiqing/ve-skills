@@ -46,6 +46,7 @@ Did the loop actually solve the user's incident on the right resource?
 Specific checks:
 
 - [ ] `{{output.triage_class.primary}}` is in `../../docs/skill-routing-graph.md` for the alarm pattern.
+- [ ] **P0-2 Alarm merge**: when ≥2 alarms received, `alarm.Merge()` called; `IsStorm` computed; `RootCause = earliest` per group.
 - [ ] `dispatch_plan.blast_radius` is enumerated (resource ids, not just types).
 - [ ] Rollback script is included for any destructive step.
 

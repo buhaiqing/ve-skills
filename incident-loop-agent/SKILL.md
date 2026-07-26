@@ -115,6 +115,8 @@ This skill MUST refuse to run a leaf `ve <service> <Action>` directly; it constr
 | `{{output.dispatch_plan}}` | JSON {primary, secondary, blast_radius} | Internal only |
 | `{{output.critic_verdict}}` | GCL Critic JSON | Persist into trace |
 | `{{output.failure_pattern}}` | One-line token if any iteration fails | Auto-aggregated by GCL write-back into `docs/failure-patterns.md` `## Extracted from GCL Traces` (dedup by skill+pattern) |
+| `{{output.alarm_groups}}` | Alarm groups from merge pre-processing | P0-2: `vet check alarm-merge` dedup by ResourceID+Metric+5min window |
+| `{{output.is_storm}}` | True if alarm count exceeds storm threshold | P0-2: IsStorm = Count > 10 in `cmd/vet/internal/alarm/merge.go` |
 
 > **Security**: this skill never sees `VOLCENGINE_SECRET_KEY`. It only authenticates via env and delegates. No credential is ever written to a trace or report.
 
@@ -122,15 +124,22 @@ This skill MUST refuse to run a leaf `ve <service> <Action>` directly; it constr
 
 The loop runs in **7 steps** with mandatory pre/post conditions. Each step emits `{{output.*}}` for the next.
 
-### Step 1 — `{{input.incident_payload}}` ingestion
+### Step 1 — `{{input.incident_payload}}` ingestion + alarm pre-processing
 
 - Source: CMS alarm webhook / JIRA DOPS create / chat trigger / patrol milestone.
 - Normalize into `{ticket_id, severity, product_hint, raw_event, observed_at}`.
+- **P0-2 Alarm Merge (告警归并引擎)**: when `{{input.incident_payload}}` contains ≥2 alarms:
+  1. Group by `(Product, ResourceID, Metric, 5-min time-slot)` using `cmd/vet/internal/alarm/merge.go` `Merge()` → `AlarmGroup`.
+  2. `IsStorm = true` when any group's `Count > 10`; route to `ve-cms-ops` Rule 5 first for storm classification.
+  3. Cross-product same `ResourceID` across ECS/RDS/Redis → merge into single group (single root cause).
+  4. `RootCause =` earliest alarm in each group (by `observed_at`).
+  5. Emit `{{output.alarm_groups}}` and `{{output.is_storm}}` for downstream steps.
 - Fail-fast on missing `product_hint` → ask user once.
 
 ### Step 2 — Triage (load routing graph)
 
 - Read `docs/skill-routing-graph.md` (lazy, ~100 lines).
+- If `{{output.is_storm}} == true`: prefer `ve-cms-ops` Rule 5 (alarm storm correlation) as primary.
 - Match `product_hint + symptom` against the alarm pattern table.
 - Emit `{{output.triage_class}}` = `{primary, secondary[], confidence}`.
 - Unknown pattern → route to `ve-cms-ops` first (Rule 5).

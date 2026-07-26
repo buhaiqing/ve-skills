@@ -1,0 +1,128 @@
+# ECS Diagnosis Rules — machine-readable, parsed by cmd/vet/internal/check/diagnosis/
+# Converted from aiops.md Cross-Skill Diagnosis Decision Tree
+rules:
+  - id: ecs-cpu-surge
+    product: ECS
+    severity: high
+    description: CPU > 90% sustained for 5 minutes — branch to app/jvm/process/credit
+    trigger:
+      metric: CPU
+      operator: ">"
+      threshold: 90
+      duration: "5m"
+    steps:
+      - action: check
+        target: memory
+        condition: Memory > 85
+        then_do: delegate
+        suggestion: "Application-level issue — delegate to application skill, check GC logs and thread states"
+      - action: check
+        target: process_list
+        condition: single_process
+        then_do: continue
+        suggestion: "Runaway process detected — kill or restart the process"
+      - action: check
+        target: burstable_credit
+        condition: InstanceType contains t5 AND CreditBalance < 20
+        then_do: escalate
+        suggestion: "CPU credit exhausted on burstable instance — switch to compute-optimized"
+      - action: recommend
+        target: reboot
+        then_do: stop
+        suggestion: "System-wide CPU spike with no clear cause — consider rebooting instance"
+    correlate_with:
+      - product: RDS
+        metric: Threads_connected
+        window: "5m"
+        threshold: 0.7
+
+  - id: ecs-disk-full
+    product: ECS
+    severity: critical
+    description: Disk usage > 90% — check log files, latency, expand disk
+    trigger:
+      metric: DiskUsage
+      operator: ">"
+      threshold: 90
+    steps:
+      - action: check
+        target: log_files
+        condition: log_files_found
+        then_do: continue
+        suggestion: "Log files consuming disk space — set up rotation via Cloud Assistant"
+      - action: check
+        target: disk_latency
+        condition: ReadLatency > 20ms
+        then_do: continue
+        suggestion: "High disk latency — consider upgrading from basic disk to ESSD"
+      - action: recommend
+        target: expand_disk
+        then_do: stop
+        suggestion: "Disk space exhausted — expand cloud disk or add a data disk"
+
+  - id: ecs-disk-iops-surge
+    product: ECS
+    severity: high
+    description: Disk IOPS > 90% of max throughput — check queries and backup jobs
+    trigger:
+      metric: DiskIOPS
+      operator: ">"
+      threshold: 90
+    steps:
+      - action: check
+        target: database_queries
+        condition: slow_queries_found
+        then_do: delegate
+        suggestion: "Database query causing IOPS spike — delegate to ve-rds-ops"
+      - action: check
+        target: backup_jobs
+        condition: backup_running
+        then_do: continue
+        suggestion: "Backup job running during peak — reschedule to off-peak window"
+      - action: recommend
+        target: resize_disk
+        then_do: stop
+        suggestion: "Disk IOPS at limit — upgrade disk type or规格"
+
+  - id: ecs-network-latency
+    product: ECS
+    severity: high
+    description: Network latency spike > 200ms — delegate to VPC for path analysis
+    trigger:
+      metric: Latency
+      operator: ">"
+      threshold: 200
+    steps:
+      - action: delegate
+        target: ve-vpc-ops
+        then_do: stop
+        suggestion: "Network path issue detected — delegate to ve-vpc-ops for path analysis"
+
+  - id: ecs-idle
+    product: ECS
+    severity: low
+    description: CPU < 5% sustained for 7 days — idle resource flag for cost optimization
+    trigger:
+      metric: CPU
+      operator: "<"
+      threshold: 5
+      duration: "168h"
+    steps:
+      - action: recommend
+        target: stop_or_downsize
+        then_do: stop
+        suggestion: "Idle instance detected (CPU < 5% for 7 days) — stop instance or downsize to reduce cost"
+
+  - id: ecs-spot-interrupt
+    product: ECS
+    severity: medium
+    description: Spot instance interruption warning — convert to PrePaid for stability
+    trigger:
+      metric: SpotInterruption
+      operator: "=="
+      threshold: 1
+    steps:
+      - action: recommend
+        target: convert_prepaid
+        then_do: stop
+        suggestion: "Spot interruption warning — convert to PrePaid for production stability"
