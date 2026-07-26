@@ -10,8 +10,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/alarm"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/aiops"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/assessment"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/diagnosis"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/eval"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/finopsquality"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
@@ -38,7 +40,7 @@ type checkSummary struct {
 
 func runCheck(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard|trace|routing|finops|tags)")
+		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard|trace|routing|finops|tags|alarm-merge|diagnosis)")
 		os.Exit(2)
 	}
 	name := args[0]
@@ -75,14 +77,18 @@ func runCheck(args []string) {
 		perSkillCheck("eval", evalRes, evalSkills, *jsonOut)
 	case "policyguard":
 		pgCheck(*root, *jsonOut)
-		case "trace":
-			traceCheck(*root, *jsonOut)
-case "routing":
-			runCheckRouting(*root, *jsonOut)
-		case "finops":
-			finopsQualityCheck(*root, *jsonOut)
-		case "tags":
-			tagsCheck(*root, *jsonOut)
+	case "trace":
+		traceCheck(*root, *jsonOut)
+	case "routing":
+		runCheckRouting(*root, *jsonOut)
+	case "finops":
+		finopsQualityCheck(*root, *jsonOut)
+	case "tags":
+		tagsCheck(*root, *jsonOut)
+	case "alarm-merge":
+		alarmMergeCheck(*root, *jsonOut)
+	case "diagnosis":
+		diagnosisCheck(*root, *jsonOut)
 	default:
 		fmt.Fprintf(os.Stderr, "vet check %s: not implemented yet\n", name)
 		os.Exit(3)
@@ -94,15 +100,30 @@ func frontmatterCheck(root string, jsonOut bool) {
 	perSkillCheck("frontmatter", results, skills, jsonOut)
 }
 
+func alarmMergeCheck(root string, jsonOut bool) {
+	results, skills := alarm.CheckDir(root)
+	// Ensure nil map so perSkillCheck sees no errors
+	if results == nil {
+		results = make(map[string][]string)
+	}
+	perSkillCheck("alarm-merge", results, skills, jsonOut)
+}
+
+func diagnosisCheck(root string, jsonOut bool) {
+	results, skills := diagnosis.CheckDir(root)
+	perSkillCheck("diagnosis", results, skills, jsonOut)
+}
+
 // perSkillCheck renders a results map (only failing skills present) + sorted
 // skill list into either human or JSON form. Passing == skill not in map.
 func perSkillCheck(name string, results map[string][]string, skills []string, jsonOut bool) {
 	var reports []checkReport
 	for _, sk := range skills {
-		errs, hasErrors := results[sk]
+		errs := results[sk]
 		if errs == nil {
 			errs = []string{}
 		}
+		hasErrors := len(errs) > 0
 		reports = append(reports, checkReport{
 			Skill:  filepath.Base(filepath.Dir(sk)),
 			OK:     !hasErrors,
