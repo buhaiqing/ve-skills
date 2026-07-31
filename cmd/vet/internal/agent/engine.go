@@ -115,7 +115,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 	if state.CurrentStep <= StepPropose {
 		span := observability.StartSpan(observability.FromContext(ctx), "agent", "propose")
 		logStep(runID, "PROPOSE", "start", "")
-		plan := ProposeFix(state.Evidence, payload)
+		plan := ProposeFixWithRoot(root, state.Evidence, payload)
 		state.Plan = plan
 		saveErr := SaveState(root, state)
 		if saveErr != nil {

@@ -45,8 +45,13 @@ func healIncidentType(symptom string) string {
 // ProposeFix builds a dispatch plan from diagnosis evidence and the original payload.
 // Uses the diagnosed skill to build product-specific commands.
 func ProposeFix(evidence *DiagnosisEvidence, payload *IncidentPayload) *DispatchPlan {
+	return ProposeFixWithRoot(".", evidence, payload)
+}
+
+// ProposeFixWithRoot builds a dispatch plan, loading persisted KB patterns from root.
+func ProposeFixWithRoot(root string, evidence *DiagnosisEvidence, payload *IncidentPayload) *DispatchPlan {
 	healType := healIncidentType(payload.Symptom)
-	kb := strategy.NewKnowledgeBase()
+	kb := strategy.LoadKnowledgeBase(root)
 	if pattern := kb.Query(payload.Symptom); pattern != nil {
 		return &DispatchPlan{
 			Operations: []DispatchOp{
