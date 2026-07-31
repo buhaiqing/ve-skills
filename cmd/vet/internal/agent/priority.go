@@ -83,17 +83,39 @@ func BuildValuePriorityReport(samples []EvalSample, values []ValueMetrics) Value
 		})
 	}
 
-	sort.Slice(items, func(i, j int) bool {
-		if items[i].Score != items[j].Score {
-			return items[i].Score > items[j].Score
+		// Reason tier first (plan order), then Score within tier, then Key.
+		// Avoids mixing 0–1 rates with MTTA milliseconds in one Score sort.
+		sort.Slice(items, func(i, j int) bool {
+			ri, rj := reasonRank(items[i].Reason), reasonRank(items[j].Reason)
+			if ri != rj {
+				return ri < rj
+			}
+			if items[i].Score != items[j].Score {
+				return items[i].Score > items[j].Score
+			}
+			if items[i].Key != items[j].Key {
+				return items[i].Key < items[j].Key
+			}
+			return items[i].Reason < items[j].Reason
+		})
+		if len(items) > priorityTopN {
+			items = items[:priorityTopN]
 		}
-		return items[i].Key < items[j].Key
-	})
-	if len(items) > priorityTopN {
-		items = items[:priorityTopN]
+		return ValuePriorityReport{Top: items}
 	}
-	return ValuePriorityReport{Top: items}
-}
+
+	func reasonRank(reason string) int {
+		switch reason {
+		case "high_false_refuse":
+			return 0
+		case "low_success":
+			return 1
+		case "high_mtta":
+			return 2
+		default:
+			return 99
+		}
+	}
 
 // LoadValueMetricsJSONL reads one ValueMetrics object per non-empty line.
 func LoadValueMetricsJSONL(path string) ([]ValueMetrics, error) {
