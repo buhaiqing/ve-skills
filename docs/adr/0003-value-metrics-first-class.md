@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Accepted
+
+> Accepted 2026-08-01 via grilling after Wave A DoD (feat/l400-wave-a). Decision text unchanged.
 
 ## Context
 
@@ -22,7 +24,7 @@ Microsoft L400 Business 支柱要求：**可度量业务价值 + 优化环**；�
 - 正面：业务与技术 KPI 同屏，避免「Stable but slow / dashboard 无决策」。  
 - 正面：写回可测（fake writer），符合仓库无强制外部依赖约定。  
 - 负面：需维护 JSONL 聚合与看板字段；AlertedAt 缺失时 MTTA=0（文档化）。  
-- 后续：B1–B3；真 JIRA 凭据不进仓库。
+- 后续：B1–B3 见 [Wave B plan](../superpowers/plans/2026-08-01-l400-wave-b-ops-embed.md)；真 JIRA 凭据不进仓库。
 
 ## Alternatives considered
 

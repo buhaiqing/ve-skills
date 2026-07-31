@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Accepted
+
+> Accepted 2026-08-01 via grilling after Wave A DoD (feat/l400-wave-a). Decision text unchanged.
 
 ## Context
 
@@ -19,7 +21,7 @@ AGENTS 审计链铁律：破坏性/ASK 授权须有「谁、何时」provenance�
 
 - 正面：满足审计铁律与 L400 治理；与 incident-loop Step 5 设计一致。  
 - 负面：自动化集成多一个必填字段；旧脚本需改。  
-- 后续：B4 实现 + 回归测试「裸 confirmed 失败」。
+- 后续：B4 见 [Wave B plan](../superpowers/plans/2026-08-01-l400-wave-b-ops-embed.md) Task 4 + 回归「裸 confirmed 失败」。
 
 ## Alternatives considered
 

@@ -20,7 +20,7 @@
 - ADR-0005: 不做预测式 / multi-agent / 全量 promote
 - AGENTS: `go build` + `go vet` 干净；Probe 必须 argv 直传；中文注释可少、代码英文
 - 探针步骤只做 **read_only Describe\***，不在 Wave A 接真实扩缩容 Action
-- ADRs 仍为 Proposed：实现以 Decision 正文为准；grilling Accept 后改 Status 不阻塞本计划
+- ADRs 已于 2026-08-01 grilling **Accepted**；实现以 Decision 正文为准
 
 ## File map
 

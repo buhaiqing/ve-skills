@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Accepted
+
+> Accepted 2026-08-01 via grilling after Wave A DoD (feat/l400-wave-a). Decision text unchanged.
 
 ## Context
 

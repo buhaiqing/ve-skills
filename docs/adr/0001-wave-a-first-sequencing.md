@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposed
+Accepted
+
+> Accepted 2026-08-01 via grilling after Wave A DoD (feat/l400-wave-a). Decision text unchanged.
 
 ## Context
 
@@ -29,7 +31,7 @@ Microsoft Agentic AI 成熟度目标为 **L400 Capable**（非 500）。仓库�
 - 正面：执行数据可信后再扩权，符合 Microsoft「最弱支柱决定天花板」。  
 - 正面：与既有 Phase 1 收尾 + heal Promote 对齐。  
 - 负面：业务侧「看板故事」略晚于技术地基（可用 B1 并行缓解）。  
-- 后续：A DoD 见 roadmap §2；验收见 §6。
+- 后续：A DoD 见 roadmap §2（已完成）；B 执行计划见 [wave-b-ops-embed](../superpowers/plans/2026-08-01-l400-wave-b-ops-embed.md)；验收见 §6。
 
 ## Alternatives considered
 

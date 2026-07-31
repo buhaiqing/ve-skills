@@ -112,5 +112,10 @@ Wave A (地基→可生产)     Wave B (嵌入运营)        Wave C (Capable 固
 **推荐：批准 Wave A（A1–A5）开工** — 先写/更新对应 Superpowers spec，再派执行。  
 若希望价值看板先行，可将 **B1** 与 A1 并行（B1 不依赖真探针）。
 
-**执行计划（writing-plans）:** [2026-08-01-l400-wave-a-foundation.md](./2026-08-01-l400-wave-a-foundation.md)  
-**ADRs:** [docs/adr/README.md](../adr/README.md)
+**执行计划（writing-plans）:**
+- Wave A: [2026-08-01-l400-wave-a-foundation.md](./2026-08-01-l400-wave-a-foundation.md)（已实现于 `feat/l400-wave-a`）
+- Wave B: [2026-08-01-l400-wave-b-ops-embed.md](./2026-08-01-l400-wave-b-ops-embed.md) — spec: [wave-b-ops-embed-design](../specs/2026-08-01-l400-wave-b-ops-embed-design.md)
+
+**ADRs:** [docs/adr/README.md](../adr/README.md)（2026-08-01 grilling → **Accepted**）
+
+**下一步推荐：** 执行 Wave B（B1–B5）；Wave C plan 另案。
