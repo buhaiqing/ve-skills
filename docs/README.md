@@ -11,6 +11,7 @@
 |------|------|
 | [AGENTS.md](../AGENTS.md) | Agent 工作流入口规则（含所有角色通用规则） |
 | [README.md](../README.md) | 项目概述 |
+| [adr/README.md](./adr/README.md) | L400 Capable 架构决策（ADR）+ [glossary](./adr/glossary-l400.md) |
 
 ---
 
