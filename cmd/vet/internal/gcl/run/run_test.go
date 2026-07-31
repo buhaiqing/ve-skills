@@ -210,12 +210,12 @@ func TestRun_PolicyAskNeedsConfirm(t *testing.T) {
 	if blocked.ExitCode != 4 {
 		t.Fatalf("ASK without --confirmed should be POLICY_BLOCK, got exit %d", blocked.ExitCode)
 	}
-	confirmed := Run(Options{
-		Root: t.TempDir(), Skill: "ve-unknown-ops", Request: "ask-with-confirm",
+	confirmedNoBy := Run(Options{
+		Root: t.TempDir(), Skill: "ve-unknown-ops", Request: "ask-with-confirm-no-by",
 		Command: cmd, MaxIter: 1, Timeout: 10, StructuralOnly: true, Confirmed: true,
 	})
-	if confirmed.ExitCode == 4 {
-		t.Fatalf("ASK with --confirmed should execute, got POLICY_BLOCK (exit 4)")
+	if confirmedNoBy.ExitCode != 4 {
+		t.Fatalf("ASK with --confirmed but no confirmed_by should be POLICY_BLOCK, got exit %d", confirmedNoBy.ExitCode)
 	}
 	// Authorized ASK must persist confirmation provenance in the trace so the
 	// audit trail answers "who authorized this op".
@@ -245,6 +245,18 @@ func TestRun_PolicyAskNeedsConfirm(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("authorized ASK iteration must record confirmed_by=DOPS-12345; trace=%s", matches[0])
+	}
+}
+
+func TestASKConfirmedWithoutByIsBlocked(t *testing.T) {
+	cmd := `echo {"Response":{"RequestId":"ut-ask"}}`
+	res := Run(Options{
+		Root: t.TempDir(), Skill: "ve-unknown-ops", Request: "ask-confirmed-no-by",
+		Command: cmd, MaxIter: 1, Timeout: 10, StructuralOnly: true,
+		Confirmed: true, ConfirmedBy: "",
+	})
+	if res.ExitCode != 4 {
+		t.Fatalf("expected POLICY_BLOCK, got %d", res.ExitCode)
 	}
 }
 

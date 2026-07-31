@@ -9,8 +9,9 @@ import (
 
 // ConfirmResult is the policy decision for a dispatch plan.
 type ConfirmResult struct {
-	Decision string `json:"decision"` // AUTO / ASK / REFUSE
-	Reason   string `json:"reason"`
+	Decision    string `json:"decision"` // AUTO / ASK / REFUSE
+	Reason      string `json:"reason"`
+	ConfirmedBy string `json:"confirmed_by,omitempty"`
 }
 
 // Confirm evaluates the dispatch plan against execution-risk policies.

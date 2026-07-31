@@ -76,11 +76,16 @@ func (s *Server) confirmRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Confirmed bool   `json:"confirmed"`
-		Comment   string `json:"comment,omitempty"`
+		Confirmed   bool   `json:"confirmed"`
+		ConfirmedBy string `json:"confirmed_by"`
+		Comment     string `json:"comment,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	if req.Confirmed && strings.TrimSpace(req.ConfirmedBy) == "" {
+		writeError(w, http.StatusBadRequest, "confirmed_by required when confirmed=true")
 		return
 	}
 
@@ -99,6 +104,7 @@ func (s *Server) confirmRunHandler(w http.ResponseWriter, r *http.Request) {
 	if state.Confirm != nil {
 		if req.Confirmed {
 			state.Confirm.Decision = "AUTO"
+			state.Confirm.ConfirmedBy = req.ConfirmedBy
 		} else {
 			state.Confirm.Decision = "REFUSE"
 			state.Confirm.Reason = req.Comment

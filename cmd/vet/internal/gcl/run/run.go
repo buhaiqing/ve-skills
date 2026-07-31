@@ -737,8 +737,9 @@ func Run(opts Options) Result {
 		// Execution-risk gate (L3): score the operation BEFORE running it.
 		sClass, bRadius, conf, safety, metaOK := policyInputs(opts.Skill, operationIntent, nil)
 		policy := scoreDecision(opts.Skill, sClass, bRadius, conf, safety, metaOK)
-		// Block unless AUTO, or ASK with an external confirmation supplied.
-		if policy != OpAuto && !(policy == OpAsk && opts.Confirmed) {
+		// Block unless AUTO, or ASK with external confirmation + provenance.
+		askOK := policy == OpAsk && opts.Confirmed && strings.TrimSpace(opts.ConfirmedBy) != ""
+		if policy != OpAuto && !askOK {
 			blocked := policy
 			// ASK without confirmation in a non-interactive runtime has no
 			// human to ask → degrade to REFUSE for the recorded decision.

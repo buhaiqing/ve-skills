@@ -366,7 +366,7 @@ func TestConfirmRunHandlerInvalidJSON(t *testing.T) {
 func TestConfirmRunHandlerNotFound(t *testing.T) {
 	server, _ := setupTestServer(t)
 
-	body := []byte(`{"confirmed": true}`)
+	body := []byte(`{"confirmed": true, "confirmed_by": "DOPS-999"}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/runs/nonexistent/confirm", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -375,6 +375,30 @@ func TestConfirmRunHandlerNotFound(t *testing.T) {
 
 	if w.Code != http.StatusNotFound {
 		t.Errorf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestConfirmRunHandlerMissingConfirmedBy(t *testing.T) {
+	server, tmpDir := setupTestServer(t)
+
+	runID := "111222333"
+	state := &agent.RunState{
+		RunID:       runID,
+		CurrentStep: agent.StepConfirm,
+		Payload:     agent.IncidentPayload{ProductHint: "ecs"},
+		Confirm:     &agent.ConfirmResult{Decision: "ASK", Reason: "test"},
+	}
+	createRunState(t, tmpDir, runID, state)
+
+	body := []byte(`{"confirmed": true}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/runs/"+runID+"/confirm", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	server.confirmRunHandler(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
