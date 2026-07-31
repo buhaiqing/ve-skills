@@ -178,6 +178,9 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 
 	// Step 6: EXECUTE
 	if state.CurrentStep <= StepExecute {
+		if state.Plan == nil {
+			return finish(&RunResult{Success: false, FinalStep: StepExecute, Error: "missing plan for execute", RunID: runID})
+		}
 		if dryRun {
 			logStep(runID, "DRY-RUN", "skip_execute", "ops=%d", len(state.Plan.Operations))
 			_ = SaveState(root, state)

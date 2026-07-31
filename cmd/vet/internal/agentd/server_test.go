@@ -412,6 +412,14 @@ func TestConfirmRunHandlerPersistsConfirmedBy(t *testing.T) {
 		Payload:     agent.IncidentPayload{ProductHint: "ecs", TicketID: "DOPS-1"},
 		Confirm:     &agent.ConfirmResult{Decision: "ASK", Reason: "stub heal"},
 		Result:      &agent.ExecuteResult{Success: false, ErrorClass: "policy_block"},
+		Triage:      &agent.TriageResult{PrimarySkill: "ve-ecs-ops"},
+		Plan: &agent.DispatchPlan{
+			Operations: []agent.DispatchOp{{
+				Skill: "ve-ecs-ops", Command: "ve ecs DescribeInstances",
+				SafetyClass: "read_only", BlastRadius: "single", Confidence: "high", Safety: 1.0,
+			}},
+			BlastRadius: "single",
+		},
 	}
 	createRunState(t, tmpDir, runID, state)
 
@@ -425,21 +433,26 @@ func TestConfirmRunHandlerPersistsConfirmedBy(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
+	// Snapshot immediately after handler save (before/while resume goroutine).
 	updated, err := agent.LoadState(tmpDir, runID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if updated.Confirm.Decision != "AUTO" {
-		t.Fatalf("Decision=%s want AUTO", updated.Confirm.Decision)
-	}
 	if updated.Confirm.ConfirmedBy != "ticket:DOPS-1|human:alice" {
 		t.Fatalf("ConfirmedBy=%q", updated.Confirm.ConfirmedBy)
 	}
-	if updated.CurrentStep != agent.StepExecute {
-		t.Fatalf("CurrentStep=%v want Execute", updated.CurrentStep)
+	if updated.Confirm.Decision != "AUTO" {
+		t.Fatalf("Decision=%s want AUTO", updated.Confirm.Decision)
 	}
-	if updated.Result != nil {
-		t.Fatalf("Result should be cleared, got %+v", updated.Result)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = server.pool.Drain(ctx)
+	final, err := agent.LoadState(tmpDir, runID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if final.Confirm == nil || final.Confirm.ConfirmedBy != "ticket:DOPS-1|human:alice" {
+		t.Fatalf("ConfirmedBy lost after resume: %+v", final.Confirm)
 	}
 }
 
