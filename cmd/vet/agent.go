@@ -11,7 +11,7 @@ import (
 
 func runAgent(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "vet agent: missing subcommand (run|resume|status)")
+		fmt.Fprintln(os.Stderr, "vet agent: missing subcommand (run|resume|status|eval-report)")
 		os.Exit(2)
 	}
 	sub := args[0]
@@ -23,6 +23,8 @@ func runAgent(args []string) {
 		runAgentResume(rest)
 	case "status":
 		runAgentStatus(rest)
+	case "eval-report":
+		runAgentEvalReport(rest)
 	default:
 		fmt.Fprintf(os.Stderr, "vet agent: unknown subcommand %q\n", sub)
 		os.Exit(2)
@@ -150,4 +152,26 @@ func runAgentStatus(args []string) {
 	if state.Error != "" {
 		fmt.Printf("Error:       %s\n", state.Error)
 	}
+}
+
+func runAgentEvalReport(args []string) {
+	fs := flag.NewFlagSet("agent eval-report", flag.ExitOnError)
+	inPath := fs.String("in", "", "path to EvalReportInput JSON")
+	outPath := fs.String("out", "audit-results/eval-report.json", "output report path")
+	fs.Parse(args)
+	if *inPath == "" {
+		fmt.Fprintln(os.Stderr, "agent eval-report: --in is required")
+		os.Exit(2)
+	}
+	in, err := agent.LoadEvalSamples(*inPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "agent eval-report: load: %v\n", err)
+		os.Exit(1)
+	}
+	rep := agent.BuildEvalReport(in)
+	if err := agent.WriteEvalReport(*outPath, rep); err != nil {
+		fmt.Fprintf(os.Stderr, "agent eval-report: write: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Fprintf(os.Stderr, "eval-report written to %s (samples=%d)\n", *outPath, rep.Samples)
 }
