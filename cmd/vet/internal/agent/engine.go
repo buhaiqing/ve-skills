@@ -171,7 +171,11 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 
 		span := observability.StartSpan(observability.FromContext(ctx), "agent", "execute")
 		logStep(runID, "EXECUTE", "start", "ops=%d", len(state.Plan.Operations))
-		result := Execute(root, state.Plan, state.Payload.TicketID)
+		confirmedBy := ""
+		if state.Confirm != nil {
+			confirmedBy = state.Confirm.ConfirmedBy
+		}
+		result := Execute(root, state.Plan, state.Payload.TicketID, confirmedBy)
 		state.Result = result
 		saveErr := SaveState(root, state)
 		if saveErr != nil {

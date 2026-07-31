@@ -1,6 +1,10 @@
 package agent
 
-import "github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/run"
+import (
+	"strings"
+
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/run"
+)
 
 const executeTimeout = 300
 
@@ -10,7 +14,11 @@ type ExecuteResult struct {
 	ErrorClass string `json:"error_class,omitempty"`
 }
 
-func Execute(root string, plan *DispatchPlan, ticketID string) *ExecuteResult {
+// Execute runs each plan op via GCL. When confirmedBy is non-empty, ASK-class
+// ops are authorized with that provenance (ADR-0006).
+func Execute(root string, plan *DispatchPlan, ticketID, confirmedBy string) *ExecuteResult {
+	by := strings.TrimSpace(confirmedBy)
+	confirmed := by != ""
 	for _, op := range plan.Operations {
 		structuralOnly := op.SafetyClass == "read_only"
 
@@ -22,6 +30,8 @@ func Execute(root string, plan *DispatchPlan, ticketID string) *ExecuteResult {
 			Timeout:        executeTimeout,
 			StructuralOnly: structuralOnly,
 			Heal:           "smart",
+			Confirmed:      confirmed,
+			ConfirmedBy:    by,
 		})
 		if result.ExitCode != 0 {
 			return &ExecuteResult{

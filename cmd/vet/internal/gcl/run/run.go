@@ -761,8 +761,8 @@ func Run(opts Options) Result {
 			tr.Final = trace.Final{Status: "POLICY_BLOCK", Iter: iter, Output: nil,
 				FailurePattern: &trace.FailurePattern{
 					Category: "execution_risk", Skill: opts.Skill, Command: opts.Command,
-					Error: "operation blocked by execution-risk policy: " + blocked.String(), Fix: "escalate to human or supply --confirmed for ASK class",
-				}}
+						Error: "operation blocked by execution-risk policy: " + blocked.String(), Fix: "escalate to human or supply --confirmed with --confirmed-by for ASK class",
+					}}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
 			writebackFailurePattern(opts.Root, opts.Skill, tr.Final.FailurePattern)
 			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | POLICY_BLOCK | skill=%s decision=%s trace=%s\n",
