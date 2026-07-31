@@ -23,7 +23,8 @@ type ValuePriorityReport struct {
 }
 
 // BuildValuePriorityReport ranks high false-refuse, low success, and high MTTA.
-// Top N=5; ties break by Key lexicographic order.
+// Sort: reason tier (false_refuse → low_success → high_mtta), then Score desc,
+// then Key, then Reason. Top N=5.
 func BuildValuePriorityReport(samples []EvalSample, values []ValueMetrics) ValuePriorityReport {
 	var items []PriorityItem
 
@@ -83,39 +84,39 @@ func BuildValuePriorityReport(samples []EvalSample, values []ValueMetrics) Value
 		})
 	}
 
-		// Reason tier first (plan order), then Score within tier, then Key.
-		// Avoids mixing 0–1 rates with MTTA milliseconds in one Score sort.
-		sort.Slice(items, func(i, j int) bool {
-			ri, rj := reasonRank(items[i].Reason), reasonRank(items[j].Reason)
-			if ri != rj {
-				return ri < rj
-			}
-			if items[i].Score != items[j].Score {
-				return items[i].Score > items[j].Score
-			}
-			if items[i].Key != items[j].Key {
-				return items[i].Key < items[j].Key
-			}
-			return items[i].Reason < items[j].Reason
-		})
-		if len(items) > priorityTopN {
-			items = items[:priorityTopN]
+	// Reason tier first (plan order), then Score within tier, then Key.
+	// Avoids mixing 0–1 rates with MTTA milliseconds in one Score sort.
+	sort.Slice(items, func(i, j int) bool {
+		ri, rj := reasonRank(items[i].Reason), reasonRank(items[j].Reason)
+		if ri != rj {
+			return ri < rj
 		}
-		return ValuePriorityReport{Top: items}
+		if items[i].Score != items[j].Score {
+			return items[i].Score > items[j].Score
+		}
+		if items[i].Key != items[j].Key {
+			return items[i].Key < items[j].Key
+		}
+		return items[i].Reason < items[j].Reason
+	})
+	if len(items) > priorityTopN {
+		items = items[:priorityTopN]
 	}
+	return ValuePriorityReport{Top: items}
+}
 
-	func reasonRank(reason string) int {
-		switch reason {
-		case "high_false_refuse":
-			return 0
-		case "low_success":
-			return 1
-		case "high_mtta":
-			return 2
-		default:
-			return 99
-		}
+func reasonRank(reason string) int {
+	switch reason {
+	case "high_false_refuse":
+		return 0
+	case "low_success":
+		return 1
+	case "high_mtta":
+		return 2
+	default:
+		return 99
 	}
+}
 
 // LoadValueMetricsJSONL reads one ValueMetrics object per non-empty line.
 func LoadValueMetricsJSONL(path string) ([]ValueMetrics, error) {
