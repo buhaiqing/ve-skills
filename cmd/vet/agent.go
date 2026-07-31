@@ -158,6 +158,8 @@ func runAgentEvalReport(args []string) {
 	fs := flag.NewFlagSet("agent eval-report", flag.ExitOnError)
 	inPath := fs.String("in", "", "path to EvalReportInput JSON")
 	outPath := fs.String("out", "audit-results/eval-report.json", "output report path")
+	priorityOut := fs.String("priority-out", "", "optional value-priority report output path")
+	valuesIn := fs.String("values-in", "", "optional value metrics JSONL path for priority report")
 	fs.Parse(args)
 	if *inPath == "" {
 		fmt.Fprintln(os.Stderr, "agent eval-report: --in is required")
@@ -174,4 +176,21 @@ func runAgentEvalReport(args []string) {
 		os.Exit(1)
 	}
 	fmt.Fprintf(os.Stderr, "eval-report written to %s (samples=%d)\n", *outPath, rep.Samples)
+
+	if *priorityOut != "" {
+		var values []agent.ValueMetrics
+		if *valuesIn != "" {
+			values, err = agent.LoadValueMetricsJSONL(*valuesIn)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "agent eval-report: load values: %v\n", err)
+				os.Exit(1)
+			}
+		}
+		pri := agent.BuildValuePriorityReport(in.Samples, values)
+		if err := agent.WriteValuePriorityReport(*priorityOut, pri); err != nil {
+			fmt.Fprintf(os.Stderr, "agent eval-report: write priority: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "priority-report written to %s (top=%d)\n", *priorityOut, len(pri.Top))
+	}
 }
