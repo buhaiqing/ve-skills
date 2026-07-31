@@ -59,7 +59,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 	}
 
 	finish := func(result *RunResult) *RunResult {
-		emitValue(root, state, started, alertedAt, result)
+		EmitValue(root, state, started, alertedAt, result, nil)
 		return result
 	}
 
@@ -210,9 +210,10 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 	return finish(&RunResult{Success: true, FinalStep: StepReflexion, RunID: runID})
 }
 
-// emitValue computes, persists, and optionally writebacks value metrics.
+// EmitValue computes, persists, and optionally writebacks value metrics.
 // Writer failures are logged only — Success is unchanged.
-func emitValue(root string, state *RunState, started, alertedAt time.Time, result *RunResult) {
+// nil writer → FileTicketWriter{Dir: runDir(root, runID)} (ADR-0003).
+func EmitValue(root string, state *RunState, started, alertedAt time.Time, result *RunResult, writer TicketWriter) {
 	policy := ""
 	if state.Confirm != nil {
 		policy = state.Confirm.Decision
@@ -230,7 +231,10 @@ func emitValue(root string, state *RunState, started, alertedAt time.Time, resul
 		logError(state.RunID, "VALUE", "persist failed: %v", err)
 	}
 	if state.Payload.TicketID != "" {
-		w := FileTicketWriter{Dir: runDir(root, state.RunID)}
+		w := writer
+		if w == nil {
+			w = FileTicketWriter{Dir: runDir(root, state.RunID)}
+		}
 		if err := w.WriteValueComment(state.Payload.TicketID, FormatValueComment(m)); err != nil {
 			logError(state.RunID, "VALUE", "ticket writeback failed: %v", err)
 		}

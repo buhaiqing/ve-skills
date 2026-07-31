@@ -137,6 +137,67 @@ func TestPersistValueRoundtrip(t *testing.T) {
 	}
 }
 
+type recordingWriter struct {
+	n               int
+	lastID, lastBody string
+}
+
+func (r *recordingWriter) WriteValueComment(id, body string) error {
+	r.n++
+	r.lastID = id
+	r.lastBody = body
+	return nil
+}
+
+func TestEmitValueUsesInjectedTicketWriter(t *testing.T) {
+	root := t.TempDir()
+	alerted := time.Date(2026, 8, 1, 10, 0, 0, 0, time.UTC)
+	started := alerted.Add(5 * time.Second)
+
+	state := &RunState{
+		RunID:   "test-run",
+		Payload: IncidentPayload{TicketID: "T-123"},
+		Confirm: &ConfirmResult{Decision: "AUTO"},
+	}
+	result := &RunResult{Success: true, RunID: "test-run"}
+
+	rec := &recordingWriter{}
+	EmitValue(root, state, started, alerted, result, rec)
+
+	if rec.n != 1 {
+		t.Fatalf("WriteValueComment calls: got %d want 1", rec.n)
+	}
+	if rec.lastID != "T-123" {
+		t.Fatalf("ticketID: got %q want T-123", rec.lastID)
+	}
+	if !strings.Contains(rec.lastBody, "MTTA") {
+		t.Fatalf("body missing MTTA: %s", rec.lastBody)
+	}
+}
+
+func TestEmitValueNilWriterUsesFile(t *testing.T) {
+	root := t.TempDir()
+	alerted := time.Date(2026, 8, 1, 10, 0, 0, 0, time.UTC)
+	started := alerted.Add(5 * time.Second)
+
+	state := &RunState{
+		RunID:   "file-run",
+		Payload: IncidentPayload{TicketID: "T-FILE"},
+		Confirm: &ConfirmResult{Decision: "AUTO"},
+	}
+	result := &RunResult{Success: true, RunID: "file-run"}
+
+	EmitValue(root, state, started, alerted, result, nil)
+
+	got, err := os.ReadFile(filepath.Join(root, ".runtime", "agent", "runs", "file-run", "T-FILE.md"))
+	if err != nil {
+		t.Fatalf("read ticket file: %v", err)
+	}
+	if !strings.Contains(string(got), "MTTA") {
+		t.Fatalf("unexpected body: %s", got)
+	}
+}
+
 func TestFileTicketWriter(t *testing.T) {
 	dir := t.TempDir()
 	w := FileTicketWriter{Dir: dir}
