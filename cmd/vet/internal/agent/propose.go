@@ -19,14 +19,33 @@ type DispatchOp struct {
 
 // DispatchPlan is the proposed fix plan.
 type DispatchPlan struct {
-	Operations   []DispatchOp `json:"operations"`
-	BlastRadius  string       `json:"blast_radius"`
-	RollbackPlan string       `json:"rollback_plan,omitempty"`
+	Operations       []DispatchOp `json:"operations"`
+	BlastRadius      string       `json:"blast_radius"`
+	RollbackPlan     string       `json:"rollback_plan,omitempty"`
+	HealIncidentType string       `json:"heal_incident_type,omitempty"` // e.g. "cpu_high"
+}
+
+// healIncidentType maps symptom text to a known heal recovery plan name.
+func healIncidentType(symptom string) string {
+	s := strings.ToLower(symptom)
+	switch {
+	case strings.Contains(s, "cpu"):
+		return "cpu_high"
+	case strings.Contains(s, "redis") && strings.Contains(s, "slow"):
+		return "redis_slow_query"
+	case strings.Contains(s, "mysql") || strings.Contains(s, "connection"):
+		return "mysql_connection_pool"
+	case strings.Contains(s, "vpc") && strings.Contains(s, "route"):
+		return "vpc_route_table"
+	default:
+		return ""
+	}
 }
 
 // ProposeFix builds a dispatch plan from diagnosis evidence and the original payload.
 // Uses the diagnosed skill to build product-specific commands.
 func ProposeFix(evidence *DiagnosisEvidence, payload *IncidentPayload) *DispatchPlan {
+	healType := healIncidentType(payload.Symptom)
 	kb := strategy.NewKnowledgeBase()
 	if pattern := kb.Query(payload.Symptom); pattern != nil {
 		return &DispatchPlan{
@@ -40,8 +59,9 @@ func ProposeFix(evidence *DiagnosisEvidence, payload *IncidentPayload) *Dispatch
 					Safety:      1.0,
 				},
 			},
-			BlastRadius:  "single",
-			RollbackPlan: "no rollback needed (diagnostic only)",
+			BlastRadius:      "single",
+			RollbackPlan:     "no rollback needed (diagnostic only)",
+			HealIncidentType: healType,
 		}
 	}
 
@@ -75,9 +95,10 @@ func ProposeFix(evidence *DiagnosisEvidence, payload *IncidentPayload) *Dispatch
 	}
 
 	return &DispatchPlan{
-		Operations:   ops,
-		BlastRadius:  "single",
-		RollbackPlan: "no rollback needed (diagnostic only)",
+		Operations:       ops,
+		BlastRadius:      "single",
+		RollbackPlan:     "no rollback needed (diagnostic only)",
+		HealIncidentType: healType,
 	}
 }
 

@@ -37,7 +37,8 @@ func (kb *KnowledgeBase) Query(symptom string) *FailurePattern {
 		p := &kb.patterns[i]
 		if strings.Contains(strings.ToLower(symptom), strings.ToLower(p.Pattern)) {
 			if best == nil || p.Confidence > best.Confidence {
-				best = p
+				cp := *p
+				best = &cp
 			}
 		}
 	}

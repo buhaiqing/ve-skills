@@ -3,6 +3,8 @@ package triage
 import (
 	"fmt"
 	"sort"
+	"strings"
+	"sync"
 )
 
 type SkillDoc struct {
@@ -166,6 +168,11 @@ var defaultSkills = []SkillDoc{
 	},
 }
 
+var (
+	defaultClassifierOnce sync.Once
+	defaultClassifierInst *TriageClassifier
+)
+
 func NewTriageClassifier(skills []SkillDoc) *TriageClassifier {
 	documents := make([]string, len(skills))
 	for i, s := range skills {
@@ -180,7 +187,10 @@ func NewTriageClassifier(skills []SkillDoc) *TriageClassifier {
 }
 
 func DefaultClassifier() *TriageClassifier {
-	return NewTriageClassifier(defaultSkills)
+	defaultClassifierOnce.Do(func() {
+		defaultClassifierInst = NewTriageClassifier(defaultSkills)
+	})
+	return defaultClassifierInst
 }
 
 func (c *TriageClassifier) Classify(input string, topK int) []ClassificationResult {
@@ -217,9 +227,5 @@ func (c *TriageClassifier) Explain(result ClassificationResult) string {
 }
 
 func joinKeywords(keywords []string) string {
-	result := ""
-	for _, k := range keywords {
-		result += k + " "
-	}
-	return result
+	return strings.Join(keywords, " ")
 }

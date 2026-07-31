@@ -17,6 +17,8 @@ type RunState struct {
 	Confirm     *ConfirmResult     `json:"confirm,omitempty"`
 	Result      *ExecuteResult     `json:"result,omitempty"`
 	Error       string             `json:"error,omitempty"`
+	StartedAt   string             `json:"started_at,omitempty"`
+	Value       *ValueMetrics      `json:"value,omitempty"`
 }
 
 func runDir(root, runID string) string {

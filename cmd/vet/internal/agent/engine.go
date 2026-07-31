@@ -3,10 +3,13 @@ package agent
 import (
 	"context"
 	"fmt"
-	"os"
+	"time"
 
+	vlog "github.com/buhaiqing/ve-skills/cmd/vet/internal/log"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/observability"
 )
+
+const agentLogPath = "audit-results/agent-execution.log"
 
 type RunResult struct {
 	Success   bool   `json:"success"`
@@ -24,6 +27,16 @@ func RunDry(root string, payload *IncidentPayload, runID string) *RunResult {
 }
 
 func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *RunResult {
+	started := time.Now()
+	alertedAt := started
+	if payload.AlertedAt != "" {
+		if t, err := time.Parse(time.RFC3339Nano, payload.AlertedAt); err == nil {
+			alertedAt = t
+		} else if t, err := time.Parse(time.RFC3339, payload.AlertedAt); err == nil {
+			alertedAt = t
+		}
+	}
+
 	rootTrace := observability.NewRootTrace("agent", "run")
 	ctx := observability.WithTrace(context.Background(), rootTrace)
 
@@ -31,12 +44,23 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		RunID:       runID,
 		CurrentStep: StepIngest,
 		Payload:     *payload,
+		StartedAt:   started.UTC().Format(time.RFC3339Nano),
 	}
 
 	// Resume: load existing state and skip completed steps
 	existing, err := LoadState(root, runID)
 	if err == nil && existing != nil {
 		state = existing
+		if state.StartedAt == "" {
+			state.StartedAt = started.UTC().Format(time.RFC3339Nano)
+		} else if t, err := time.Parse(time.RFC3339Nano, state.StartedAt); err == nil {
+			started = t
+		}
+	}
+
+	finish := func(result *RunResult) *RunResult {
+		emitValue(root, state, started, alertedAt, result)
+		return result
 	}
 
 	if dryRun {
@@ -48,7 +72,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 	if state.CurrentStep <= StepIngest {
 		if err := SaveState(root, state); err != nil {
 			logError(runID, "INGEST", "save failed: %v", err)
-			return &RunResult{Success: false, FinalStep: StepIngest, Error: fmt.Sprintf("ingest save: %v", err), RunID: runID}
+			return finish(&RunResult{Success: false, FinalStep: StepIngest, Error: fmt.Sprintf("ingest save: %v", err), RunID: runID})
 		}
 		state.CurrentStep = StepTriage
 	}
@@ -63,7 +87,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		if saveErr != nil {
 			span.End(saveErr)
 			logError(runID, "TRIAGE", "save failed: %v", saveErr)
-			return &RunResult{Success: false, FinalStep: StepTriage, Error: fmt.Sprintf("triage save: %v", saveErr), RunID: runID}
+			return finish(&RunResult{Success: false, FinalStep: StepTriage, Error: fmt.Sprintf("triage save: %v", saveErr), RunID: runID})
 		}
 		span.End(nil)
 		logStep(runID, "TRIAGE", "done", "primary=%s confidence=%s", triage.PrimarySkill, triage.Confidence)
@@ -80,7 +104,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		if saveErr != nil {
 			span.End(saveErr)
 			logError(runID, "DIAGNOSE", "save failed: %v", saveErr)
-			return &RunResult{Success: false, FinalStep: StepDiagnose, Error: fmt.Sprintf("diagnose save: %v", saveErr), RunID: runID}
+			return finish(&RunResult{Success: false, FinalStep: StepDiagnose, Error: fmt.Sprintf("diagnose save: %v", saveErr), RunID: runID})
 		}
 		span.End(nil)
 		logStep(runID, "DIAGNOSE", "done", "findings=%d partial=%v", len(evidence.Findings), evidence.Partial)
@@ -97,7 +121,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		if saveErr != nil {
 			span.End(saveErr)
 			logError(runID, "PROPOSE", "save failed: %v", saveErr)
-			return &RunResult{Success: false, FinalStep: StepPropose, Error: fmt.Sprintf("propose save: %v", saveErr), RunID: runID}
+			return finish(&RunResult{Success: false, FinalStep: StepPropose, Error: fmt.Sprintf("propose save: %v", saveErr), RunID: runID})
 		}
 		span.End(nil)
 		logStep(runID, "PROPOSE", "done", "ops=%d blast_radius=%s", len(plan.Operations), plan.BlastRadius)
@@ -114,7 +138,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		if saveErr != nil {
 			span.End(saveErr)
 			logError(runID, "CONFIRM", "save failed: %v", saveErr)
-			return &RunResult{Success: false, FinalStep: StepConfirm, Error: fmt.Sprintf("confirm save: %v", saveErr), RunID: runID}
+			return finish(&RunResult{Success: false, FinalStep: StepConfirm, Error: fmt.Sprintf("confirm save: %v", saveErr), RunID: runID})
 		}
 		span.End(nil)
 		logStep(runID, "CONFIRM", "done", "decision=%s reason=%s", confirm.Decision, confirm.Reason)
@@ -125,8 +149,8 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		state.CurrentStep = StepReflexion
 		span := observability.StartSpan(observability.FromContext(ctx), "agent", "reflexion")
 		logStep(runID, "REFLEXION", "policy_refused", "reason=%s", state.Confirm.Reason)
-			reflectErr := Reflect(root, state.Triage.PrimarySkill, "policy_refused", "execution_risk",
-				"plan was refused by policy: "+state.Confirm.Reason)
+		reflectErr := Reflect(root, state.Triage.PrimarySkill, "policy_refused", "execution_risk",
+			"plan was refused by policy: "+state.Confirm.Reason)
 		if reflectErr != nil {
 			span.End(reflectErr)
 			logError(runID, "REFLEXION", "writeback failed: %v", reflectErr)
@@ -134,7 +158,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 			span.End(nil)
 		}
 		_ = SaveState(root, state)
-		return &RunResult{Success: false, FinalStep: StepConfirm, Error: "policy refused: " + state.Confirm.Reason, RunID: runID}
+		return finish(&RunResult{Success: false, FinalStep: StepConfirm, Error: "policy refused: " + state.Confirm.Reason, RunID: runID})
 	}
 
 	// Step 6: EXECUTE
@@ -142,7 +166,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		if dryRun {
 			logStep(runID, "DRY-RUN", "skip_execute", "ops=%d", len(state.Plan.Operations))
 			_ = SaveState(root, state)
-			return &RunResult{Success: true, FinalStep: StepExecute, RunID: runID}
+			return finish(&RunResult{Success: true, FinalStep: StepExecute, RunID: runID})
 		}
 
 		span := observability.StartSpan(observability.FromContext(ctx), "agent", "execute")
@@ -153,7 +177,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		if saveErr != nil {
 			span.End(saveErr)
 			logError(runID, "EXECUTE", "save failed: %v", saveErr)
-			return &RunResult{Success: false, FinalStep: StepExecute, Error: fmt.Sprintf("execute save: %v", saveErr), RunID: runID}
+			return finish(&RunResult{Success: false, FinalStep: StepExecute, Error: fmt.Sprintf("execute save: %v", saveErr), RunID: runID})
 		}
 		span.End(nil)
 		logStep(runID, "EXECUTE", "done", "success=%v", result.Success)
@@ -172,7 +196,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 				reflexSpan.End(nil)
 			}
 			_ = SaveState(root, state)
-			return &RunResult{Success: false, FinalStep: StepExecute, Error: "execution failed: " + result.ErrorClass, RunID: runID}
+			return finish(&RunResult{Success: false, FinalStep: StepExecute, Error: "execution failed: " + result.ErrorClass, RunID: runID})
 		}
 	}
 
@@ -183,19 +207,49 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 	span.End(nil)
 	_ = SaveState(root, state)
 
-	return &RunResult{Success: true, FinalStep: StepReflexion, RunID: runID}
+	return finish(&RunResult{Success: true, FinalStep: StepReflexion, RunID: runID})
+}
+
+// emitValue computes, persists, and optionally writebacks value metrics.
+// Writer failures are logged only — Success is unchanged.
+func emitValue(root string, state *RunState, started, alertedAt time.Time, result *RunResult) {
+	policy := ""
+	if state.Confirm != nil {
+		policy = state.Confirm.Decision
+	}
+	m := ComputeValue(ValueInput{
+		RunID:          state.RunID,
+		TicketID:       state.Payload.TicketID,
+		PolicyDecision: policy,
+		Success:        result.Success,
+		AlertedAt:      alertedAt,
+		StartedAt:      started,
+		ResolvedAt:     time.Now(),
+	})
+	if err := PersistValue(root, m); err != nil {
+		logError(state.RunID, "VALUE", "persist failed: %v", err)
+	}
+	if state.Payload.TicketID != "" {
+		w := FileTicketWriter{Dir: runDir(root, state.RunID)}
+		if err := w.WriteValueComment(state.Payload.TicketID, FormatValueComment(m)); err != nil {
+			logError(state.RunID, "VALUE", "ticket writeback failed: %v", err)
+		}
+	}
+	state.Value = &m
+	state.StartedAt = started.UTC().Format(time.RFC3339Nano)
+	_ = SaveState(root, state)
 }
 
 func logStep(runID, step, event, format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[%s] [INFO] agent.engine | %s %s", runID, step, event)
+	msg := step + " " + event
+	var kvs []string
 	if format != "" {
-		fmt.Fprintf(os.Stderr, " | "+format, args...)
+		kvs = append(kvs, vlog.KV("detail", fmt.Sprintf(format, args...)))
 	}
-	fmt.Fprintln(os.Stderr)
+	_ = vlog.Append(agentLogPath, runID, vlog.INFO, "agent.engine", msg, kvs...)
 }
 
 func logError(runID, step, format string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[%s] [ERROR] agent.engine | %s | ", runID, step)
-	fmt.Fprintf(os.Stderr, format, args...)
-	fmt.Fprintln(os.Stderr)
+	_ = vlog.Append(agentLogPath, runID, vlog.ERROR, "agent.engine", step,
+		vlog.KV("detail", fmt.Sprintf(format, args...)))
 }

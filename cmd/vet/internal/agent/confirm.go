@@ -3,6 +3,7 @@ package agent
 import (
 	"strings"
 
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/heal"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/policy"
 )
 
@@ -71,6 +72,17 @@ func Confirm(root string, plan *DispatchPlan) *ConfirmResult {
 				case "AUTO":
 					// AUTO guardrail means "allow", continue to next check.
 				}
+			}
+		}
+	}
+
+	// Stub heal plans must not enter production AUTO (P0-2 / spec §3.2).
+	if plan.HealIncidentType != "" {
+		hp := heal.NewOrchestrator().Plan(plan.HealIncidentType)
+		if hp != nil && hp.IsStub() {
+			return &ConfirmResult{
+				Decision: "ASK",
+				Reason:   "heal plan " + plan.HealIncidentType + " is stub (no real probe); production AUTO forbidden",
 			}
 		}
 	}

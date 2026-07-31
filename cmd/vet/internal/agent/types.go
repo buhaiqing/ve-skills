@@ -45,6 +45,7 @@ type IncidentPayload struct {
 	ResourceIDs []string `json:"resource_ids,omitempty"`
 	RawInput    string   `json:"raw_input"`
 	Source      string   `json:"source"`
+	AlertedAt   string   `json:"alerted_at,omitempty"` // optional RFC3339 / RFC3339Nano
 }
 
 type TriageResult struct {
