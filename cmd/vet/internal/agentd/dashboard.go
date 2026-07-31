@@ -1,6 +1,7 @@
 package agentd
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -25,13 +26,14 @@ func (s *Server) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 // DashboardStats holds aggregated SLO statistics.
 type DashboardStats struct {
-	TotalRuns      int            `json:"total_runs"`
-	SuccessRate    float64        `json:"success_rate"`
-	AvgDurationMs  int64          `json:"avg_duration_ms"`
-	ActiveRuns     int            `json:"active_runs"`
-	QueuedRuns     int            `json:"queued_runs"`
-	BySkill        map[string]int `json:"by_skill"`
-	RecentRuns     []RunSummary   `json:"recent_runs"`
+	TotalRuns     int                  `json:"total_runs"`
+	SuccessRate   float64              `json:"success_rate"`
+	AvgDurationMs int64                `json:"avg_duration_ms"`
+	ActiveRuns    int                  `json:"active_runs"`
+	QueuedRuns    int                  `json:"queued_runs"`
+	BySkill       map[string]int       `json:"by_skill"`
+	RecentRuns    []RunSummary         `json:"recent_runs"`
+	Value         agent.ValueDashboard `json:"value"`
 }
 
 // RunSummary is a summary of a single run.
@@ -51,66 +53,65 @@ func (s *Server) aggregateStats() *DashboardStats {
 
 	runDir := filepath.Join(s.root, ".runtime", "agent", "runs")
 	entries, err := os.ReadDir(runDir)
-	if err != nil {
-		return stats
+	if err == nil {
+		var totalDuration int64
+		var successCount int
+
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+			runID := entry.Name()
+			state, err := agent.LoadState(s.root, runID)
+			if err != nil || state == nil {
+				continue
+			}
+
+			stats.TotalRuns++
+			runStatus := determineStatus(state)
+
+			// Count by skill
+			if state.Triage != nil {
+				stats.BySkill[state.Triage.PrimarySkill]++
+			}
+
+			// Count active/queued
+			if runStatus == "running" {
+				stats.ActiveRuns++
+			} else if runStatus == "queued" {
+				stats.QueuedRuns++
+			}
+
+			// Success rate
+			if runStatus == "completed" {
+				successCount++
+			}
+
+			// Duration (approximate from run ID timestamp)
+			ts, _ := parseRunTimestamp(runID)
+			if !ts.IsZero() {
+				totalDuration += time.Since(ts).Milliseconds()
+			}
+
+			// Recent runs (last 10)
+			if len(stats.RecentRuns) < 10 {
+				stats.RecentRuns = append(stats.RecentRuns, RunSummary{
+					RunID:     runID,
+					Status:    runStatus,
+					Product:   state.Payload.ProductHint,
+					Step:      state.CurrentStep.String(),
+					CreatedAt: ts.UTC().Format(time.RFC3339),
+				})
+			}
+		}
+
+		if stats.TotalRuns > 0 {
+			stats.SuccessRate = float64(successCount) / float64(stats.TotalRuns)
+			stats.AvgDurationMs = totalDuration / int64(stats.TotalRuns)
+		}
 	}
 
-	var totalDuration int64
-	var successCount int
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		runID := entry.Name()
-		state, err := agent.LoadState(s.root, runID)
-		if err != nil || state == nil {
-			continue
-		}
-
-		stats.TotalRuns++
-		runStatus := determineStatus(state)
-
-		// Count by skill
-		if state.Triage != nil {
-			stats.BySkill[state.Triage.PrimarySkill]++
-		}
-
-		// Count active/queued
-		if runStatus == "running" {
-			stats.ActiveRuns++
-		} else if runStatus == "queued" {
-			stats.QueuedRuns++
-		}
-
-		// Success rate
-		if runStatus == "completed" {
-			successCount++
-		}
-
-		// Duration (approximate from run ID timestamp)
-		ts, _ := parseRunTimestamp(runID)
-		if !ts.IsZero() {
-			totalDuration += time.Since(ts).Milliseconds()
-		}
-
-		// Recent runs (last 10)
-		if len(stats.RecentRuns) < 10 {
-			stats.RecentRuns = append(stats.RecentRuns, RunSummary{
-				RunID:     runID,
-				Status:    runStatus,
-				Product:   state.Payload.ProductHint,
-				Step:      state.CurrentStep.String(),
-				CreatedAt: ts.UTC().Format(time.RFC3339),
-			})
-		}
-	}
-
-	if stats.TotalRuns > 0 {
-		stats.SuccessRate = float64(successCount) / float64(stats.TotalRuns)
-		stats.AvgDurationMs = totalDuration / int64(stats.TotalRuns)
-	}
-
+	stats.Value = agent.AggregateValueMetrics(s.root)
 	return stats
 }
 
@@ -182,6 +183,28 @@ func renderDashboard(stats *DashboardStats) string {
     </div>
 
     <div class="card">
+        <h2>Value KPIs</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">` + formatDuration(stats.Value.P50MTTAMs) + `</div>
+                <div class="stat-label">P50 MTTA</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">` + formatDuration(stats.Value.P50MTTRMs) + `</div>
+                <div class="stat-label">P50 MTTR</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">` + formatLabor(stats.Value.LaborMinutesSum) + `</div>
+                <div class="stat-label">Labor Saved (min)</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">` + formatPercent(stats.Value.AutoRate) + `</div>
+                <div class="stat-label">AUTO %</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
         <h2>Recent Runs</h2>
         <table>
             <thead>
@@ -238,6 +261,10 @@ func formatDuration(ms int64) string {
 		return formatInt(int(ms)) + "ms"
 	}
 	return formatInt(int(ms/1000)) + "s"
+}
+
+func formatLabor(minutes float64) string {
+	return fmt.Sprintf("%.0f", minutes)
 }
 
 func runsTable(runs []RunSummary) string {
