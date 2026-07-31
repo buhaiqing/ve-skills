@@ -144,10 +144,12 @@ type Orchestrator struct {
 }
 
 func NewOrchestrator() *Orchestrator {
-	return &Orchestrator{
+	o := &Orchestrator{
 		plans:   defaultPlans(),
 		circuit: &CircuitBreaker{threshold: 5, timeout: 30 * time.Second},
 	}
+	_ = o.ApplyBuiltInPromotions() // Wave A: cpu_high + redis_slow_query
+	return o
 }
 
 func defaultPlans() map[string]*RecoveryPlan {

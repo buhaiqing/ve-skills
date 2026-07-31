@@ -101,7 +101,8 @@ func TestCircuitBreakerSuccess(t *testing.T) {
 func TestOrchestratorExecutePlan(t *testing.T) {
 	o := NewOrchestrator()
 
-	status, err := o.ExecutePlanWithOpts("cpu_high", ExecuteOpts{AllowStub: true})
+	okRunner := func(_ context.Context, _ []string) (string, error) { return "ok", nil }
+	status, err := o.ExecutePlanWithOpts("cpu_high", ExecuteOpts{AllowStub: true, Runner: okRunner})
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
@@ -255,10 +256,11 @@ func TestOrchestratorRollbackNoRollbackFn(t *testing.T) {
 
 func TestOrchestratorMultipleIncidents(t *testing.T) {
 	o := NewOrchestrator()
+	okRunner := func(_ context.Context, _ []string) (string, error) { return "ok", nil }
 
 	tests := []string{"cpu_high", "redis_slow_query", "mysql_connection_pool", "vpc_route_table"}
 	for _, it := range tests {
-		status, err := o.ExecutePlanWithOpts(it, ExecuteOpts{AllowStub: true})
+		status, err := o.ExecutePlanWithOpts(it, ExecuteOpts{AllowStub: true, Runner: okRunner})
 		if err != nil {
 			t.Fatalf("expected no error for %s, got: %v", it, err)
 		}
@@ -481,7 +483,7 @@ func TestAllowProductionAuto(t *testing.T) {
 func TestExecutePlanRejectsStub(t *testing.T) {
 	o := NewOrchestrator()
 
-	_, err := o.ExecutePlan("cpu_high")
+	_, err := o.ExecutePlan("mysql_connection_pool")
 	if err == nil {
 		t.Fatal("expected error for stub default plan without AllowStub")
 	}
@@ -548,22 +550,18 @@ func TestExecutePlanWithRealProbe(t *testing.T) {
 	}
 }
 
-func TestDefaultPlansAreStub(t *testing.T) {
+func TestDefaultPlansPromotedSubset(t *testing.T) {
 	o := NewOrchestrator()
-	for name, plan := range o.plans {
-		if !plan.IsStub() {
-			t.Errorf("expected default plan %q to be stub", name)
-		}
-		for i, step := range plan.Steps {
-			if !step.Stub {
-				t.Errorf("plan %q step[%d] %q: expected Stub:true", name, i, step.Name)
-			}
-			if step.CheckFn != nil {
-				t.Errorf("plan %q step[%d] %q: expected no CheckFn", name, i, step.Name)
-			}
-		}
-		if AllowProductionAuto(plan) {
-			t.Errorf("expected default plan %q not AllowProductionAuto", name)
-		}
+	if o.Plan("cpu_high").IsStub() {
+		t.Fatal("cpu_high should be promoted")
+	}
+	if o.Plan("redis_slow_query").IsStub() {
+		t.Fatal("redis_slow_query should be promoted")
+	}
+	if !o.Plan("mysql_connection_pool").IsStub() {
+		t.Fatal("mysql should remain stub")
+	}
+	if !o.Plan("vpc_route_table").IsStub() {
+		t.Fatal("vpc should remain stub")
 	}
 }
