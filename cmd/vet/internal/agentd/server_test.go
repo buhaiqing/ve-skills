@@ -402,6 +402,47 @@ func TestConfirmRunHandlerMissingConfirmedBy(t *testing.T) {
 	}
 }
 
+func TestConfirmRunHandlerPersistsConfirmedBy(t *testing.T) {
+	server, tmpDir := setupTestServer(t)
+
+	runID := "persist-by-001"
+	state := &agent.RunState{
+		RunID:       runID,
+		CurrentStep: agent.StepConfirm,
+		Payload:     agent.IncidentPayload{ProductHint: "ecs", TicketID: "DOPS-1"},
+		Confirm:     &agent.ConfirmResult{Decision: "ASK", Reason: "stub heal"},
+		Result:      &agent.ExecuteResult{Success: false, ErrorClass: "policy_block"},
+	}
+	createRunState(t, tmpDir, runID, state)
+
+	body := []byte(`{"confirmed":true,"confirmed_by":"ticket:DOPS-1|human:alice"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/runs/"+runID+"/confirm", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	server.confirmRunHandler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	updated, err := agent.LoadState(tmpDir, runID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Confirm.Decision != "AUTO" {
+		t.Fatalf("Decision=%s want AUTO", updated.Confirm.Decision)
+	}
+	if updated.Confirm.ConfirmedBy != "ticket:DOPS-1|human:alice" {
+		t.Fatalf("ConfirmedBy=%q", updated.Confirm.ConfirmedBy)
+	}
+	if updated.CurrentStep != agent.StepExecute {
+		t.Fatalf("CurrentStep=%v want Execute", updated.CurrentStep)
+	}
+	if updated.Result != nil {
+		t.Fatalf("Result should be cleared, got %+v", updated.Result)
+	}
+}
+
 func TestConfirmRunHandlerMissingRunID(t *testing.T) {
 	server, _ := setupTestServer(t)
 

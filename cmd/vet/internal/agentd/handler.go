@@ -100,15 +100,21 @@ func (s *Server) confirmRunHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update confirm result
+	// Update confirm result and reset for Execute resume (ADR-0006).
 	if state.Confirm != nil {
 		if req.Confirmed {
 			state.Confirm.Decision = "AUTO"
 			state.Confirm.ConfirmedBy = req.ConfirmedBy
+			state.Confirm.Reason = "human confirmed"
+			state.CurrentStep = agent.StepExecute
+			state.Result = nil
 		} else {
 			state.Confirm.Decision = "REFUSE"
 			state.Confirm.Reason = req.Comment
 		}
+	} else if req.Confirmed {
+		writeError(w, http.StatusConflict, "run has no confirm decision to authorize")
+		return
 	}
 
 	// Save updated state

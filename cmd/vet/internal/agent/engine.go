@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	vlog "github.com/buhaiqing/ve-skills/cmd/vet/internal/log"
@@ -145,7 +146,7 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		state.CurrentStep = StepExecute
 	}
 
-	if state.Confirm.Decision == "REFUSE" {
+	if state.Confirm != nil && state.Confirm.Decision == "REFUSE" {
 		state.CurrentStep = StepReflexion
 		span := observability.StartSpan(observability.FromContext(ctx), "agent", "reflexion")
 		logStep(runID, "REFLEXION", "policy_refused", "reason=%s", state.Confirm.Reason)
@@ -159,6 +160,20 @@ func runLoop(root string, payload *IncidentPayload, runID string, dryRun bool) *
 		}
 		_ = SaveState(root, state)
 		return finish(&RunResult{Success: false, FinalStep: StepConfirm, Error: "policy refused: " + state.Confirm.Reason, RunID: runID})
+	}
+
+	// ASK without provenance: pause for agentd/CLI confirm (ADR-0006). Do not Execute.
+	if state.Confirm != nil && state.Confirm.Decision == "ASK" && strings.TrimSpace(state.Confirm.ConfirmedBy) == "" {
+		state.CurrentStep = StepConfirm
+		state.Result = nil
+		_ = SaveState(root, state)
+		logStep(runID, "CONFIRM", "awaiting_human", "reason=%s", state.Confirm.Reason)
+		return finish(&RunResult{
+			Success:   false,
+			FinalStep: StepConfirm,
+			Error:     "awaiting human confirmation",
+			RunID:     runID,
+		})
 	}
 
 	// Step 6: EXECUTE
