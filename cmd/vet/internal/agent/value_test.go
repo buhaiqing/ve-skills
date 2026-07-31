@@ -188,7 +188,7 @@ func TestConfirmStubHealForcesASK(t *testing.T) {
 			},
 		},
 		BlastRadius:      "single",
-		HealIncidentType: "cpu_high",
+		HealIncidentType: "mysql_connection_pool",
 	}
 
 	res := Confirm(root, plan)
