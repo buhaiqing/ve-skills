@@ -49,6 +49,11 @@
 | [ve-skill-generator/references/governance-and-adversarial-review.md](../ve-skill-generator/references/governance-and-adversarial-review.md) | 治理与对抗评审（R1–R4 场景） |
 | [document-integrity.md](./document-integrity.md) | 文档完整性检查（链接验证 + 去重） |
 
+### Runbooks
+| 文件 | 说明 |
+|------|------|
+| [runbooks/agentd-value-golden-path.md](./runbooks/agentd-value-golden-path.md) | agentd 告警 → value.json 黄金路径（含 ASK confirm） |
+
 ### 专项指南
 | 文件 | 说明 |
 |------|------|
