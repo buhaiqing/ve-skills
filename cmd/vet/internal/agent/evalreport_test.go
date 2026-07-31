@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -45,7 +46,15 @@ func TestLoadEvalSamplesAndWriteEvalReport(t *testing.T) {
 	if err := WriteEvalReport(outPath, rep); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(outPath); err != nil {
+	raw, err := os.ReadFile(outPath)
+	if err != nil {
 		t.Fatal(err)
+	}
+	var got EvalReport
+	if err := json.Unmarshal(raw, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Samples != 1 || got.TriageTop1Accuracy != 1 || got.GCLFirstPassRate != 1 || got.FalseRefuseRate != 0 {
+		t.Fatalf("unexpected report: %+v", got)
 	}
 }

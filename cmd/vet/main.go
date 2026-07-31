@@ -67,7 +67,7 @@ Usage:
   vet gcl <run|gate|trace> [flags]
   vet reflexion <promote|check|transpile> [flags]
   vet policy <load|diff|check-changelog> [flags]
-  vet agent <run|resume|status> [flags]
+  vet agent <run|resume|status|eval-report> [flags]
   vet agentd <serve> [flags]
   vet autonomy <test> [flags]
 
