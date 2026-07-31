@@ -125,6 +125,10 @@
 
 | 文件 | 说明 |
 |------|------|
+| [superpowers/plans/2026-08-01-l400-capable-roadmap.md](./superpowers/plans/2026-08-01-l400-capable-roadmap.md) | L400 Capable 三波路线图 |
+| [superpowers/plans/2026-08-01-l400-wave-a-foundation.md](./superpowers/plans/2026-08-01-l400-wave-a-foundation.md) | Wave A 生产地基（已实现） |
+| [superpowers/plans/2026-08-01-l400-wave-b-ops-embed.md](./superpowers/plans/2026-08-01-l400-wave-b-ops-embed.md) | Wave B 嵌入运营执行计划 |
+| [superpowers/specs/2026-08-01-l400-wave-b-ops-embed-design.md](./superpowers/specs/2026-08-01-l400-wave-b-ops-embed-design.md) | Wave B 设计规格 |
 | [superpowers/plans/2026-05-27-finops-aiops-optimization.md](./superpowers/plans/2026-05-27-finops-aiops-optimization.md) | FinOps + AIOps 优化计划 |
 | [superpowers/plans/golang-migration/2026-07-12-python-to-go-cli.md](./superpowers/plans/golang-migration/2026-07-12-python-to-go-cli.md) | Python→Go (vet) + CodeGraph 迁移计划 |
 | [superpowers/specs/2026-05-25-ve-p0-cloud-resources-design.md](./superpowers/specs/2026-05-25-ve-p0-cloud-resources-design.md) | P0 云资源设计 |
