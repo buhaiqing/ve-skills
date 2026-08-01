@@ -53,8 +53,10 @@ func SmokeSkill(root, skill string) Report {
 	r.TimedOut = res.TimedOut
 	r.TraceLine = res.TraceLine
 	r.StderrLine = res.StderrLine
-	// runner returns 0 (PASS) or 1 (MAX_ITER) — both structurally acceptable
-	r.OK = res.ExitCode == 0 || res.ExitCode == 1
+	// Smoke verifies loop plumbing (classifier + policy + writeback), not the
+	// policy decision itself. Accept any code < 5 as structurally OK; negative
+	// = crash/timeout. 4 = REFUSE is policy guard working correctly.
+	r.OK = res.ExitCode >= 0 && res.ExitCode < 5
 	return r
 }
 

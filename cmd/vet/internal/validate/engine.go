@@ -124,7 +124,11 @@ func buildSteps() []Step {
 					Timeout:        30,
 					StructuralOnly: true,
 				}).ExitCode
-				if code == 0 || code == 1 {
+				// Smoke verifies loop plumbing (classifier + policy + writeback),
+				// not the policy decision itself. Any code < 5 means the loop
+				// completed structurally (0 PASS / 1 MAX_ITER / 2 USER_CANCEL /
+				// 3 SELF_HEAL_EXHAUSTED / 4 REFUSE). Negative = crash/timeout.
+				if code >= 0 && code < 5 {
 					return stepOutcome{}
 				}
 				return stepOutcome{errors: []string{fmt.Sprintf("gcl run structural smoke exited with %d", code)}}

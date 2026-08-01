@@ -552,8 +552,16 @@ func loadKnownFailurePatternsFromMarkdown(root, skill string, limit int) string 
 // (.runtime/memory/failure-patterns.json). If the pattern's count reaches
 // the threshold (>= 5, matches promote.LevelConstraint), it triggers
 // auto-transpile to guardrails.yaml.
-func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
+//
+// Structural-only mode (CI smoke) still emits the trace record (audit
+// chain intact) but skips Reflexion writeback — deterministic fake echo
+// commands would otherwise pollute the pattern store and auto-promote
+// REFUSE itself into a Guardrail on first CI run.
+func writebackFailurePattern(root, skill string, fp *trace.FailurePattern, structuralOnly bool) {
 	if fp == nil {
+		return
+	}
+	if structuralOnly {
 		return
 	}
 	// 1. Write to markdown (legacy, keep compatibility — best-effort, non-blocking)
@@ -766,7 +774,7 @@ func Run(opts Options) Result {
 						Error: "operation blocked by execution-risk policy: " + blocked.String(), Fix: "escalate to human or supply --confirmed with --confirmed-by for ASK class",
 					}}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
-			writebackFailurePattern(opts.Root, opts.Skill, tr.Final.FailurePattern)
+			writebackFailurePattern(opts.Root, opts.Skill, tr.Final.FailurePattern, opts.StructuralOnly)
 			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | POLICY_BLOCK | skill=%s decision=%s trace=%s\n",
 				runID, opts.Skill, blocked.String(), path)
 			return Result{ExitCode: 4, TraceLine: "blocked:" + blocked.String(), StderrLine: "blocked:" + blocked.String()}
@@ -811,7 +819,7 @@ func Run(opts Options) Result {
 				fp := extractFailurePattern(opts.Skill, opts.Command, gen, nil)
 				tr.Final = trace.Final{Status: "SAFETY_FAIL", Iter: iter, Output: nil, FailurePattern: fp}
 				path, _ := trace.PersistTrace(opts.Root, "", tr)
-				writebackFailurePattern(opts.Root, opts.Skill, fp)
+				writebackFailurePattern(opts.Root, opts.Skill, fp, opts.StructuralOnly)
 				fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | SAFETY_FAIL | credential_leak skill=%s iter=%d trace=%s\n",
 				runID, opts.Skill, iter, path)
 				return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
@@ -878,7 +886,7 @@ func Run(opts Options) Result {
 			fp := extractFailurePattern(opts.Skill, opts.Command, gen, c)
 			tr.Final = trace.Final{Status: "SAFETY_FAIL", Iter: iter, Output: nil, FailurePattern: fp}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
-			writebackFailurePattern(opts.Root, opts.Skill, fp)
+			writebackFailurePattern(opts.Root, opts.Skill, fp, opts.StructuralOnly)
 			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | SAFETY_FAIL | skill=%s iter=%d trace=%s\n",
 				runID, opts.Skill, iter, path)
 			return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
@@ -905,7 +913,7 @@ func Run(opts Options) Result {
 	out := lastIter.Generator.ResultExcerpt
 	tr.Final = trace.Final{Status: "MAX_ITER", Iter: opts.MaxIter, Output: &out, Unresolved: unresolved, FailurePattern: fp}
 	path, _ := trace.PersistTrace(opts.Root, "", tr)
-	writebackFailurePattern(opts.Root, opts.Skill, fp)
+	writebackFailurePattern(opts.Root, opts.Skill, fp, opts.StructuralOnly)
 	fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | MAX_ITER | skill=%s iter=%d total_duration_ms=%d trace=%s\n",
 		runID, opts.Skill, opts.MaxIter, time.Since(startTime).Milliseconds(), path)
 	return Result{

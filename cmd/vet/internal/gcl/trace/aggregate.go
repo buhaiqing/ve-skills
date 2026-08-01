@@ -89,6 +89,13 @@ func Aggregate(root string, traces []*Trace, sinceHours *int) *Summary {
 		}
 		if t.Final.FailurePattern != nil {
 			fp := t.Final.FailurePattern
+			// Skip smoke / structural-only traces — they emit deterministic fake
+			// REFUSE blocks that would otherwise pollute the pattern store and
+			// auto-promote REFUSE itself into a Guardrail on every CI run.
+			if strings.HasPrefix(t.Request, "CI smoke test") ||
+				strings.HasPrefix(t.Request, "CI gate smoke:") {
+				continue
+			}
 			failurePatterns = append(failurePatterns, map[string]any{
 				"skill":    t.Skill,
 				"pattern":  fp.Error,
