@@ -15,7 +15,7 @@ func TestLevelOf_Pruned(t *testing.T) {
 }
 
 func TestLevelOf_Hint(t *testing.T) {
-	counts := []int{3, 5, 9}
+	counts := []int{3, 4}
 	for _, c := range counts {
 		p := Pattern{Count: c}
 		if got := LevelOf(p); got != LevelHint {
@@ -25,7 +25,7 @@ func TestLevelOf_Hint(t *testing.T) {
 }
 
 func TestLevelOf_Constraint(t *testing.T) {
-	counts := []int{10, 15, 29}
+	counts := []int{5, 10, 14}
 	for _, c := range counts {
 		p := Pattern{Count: c}
 		if got := LevelOf(p); got != LevelConstraint {
@@ -35,7 +35,7 @@ func TestLevelOf_Constraint(t *testing.T) {
 }
 
 func TestLevelOf_Hard(t *testing.T) {
-	counts := []int{30, 100}
+	counts := []int{15, 100}
 	for _, c := range counts {
 		p := Pattern{Count: c}
 		if got := LevelOf(p); got != LevelHard {
@@ -51,10 +51,10 @@ func TestLevelOf_Boundaries(t *testing.T) {
 	}{
 		{2, LevelPruned},
 		{3, LevelHint},
-		{9, LevelHint},
-		{10, LevelConstraint},
-		{29, LevelConstraint},
-		{30, LevelHard},
+		{4, LevelHint},
+		{5, LevelConstraint},
+		{14, LevelConstraint},
+		{15, LevelHard},
 	}
 	for _, tt := range tests {
 		p := Pattern{Count: tt.count}
@@ -65,7 +65,7 @@ func TestLevelOf_Boundaries(t *testing.T) {
 }
 
 func TestEnforce_Hint(t *testing.T) {
-	p := Pattern{Count: 5}
+	p := Pattern{Count: 4}
 	lvl, err := Enforce(p, 1)
 	if lvl != LevelHint {
 		t.Errorf("Enforce(Hint) level = %v, want LevelHint", lvl)
@@ -76,7 +76,7 @@ func TestEnforce_Hint(t *testing.T) {
 }
 
 func TestEnforce_Constraint(t *testing.T) {
-	p := Pattern{Count: 15}
+	p := Pattern{Count: 10}
 	lvl, err := Enforce(p, 1)
 	if lvl != LevelConstraint {
 		t.Errorf("Enforce(Constraint) level = %v, want LevelConstraint", lvl)
@@ -90,7 +90,7 @@ func TestEnforce_Constraint(t *testing.T) {
 }
 
 func TestEnforce_Hard(t *testing.T) {
-	p := Pattern{Count: 50}
+	p := Pattern{Count: 20}
 	lvl, err := Enforce(p, 1)
 	if lvl != LevelHard {
 		t.Errorf("Enforce(Hard) level = %v, want LevelHard", lvl)

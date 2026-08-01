@@ -20,13 +20,14 @@ var RequiredRecommended = map[string]bool{
 	"ve-nas-ops": true, "ve-cms-ops": true, "ve-fg-ops": true, "ve-ark-ops": true,
 }
 
-// AllSkills is the full set of 29 skills.
+// AllSkills is the full set of 29 leaf/meta skills plus the orchestration skill.
 var AllSkills = []string{
 	"ve-ecs-ops", "ve-redis-ops", "ve-rds-mysql-ops", "ve-rds-ops", "ve-rds-pg-ops",
 	"ve-polar-mysql-ops", "ve-mongodb-ops", "ve-elasticsearch-ops", "ve-tos-ops", "ve-iam-ops",
 	"ve-kms-ops", "ve-eip-ops", "ve-security-group-ops", "ve-vpc-ops", "ve-nat-ops", "ve-vpn-ops",
 	"ve-clb-ops", "ve-alb-ops", "ve-vke-ops", "ve-nas-ops", "ve-cms-ops", "ve-fg-ops", "ve-ark-ops",
 	"ve-cdn-ops", "ve-dns-ops", "ve-kafka-ops", "ve-sls-ops", "ve-billing-ops", "ve-skill-generator",
+	"incident-loop-agent",
 }
 
 type skillResult struct {

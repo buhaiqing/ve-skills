@@ -40,19 +40,20 @@ func hashID(skill, pattern string) string {
 }
 
 // Transpile converts a single FailurePattern to a Guardrail.
-// Returns (Guardrail, true) if count >= 10, (Guardrail{}, false) otherwise.
+// Returns (Guardrail, true) if count >= 5 (matches promote.LevelConstraint),
+// (Guardrail{}, false) otherwise. Severity ladder: 5-7 low, 8-14 medium, >= 15 high.
 func Transpile(p FailurePattern) (Guardrail, bool) {
-	if p.Count < 10 {
+	if p.Count < 5 {
 		return Guardrail{}, false
 	}
 
 	severity := "low"
 	action := "auto-ASK"
 
-	if p.Count >= 30 {
+	if p.Count >= 15 {
 		severity = "high"
 		action = "auto-REFUSE"
-	} else if p.Count >= 15 {
+	} else if p.Count >= 8 {
 		severity = "medium"
 	}
 

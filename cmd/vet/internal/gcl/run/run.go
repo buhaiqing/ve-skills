@@ -550,7 +550,8 @@ func loadKnownFailurePatternsFromMarkdown(root, skill string, limit int) string 
 // writebackFailurePattern persists a failure pattern to both the legacy
 // markdown store (docs/failure-patterns.md) and the structured JSON store
 // (.runtime/memory/failure-patterns.json). If the pattern's count reaches
-// the threshold (>= 10), it triggers auto-transpile to guardrails.yaml.
+// the threshold (>= 5, matches promote.LevelConstraint), it triggers
+// auto-transpile to guardrails.yaml.
 func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 	if fp == nil {
 		return
@@ -592,7 +593,7 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 		return
 	}
 	for _, e := range entries {
-		if e.Pattern == fp.Error && e.Count >= 10 {
+		if e.Pattern == fp.Error && e.Count >= 5 {
 			fmt.Fprintf(os.Stderr, "INFO: pattern count=%d reached threshold, triggering auto-transpile\n", e.Count)
 			triggerTranspile(root)
 			break
@@ -601,7 +602,8 @@ func writebackFailurePattern(root, skill string, fp *trace.FailurePattern) {
 }
 
 // triggerTranspile regenerates guardrails.yaml in-process from the JSON memory
-// store when a failure pattern reaches the count >= 10 threshold.
+// store when a failure pattern reaches the count >= 5 threshold
+// (matches promote.LevelConstraint).
 // This avoids shelling out to `vet` (fragile PATH dependency) and uses the
 // authoritative JSON store (which has count data) instead of the markdown file
 // (which lacks count).
@@ -612,7 +614,7 @@ func triggerTranspile(root string) {
 		return
 	}
 
-	// Convert memory entries to transpile.FailurePattern and filter count >= 10
+	// Convert memory entries to transpile.FailurePattern and filter count >= 5
 	var guardrails []transpile.Guardrail
 	for _, e := range entries {
 		fp := transpile.FailurePattern{

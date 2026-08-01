@@ -7,9 +7,9 @@ type Level int
 
 const (
 	LevelPruned     Level = iota // count < 3
-	LevelHint                    // 3 ≤ count < 10
-	LevelConstraint              // 10 ≤ count < 30
-	LevelHard                    // count ≥ 30
+	LevelHint                    // 3 ≤ count < 5
+	LevelConstraint              // 5 ≤ count < 15
+	LevelHard                    // count ≥ 15
 )
 
 // Pattern represents a failure pattern tracked across sessions.
@@ -22,11 +22,14 @@ type Pattern struct {
 }
 
 // LevelOf returns the Level for a pattern based on its count.
+// Thresholds: < 3 Pruned | 3-4 Hint | 5-14 Constraint | >= 15 Hard.
+// Tightened from 10/30 (2026-07-26) so real incidents reach Constraint
+// without needing 10+ observations; otherwise Reflexion stays at HINT forever.
 func LevelOf(p Pattern) Level {
 	switch {
-	case p.Count >= 30:
+	case p.Count >= 15:
 		return LevelHard
-	case p.Count >= 10:
+	case p.Count >= 5:
 		return LevelConstraint
 	case p.Count >= 3:
 		return LevelHint

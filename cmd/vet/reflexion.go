@@ -73,8 +73,9 @@ func runReflexionCheck(args []string) {
 	hasHard := false
 
 	for _, p := range patterns {
-		// Only check patterns with count >= 10 (Constraint or Hard)
-		if p.Count < 10 {
+		// Only check patterns with count >= 5 (Constraint or Hard).
+		// Threshold matches promote.LevelConstraint; Reflexion promotes here.
+		if p.Count < 5 {
 			continue
 		}
 		pat := promote.Pattern{
