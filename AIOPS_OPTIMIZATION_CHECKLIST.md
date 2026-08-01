@@ -12,8 +12,8 @@
 | advanced/finops.md | 1/23 R+R (4%) | **23/23 R+R (100%)** | ✅ Done |
 | eval_queries.json | 5/29 (17%) | **29/29 (100%)** | ✅ Done |
 | failure-patterns.md | 0 active records | Auto-extraction added | ✅ Done |
-| GCL quality dashboard | No | gcl_trace_aggregate.py enhanced | ✅ Done |
-| Coverage validation | No | check_aiops_coverage.py created | ✅ Done |
+| GCL quality dashboard | No | `cmd/vet` GCL trace aggregation | ✅ Done |
+| Coverage validation | No | `cmd/vet check aiops` (Go) | ✅ Done |
 
 ---
 
@@ -62,18 +62,18 @@ Created `assets/eval_queries.json` for all 24 previously-missing skills.
 ### 🟡 Medium Priority — DONE ✅
 
 #### [x] Failure Pattern Automation
-- ✅ `scripts/gcl_trace_aggregate.py` enhanced with `extract_failure_patterns()` and `update_failure_patterns_file()`
-- ✅ Post-GCL hook automatically extracts `failure_pattern` from traces
+- ✅ `cmd/vet/internal/gcl/trace/aggregate.go` enhanced with `extract_failure_patterns()` and `update_failure_patterns_file()`
+- ✅ Post-GCL hook (`cmd/vet/internal/gcl/run/run.go: writebackFailurePattern`) automatically extracts `failure_pattern` from traces
 - ✅ Pattern table appended to `docs/failure-patterns.md`
 
 #### [x] GCL Quality Dashboard
-- ✅ `scripts/gcl_trace_aggregate.py` enhanced with:
+- ✅ `cmd/vet/internal/gcl/trace/aggregate.go` enhanced with:
   - `failure_patterns[]` field in summary output
   - `failure_patterns_extracted` count in result JSON
   - `failure_patterns_updated` path returned
 
 #### [x] Coverage Validation Script
-- ✅ `scripts/check_aiops_coverage.py` created
+- ✅ `cmd/vet check aiops` (Go) created — faithful port of legacy `scripts/check_aiops_coverage.py` (Python script retired per AGENTS.md "All Tools MUST Be Written in Go" rule)
   - Validates advanced/aiops.md for all 29 skills
   - Validates advanced/finops.md for 23 required+recommended skills
   - Validates eval_queries.json for all 29 skills
@@ -102,14 +102,14 @@ Created `assets/eval_queries.json` for all 24 previously-missing skills.
 ## Validation
 
 ```bash
-# Run full validation suite
-python3 scripts/validate_local.py
+# Run full validation suite (Go toolchain)
+cd cmd/vet && go build ./... && go test ./...
 
 # Run AIOps coverage check
-python3 scripts/check_aiops_coverage.py
+vet check aiops
 
 # Run GCL conformance check
-python3 scripts/check_gcl_conformance.py
+vet check gcl
 ```
 
 All checks pass ✅

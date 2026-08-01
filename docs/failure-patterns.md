@@ -111,27 +111,35 @@
 ## 6. Orchestration & GCL Patterns
 
 > Failure patterns in orchestration (`incident-loop-agent`) and GCL (Generator-Critic-Loop) execution.
-> **Status**: Rows with `Count=0` are pre-seeded design hypotheses, not Reflexion-promoted patterns.
 > Governance (per `docs/reflexion-memory.md` §4 and `incident-loop-agent/SKILL.md`):
-> Reflexion only promotes a pattern once its `count ≥ 10` from *real* incidents.
-> These seed rows are excluded from that threshold until a real incident hits them.
+> Reflexion promotes a pattern once its `count >= 5` from *real* incidents (≥ 15 escalates to Hard).
+> Seed rows (Count=0) are design hypotheses and are **NOT** counted toward that threshold — keep them below.
+> Seed rows are listed in `### Seed (design hypotheses, Count=0)` and excluded from auto-transpile; Observed rows are listed in `### Observed (real incidents)` and are eligible for promotion.
+
+### Seed (design hypotheses, Count=0)
+
+| Scope | Category | Failure Pattern | Resolution | Count |
+|-------|----------|-----------------|------------|-------|
+| `orchestration` | `max_iter` | Orchestration loop exceeded max iterations | Increase max_iter or simplify execution plan | 0 |
+| `orchestration` | `safety_fail` | Safety=0 in iteration | Review and fix safety violations before retry | 0 |
+| `orchestration` | `timeout` | Orchestration iteration exceeded timeout | Optimize execution or increase timeout | 0 |
+| `orchestration` | `credential_leak` | Credential detected in trace output | Mask credentials in all trace output | 0 |
+| `orchestration` | `cross_skill_timeout` | Cross-skill delegation timed out | Increase delegation timeout or simplify | 0 |
+| `orchestration` | `budget_overrun` | Fix cost exceeds budget without warning | Include cost estimate in propose step before execution | 0 |
+| `orchestration` | `wrong_billing_model` | PostPaid→PrePaid migration missed | Add billing model check in diagnose step | 0 |
+| `gcl` | `max_iter` | Generator exceeded max iterations | Simplify task or increase max_iter | 0 |
+| `gcl` | `timeout` | GCL run exceeded overall timeout | Break into smaller tasks | 0 |
+| `gcl` | `critic_error` | Critic returned invalid score | Validate critic prompt and rubric | 0 |
+| `gcl` | `trace_write` | Failed to write GCL trace to disk | Check disk space and permissions | 0 |
+| `gcl` | `missing_cost_dimension` | Critic accepted fix without cost assessment | Validate Cost Efficiency dimension score > 0 | 0 |
+
+### Observed (real incidents, Count >= 3)
 
 | Scope | Category | Failure Pattern | Resolution | Count |
 |-------|----------|-----------------|------------|-------|
 | `orchestration` | `execution_risk` | Operation blocked by REFUSE policy | Escalate to human or supply `--confirmed` for ASK class | 8 |
-| `orchestration` | `max_iter` | Orchestration loop exceeded max iterations | Increase max_iter or simplify execution plan | 1 |
-| `gcl` | `max_iter` | Generator exceeded max iterations | Simplify task or increase max_iter | 2 |
-| `orchestration` | `safety_fail` | Safety=0 in iteration | Review and fix safety violations before retry | 0 |
-| `gcl` | `safety_fail` | Safety check failed in Critic | Review safety rules and fix violations | 1 |
-| `orchestration` | `timeout` | Orchestration iteration exceeded timeout | Optimize execution or increase timeout | 0 |
-| `gcl` | `timeout` | GCL run exceeded overall timeout | Break into smaller tasks | 0 |
-| `orchestration` | `credential_leak` | Credential detected in trace output | Mask credentials in all trace output | 0 |
-| `orchestration` | `cross_skill_timeout` | Cross-skill delegation timed out | Increase delegation timeout or simplify | 0 |
-| `gcl` | `critic_error` | Critic returned invalid score | Validate critic prompt and rubric | 0 |
-| `gcl` | `trace_write` | Failed to write GCL trace to disk | Check disk space and permissions | 0 |
-| `orchestration` | `budget_overrun` | Fix cost exceeds budget without warning | Include cost estimate in propose step before execution | 0 |
-| `orchestration` | `wrong_billing_model` | PostPaid→PrePaid migration missed | Add billing model check in diagnose step | 0 |
-| `gcl` | `missing_cost_dimension` | Critic accepted fix without cost assessment | Validate Cost Efficiency dimension score > 0 | 0 |
+
+> Rows with Count < 3 are pruned from this doc and live only in `.runtime/memory/failure-patterns.json` until they reach Count >= 3.
 
 ---
 

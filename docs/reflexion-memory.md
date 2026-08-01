@@ -60,7 +60,7 @@ Each pattern in `docs/failure-patterns.md` follows this structure:
 | **Token budget** | `docs/failure-patterns.md` <= 200 lines (design doc). Runtime data lives in `.runtime/memory/failure-patterns.json` (unbounded, structured). |
 | **Dedup** | Before adding, check if pattern exists (match by `(skill, pattern)`). If exists, increment `count`. Aligns with `vet gcl trace` `update_failure_patterns_file` and the `incident-loop-agent` rubric. |
 | **Source** | Patterns come from: (1) GCL trace `failure_pattern` field → `.runtime/memory/failure-patterns.json`, (2) lessons learned captured after Self-Review Round 1/2 findings |
-| **Review** | Patterns are reviewed monthly. Patterns with `count >= 10` are candidates for promotion to Anti-Patterns sections (T13 transpile → guardrails.yaml) |
+| **Review** | Patterns are reviewed monthly. Patterns with `count >= 5` are candidates for promotion to Anti-Patterns sections (T13 transpile → guardrails.yaml); `count >= 15` escalates to Hard (ABORT). Threshold lowered from 10/30 in 2026-07-26 so real incidents reach Constraint. |
 | **Storage** | Runtime memory lives in `.runtime/memory/` (gitignored). Design docs / seed data in `docs/failure-patterns.md`. |
 
 ## 5. Pre-flight Retrieval (Optional)
@@ -116,7 +116,7 @@ GCL run fails (SAFETY_FAIL / MAX_ITER / POLICY_BLOCK)
     │       └── memory.AppendFailurePattern() → .runtime/memory/failure-patterns.json
     │               ├── Dedup by (skill, pattern)
     │               ├── count++ (not overwrite)
-    │               └── If count >= 10 → triggerTranspile() → guardrails.yaml
+    │               └── If count >= 5 → triggerTranspile() → guardrails.yaml
     │
     └── Pre-flight: loadKnownFailurePatterns()
             ├── Primary: memory.GetPatternsBySkill() → JSON store (structured)
@@ -139,9 +139,13 @@ GCL run fails (SAFETY_FAIL / MAX_ITER / POLICY_BLOCK)
 | Count | Level | Action |
 |-------|-------|--------|
 | < 3 | Pruned | Removed from memory |
-| 3-9 | Hint | Injected as context only (not enforced) |
-| 10-29 | Constraint | Transpiled to guardrails.yaml (enforced as ASK) |
-| ≥ 30 | Hard | ABORT on hit, forced human review |
+| 3-4 | Hint | Injected as context only (not enforced) |
+| 5-14 | Constraint | Transpiled to guardrails.yaml (enforced as ASK) |
+| ≥ 15 | Hard | ABORT on hit, forced human review |
+
+> Threshold update (2026-07-26): Constraint floor 10→5, Hard floor 30→15. Without this, the existing
+> `execution_risk` pattern (count=8) and `UnauthorizedOperation` (count=5) would stay at Hint forever.
+> See `cmd/vet/internal/reflexion/promote/promote.go: LevelOf` for the canonical implementation.
 
 ## 9. Architecture Reference
 
