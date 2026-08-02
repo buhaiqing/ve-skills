@@ -10,6 +10,7 @@ import (
 
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/aiops"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/assessment"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/distillation"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/eval"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/gcl"
@@ -109,6 +110,20 @@ func buildSteps() []Step {
 			name: "Product assessment examples",
 			run: func(root string) stepOutcome {
 				errs, _, _ := assessment.CheckDir(root)
+				return stepOutcome{errors: errs}
+			},
+		},
+		{
+			name: "Knowledge distillation compliance",
+			run: func(root string) stepOutcome {
+				results, err := distillation.CheckDir(root)
+				if err != nil {
+					return stepOutcome{errors: []string{fmt.Sprintf("distillation check failed: %v", err)}}
+				}
+				var errs []string
+				for _, r := range results {
+					errs = append(errs, r.Errors...)
+				}
 				return stepOutcome{errors: errs}
 			},
 		},
