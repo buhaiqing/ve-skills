@@ -292,17 +292,35 @@ CodeGraph 的 AST + 调用图覆盖了 grep 无法到达的跳转表（接口实
 
 **例外**：纯文本内容搜索（日志关键字、文档内容）除外。
 
-### 常用命令
+### 优先级
 
-| 场景 | 命令 |
-|------|------|
-| 查符号定义+调用者 | `codegraph explore <pkg.Symbol>` |
-| 查影响面 | `codegraph impact <pkg.Symbol>` |
-| 查调用链（被调方） | `codegraph callees <pkg.Symbol>` |
-| 索引状态 | `codegraph status` |
-| 同步索引 | `codegraph sync --quiet` |
+| 优先级 | 工具 | 适用场景 | Fallback |
+|---|---|---|---|
+| **Primary** | `codegraph explore` | 理解符号定义/调用链/影响面 | — |
+| **Secondary** | `grep` / `read` | 纯文本搜索、配置文件 | `grep` 等原生工具 |
+| **Tertiary** | LSP (`lsp`) | 符号重命名、引用查找、类型推断 | `grep` |
 
-**Agent 自动执行**（每次编码任务结束时）：sync → explore 核心符号 → 检查 blast radius
+### Fallback 规则
+
+当 CodeGraph 不可用或索引过期时，按以下顺序降级：
+1. `grep` — 纯文本模式/关键字搜索
+2. `glob` + `read` — 文件存在性 + 内容确认
+3. `lsp` — 符号级操作（definition/references/rename）
+
+### 触发条件
+
+以下场景**必须**使用 CodeGraph：
+- 理解某个函数/方法的实现逻辑
+- 查找某个符号的所有调用方（影响面分析）
+- 追踪跨包的接口实现或动态派送
+- 修改导出符号前的调用方确认
+- 代码重构前的结构分析
+
+### 禁止事项
+
+- ❌ 在 CodeGraph 可用时直接用 `grep` 做代码理解（跳过语义层）
+- ❌ 修改前不确认 blast radius 就直接编辑
+- ❌ 修改 Go 代码后不执行 `codegraph sync --quiet`
 
 > 完整配置、MCP 设置、工作流集成见 [docs/codegraph-integration.md](docs/codegraph-integration.md)。
 
@@ -357,45 +375,140 @@ CodeGraph 的 AST + 调用图覆盖了 grep 无法到达的跳转表（接口实
 
 ## CodeGraph 优先级原则
 
-> **铁律 — 不可打破。** 所有代码理解任务必须先用 `codegraph explore`，再用 `grep`/`read` 补充。
+> 完整规则见上方 [CodeGraph Integration](#codegraph-integration--代码变动即时同步) 章节（含优先级表、Fallback 规则、触发条件、禁止事项）。
+
+本节仅保留 Agent Runtime Patterns 中的 P10 规则摘要（见上表）。
+
+
+## Knowledge Distillation Principle（知识萃取原则）
+
+> **铁律 — 不可打破。** 所有知识产物（spec/plan/ADR/runbook）必须为 AI 协作优化，而非人类阅读优化。
 
 ### 核心原则
 
-| 优先级 | 工具 | 适用场景 | Fallback |
-|---|---|---|---|
-| **Primary** | `codegraph explore` | 理解符号定义/调用链/影响面 | — |
-| **Secondary** | `grep` / `read` | 纯文本搜索、配置文件 | `grep` 等原生工具 |
-| **Tertiary** | LSP (`lsp`) | 符号重命名、引用查找、类型推断 | `grep` |
+| 原则 | 含义 |
+|------|------|
+| **结构化 > 叙事化** | 状态机、接口契约、决策表、代码片段优先。禁止时间线/故事叙述。 |
+| **压缩但完整** | 保留契约、不变量、决策理由。删除背景、动机、会议记录。 |
+| **单一事实源** | 一个概念只在一处定义。禁止跨文件重复。 |
+| **可查询** | 清晰的章节标题，便于按章节号定位。 |
+| **可执行** | 包含验证命令（`make check-ci`）、测试路径、状态检查方法。 |
+| **英文优先** | 代码术语已是英文；中文叙述对 Agent 是 token 噪声。 |
 
-### 执行顺序
+### 实践规则
 
-1. **理解阶段**：先用 `codegraph explore <symbol>` 获取 AST + 调用图
-2. **交叉验证**：用 `grep`/`read` 确认细节（字段名、行号等）
-3. **修改前**：再次 `codegraph explore` 确认 blast radius，scope 所有调用方
-4. **修改后**：执行 `codegraph sync --quiet` 同步索引
+| 规则 | 要求 | 反例 |
+|------|------|------|
+| **R1** | 每个 spec/plan 必须有「当前状态」章节 | ❌ 只有「背景」「目标」 |
+| **R2** | ADR 必须包含「决策」「理由」「后果」三要素 | ❌ 只写「我们决定用 X」 |
+| **R3** | 接口契约必须包含 Go 代码签名 | ❌ 只用自然语言描述 |
+| **R4** | 状态机必须包含状态转移图（mermaid 或表格） | ❌ 只用文字描述状态 |
+| **R5** | 决策表必须包含条件、动作、理由 | ❌ 只列「如果 X 则 Y」 |
+| **R6** | 禁止「我们」「他们」等模糊主语 | ❌ 「我们认为应该…」 |
+| **R7** | 禁止「可能」「也许」「大概」等模糊限定词 | ❌ 「这可能会导致…」 |
 
-### Fallback 规则
+### 示例：AI-First vs 人类视角
 
-当 CodeGraph 不可用或索引过期时，按以下顺序降级：
-1. `grep` — 纯文本模式/关键字搜索
-2. `glob` + `read` — 文件存在性 + 内容确认
-3. `lsp` — 符号级操作（definition/references/rename）
+**❌ 人类视角（禁止）**:
+> "在 2026-08-01 的会议中，团队讨论了 Wave A 的实现方案。经过激烈讨论，我们决定先实现 heal probe，因为没有真实的探测就无法安全地自动执行。这个决策基于之前的经验教训…"
 
-### 触发条件
+**✅ AI-First（推荐）**:
+```markdown
+### ADR-0001: Wave A First (heal probe + CI + eval + KB)
 
-以下场景**必须**使用 CodeGraph：
-- 理解某个函数/方法的实现逻辑
-- 查找某个符号的所有调用方（影响面分析）
-- 追踪跨包的接口实现或动态派送
-- 修改导出符号前的调用方确认
-- 代码重构前的结构分析
+**Decision**: Implement heal probe before any AUTO execution.
+
+**Rationale**: No real probe → no safe AUTO. Stub heal plans (`CheckFn: func() bool { return true }`) are fake execution.
+
+**Consequence**: Wave A blocked until `heal/probe.go` + `heal/promote.go` complete and tested.
+
+**Verification**: `go test ./internal/heal/ -count=1` must pass.
+```
+
+### 触发条件（MUST apply）
+
+- 编写或修改 spec/plan/ADR/runbook 时
+- 创建新的知识产物（failure pattern、decision record、architecture doc）时
+- 评审（review）任何文档时，检查是否符合上述原则
 
 ### 禁止事项
 
-- ❌ 在 CodeGraph 可用时直接用 `grep` 做代码理解（跳过语义层）
-- ❌ 修改前不确认 blast radius 就直接编辑
-- ❌ 修改 Go 代码后不执行 `codegraph sync --quiet`
+- ❌ 时间线/故事型文档结构
+- ❌ 背景说明和动机叙述
+- ❌ 跨文件重复上下文
+- ❌ 知识产物中混用中英文
+- ❌ 没有明确契约/接口的模糊「建议」
+
+### 自动验证（MUST run before commit）
+
+```bash
+# 1. 检查模糊限定词（R6/R7）
+grep -nE '(我们|他们|可能|也许|大概)' <file> && echo "❌ VIOLATION: vague language"
+
+# 2. 检查缺少契约的代码块（R3）
+grep -B2 '```go' <file> | grep -v 'func\|type\|interface' && echo "⚠️ WARNING: code without signature"
+
+# 3. 检查 ADR 三要素完整性（R2）
+for f in docs/adr/*.md; do
+  grep -q 'Decision' "$f" || echo "❌ $f: missing Decision"
+  grep -q 'Rationale' "$f" || echo "❌ $f: missing Rationale"
+  grep -q 'Consequence' "$f" || echo "❌ $f: missing Consequence"
+done
+
+# 4. 检查单一事实源（TE-6）
+find . -name '*.md' -exec grep -l 'CodeGraph.*优先级' {} \; | wc -l
+# 期望输出：1（仅 AGENTS.md）
+```
+
+CI 集成：在 `vet validate` 中添加 `--check-distillation` flag（TODO）。
+
 ---
+
+## Knowledge Compound Loop（知识复利循环）
+
+> **铁律 — 不可打破。** 每次工作都必须让系统变得更好。禁止"只消费知识、不沉淀知识"的行为。
+
+### 复利触发器
+
+| Trigger | Action | Compound Effect |
+|---------|--------|-----------------|
+| Go interface 变更 | `codegraph impact` → 更新 ARCHITECTURE.md §3 | 文档始终反映当前代码 |
+| Runtime failure | Reflexion → `docs/failure-patterns.md` → spec 更新 | 失败不再重复 |
+| ADR 决策 | ADR rationale → 代码注释 `// ADR-0001: ...` | 决策理由可追溯 |
+| Wave C 完成 | Post-mortem → ARCHITECTURE.md §5 更新 | 经验沉淀 |
+| Bug fix | 根因 → `failure-patterns.json` → 测试用例 | 回归免疫 |
+| Code review | 发现 → `AGENTS.md` 规则补充 | 规则进化 |
+
+### 复利度量（Compound Interest Metrics）
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Knowledge reuse rate | ≥80% | Agent sessions 加载 ARCHITECTURE.md vs 读 raw specs 的比例 |
+| Failure recurrence | ≤5% | 匹配 `failure-patterns.md` 已有模式的失败占比 |
+| Spec drift | 0 | ARCHITECTURE.md 契约 vs 实际 Go 签名的差异数 |
+| Decision traceability | 100% | ADR 有对应代码注释的比例 |
+| 文档维护成本 | ↓ 每季 | 每季度文档更新所需的 agent token 数 |
+
+### 反模式（禁止）
+
+- ❌ **知识消费不沉淀**：完成任务后不更新 failure-patterns / ARCHITECTURE.md
+- ❌ **重复失败**：同一类 bug 出现第二次（说明 Reflexion 闭环断裂）
+- ❌ **文档漂移**：代码改了但 ARCHITECTURE.md 没更新（spec drift > 0）
+- ❌ **决策失忆**：ADR 写了但代码里没有注释引用（traceability < 100%）
+
+### 复利检查清单（每次 PR 前）
+
+```bash
+# 1. 检查 spec drift
+codegraph diff --against ARCHITECTURE.md  # TODO: 待实现
+
+# 2. 检查 failure-patterns 是否更新
+git diff --name-only HEAD~1 | grep -q 'failure-patterns' || \
+  echo "⚠️ 本次修复是否产生了新的 failure pattern?"
+
+# 3. 检查 ADR traceability
+grep -r 'ADR-' cmd/ internal/ | wc -l  # 期望：每个 ADR 至少一处引用
+```
 
 ## Key References
 
