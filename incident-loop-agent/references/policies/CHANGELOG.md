@@ -5,6 +5,7 @@
 | 日期 | 版本 | 作者 | 变更摘要 |
 |------|------|------|----------|
 | 2026-07-17 | v1.0.0 | T15 | 初始版本：execution-risk.md + domain-allowlist.md + guardrails.schema.json |
+| 2026-08-05 | v1.1.0 | T16 | autonomy-envelope.md 嵌入 fenced YAML `domains:` 块，使 `vet autonomy test --envelope` 可解析（L4 出口 DoD #10） |
 
 ## 变更规则
 
