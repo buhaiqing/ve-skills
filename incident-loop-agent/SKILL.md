@@ -19,8 +19,8 @@ compatibility: >-
   compatible with the existing `ve-skill-generator` flow.
 metadata:
   author: ve-skills
-  version: "0.3.1"
-  last_updated: "2026-07-13"
+  version: "0.3.2"
+  last_updated: "2026-08-05"
   runtime: Harness AI Agent, Claude Code, Cursor, or compatible Agent runtimes
   type: orchestration-skill
   guidance_freedom_level: medium
@@ -264,6 +264,7 @@ This skill never reimplements routing. It loads the routing table, matches, and 
 
 | Version | Date | Change |
 |---------|------|--------|
+| 0.3.2   | 2026-08-05 | T16 L4 envelope: `references/policies/autonomy-envelope.md` 嵌入 fenced YAML `domains:` 块，使 `vet autonomy test --envelope` 可解析（L4 出口 DoD #10）；bump `version` → 0.3.2. |
 | 0.3.1   | 2026-07-13 | T05 wiring: replace L2 `{{user.confirm}}` hard gate with policy decision gate; add `{{policy.decision}}`/`{{policy.reason}}` variables; Step 5 now reads policy verdict (AUTO→auto-exec, ASK→prompt, REFUSE→block); add Step 5a policy-evaluation description; bump `version` → 0.3.1. |
 | 0.3.0   | 2026-07-13 | L3 policy foundation complete (T01–T04): add `execution-risk.schema.json` (machine-readable policy twin, Safety=0→REFUSE + missing→ASK hard rules), `domain-allowlist.md` (8 coordinated skills + per-skill symptom whitelist + destructive exclusions + expansion policy), and `ve-skill-generator/references/leaf-op-metadata-spec.md` (per-op `safety_class`/`blast_radius` contract — 8 leaf SKILL.md operation tables now annotated). |
 | 0.2.0   | 2026-07-13 | Add L3 execution-risk policy (`references/policies/execution-risk.md`); `## References` now links the graded AUTO/ASK/REFUSE policy replacing the L2 blanket `{{user.confirm}}` gate. |
