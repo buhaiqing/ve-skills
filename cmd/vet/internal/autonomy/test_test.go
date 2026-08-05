@@ -26,7 +26,7 @@ func TestRunNConsecutiveIncidents(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	report, err := RunNConsecutiveIncidents(ctx, 5, envPath)
+	report, err := RunNConsecutiveIncidentsPath(ctx, 5, envPath, nil)
 	if err != nil {
 		t.Fatalf("RunNConsecutiveIncidents failed: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestRunNConsecutiveIncidents_ContextCancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
-	_, err := RunNConsecutiveIncidents(ctx, 5, envPath)
+	_, err := RunNConsecutiveIncidentsPath(ctx, 5, envPath, nil)
 	if err == nil {
 		t.Error("expected error for cancelled context")
 	}
@@ -72,7 +72,7 @@ func TestRunNConsecutiveIncidents_ContextCancelled(t *testing.T) {
 
 func TestRunNConsecutiveIncidents_InvalidEnvelope(t *testing.T) {
 	ctx := context.Background()
-	_, err := RunNConsecutiveIncidents(ctx, 5, "/nonexistent/path.yaml")
+	_, err := RunNConsecutiveIncidentsPath(ctx, 5, "/nonexistent/path.yaml", nil)
 	if err == nil {
 		t.Error("expected error for invalid envelope path")
 	}

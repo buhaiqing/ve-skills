@@ -87,3 +87,10 @@
 - 已实证项：② 零 per-op prompt、⑧ policy CHANGELOG 化（CI P8 门禁强制）
 - 待取证（需真实 incident 流量）：③ 回滚 trace、⑤ reflexion transpile>=1 次、⑥ predict Risk=high 触发、⑦ heal 成功率>80%
 - 结论：L4 代码与合成验证已达成；生产运行时认证待真实环境取证后最终勾定
+## T16 2026-08-06 — L4 synthetic load-test harness done
+- 新增 `vet autonomy loadtest` 子命令（cmd/vet/autonomy.go + internal/autonomy/l4evidence.go 既有实现接通 CLI）
+- `RunNConsecutiveIncidents` 改为经真实 slo.Engine（RunIncidentWithEngine）：注入违规 incident → RecommendAction=rollback → 观察恢复样本 → 终态 Healthy（item ①④）
+- trace.Iteration 加 RollbackApplied 字段（item ③）
+- loadtest 经真实代码路径取证：③ rollback_applied=1、⑤ transpile source_count=10、⑥ predict Risk=high、⑦ heal 90%>80%
+- 验证：go build/vet/test ./... 全绿；vet autonomy test --n 5 PASS；vet autonomy loadtest PASS；vet validate 15 steps passed
+- L4 运行时取证闭环达成

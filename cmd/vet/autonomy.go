@@ -45,6 +45,8 @@ Flags:`)
 	switch subcmd {
 	case "test":
 		runAutonomyTest(*envelopePath, *n, *timeout)
+	case "loadtest":
+		runAutonomyLoadTest(*envelopePath, *n, *timeout)
 	default:
 		fmt.Fprintf(os.Stderr, "vet autonomy: unknown subcommand %q\n", subcmd)
 		fs.Usage()
@@ -64,7 +66,7 @@ func runAutonomyTest(envelopePath string, n int, timeout time.Duration) {
 	fmt.Printf("Running %d synthetic incidents against envelope: %s\n", n, envelopePath)
 	fmt.Println("---------------------------------------------------")
 
-	report, err := autonomy.RunNConsecutiveIncidents(ctx, n, envelopePath)
+	report, err := autonomy.RunNConsecutiveIncidentsPath(ctx, n, envelopePath, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -85,4 +87,46 @@ func runAutonomyTest(envelopePath string, n int, timeout time.Duration) {
 	}
 
 	fmt.Printf("PASS — %d/%d incidents completed, 0 prompts, SLO maintained\n", report.Passed, report.TotalIncidents)
+}
+
+func runAutonomyLoadTest(envelopePath string, n int, timeout time.Duration) {
+	if envelopePath == "" {
+		fmt.Fprintln(os.Stderr, "error: --envelope is required")
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	env, err := autonomy.LoadEnvelope(envelopePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error loading envelope: %v\n", err)
+		os.Exit(1)
+	}
+
+	ev, err := autonomy.RunL4LoadTest(ctx, n, env)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("L4 runtime evidence (synthetic):")
+	fmt.Println("---------------------------------------------------")
+	for _, it := range ev.Items {
+		status := "PASS"
+		if !it.Passed {
+			status = "FAIL"
+		}
+		fmt.Printf("  [%s] item %s — %s\n         %s\n", status, it.ID, it.Description, it.Detail)
+	}
+	if ev.Rollbacks > 0 {
+		fmt.Printf("  rollbacks applied: %d\n", ev.Rollbacks)
+	}
+	fmt.Println("---------------------------------------------------")
+
+	if !ev.Passed {
+		fmt.Println("FAIL — L4 runtime evidence incomplete")
+		os.Exit(1)
+	}
+	fmt.Println("PASS — L4 runtime evidence items ③⑤⑥⑦ met")
 }

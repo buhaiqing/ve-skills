@@ -124,3 +124,21 @@ func TestCmdIncidentNoAuditDir(t *testing.T) {
 		t.Errorf("expected no incident-summary file, got %v", matches)
 	}
 }
+
+func TestIterationRollbackApplied(t *testing.T) {
+	it := Iteration{Iter: 1, Timestamp: "2026-08-06T00:00:00Z", RollbackApplied: true}
+	b, err := json.Marshal(it)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if !strings.Contains(string(b), "\"rollback_applied\":true") {
+		t.Errorf("expected rollback_applied=true in JSON, got %s", string(b))
+	}
+	var got Iteration
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if !got.RollbackApplied {
+		t.Error("round-trip RollbackApplied = false, want true")
+	}
+}

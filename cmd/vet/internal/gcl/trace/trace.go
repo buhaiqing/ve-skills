@@ -73,6 +73,10 @@ type Iteration struct {
 	SelfHealing *SelfHealingRecord `json:"self_healing,omitempty"`
 	// P0-3: CostImpact records billing impact estimates (advisory, never blocks).
 	CostImpact *CostImpactRecord `json:"cost_impact,omitempty"`
+	// RollbackApplied records that an L4 envelope auto-applied a rollback when
+	// the SLO engine recommended one (T16 item ③). False/absent when no rollback
+	// was recommended or applied. Consumed by the L4 autonomy evidence layer.
+	RollbackApplied bool `json:"rollback_applied,omitempty"`
 }
 
 // SelfHealingRecord captures one multi-path self-healing attempt (T10): which
