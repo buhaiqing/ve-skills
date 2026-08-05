@@ -81,3 +81,9 @@
 - cmd/vet/internal/policy/ loader + diff
 - vet policy {load,diff,check-changelog} 子命令
 - CI: vet policy check-changelog 加入 hard-gates
+
+## T16 2026-08-05 — L4 runtime verification status
+- 合成验证层（1-8 实现+单测）全绿：go build/vet/test ./... 通过；vet autonomy test --envelope autonomy-envelope.md --n 5 → 5/5 passed, 0 prompts, SLO maintained
+- 已实证项：② 零 per-op prompt、⑧ policy CHANGELOG 化（CI P8 门禁强制）
+- 待取证（需真实 incident 流量）：③ 回滚 trace、⑤ reflexion transpile>=1 次、⑥ predict Risk=high 触发、⑦ heal 成功率>80%
+- 结论：L4 代码与合成验证已达成；生产运行时认证待真实环境取证后最终勾定
