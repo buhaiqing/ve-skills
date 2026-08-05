@@ -22,7 +22,7 @@ type HarnessReport struct {
 	TotalIncidents  int
 	Passed          int
 	Failed          int
-	Prompts         int  // number of per-op prompts (should be 0 in L4)
+	Prompts         int // number of per-op prompts (should be 0 in L4)
 	SLOViolations   int
 	Rollbacks       int // number of incidents where SLO recommended auto-rollback
 	Duration        time.Duration
@@ -125,11 +125,11 @@ func buildEngine(env *Envelope) *slo.Engine {
 			skill = d.Skills[0]
 		}
 		slos = append(slos, slo.SLO{
-			Name:    d.SLORef,
-			Skill:   skill,
-			Metric:  metricForSLO(d.SLORef),
-			Target:  100,
-			Window:  0,
+			Name:       d.SLORef,
+			Skill:      skill,
+			Metric:     metricForSLO(d.SLORef),
+			Target:     100,
+			Window:     0,
 			Comparator: slo.CompareGreaterThan,
 		})
 	}

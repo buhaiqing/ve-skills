@@ -44,10 +44,14 @@
 - No external deps; all paths pure/file-based.
 
 ## DoD (per spec §3)
-- [ ] real engine wired, Rollbacks counted, trace field added
-- [ ] loadtest subcommand + L4Evidence report for ①–⑧
-- [ ] `go build`/`go vet`/`go test ./...` green
-- [ ] `vet autonomy test --n 5` PASS; `vet autonomy loadtest` prints per-item status
+- [x] real engine wired, Rollbacks counted, trace field added (M1/M2)
+- [x] loadtest subcommand + L4Evidence report for ③⑤⑥⑦ (M3)
+- [x] `go build`/`go vet`/`go test ./...` green (M4)
+- [x] `vet autonomy test --n 5` PASS; `vet autonomy loadtest` prints per-item status (M4 smoke)
+
+## Status (2026-08-06)
+M1–M4 全部完成并验证：`go build`/`go vet`/`go test ./...` 绿；`vet autonomy test --n 5` 与
+`vet autonomy loadtest --n 3` 均 PASS，L4 items ③⑤⑥⑦ 经真实 slo/predict/transpile/heal 代码路径取证。
 
 ## Verification commands
 ```bash
