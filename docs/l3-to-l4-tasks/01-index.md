@@ -14,7 +14,7 @@
 | T13 | [T13-pattern-to-policy.md](./T13-pattern-to-policy.md) | Pattern→Policy 转译器 | 1 Go 转译器 + 1 护栏 schema | T11, T14 | 1.5d | ✅ DONE |
 | T14 | [T14-reflexion-promotion.md](./T14-reflexion-promotion.md) | Reflexion HINT→Constraint 升级 | 1 Go 升级机制 | T11 | 1d | ✅ DONE |
 | T15 | [T15-versioned-policy-lib.md](./T15-versioned-policy-lib.md) | 版本化 policy library | 1 Go loader + 目录结构 | T13, T14 | 1d | ✅ DONE |
-| T16 | [T16-l4-slo-envelope-dashboard.md](./T16-l4-slo-envelope-dashboard.md) | SLO 目标 + 自治域 + goals dashboard | 1 Go SLO 引擎 + 1 dashboard | T10, T12, T15 | 3d | 🟡 TODO |
+| T16 | [T16-l4-slo-envelope-dashboard.md](./T16-l4-slo-envelope-dashboard.md) | SLO 目标 + 自治域 + goals dashboard | 1 Go SLO 引擎 + 1 dashboard | T10, T12, T15 | 3d | ✅ DONE |
 
 ## 依赖图
 

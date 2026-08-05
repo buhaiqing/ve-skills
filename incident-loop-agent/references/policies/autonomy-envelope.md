@@ -33,6 +33,20 @@ All executions within the envelope produce trace records with:
 
 ## 5. Domains
 
+```yaml
+domains:
+  - name: redis-slow-commands
+    skills: [ve-redis-ops]
+    symptoms: [slow-commands, oom-prevention]
+    blast_radius: single
+    slo_ref: redis-p99-latency
+  - name: ecs-idle-cleanup
+    skills: [ve-ecs-ops]
+    symptoms: [idle-resource-cleanup]
+    blast_radius: single
+    slo_ref: ecs-idle-cost
+```
+
 ### 5.1 Redis Slow Commands
 
 | Field | Value |

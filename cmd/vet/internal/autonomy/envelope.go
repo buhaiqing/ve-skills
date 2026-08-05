@@ -3,9 +3,17 @@ package autonomy
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+// yamlBlockRE matches a fenced ```yaml ... ``` block in a Markdown policy doc.
+// Group 1 captures the block body so the same loader works for both pure .yaml
+// files and .md files that embed the envelope as a fenced YAML block.
+// Backticks are written as \x60 because they cannot appear in a Go raw string.
+var yamlBlockRE = regexp.MustCompile("(?s)\x60\x60\x60ya?ml[[:space:]]*\n(.*?)\n\x60\x60\x60")
 
 // Domain defines a single autonomous domain within the envelope.
 type Domain struct {
@@ -28,8 +36,18 @@ func LoadEnvelope(path string) (*Envelope, error) {
 		return nil, fmt.Errorf("reading envelope file: %w", err)
 	}
 
+	// A .md policy doc embeds the envelope as a fenced ```yaml block; a .yaml
+	// file is the envelope directly. Extract the block when present so both
+	// shapes load through the same path.
+	doc := string(data)
+	if m := yamlBlockRE.FindStringSubmatch(doc); m != nil {
+		doc = m[1]
+	} else if strings.TrimSpace(doc) == "" {
+		return nil, fmt.Errorf("parsing envelope YAML: empty file")
+	}
+
 	var env Envelope
-	if err := yaml.Unmarshal(data, &env); err != nil {
+	if err := yaml.Unmarshal([]byte(doc), &env); err != nil {
 		return nil, fmt.Errorf("parsing envelope YAML: %w", err)
 	}
 
