@@ -77,8 +77,12 @@ User Request
 [3] Decide (Orchestrator)              │
     - Safety=0  → ABORT (no partial)   │
     - all pass  → RETURN                │
+    - stall     → NO_PROGRESS          │  (next effective command byte-identical
+       (RETRY re-runs the same         │   to the one that just failed again)
+        command and fails again)       │
     - else & iter<max → inject         │
-       suggestions into G               │
+       suggestions + prior_suggestions │
+       into G                          │
     - else → RETURN best + unresolved   │
        rubric items                     │
      └──────────────────────────────────┘
@@ -100,11 +104,13 @@ The Orchestrator owns `operation_intent` generation during Pre-flight. It MUST d
 | **PASS** | Every rubric dimension meets its threshold → return G's result |
 | **MAX_ITER** | Reached `max_iterations` (default 3, 2 for destructive skills) → return **best-so-far** + unresolved rubric items |
 | **SAFETY_FAIL** | Safety = 0 → **ABORT**; never return partial or "best-effort" output |
+| **NO_PROGRESS** | A RETRY re-runs a **byte-identical** effective command **and that retry fails again** (`exit != 0`) → the retry cannot alter the outcome → stop early with exit code 1 (same "did not pass" bucket as MAX_ITER); trace records the real prior RETRY verdict + `unresolved` dims. A byte-identical command that *succeeds* on retry (transient failure) is NOT a stall — it falls through to the Critic and may reach PASS. |
 | **POLICY_BLOCK** | Execution-Risk Gate refused the operation (`REFUSE`, or `ASK` without `--confirmed` in non-interactive mode) → **no execution**; exit code 4; trace records `policy_decision` |
 
 `max_iterations` defaults per skill class — see §8.
 
-Exit codes: `0` PASS · `1` MAX_ITER · `2` invalid/missing Critic input · `3` SAFETY_FAIL · `4` POLICY_BLOCK.
+Exit codes: `0` PASS · `1` MAX_ITER / NO_PROGRESS · `2` invalid/missing Critic input · `3` SAFETY_FAIL · `4` POLICY_BLOCK.
+`NO_PROGRESS` shares exit `1` with `MAX_ITER`; the two are distinguished by `final.status` in the trace.
 
 ## 6. Trace & Audit (mandatory)
 
@@ -235,6 +241,8 @@ Each skill may override `max_iter` in its own `SKILL.md` (under `## Quality Gate
 - ❌ **Unbounded loop** — always hard-cap iterations → banned
 - ❌ **Critic sees the user request** — encourages rubber-stamping → banned
 - ❌ **Silently downgrade on Safety fail** — must ABORT visibly → banned
+- ❌ **Blind retry** — re-running an identical failing command without changing it, then burning the iteration budget → detect and terminate as `NO_PROGRESS` → banned
+- ❌ **Feedback-free retry** — feeding G only "RETRY" without the Critic's suggestions / prior_suggestions, so the retry has no direction → banned
 - ❌ **Trace not persisted** — no post-mortem possible → banned
 - ❌ **Critic mutates resources** — Critic is read-only by definition → banned
 - ❌ **Real `VOLCENGINE_SECRET_KEY` in trace** — credential leakage → banned (use `<masked>` only)
@@ -281,6 +289,7 @@ GCL traces include a `failure_pattern` field in the `final` object (see SS6). Th
 
 | Version | Date | Change |
 |---|---|---|
+| 1.19.0 | 2026-10-03 | **Loop convergence & feedback (P0-1..P0-3):** new `NO_PROGRESS` termination — a RETRY that re-runs a byte-identical effective command *and fails again* stops early (exit 1) instead of exhausting `max_iterations`; §4 Decide step + §5 table + exit-code line updated. Critic now receives the current iteration + `prior_suggestions` so retries have direction. `NO_PROGRESS` trace records the real prior RETRY verdict + `unresolved` dims. Optional `--fix-command` external fixer rewrites the next retry. `vet gcl trace` counts `NO_PROGRESS` in `totals` and `by_skill`. |
 | 1.18.0 | 2026-06-19 | **Phase 4.1 (done):** `vet check gcl` -- CI gate for Tier-A conformance across all 29 skills; spec enhanced with `operation_intent`, enhanced trace schema, Reflexion Integration, Rollout Roadmap, and See also sections |
 | 1.17.0 | 2026-06-19 | ve-rds-ops (RDS MySQL variant) GCL rollout; full coverage of all 29 skills |
 | 1.16.0 | 2026-06-04 | ve-skill-generator meta-skill GCL rollout |
