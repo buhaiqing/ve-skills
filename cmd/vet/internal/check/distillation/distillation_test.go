@@ -8,9 +8,9 @@ import (
 
 func TestCheckADR(t *testing.T) {
 	tests := []struct {
-		name        string
-		content     string
-		wantErrors  int
+		name       string
+		content    string
+		wantErrors int
 	}{
 		{
 			name: "complete ADR",
@@ -242,8 +242,8 @@ Users can access the API.
 			wantAdvisory: 1,
 		},
 		{
-			name: "skip code fence",
-			content: "# Document\n\n```\n我们可能也许大概\n```\n\nClear text here.\n",
+			name:         "skip code fence",
+			content:      "# Document\n\n```\n我们可能也许大概\n```\n\nClear text here.\n",
 			wantAdvisory: 0,
 		},
 		{

@@ -164,9 +164,9 @@ func TestOrchestratorRollback(t *testing.T) {
 	plan := &RecoveryPlan{
 		Steps: []RecoveryStep{
 			{
-				Name:   "step_a",
-				Action: "Action A",
-				Stub:   false,
+				Name:    "step_a",
+				Action:  "Action A",
+				Stub:    false,
 				CheckFn: func() bool { return true },
 				RollbackFn: func() error {
 					rolledBackSteps = append(rolledBackSteps, "step_a")
@@ -174,9 +174,9 @@ func TestOrchestratorRollback(t *testing.T) {
 				},
 			},
 			{
-				Name:   "step_b",
-				Action: "Action B",
-				Stub:   false,
+				Name:    "step_b",
+				Action:  "Action B",
+				Stub:    false,
 				CheckFn: func() bool { return false },
 				RollbackFn: func() error {
 					rolledBackSteps = append(rolledBackSteps, "step_b")

@@ -138,7 +138,7 @@ func TestPersistValueRoundtrip(t *testing.T) {
 }
 
 type recordingWriter struct {
-	n               int
+	n                int
 	lastID, lastBody string
 }
 

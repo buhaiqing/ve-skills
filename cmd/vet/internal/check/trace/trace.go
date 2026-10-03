@@ -11,12 +11,12 @@ import (
 
 // Trace is the top-level incident-loop trace shape validated by Check.
 type Trace struct {
-	TicketID      string      `json:"ticket_id"`
-	StartedAt     string     `json:"started_at"`
-	FinishedAt    string     `json:"finished_at"`
-	PolicyDecision string     `json:"policy_decision"`
-	Iterations    []Iteration `json:"iterations"`
-	RedactionPass bool       `json:"redaction_pass"`
+	TicketID       string      `json:"ticket_id"`
+	StartedAt      string      `json:"started_at"`
+	FinishedAt     string      `json:"finished_at"`
+	PolicyDecision string      `json:"policy_decision"`
+	Iterations     []Iteration `json:"iterations"`
+	RedactionPass  bool        `json:"redaction_pass"`
 }
 
 // Iteration is one GCL loop iteration.
@@ -27,8 +27,8 @@ type Iteration struct {
 // VeCall is one ve CLI invocation within an iteration.
 type VeCall struct {
 	RequestID string `json:"request_id"`
-	Action   string `json:"action"`
-	Status   string `json:"status"`
+	Action    string `json:"action"`
+	Status    string `json:"status"`
 }
 
 // Check validates a single trace file.

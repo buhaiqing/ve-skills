@@ -46,10 +46,10 @@ func TestSelectBest_CheapestFirst(t *testing.T) {
 		class ErrorClass
 		want  string
 	}{
-		{ClassRetryable, "backoff-retry"},       // Cost1 < endpoint-switch-retry Cost2
-		{ClassRateLimit, "wait-retry"},          // Cost1 < wait-retry-long Cost2
-		{ClassFatal, "degrade-manual"},          // Cost3 < escalate Cost4
-		{ClassUnknown, "single-retry"},          // Cost1 < escalate Cost4
+		{ClassRetryable, "backoff-retry"}, // Cost1 < endpoint-switch-retry Cost2
+		{ClassRateLimit, "wait-retry"},    // Cost1 < wait-retry-long Cost2
+		{ClassFatal, "degrade-manual"},    // Cost3 < escalate Cost4
+		{ClassUnknown, "single-retry"},    // Cost1 < escalate Cost4
 	}
 	for _, tc := range cases {
 		p := SelectBest(tc.class, nil)
@@ -68,7 +68,7 @@ func TestSelectBest_HistoryBreaksTie(t *testing.T) {
 	// are not equal cost, so test with a synthetic equal-cost scenario by
 	// favoring a path with known good rate even if slightly costlier.
 	hist := fakeHistory{rates: map[string]float64{
-		"retryable/backoff-retry":       0.2,
+		"retryable/backoff-retry":         0.2,
 		"retryable/endpoint-switch-retry": 0.9,
 	}}
 	// backoff-retry is cheaper (1) but historically poor; endpoint-switch-retry

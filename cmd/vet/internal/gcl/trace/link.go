@@ -17,7 +17,7 @@ import (
 type incidentTraceLocal struct {
 	TicketID       string `json:"ticket_id"`
 	PolicyDecision string `json:"policy_decision"` // AUTO/ASK/REFUSE — needed for ticket-level aggregation
-	Iterations []struct {
+	Iterations     []struct {
 		VeCalls []struct {
 			RequestID string `json:"request_id"`
 		} `json:"ve_calls"`
@@ -46,11 +46,11 @@ type LinkCounts struct {
 
 // LinkResult is the output contract of the link aggregation.
 type LinkResult struct {
-	TraceSchemaVersion string          `json:"trace_schema_version"` // "v1-link"
-	GeneratedAt        string          `json:"generated_at"`
+	TraceSchemaVersion string                  `json:"trace_schema_version"` // "v1-link"
+	GeneratedAt        string                  `json:"generated_at"`
 	RequestIndex       map[string]*LinkedTrace `json:"request_index"`
-	Unlinked           UnlinkedSummary `json:"unlinked"`
-	Counts             LinkCounts      `json:"counts"`
+	Unlinked           UnlinkedSummary         `json:"unlinked"`
+	Counts             LinkCounts              `json:"counts"`
 }
 
 // LinkIndex scans audit-results/gcl-trace-*.json and incident-trace-*.json

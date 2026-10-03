@@ -88,10 +88,10 @@ func TestCheckPlan_AllClean(t *testing.T) {
 
 func TestCheckPlanWithReport_Mixed(t *testing.T) {
 	plan := DispatchPlan{Operations: []Operation{
-		{Skill: "ve-ecs-ops", Command: "DescribeInstances", Safety: 1.0, SafetyClass: "read_only", MetadataOK: true},   // clean → 0 violations
-		{Skill: "ve-ecs-ops", Command: "StopInstances", Safety: 0, SafetyClass: "destructive", MetadataOK: true},        // invariant-1 only (safety=0 triggers hard floor first)
-		{Skill: "ve-redis-ops", Command: "DeleteKeys", Safety: 1.0, SafetyClass: "destructive", MetadataOK: true},    // invariant-2 only
-		{Skill: "ve-ecs-ops", Command: "DescribeInstances", Safety: 1.0, SafetyClass: "read_only", MetadataOK: false},   // invariant-3 only
+		{Skill: "ve-ecs-ops", Command: "DescribeInstances", Safety: 1.0, SafetyClass: "read_only", MetadataOK: true},  // clean → 0 violations
+		{Skill: "ve-ecs-ops", Command: "StopInstances", Safety: 0, SafetyClass: "destructive", MetadataOK: true},      // invariant-1 only (safety=0 triggers hard floor first)
+		{Skill: "ve-redis-ops", Command: "DeleteKeys", Safety: 1.0, SafetyClass: "destructive", MetadataOK: true},     // invariant-2 only
+		{Skill: "ve-ecs-ops", Command: "DescribeInstances", Safety: 1.0, SafetyClass: "read_only", MetadataOK: false}, // invariant-3 only
 	}}
 	reports, err := CheckPlanWithReport(plan)
 	if err != nil {

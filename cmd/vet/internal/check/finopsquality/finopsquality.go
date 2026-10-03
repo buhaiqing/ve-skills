@@ -15,12 +15,12 @@ import (
 
 // Result holds the quality check result for a single skill.
 type Result struct {
-	Skill           string `json:"skill"`
-	HasFinOps       bool   `json:"has_finops"`
-	LineCount       int    `json:"line_count"`
-	HasPricing      string `json:"has_pricing"`    // empty or the product name detected
-	HasOptimizations bool  `json:"has_optimizations"`
-	OK              bool   `json:"ok"`
+	Skill            string `json:"skill"`
+	HasFinOps        bool   `json:"has_finops"`
+	LineCount        int    `json:"line_count"`
+	HasPricing       string `json:"has_pricing"` // empty or the product name detected
+	HasOptimizations bool   `json:"has_optimizations"`
+	OK               bool   `json:"ok"`
 }
 
 // Report holds the aggregate quality check report.
@@ -33,10 +33,10 @@ type Report struct {
 }
 
 var (
-	pricingRe    = regexp.MustCompile(`(?i)pricing?|billing|cost|DescribePrice|DescribeBill`)
-	optimizeRe   = regexp.MustCompile(`(?i)optimiz|right.siz|rightsize|idle|spot|preempt|recommend|suggestion|tier|downgrade|upgrade|reserved|saving`)
-	sectionRe    = regexp.MustCompile(`(?m)^#{1,3}\s+`)
-	productRe    = regexp.MustCompile(`(?i)(ecs|rds|redis|vpc|eip|nat|clb|alb|vke|tos|cms|cdn|dns|kafka|sls|billing|iam|kms|mongodb|elasticsearch|polar|nas|fg|ark|vpn|security.group)`)
+	pricingRe  = regexp.MustCompile(`(?i)pricing?|billing|cost|DescribePrice|DescribeBill`)
+	optimizeRe = regexp.MustCompile(`(?i)optimiz|right.siz|rightsize|idle|spot|preempt|recommend|suggestion|tier|downgrade|upgrade|reserved|saving`)
+	sectionRe  = regexp.MustCompile(`(?m)^#{1,3}\s+`)
+	productRe  = regexp.MustCompile(`(?i)(ecs|rds|redis|vpc|eip|nat|clb|alb|vke|tos|cms|cdn|dns|kafka|sls|billing|iam|kms|mongodb|elasticsearch|polar|nas|fg|ark|vpn|security.group)`)
 )
 
 func checkSkill(root, skill string) Result {

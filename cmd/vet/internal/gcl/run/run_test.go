@@ -17,9 +17,9 @@ import (
 // correct safety class. The runner-loop logic previously had no Go coverage.
 func TestDeriveOperationIntent(t *testing.T) {
 	cases := []struct {
-		skill   string
-		command string
-		wantOp  string
+		skill      string
+		command    string
+		wantOp     string
 		wantSafety string
 	}{
 		{"ve-ecs-ops", "ve ecs Delete --InstanceIds i-xxx", "destructive_ecs", "destructive"},
@@ -92,13 +92,13 @@ func TestRunResultTimedOut(t *testing.T) {
 // - missing metadata → ASK (fail-safe)
 func TestScoreDecision_9Cell(t *testing.T) {
 	cases := []struct {
-		skill      string
+		skill       string
 		safetyClass string
 		blastRadius string
-		confidence string
-		safety     float64
-		metadataOK bool
-		want       OpDecision
+		confidence  string
+		safety      float64
+		metadataOK  bool
+		want        OpDecision
 	}{
 		// AUTO cases
 		{"ve-ecs-ops", "read_only", "single", "high", 1.0, true, OpAuto},
@@ -155,9 +155,9 @@ func TestPolicyInputs_FailSafe(t *testing.T) {
 		command string
 		want    OpDecision
 	}{
-		{"ve-ecs-ops", "ve ecs DeleteInstances --Ids i", OpAsk},  // destructive → ASK (Run downgrades to REFUSE)
-		{"ve-ecs-ops", "ve ecs DescribeInstances", OpAuto},        // read_only + high confidence (allow-list) → AUTO
-		{"ve-unknown-ops", "ve unknown Describe", OpAsk},         // not in allow-list → ASK
+		{"ve-ecs-ops", "ve ecs DeleteInstances --Ids i", OpAsk}, // destructive → ASK (Run downgrades to REFUSE)
+		{"ve-ecs-ops", "ve ecs DescribeInstances", OpAuto},      // read_only + high confidence (allow-list) → AUTO
+		{"ve-unknown-ops", "ve unknown Describe", OpAsk},        // not in allow-list → ASK
 	}
 	for _, c := range cases {
 		sClass, bRadius, conf, safety, metaOK := policyInputs(c.skill, deriveOperationIntent(c.skill, c.command), nil)

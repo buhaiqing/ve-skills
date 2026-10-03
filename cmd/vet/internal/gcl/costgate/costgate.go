@@ -8,14 +8,14 @@ import (
 )
 
 type OperationCost struct {
-	Operation     string
-	BillingModel  string
-	ResourceType  string
-	EstMonthlyCost float64
-	RefundOnDelete float64
-	NewMonthlyCost float64
+	Operation       string
+	BillingModel    string
+	ResourceType    string
+	EstMonthlyCost  float64
+	RefundOnDelete  float64
+	NewMonthlyCost  float64
 	NetMonthlyDelta float64
-	Warning       string
+	Warning         string
 }
 
 var (

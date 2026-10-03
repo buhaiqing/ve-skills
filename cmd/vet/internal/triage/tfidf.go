@@ -7,10 +7,10 @@ import (
 )
 
 type TFIDFVectorizer struct {
-	docFreq  map[string]int
-	idf      map[string]float64
-	vectors  [][]float64
-	vocab    map[string]int
+	docFreq   map[string]int
+	idf       map[string]float64
+	vectors   [][]float64
+	vocab     map[string]int
 	tokenizer func(string) []string
 }
 

@@ -31,13 +31,13 @@ func (d Decision) String() string {
 
 // Operation describes a single operation in a dispatch plan.
 type Operation struct {
-	Skill        string  `json:"skill"`
-	Command      string  `json:"command"`
-	SafetyClass  string  `json:"safety_class"`  // "read_only" | "mutating" | "destructive"
-	BlastRadius  string  `json:"blast_radius"`  // "single" | "multi" | "account-or-region"
-	Confidence   string  `json:"confidence"`    // "high" | "medium" | "low"
-	Safety       float64 `json:"safety"`        // 0.0–1.0; 0 = hard floor → REFUSE
-	MetadataOK   bool    `json:"metadata_ok"`   // false → fail-safe → ASK (never AUTO)
+	Skill       string  `json:"skill"`
+	Command     string  `json:"command"`
+	SafetyClass string  `json:"safety_class"` // "read_only" | "mutating" | "destructive"
+	BlastRadius string  `json:"blast_radius"` // "single" | "multi" | "account-or-region"
+	Confidence  string  `json:"confidence"`   // "high" | "medium" | "low"
+	Safety      float64 `json:"safety"`       // 0.0–1.0; 0 = hard floor → REFUSE
+	MetadataOK  bool    `json:"metadata_ok"`  // false → fail-safe → ASK (never AUTO)
 }
 
 // DispatchPlan is the input to Check.
@@ -109,13 +109,13 @@ func ComputeDecision(op Operation) Decision {
 
 // ViolationReport describes a single invariant violation for human review.
 type ViolationReport struct {
-	OpIndex      int    `json:"op_index"`
-	Skill        string `json:"skill"`
-	Command      string `json:"command"`
-	Invariant    int    `json:"invariant"` // 1, 2, or 3
-	Actual       string `json:"actual_decision"`
-	Expected     string `json:"expected_decision"`
-	Description  string `json:"description"`
+	OpIndex     int    `json:"op_index"`
+	Skill       string `json:"skill"`
+	Command     string `json:"command"`
+	Invariant   int    `json:"invariant"` // 1, 2, or 3
+	Actual      string `json:"actual_decision"`
+	Expected    string `json:"expected_decision"`
+	Description string `json:"description"`
 }
 
 // CheckPlanWithReport is like CheckPlan but also returns detailed violation info.
@@ -124,34 +124,34 @@ func CheckPlanWithReport(plan DispatchPlan) ([]ViolationReport, error) {
 	for i, op := range plan.Operations {
 		if op.Safety == 0 {
 			reports = append(reports, ViolationReport{
-				OpIndex:   i,
-				Skill:     op.Skill,
-				Command:   op.Command,
-				Invariant: 1,
-				Actual:    "REFUSE",
-				Expected:  "REFUSE",
+				OpIndex:     i,
+				Skill:       op.Skill,
+				Command:     op.Command,
+				Invariant:   1,
+				Actual:      "REFUSE",
+				Expected:    "REFUSE",
 				Description: "safety=0 is a hard floor — must REFUSE regardless of other signals",
 			})
 		}
 		if op.SafetyClass == "destructive" {
 			reports = append(reports, ViolationReport{
-				OpIndex:   i,
-				Skill:     op.Skill,
-				Command:   op.Command,
-				Invariant: 2,
-				Actual:    "AUTO or ASK",
-				Expected:  "ASK or REFUSE",
+				OpIndex:     i,
+				Skill:       op.Skill,
+				Command:     op.Command,
+				Invariant:   2,
+				Actual:      "AUTO or ASK",
+				Expected:    "ASK or REFUSE",
 				Description: "destructive ops require human confirmation — AUTO is never appropriate",
 			})
 		}
 		if !op.MetadataOK {
 			reports = append(reports, ViolationReport{
-				OpIndex:   i,
-				Skill:     op.Skill,
-				Command:   op.Command,
-				Invariant: 3,
-				Actual:    "AUTO",
-				Expected:  "ASK",
+				OpIndex:     i,
+				Skill:       op.Skill,
+				Command:     op.Command,
+				Invariant:   3,
+				Actual:      "AUTO",
+				Expected:    "ASK",
 				Description: "missing metadata triggers fail-safe — must ASK, never AUTO",
 			})
 		}

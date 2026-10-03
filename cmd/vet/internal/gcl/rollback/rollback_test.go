@@ -35,8 +35,8 @@ func TestApplyRollback_DryRun(t *testing.T) {
 
 func TestApplyRollback_EmptySteps(t *testing.T) {
 	plan := &Plan{
-		Steps:   []Step{},
-		DryRun:  true,
+		Steps:  []Step{},
+		DryRun: true,
 	}
 
 	result, err := ApplyRollback(context.Background(), plan)
@@ -100,9 +100,9 @@ func TestVerifyRollback_EmptySnapshot(t *testing.T) {
 
 func TestVerifyRollback_ValidSnapshot(t *testing.T) {
 	snapshot := Snapshot{
-		StateJSON:   []byte(`{"status":"running"}`),
-		Timestamp:   time.Now(),
-		RunID:       "test-run-123",
+		StateJSON: []byte(`{"status":"running"}`),
+		Timestamp: time.Now(),
+		RunID:     "test-run-123",
 	}
 
 	ok, err := VerifyRollback(context.Background(), snapshot)

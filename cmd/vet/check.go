@@ -17,10 +17,10 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/eval"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/finopsquality"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
-	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/tags"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/gcl"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/links"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/policyguard"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/tags"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/trace"
 	gcltrace "github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 )
@@ -33,8 +33,8 @@ type checkReport struct {
 }
 
 type checkSummary struct {
-	Passing int            `json:"passing"`
-	Total  int            `json:"total"`
+	Passing int           `json:"passing"`
+	Total   int           `json:"total"`
 	Reports []checkReport `json:"reports"`
 }
 

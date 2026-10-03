@@ -22,22 +22,22 @@ type Policy struct {
 }
 
 type Action struct {
-	Type      string
-	Target    string
-	Params    map[string]interface{}
+	Type       string
+	Target     string
+	Params     map[string]interface{}
 	ApprovedBy string
 }
 
 type AutonomousDomain struct {
-	Name       string
-	Level      L4Level
-	Skills     []string
-	Policies   []Policy
-	Actions    []Action
-	Knowledge  map[string]string
-	Children   []*AutonomousDomain
-	Parent     *AutonomousDomain
-	mu         sync.RWMutex
+	Name      string
+	Level     L4Level
+	Skills    []string
+	Policies  []Policy
+	Actions   []Action
+	Knowledge map[string]string
+	Children  []*AutonomousDomain
+	Parent    *AutonomousDomain
+	mu        sync.RWMutex
 }
 
 func NewAutonomousDomain(name string) *AutonomousDomain {
@@ -156,8 +156,8 @@ func (d *AutonomousDomain) CrossCoordinate(other *AutonomousDomain) []Action {
 			Target: skill,
 			Params: map[string]interface{}{
 				"source_domain": d.Name,
-				"target_domain":  other.Name,
-				"skill":          skill,
+				"target_domain": other.Name,
+				"skill":         skill,
 			},
 			ApprovedBy: "cross_coordinate",
 		})
@@ -166,8 +166,8 @@ func (d *AutonomousDomain) CrossCoordinate(other *AutonomousDomain) []Action {
 			Target: skill,
 			Params: map[string]interface{}{
 				"source_domain": d.Name,
-				"target_domain":  other.Name,
-				"skill":          skill,
+				"target_domain": other.Name,
+				"skill":         skill,
 			},
 			ApprovedBy: "cross_coordinate",
 		})

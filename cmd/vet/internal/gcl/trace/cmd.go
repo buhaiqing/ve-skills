@@ -49,10 +49,10 @@ func CmdAggregate(root string, inputs []string, sinceHours *int) int {
 		fmt.Fprintf(stderr, "INFO: failure-patterns updated: %d patterns written to %s\n", len(summary.FailurePatterns), fpOut)
 	}
 	result := map[string]any{
-		"summary_path":                 out,
-		"pass_rate":                    summary.PassRate,
-		"total_runs":                   summary.Totals["total_runs"],
-		"failure_patterns_extracted":   len(summary.FailurePatterns),
+		"summary_path":               out,
+		"pass_rate":                  summary.PassRate,
+		"total_runs":                 summary.Totals["total_runs"],
+		"failure_patterns_extracted": len(summary.FailurePatterns),
 	}
 	if fpOut != "" {
 		result["failure_patterns_updated"] = fpOut

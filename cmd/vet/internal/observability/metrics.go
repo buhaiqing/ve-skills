@@ -68,9 +68,9 @@ func (h *Histogram) Observe(v float64) {
 }
 
 type MetricsSnapshot struct {
-	Timestamp  time.Time           `json:"timestamp"`
-	Counters   map[string]int64    `json:"counters"`
-	Gauges     map[string]float64  `json:"gauges"`
+	Timestamp  time.Time                         `json:"timestamp"`
+	Counters   map[string]int64                  `json:"counters"`
+	Gauges     map[string]float64                `json:"gauges"`
 	Histograms map[string]map[string]interface{} `json:"histograms"`
 }
 

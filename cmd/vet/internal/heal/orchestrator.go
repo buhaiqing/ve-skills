@@ -186,10 +186,10 @@ func defaultPlans() map[string]*RecoveryPlan {
 					Stub:   true,
 				},
 				{
-					Name:   "restart_redis",
-					Action: "Restart Redis instance",
-					Params: map[string]interface{}{"graceful": true},
-					Stub:   true,
+					Name:       "restart_redis",
+					Action:     "Restart Redis instance",
+					Params:     map[string]interface{}{"graceful": true},
+					Stub:       true,
 					RollbackFn: func() error { return nil },
 				},
 			},
@@ -198,10 +198,10 @@ func defaultPlans() map[string]*RecoveryPlan {
 		"mysql_connection_pool": {
 			Steps: []RecoveryStep{
 				{
-					Name:   "adjust_pool_size",
-					Action: "Adjust MySQL connection pool size",
-					Params: map[string]interface{}{"max_connections": 200, "idle_timeout": 280},
-					Stub:   true,
+					Name:       "adjust_pool_size",
+					Action:     "Adjust MySQL connection pool size",
+					Params:     map[string]interface{}{"max_connections": 200, "idle_timeout": 280},
+					Stub:       true,
 					RollbackFn: func() error { return nil },
 				},
 				{

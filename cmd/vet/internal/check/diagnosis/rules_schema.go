@@ -10,13 +10,13 @@ import (
 
 // DiagnosisRule represents one rule from diagnosis-rules.yaml
 type DiagnosisRule struct {
-	ID            string             `yaml:"id"`
-	Product       string             `yaml:"product"`
-	Trigger      TriggerCondition   `yaml:"trigger"`
-	Steps        []RuleStep         `yaml:"steps"`
+	ID            string            `yaml:"id"`
+	Product       string            `yaml:"product"`
+	Trigger       TriggerCondition  `yaml:"trigger"`
+	Steps         []RuleStep        `yaml:"steps"`
 	CorrelateWith []CorrelationSpec `yaml:"correlate_with,omitempty"`
-	Severity     string             `yaml:"severity"`
-	Description  string             `yaml:"description"`
+	Severity      string            `yaml:"severity"`
+	Description   string            `yaml:"description"`
 }
 
 // TriggerCondition specifies the metric that triggers this rule
@@ -48,8 +48,8 @@ type CorrelationSpec struct {
 type DiagnosisAction struct {
 	RuleID     string
 	StepIndex  int
-	Action    string
-	Target    string
+	Action     string
+	Target     string
 	Suggestion string
 	DelegateTo string // populated when Action == "delegate"
 }
@@ -95,8 +95,8 @@ func (e *RulesEngine) Match(product, metric string, value float64, dur time.Dura
 			a := &DiagnosisAction{
 				RuleID:     rule.ID,
 				StepIndex:  i,
-				Action:    step.Action,
-				Target:    step.Target,
+				Action:     step.Action,
+				Target:     step.Target,
 				Suggestion: step.Suggestion,
 				DelegateTo: step.Target,
 			}

@@ -37,9 +37,9 @@ type CriticResult struct {
 
 // GeneratorResult is the sanitized generator output fed to the critic.
 type GeneratorResult struct {
-	Command        string `json:"command"`
-	ExitCode       int    `json:"exit_code"`
-	ResultExcerpt  string `json:"result_excerpt"`
+	Command       string `json:"command"`
+	ExitCode      int    `json:"exit_code"`
+	ResultExcerpt string `json:"result_excerpt"`
 }
 
 // StructuralCritic is the rule-based audit used for CI/dry-run (mirrors

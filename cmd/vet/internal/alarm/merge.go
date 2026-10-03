@@ -20,18 +20,18 @@ type Alarm struct {
 }
 
 type AlarmGroup struct {
-	RootCause  *Alarm
-	Alarms     []*Alarm
-	Count      int
-	Products   []string
-	Metrics    []string
-	IsStorm    bool
+	RootCause *Alarm
+	Alarms    []*Alarm
+	Count     int
+	Products  []string
+	Metrics   []string
+	IsStorm   bool
 }
 
 type StormConfig struct {
-	Window        time.Duration
+	Window         time.Duration
 	CountThreshold int
-	SeverityRate  float64
+	SeverityRate   float64
 }
 
 func NewStormConfig() *StormConfig {

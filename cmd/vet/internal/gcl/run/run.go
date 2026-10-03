@@ -19,13 +19,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/costgate"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/critic"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/heal"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/secret"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/trace"
 	vlog "github.com/buhaiqing/ve-skills/cmd/vet/internal/log"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/memory"
-	"github.com/buhaiqing/ve-skills/cmd/vet/internal/gcl/costgate"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/reflexion/transpile"
 	"gopkg.in/yaml.v3"
 )
@@ -447,7 +447,7 @@ func runIsolatedCritic(opts Options, operationIntent map[string]any, gen trace.G
 			"exit_code":      gen.ExitCode,
 			"result_excerpt": gen.ResultExcerpt,
 		},
-		"trace":       map[string]any{"iterations": iterations},
+		"trace": map[string]any{"iterations": iterations},
 		// P0-2: explicit flattened prior suggestions let the Critic judge
 		// whether an earlier blocking suggestion was addressed and express
 		// stagnation instead of repeating the same feedback.
@@ -881,8 +881,8 @@ func Run(opts Options) Result {
 			tr.Final = trace.Final{Status: "POLICY_BLOCK", Iter: iter, Output: nil,
 				FailurePattern: &trace.FailurePattern{
 					Category: "execution_risk", Skill: opts.Skill, Command: opts.Command,
-						Error: "operation blocked by execution-risk policy: " + blocked.String(), Fix: "escalate to human or supply --confirmed with --confirmed-by for ASK class",
-					}}
+					Error: "operation blocked by execution-risk policy: " + blocked.String(), Fix: "escalate to human or supply --confirmed with --confirmed-by for ASK class",
+				}}
 			path, _ := trace.PersistTrace(opts.Root, "", tr)
 			writebackFailurePattern(opts.Root, opts.Skill, tr.Final.FailurePattern, opts.StructuralOnly)
 			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | POLICY_BLOCK | skill=%s decision=%s trace=%s\n",
@@ -1017,32 +1017,32 @@ func Run(opts Options) Result {
 				path, _ := trace.PersistTrace(opts.Root, "", tr)
 				writebackFailurePattern(opts.Root, opts.Skill, fp, opts.StructuralOnly)
 				fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | SAFETY_FAIL | credential_leak skill=%s iter=%d trace=%s\n",
-				runID, opts.Skill, iter, path)
+					runID, opts.Skill, iter, path)
 				return Result{ExitCode: 3, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
-		loaded, err := loadCritic(opts.CriticJSON, opts.CriticStdin)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | invalid critic JSON | %v\n", runID, err)
-			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic JSON: "+err.Error(), runID)
-			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
-		}
-		if loaded == nil && opts.CriticCommand != "" {
-			loaded2, err := runIsolatedCritic(opts, operationIntent, gen, tr.Iterations, runID)
+			loaded, err := loadCritic(opts.CriticJSON, opts.CriticStdin)
 			if err != nil {
-				persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "critic command failed: "+err.Error(), runID)
+				fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | invalid critic JSON | %v\n", runID, err)
+				persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic JSON: "+err.Error(), runID)
 				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
-			loaded = loaded2
-		}
-		if loaded == nil {
-			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | no critic payload | Pass --critic-json, pipe JSON to stdin, --critic-command <cmd>, or use --structural-critic-only\n", runID)
-			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "no critic payload", runID)
-			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
-		}
-		if errs := critic.ValidatePayload(*loaded); len(errs) > 0 {
-			fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | invalid critic payload | %s\n", runID, strings.Join(errs, "; "))
-			persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic payload: "+strings.Join(errs, "; "), runID)
-			return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
+			if loaded == nil && opts.CriticCommand != "" {
+				loaded2, err := runIsolatedCritic(opts, operationIntent, gen, tr.Iterations, runID)
+				if err != nil {
+					persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "critic command failed: "+err.Error(), runID)
+					return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
+				}
+				loaded = loaded2
+			}
+			if loaded == nil {
+				fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | no critic payload | Pass --critic-json, pipe JSON to stdin, --critic-command <cmd>, or use --structural-critic-only\n", runID)
+				persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "no critic payload", runID)
+				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
+			}
+			if errs := critic.ValidatePayload(*loaded); len(errs) > 0 {
+				fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | invalid critic payload | %s\n", runID, strings.Join(errs, "; "))
+				persistCriticFailureTrace(opts.Root, tr, opts.Skill, opts.Command, "invalid critic payload: "+strings.Join(errs, "; "), runID)
+				return Result{ExitCode: 2, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 			}
 			c = loaded
 		}

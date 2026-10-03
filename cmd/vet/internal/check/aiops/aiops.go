@@ -42,17 +42,17 @@ type skillResult struct {
 }
 
 type Report struct {
-	TotalSkills              int            `json:"total_skills"`
-	RRCoverage               string         `json:"rr_aiops_coverage"`
-	RRFinOpsCoverage         string         `json:"rr_finops_coverage"`
-	EvalCoverage             string         `json:"eval_coverage"`
-	SkillsMissingAIOps       []string       `json:"skills_missing_aiops"`
-	SkillsMissingFinOps      []string       `json:"skills_missing_finops"`
-	SkillsMissingEval        []string       `json:"skills_missing_eval"`
-	EvalParseFail            []string       `json:"eval_parse_fail"`
-	EvalQualityBad           []skillResult  `json:"eval_quality_bad"`
-	Details                  []skillResult  `json:"details"`
-	OK                       bool           `json:"ok"`
+	TotalSkills         int           `json:"total_skills"`
+	RRCoverage          string        `json:"rr_aiops_coverage"`
+	RRFinOpsCoverage    string        `json:"rr_finops_coverage"`
+	EvalCoverage        string        `json:"eval_coverage"`
+	SkillsMissingAIOps  []string      `json:"skills_missing_aiops"`
+	SkillsMissingFinOps []string      `json:"skills_missing_finops"`
+	SkillsMissingEval   []string      `json:"skills_missing_eval"`
+	EvalParseFail       []string      `json:"eval_parse_fail"`
+	EvalQualityBad      []skillResult `json:"eval_quality_bad"`
+	Details             []skillResult `json:"details"`
+	OK                  bool          `json:"ok"`
 }
 
 func checkSkill(root, skill string) skillResult {
@@ -148,17 +148,17 @@ func CheckDir(root string) Report {
 		evalSkills == len(AllSkills) && len(parseFail) == 0 && len(evalQualityBad) == 0
 
 	return Report{
-		TotalSkills:        len(AllSkills),
-		RRCoverage:         strconv.Itoa(rrAIOps) + "/" + strconv.Itoa(rrCount),
-		RRFinOpsCoverage:   strconv.Itoa(rrFinOps) + "/" + strconv.Itoa(rrCount),
-		EvalCoverage:       strconv.Itoa(evalSkills) + "/" + strconv.Itoa(len(AllSkills)),
-		SkillsMissingAIOps: missingAIOps,
+		TotalSkills:         len(AllSkills),
+		RRCoverage:          strconv.Itoa(rrAIOps) + "/" + strconv.Itoa(rrCount),
+		RRFinOpsCoverage:    strconv.Itoa(rrFinOps) + "/" + strconv.Itoa(rrCount),
+		EvalCoverage:        strconv.Itoa(evalSkills) + "/" + strconv.Itoa(len(AllSkills)),
+		SkillsMissingAIOps:  missingAIOps,
 		SkillsMissingFinOps: missingFinOps,
-		SkillsMissingEval:  missingEval,
-		EvalParseFail:      parseFail,
-		EvalQualityBad:     evalQualityBad,
-		Details:            results,
-		OK:                 ok,
+		SkillsMissingEval:   missingEval,
+		EvalParseFail:       parseFail,
+		EvalQualityBad:      evalQualityBad,
+		Details:             results,
+		OK:                  ok,
 	}
 }
 

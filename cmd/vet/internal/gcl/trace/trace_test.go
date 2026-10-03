@@ -89,9 +89,9 @@ func TestAggregateWindow(t *testing.T) {
 }
 
 func TestCollectSince(t *testing.T) {
-	old := "/repo/audit-results/gcl-trace-20200101-000000.json" // far in the past
+	old := "/repo/audit-results/gcl-trace-20200101-000000.json"    // far in the past
 	recent := "/repo/audit-results/gcl-trace-20990101-000000.json" // far in the future
-	legacy := "/repo/audit-results/gcl-trace-legacy.json"         // no parseable timestamp
+	legacy := "/repo/audit-results/gcl-trace-legacy.json"          // no parseable timestamp
 
 	// 24h window: recent kept, old dropped, legacy dropped.
 	got := collectSince([]string{old, recent, legacy}, 24)

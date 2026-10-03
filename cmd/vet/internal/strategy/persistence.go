@@ -26,7 +26,7 @@ type nodeState struct {
 }
 
 type kbState struct {
-	Patterns []patternState      `json:"patterns"`
+	Patterns []patternState         `json:"patterns"`
 	Graphs   map[string][]nodeState `json:"graphs"`
 }
 
