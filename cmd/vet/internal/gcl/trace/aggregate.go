@@ -49,7 +49,7 @@ type Window struct {
 // sinceHours is the --since window in hours (nil for full scan); it is used to
 // populate the real Window range rather than the legacy trace-count total.
 func Aggregate(root string, traces []*Trace, sinceHours *int) *Summary {
-	totals := map[string]int{"PASS": 0, "SAFETY_FAIL": 0, "MAX_ITER": 0, "total_runs": len(traces)}
+	totals := map[string]int{"PASS": 0, "SAFETY_FAIL": 0, "MAX_ITER": 0, "NO_PROGRESS": 0, "total_runs": len(traces)}
 	scoreSums := map[string]float64{}
 	scoreCount := 0
 	bySkill := map[string]map[string]any{}
@@ -68,7 +68,7 @@ func Aggregate(root string, traces []*Trace, sinceHours *int) *Summary {
 		}
 		bucket := bySkill[t.Skill]
 		if bucket == nil {
-			bucket = map[string]any{"total": 0, "PASS": 0, "SAFETY_FAIL": 0, "MAX_ITER": 0, "avg_iterations": 0.0}
+			bucket = map[string]any{"total": 0, "PASS": 0, "SAFETY_FAIL": 0, "MAX_ITER": 0, "NO_PROGRESS": 0, "avg_iterations": 0.0}
 			bySkill[t.Skill] = bucket
 		}
 		bucket["total"] = toInt(bucket["total"]) + 1

@@ -62,6 +62,7 @@ func runGCLRun(args []string) {
 	confirmed := fs.Bool("confirmed", false, "vouch for ASK-class operations (otherwise treated as blocked in non-interactive mode)")
 	confirmedBy := fs.String("confirmed-by", "", "provenance of --confirmed (ticket id / human handle from the Step 5 {{user.confirm}} gate); recorded in trace for audit")
 	heal := fs.String("heal", "smart", "retry strategy: 'smart' (error-classification-driven L4 retry) or 'none' (legacy fixed-count loop)")
+	fixCmd := fs.String("fix-command", "", "external Generator fixer: reads critic JSON on stdin, emits {\"command\":\"...\"} on stdout to rewrite the next retry (empty = disabled)")
 	fs.Parse(args)
 
 	if *skill == "" || *request == "" || *command == "" {
@@ -87,6 +88,7 @@ func runGCLRun(args []string) {
 		Confirmed:      *confirmed,
 		ConfirmedBy:    *confirmedBy,
 		Heal:           *heal,
+		FixCommand:     *fixCmd,
 	}).ExitCode
 	fmt.Fprintf(os.Stderr, "gcl.cli | run end | skill=%s exit=%d\n", *skill, code)
 	os.Exit(code)

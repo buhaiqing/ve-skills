@@ -17,7 +17,9 @@ import (
 var RubricDims = []string{"correctness", "safety", "idempotency", "traceability", "spec_compliance"}
 
 // FinalStatuses mirrors gcl_trace_aggregate.FINAL_STATUSES.
-var FinalStatuses = []string{"PASS", "SAFETY_FAIL", "MAX_ITER"}
+// NO_PROGRESS: loop stopped early because the effective command was unchanged
+// across a RETRY (the retry could not have produced a different outcome).
+var FinalStatuses = []string{"PASS", "SAFETY_FAIL", "MAX_ITER", "NO_PROGRESS"}
 
 // GeneratorResult is the per-iteration generator record (masked).
 type GeneratorResult struct {

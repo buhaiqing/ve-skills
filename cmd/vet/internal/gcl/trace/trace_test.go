@@ -37,10 +37,11 @@ func TestAggregate(t *testing.T) {
 		sampleTrace("ve-ecs-ops", "PASS", map[string]float64{"correctness": 1, "safety": 1, "idempotency": 0.5, "traceability": 1, "spec_compliance": 1}),
 		sampleTrace("ve-ecs-ops", "PASS", map[string]float64{"correctness": 1, "safety": 1, "idempotency": 0.5, "traceability": 1, "spec_compliance": 1}),
 		sampleTrace("ve-redis-ops", "SAFETY_FAIL", map[string]float64{"correctness": 1, "safety": 0, "idempotency": 0.5, "traceability": 1, "spec_compliance": 1}),
+		sampleTrace("ve-rds-ops", "NO_PROGRESS", map[string]float64{"correctness": 0, "safety": 1, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0}),
 	}
 	sum := Aggregate("/tmp", traces, nil)
-	if sum.Totals["total_runs"] != 3 {
-		t.Errorf("total_runs want 3 got %d", sum.Totals["total_runs"])
+	if sum.Totals["total_runs"] != 4 {
+		t.Errorf("total_runs want 4 got %d", sum.Totals["total_runs"])
 	}
 	if sum.Totals["PASS"] != 2 {
 		t.Errorf("PASS want 2 got %d", sum.Totals["PASS"])
@@ -48,8 +49,13 @@ func TestAggregate(t *testing.T) {
 	if sum.Totals["SAFETY_FAIL"] != 1 {
 		t.Errorf("SAFETY_FAIL want 1 got %d", sum.Totals["SAFETY_FAIL"])
 	}
-	if sum.PassRate < 0.6666 || sum.PassRate > 0.6668 {
-		t.Errorf("pass_rate want ~%v got %v", 2.0/3.0, sum.PassRate)
+	// NO_PROGRESS must have its own bucket: the status is counted in
+	// total_runs, so dropping it here would make the sums silently disagree.
+	if sum.Totals["NO_PROGRESS"] != 1 {
+		t.Errorf("NO_PROGRESS want 1 got %d", sum.Totals["NO_PROGRESS"])
+	}
+	if sum.PassRate < 0.4999 || sum.PassRate > 0.5001 {
+		t.Errorf("pass_rate want ~%v got %v", 2.0/4.0, sum.PassRate)
 	}
 }
 

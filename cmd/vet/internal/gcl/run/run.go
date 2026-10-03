@@ -9,6 +9,8 @@ package run
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -139,6 +141,12 @@ type Options struct {
 	//   "smart" (default) — error-classification-driven retry (L4/T09)
 	//   "none"           — legacy fixed-count loop (no smart retry)
 	Heal string
+	// FixCommand is an optional external "Generator fixer". After a RETRY
+	// decision the orchestrator runs it with the critic feedback as JSON on
+	// stdin; it emits {"command":"<rewritten cmd>"} on stdout which becomes
+	// the effective command for the next iteration. Empty = disabled (legacy
+	// behaviour: the same command is retried). P0-1 closure.
+	FixCommand string
 }
 
 // deriveOperationIntent mirrors gcl_runner.derive_operation_intent.
@@ -264,27 +272,32 @@ func runCommand(command string, timeout int, extraEnv map[string]string) trace.G
 // result are returned so the caller can stamp them into the trace iteration
 // for audit/telemetry (T10 + T11).
 //
+// effectiveCmd is the command to actually run this iteration: it equals
+// opts.Command on iteration 1 and may have been rewritten by the fix command
+// on later iterations (P0-1). opts.Command itself stays the original for the
+// audit delta.
+//
 // metrics (may be nil) accumulates each healing attempt for the self-healing
 // telemetry; logPath ("" = no logging) appends a framework §6.2 row per
 // attempt so T11's `vet gcl heal-stats` can aggregate offline.
-func runGeneratorWithHeal(opts Options, criticFeedback, knownPatterns string, metrics *heal.Metrics, logPath string, runID string) (trace.GeneratorResult, string, *trace.SelfHealingRecord) {
+func runGeneratorWithHeal(opts Options, effectiveCmd, criticFeedback, knownPatterns string, metrics *heal.Metrics, logPath string, runID string) (trace.GeneratorResult, string, *trace.SelfHealingRecord) {
 	env := map[string]string{
 		"GCL_CRITIC_FEEDBACK":        criticFeedback,
 		"GCL_KNOWN_FAILURE_PATTERNS": knownPatterns,
 	}
 	if opts.Heal != "smart" {
-		return runCommand(opts.Command, opts.Timeout, env), "", nil
+		return runCommand(effectiveCmd, opts.Timeout, env), "", nil
 	}
 	// First attempt: observe the outcome so we can classify the error and
 	// select the best healing path (Classify → Select → Execute, per T10).
-	first := runCommand(opts.Command, opts.Timeout, env)
+	first := runCommand(effectiveCmd, opts.Timeout, env)
 	if first.ExitCode == 0 {
 		// Succeeded on first try — no healing needed.
 		return first, "", nil
 	}
 	var last trace.GeneratorResult
 	op := func() error {
-		last = runCommand(opts.Command, opts.Timeout, env)
+		last = runCommand(effectiveCmd, opts.Timeout, env)
 		if last.ExitCode != 0 {
 			return &generatorError{exit: last.ExitCode, excerpt: last.ResultExcerpt}
 		}
@@ -435,7 +448,11 @@ func runIsolatedCritic(opts Options, operationIntent map[string]any, gen trace.G
 			"result_excerpt": gen.ResultExcerpt,
 		},
 		"trace":       map[string]any{"iterations": iterations},
-		"rubric_path": rubricPath,
+		// P0-2: explicit flattened prior suggestions let the Critic judge
+		// whether an earlier blocking suggestion was addressed and express
+		// stagnation instead of repeating the same feedback.
+		"prior_suggestions": priorSuggestions(iterations),
+		"rubric_path":       rubricPath,
 	}
 	inBytes, _ := json.Marshal(input)
 	cmd := exec.Command("sh", "-c", opts.CriticCommand)
@@ -458,6 +475,88 @@ func runIsolatedCritic(opts Options, operationIntent map[string]any, gen trace.G
 		return nil, err
 	}
 	return &c, nil
+}
+
+// commandHash returns a stable digest of the (credential-masked) command.
+// Used to detect a no-op retry: if a RETRY iteration's effective command has
+// the same hash as the previous iteration's, the retry cannot produce a
+// different outcome, so the loop terminates NO_PROGRESS instead of burning
+// the remaining MaxIter budget (P0-1).
+func commandHash(cmd string) string {
+	sum := sha256.Sum256([]byte(secret.MaskSecrets(cmd)))
+	return hex.EncodeToString(sum[:])
+}
+
+// priorSuggestions flattens the suggestions from all recorded iterations,
+// deduped in first-seen order, capped at 10 entries × 200 chars so the
+// payload to the Critic / fixer stays bounded (P0-2).
+func priorSuggestions(iterations []trace.Iteration) []string {
+	seen := map[string]bool{}
+	out := []string{}
+	for _, it := range iterations {
+		for _, s := range it.Critic.Suggestions {
+			if s == "" || seen[s] {
+				continue
+			}
+			seen[s] = true
+			if len(s) > 200 {
+				s = s[:200]
+			}
+			out = append(out, s)
+			if len(out) >= 10 {
+				return out
+			}
+		}
+	}
+	return out
+}
+
+// runFixCommand invokes the external Generator fixer (opts.FixCommand) with a
+// JSON payload on stdin and returns the rewritten command it emits on stdout
+// as {"command":"..."}. A malformed payload or exit error returns "" so the
+// caller keeps the previous effective command — no-op detection then fires,
+// producing an explicit NO_PROGRESS rather than a crash (P0-1).
+func runFixCommand(opts Options, intent map[string]any, gen trace.GeneratorResult, c *critic.CriticResult, iterations []trace.Iteration, nextIter int, runID string) (string, error) {
+	payload := map[string]any{
+		"skill":            opts.Skill,
+		"operation_intent": intent,
+		"generator_output": map[string]any{
+			"command":        gen.Command,
+			"exit_code":      gen.ExitCode,
+			"result_excerpt": gen.ResultExcerpt,
+		},
+		"critic": map[string]any{
+			"scores":      c.Scores,
+			"suggestions": c.Suggestions,
+			"blocking":    c.Blocking,
+		},
+		"prior_suggestions": priorSuggestions(iterations),
+		"next_iter":         nextIter,
+	}
+	inBytes, _ := json.Marshal(payload)
+	cmd := exec.Command("sh", "-c", opts.FixCommand)
+	cmd.Stdin = strings.NewReader(string(inBytes))
+	var out, errBuf strings.Builder
+	cmd.Stdout = &out
+	cmd.Stderr = &errBuf
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | fix command failed | %v stderr=%s\n",
+			runID, err, firstLine(errBuf.String()))
+		return "", err
+	}
+	var fix struct {
+		Command string `json:"command"`
+	}
+	if err := json.Unmarshal([]byte(out.String()), &fix); err != nil {
+		fmt.Fprintf(os.Stderr, "[%s] [ERROR] gcl.run | fix command JSON parse failed | %v\n", runID, err)
+		return "", err
+	}
+	if strings.TrimSpace(fix.Command) == "" {
+		fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | fix command returned empty command\n", runID)
+		return "", nil
+	}
+	fmt.Fprintf(os.Stderr, "[%s] [INFO] gcl.run | fix command rewrote effective command | next_iter=%d\n", runID, nextIter)
+	return fix.Command, nil
 }
 
 // extractFailurePattern mirrors gcl_runner.extract_failure_pattern.
@@ -743,6 +842,17 @@ func Run(opts Options) Result {
 
 	criticFeedback := ""
 	var lastGen trace.GeneratorResult
+	// P0-2 addendum: the critic verdict of the previous iteration, reused by
+	// the no-op guard so a NO_PROGRESS trace records the real RETRY verdict
+	// instead of a null critic record.
+	var lastCritic *critic.CriticResult
+	// P0-1: the command actually executed may be rewritten between RETRY
+	// iterations by opts.FixCommand. prevHash/prevDecision arm the no-op
+	// detection only on the retry path, so a single-shot run is never
+	// mislabelled NO_PROGRESS.
+	effectiveCmd := opts.Command
+	prevHash := ""
+	prevDecision := ""
 	for iter := 1; iter <= opts.MaxIter; iter++ {
 		// Execution-risk gate (L3): score the operation BEFORE running it.
 		sClass, bRadius, conf, safety, metaOK := policyInputs(opts.Skill, operationIntent, nil)
@@ -781,7 +891,7 @@ func Run(opts Options) Result {
 		}
 
 		iterStart := time.Now()
-		gen, healClass, selfHeal := runGeneratorWithHeal(opts, criticFeedback, knownPatterns, healMetrics, healLogPath, runID)
+		gen, healClass, selfHeal := runGeneratorWithHeal(opts, effectiveCmd, criticFeedback, knownPatterns, healMetrics, healLogPath, runID)
 		iterDurationMs := time.Since(iterStart).Milliseconds()
 		// When this iteration runs an ASK-class op that was authorized by an
 		// external confirmation, stamp the confirmation provenance into the
@@ -796,6 +906,98 @@ func Run(opts Options) Result {
 			gen.Args["confirmed_by"] = confirmedBy
 		}
 		lastGen = gen
+		// P0-1: when a RETRY re-runs a byte-identical command AND that retry
+		// failed again, no further retry can alter the outcome — stop now with
+		// an explicit NO_PROGRESS instead of silently exhausting MaxIter.
+		//
+		// The `gen.ExitCode != 0` guard is load-bearing: a byte-identical
+		// command can legitimately succeed on a later attempt (transient
+		// failure — rate limit, lock contention, eventual consistency), which
+		// is exactly what MaxIter exists for. Only a *repeated failure* is a
+		// stall; a successful retry must fall through to the Critic.
+		curHash := commandHash(effectiveCmd)
+		if prevDecision == "RETRY" && prevHash != "" && curHash == prevHash && gen.ExitCode != 0 {
+			fp := &trace.FailurePattern{
+				Category: "no_progress", Skill: opts.Skill, Command: secret.MaskSecrets(effectiveCmd),
+				Error: "effective command unchanged across retry — retry cannot alter the outcome",
+				Fix:   "supply --fix-command to rewrite the command, or address the blocking Critic suggestion",
+			}
+			out := gen.ResultExcerpt
+			// P0-3: the verdict being acted on belongs to the PREVIOUS
+			// iteration (that critic declared RETRY; this iteration merely
+			// re-ran the same command to prove the stall). Record that real
+			// verdict instead of a null critic — a `retry` with no critic
+			// evidence is a malformed trace for downstream consumers.
+			criticRec := trace.CriticRecord{}
+			if lastCritic != nil {
+				criticRec = trace.CriticRecord{Scores: lastCritic.Scores, Suggestions: lastCritic.Suggestions, Blocking: lastCritic.Blocking}
+			}
+			// Spec §6.2: the NO_PROGRESS Final carries the dims still below
+			// threshold (same contract as MAX_ITER), so downstream consumers
+			// know *why* the loop stalled without re-deriving it from the
+			// iteration history.
+			var unresolved []string
+			for dim, th := range critic.RubricThresholds {
+				if criticRec.Scores[dim] < th {
+					unresolved = append(unresolved, dim)
+				}
+			}
+			fp.Count = 1
+			tr.Iterations = append(tr.Iterations, trace.Iteration{
+				Iter:           iter,
+				Timestamp:      iterStart.UTC().Format(time.RFC3339),
+				DurationMs:     iterDurationMs,
+				Generator:      gen,
+				Critic:         criticRec,
+				Decision:       "RETRY",
+				PolicyDecision: policy.String(),
+				ConfirmedBy:    confirmedBy,
+				HealClass:      healClass,
+				SelfHealing:    selfHeal,
+				// trace.Check requires a request_id whenever a command ran
+				// (Decision != POLICY_BLOCK); stamp it here too or the
+				// NO_PROGRESS trace fails its own checker.
+				RequestID: parseRequestID(gen.ResultExcerpt),
+			})
+			tr.Final = trace.Final{Status: "NO_PROGRESS", Iter: iter, Output: &out, Unresolved: unresolved, FailurePattern: fp}
+			path, _ := trace.PersistTrace(opts.Root, "", tr)
+			writebackFailurePattern(opts.Root, opts.Skill, fp, opts.StructuralOnly)
+			fmt.Fprintf(os.Stderr, "[%s] [WARN] gcl.run | NO_PROGRESS | skill=%s iter=%d trace=%s\n",
+				runID, opts.Skill, iter, path)
+			return Result{ExitCode: 1, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
+		}
+
+		// Capture the cloud API RequestId from this iteration's `ve` call so
+		// the runtime trace is end-to-end traceable (P5).
+		requestID := parseRequestID(gen.ResultExcerpt)
+		// P0-2: append the current iteration BEFORE invoking the Critic so the
+		// history the Critic sees includes the iteration it is scoring (no
+		// off-by-one). The Decision is stamped after the Critic returns.
+		tr.Iterations = append(tr.Iterations, trace.Iteration{
+			Iter:           iter,
+			Timestamp:      iterStart.UTC().Format(time.RFC3339),
+			DurationMs:     iterDurationMs,
+			Generator:      gen,
+			PolicyDecision: policy.String(),
+			ConfirmedBy:    confirmedBy,
+			RequestID:      requestID,
+			HealClass:      healClass,
+			SelfHealing:    selfHeal,
+			CostImpact: func() *trace.CostImpactRecord {
+				if costImpact == nil {
+					return nil
+				}
+				return &trace.CostImpactRecord{
+					Operation:       costImpact.Operation,
+					BillingModel:    costImpact.BillingModel,
+					EstMonthlyCost:  costImpact.EstMonthlyCost,
+					RefundOnDelete:  costImpact.RefundOnDelete,
+					NetMonthlyDelta: costImpact.NetMonthlyDelta,
+					Warning:         costImpact.Warning,
+				}
+			}(),
+		})
+		curIter := &tr.Iterations[len(tr.Iterations)-1]
 
 		var c *critic.CriticResult
 		if opts.StructuralOnly {
@@ -804,18 +1006,12 @@ func Run(opts Options) Result {
 			c = &res
 		} else {
 			if secret.HasCredentialLeak(gen.ResultExcerpt) {
-				tr.Iterations = append(tr.Iterations, trace.Iteration{
-					Iter:      iter,
-					Timestamp: time.Now().UTC().Format(time.RFC3339),
-					Generator: gen,
-					Critic: trace.CriticRecord{
-						Scores:      map[string]float64{"correctness": 0, "safety": 0, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0.5},
-						Suggestions: []string{"Credential leak in generator output — mask secrets and re-run"},
-						Blocking:    true,
-					},
-					Decision:       "SAFETY_FAIL",
-					PolicyDecision: "AUTO",
-				})
+				curIter.Critic = trace.CriticRecord{
+					Scores:      map[string]float64{"correctness": 0, "safety": 0, "idempotency": 0.5, "traceability": 0.5, "spec_compliance": 0.5},
+					Suggestions: []string{"Credential leak in generator output — mask secrets and re-run"},
+					Blocking:    true,
+				}
+				curIter.Decision = "SAFETY_FAIL"
 				fp := extractFailurePattern(opts.Skill, opts.Command, gen, nil)
 				tr.Final = trace.Final{Status: "SAFETY_FAIL", Iter: iter, Output: nil, FailurePattern: fp}
 				path, _ := trace.PersistTrace(opts.Root, "", tr)
@@ -852,35 +1048,9 @@ func Run(opts Options) Result {
 		}
 
 		decision := critic.Decide(c.Scores)
-		// Capture the cloud API RequestId from this iteration's `ve` call so
-		// the runtime trace is end-to-end traceable (P5).
-		requestID := parseRequestID(gen.ResultExcerpt)
-		tr.Iterations = append(tr.Iterations, trace.Iteration{
-			Iter:           iter,
-			Timestamp:      iterStart.UTC().Format(time.RFC3339),
-			DurationMs:     iterDurationMs,
-			Generator:      gen,
-			Critic:         trace.CriticRecord{Scores: c.Scores, Suggestions: c.Suggestions, Blocking: c.Blocking},
-			Decision:       decision,
-			PolicyDecision: policy.String(),
-			ConfirmedBy:    confirmedBy,
-			RequestID:      requestID,
-			HealClass:      healClass,
-			SelfHealing:    selfHeal,
-			CostImpact: func() *trace.CostImpactRecord {
-				if costImpact == nil {
-					return nil
-				}
-				return &trace.CostImpactRecord{
-					Operation:       costImpact.Operation,
-					BillingModel:    costImpact.BillingModel,
-					EstMonthlyCost:  costImpact.EstMonthlyCost,
-					RefundOnDelete:  costImpact.RefundOnDelete,
-					NetMonthlyDelta: costImpact.NetMonthlyDelta,
-					Warning:         costImpact.Warning,
-				}
-			}(),
-		})
+		curIter.Critic = trace.CriticRecord{Scores: c.Scores, Suggestions: c.Suggestions, Blocking: c.Blocking}
+		curIter.Decision = decision
+		lastCritic = c
 
 		if decision == "SAFETY_FAIL" {
 			fp := extractFailurePattern(opts.Skill, opts.Command, gen, c)
@@ -900,6 +1070,16 @@ func Run(opts Options) Result {
 			return Result{ExitCode: 0, TraceLine: gen.ResultExcerpt, StderrLine: gen.StderrExcerpt}
 		}
 		criticFeedback = strings.Join(firstN(c.Suggestions, 3), "; ")
+		// P0-1: let an external fixer rewrite the command for the next retry.
+		// A malformed/absent rewrite leaves effectiveCmd unchanged, which the
+		// no-op guard above will catch on the next iteration.
+		if opts.FixCommand != "" {
+			if fixed, ferr := runFixCommand(opts, operationIntent, gen, c, tr.Iterations, iter+1, runID); ferr == nil && fixed != "" {
+				effectiveCmd = fixed
+			}
+		}
+		prevHash = curHash
+		prevDecision = decision
 	}
 
 	lastIter := tr.Iterations[len(tr.Iterations)-1]
