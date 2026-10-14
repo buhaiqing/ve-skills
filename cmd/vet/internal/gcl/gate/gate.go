@@ -86,14 +86,19 @@ func Run(root string, skills []string, skipIncidentLoop bool, jsonOut bool) int 
 	}
 	reports := SmokeAll(root, target)
 	passing := 0
+	refusing := 0
 	for _, r := range reports {
 		if r.OK {
 			passing++
 		}
+		// ExitCode 4 == policy REFUSE (safety gate working correctly).
+		if r.ExitCode == 4 {
+			refusing++
+		}
 	}
 	if jsonOut {
-		fmt.Printf("{\"summary\":{\"total\":%d,\"passing\":%d,\"failing\":%d},\"reports\":[",
-			len(reports), passing, len(reports)-passing)
+		fmt.Printf("{\"summary\":{\"total\":%d,\"passing\":%d,\"refuse\":%d,\"failing\":%d,\"structural_only\":true,\"reports\":[",
+			len(reports), passing, refusing, len(reports)-passing)
 		for i, r := range reports {
 			if i > 0 {
 				fmt.Print(",")
@@ -107,7 +112,8 @@ func Run(root string, skills []string, skipIncidentLoop bool, jsonOut bool) int 
 		}
 		fmt.Println("]}")
 	} else {
-		fmt.Printf("GCL CI gate: %d/%d skills pass structural smoke.\n", passing, len(reports))
+		fmt.Printf("GCL CI gate: %d/%d skills pass structural smoke (%d policy-blocked via safety gate).\n", passing, len(reports), refusing)
+		fmt.Println("NOTE: structural smoke != executable run; REFUSE (exit 4) means the safety gate is exercising its guard, not that the skill ran end-to-end.")
 		if passing != len(reports) {
 			fmt.Println()
 			for _, r := range reports {

@@ -315,3 +315,19 @@ GCL traces include a `failure_pattern` field in the `final` object (see SS6). Th
 - Each skill's `references/rubric.md` -- the rubric instance
 - Each skill's `references/prompt-templates.md` -- the G/C prompt skeletons
 - `ve-skill-generator/references/governance-and-adversarial-review.md` -- build-time R1-R4 review (sister gate)
+## 15. Single-Model Degraded Mode（Mode: degraded）
+
+When only one legal model is available for both Generator and Critic (see AGENTS.md `subagent-model-visibility`),
+the GCL cannot establish true blind review. In that state, the loop still runs but MUST be reported as
+`degraded` and the review report & commit message MUST disclose:
+
+- `gcl_mode: degraded (single-model)` field in the trace JSON
+- header line in every GCL report: `[DEGRADED: single-model critic, independence constrained]`
+- prohibition: do not claim "passed GCL blind review"; use "passed structural GCL (self-review, independence constrained)"
+- per-run honesty recorded in `docs/failure-patterns.md` if a finding is discovered post-hoc
+
+Trigger condition (hard): count of legal models (per `models-store.json ALLOWED_TARGETS`) == 1.
+This mode is **not an exception**; it is a contract downgrade whose downstream consumers (ci/review/spec drift)
+must be able to distinguish from true independent review.
+
+Reference: 2026-10-14 amendment `model-fallback-default` — user ruling allows only `opencode-go/deepseek-v4.1-flash`.

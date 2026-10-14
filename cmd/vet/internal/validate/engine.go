@@ -11,6 +11,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/aiops"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/assessment"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/distillation"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/duprefs"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/eval"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/gcl"
@@ -96,6 +97,21 @@ func buildSteps() []Step {
 				errs = append(errs, rep.SkillsMissingEval...)
 				errs = append(errs, rep.EvalParseFail...)
 				return stepOutcome{errors: errs}
+			},
+		},
+		{
+			name: "TE-6 near-dup block scan (duprefs)",
+			run: func(root string) stepOutcome {
+				findings, err := duprefs.CheckDir(root)
+				if err != nil {
+					return stepOutcome{errors: []string{fmt.Sprintf("duprefs check failed: %v", err)}}
+				}
+				errs := []string{}
+				for _, f := range findings {
+					errs = append(errs, f)
+				}
+				// Advisory in P2 rollout: report count, do not fail full suite yet.
+				return stepOutcome{errors: errs, advisory: true}
 			},
 		},
 		{

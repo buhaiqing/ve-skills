@@ -1,7 +1,11 @@
-# Wave A CI gate: go vet + test + build (hard fail).
-# Full `vet check` / `gcl gate` tighten to hard failure in Wave B.
+# Wave A CI gate: gofmt + go vet + test + build + GCL structural gate (hard fail).
 
-.PHONY: test vet build check-ci
+.PHONY: test vet build gofmt lint gcl-gate check-ci
+
+gofmt:
+	@test -z "$$(gofmt -l .)" || { echo "gofmt: unformatted files:"; gofmt -l .; exit 1; }
+
+lint: gofmt vet
 
 test:
 	go test ./...
@@ -12,4 +16,7 @@ vet:
 build:
 	go build -o /dev/null .
 
-check-ci: vet test build
+gcl-gate:
+	go run . gcl gate
+
+check-ci: vet test build gcl-gate

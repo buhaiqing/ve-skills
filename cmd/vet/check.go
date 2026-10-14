@@ -14,6 +14,7 @@ import (
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/aiops"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/assessment"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/diagnosis"
+	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/duprefs"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/eval"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/finopsquality"
 	"github.com/buhaiqing/ve-skills/cmd/vet/internal/check/frontmatter"
@@ -40,7 +41,7 @@ type checkSummary struct {
 
 func runCheck(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard|trace|routing|finops|tags|alarm-merge|diagnosis)")
+		fmt.Fprintln(os.Stderr, "vet check: missing subcommand (frontmatter|aiops|assessment|gcl|links|eval|policyguard|trace|routing|finops|tags|alarm-merge|diagnosis|duprefs)")
 		os.Exit(2)
 	}
 	name := args[0]
@@ -87,6 +88,26 @@ func runCheck(args []string) {
 		tagsCheck(*root, *jsonOut)
 	case "alarm-merge":
 		alarmMergeCheck(*root, *jsonOut)
+	case "duprefs":
+		findings, err := duprefs.CheckDir(*root)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "duprefs error:", err)
+			os.Exit(1)
+		}
+		if *jsonOut {
+			fmt.Printf("{\"findings\":%d,\"items\":[", len(findings))
+			for i, f := range findings {
+				if i > 0 {
+					fmt.Print(",")
+				}
+				fmt.Printf("%q", f)
+			}
+			fmt.Println("]}")
+		} else {
+			for _, f := range findings {
+				fmt.Println(f)
+			}
+		}
 	case "diagnosis":
 		diagnosisCheck(*root, *jsonOut)
 	default:

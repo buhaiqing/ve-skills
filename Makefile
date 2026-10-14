@@ -18,7 +18,7 @@ VERSION     := $(shell (git describe --tags --always --dirty 2>$(NULL) || echo "
 TAG         := v$(VERSION:v%=%)
 REMOTE      ?= origin
 
-.PHONY: help tag push release release-api build vet test install clean check
+.PHONY: help tag push release release-api build vet test install clean check lint check-ci
 
 help:
 	@echo "Targets:"
@@ -62,5 +62,11 @@ install:
 check:
 	goreleaser check
 
+lint:
+	cd cmd/vet && gofmt -l . | tee /dev/stderr | (! grep .)
+	cd cmd/vet && go vet ./...
+
+check-ci:
+	cd cmd/vet && $(MAKE) check-ci
 clean:
 	rm -rf dist cmd/bin
